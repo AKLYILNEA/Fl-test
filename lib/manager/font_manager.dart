@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -5,110 +6,312 @@ import 'package:fl_clash/common/common.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
+import 'package:shared_preferences/shared_preferences.dart';
+
+/// A font the user imported, copied into the app's own fonts directory.
+class CustomFont {
+  const CustomFont({required this.name, required this.path});
+
+  /// What the list and the theme card show, such as `sleek.ttf`.
+  final String name;
+
+  /// Absolute path of the copied file.
+  final String path;
+
+  Map<String, String> toJson() => {'name': name, 'path': path};
+
+  static CustomFont? fromJson(Object? json) {
+    if (json is! Map) {
+      return null;
+    }
+    final name = json['name'];
+    final path = json['path'];
+    if (name is! String || path is! String) {
+      return null;
+    }
+    if (name.isEmpty || path.isEmpty) {
+      return null;
+    }
+    return CustomFont(name: name, path: path);
+  }
+}
+
+class _FontMetrics {
+  const _FontMetrics({required this.isVariable, required this.baseWeight});
+
+  final bool isVariable;
+  final int baseWeight;
+}
 
 class FontManager {
   static final ValueNotifier<String?> fontFamilyNotifier =
       ValueNotifier<String?>(null);
 
-  static String? get customFontFamily => fontFamilyNotifier.value;
-  static bool get isLoaded => fontFamilyNotifier.value != null;
+  static List<CustomFont> _fonts = const [];
+  static final Map<String, String> _families = {};
+  static final Map<String, _FontMetrics> _metrics = {};
+  static String? _selectedPath;
 
-  static bool _isVariableFont = false;
-  static bool get isVariableFont => _isVariableFont;
+  static const String _prefKeyFonts = 'custom_fonts';
+  static const String _prefKeySelected = 'custom_font_selected';
+  static const String _prefKeyLegacyName = 'custom_font_name';
+  static const String _prefKeyLegacyPath = 'custom_font_path';
 
-  static int _fontBaseWeight = 400;
-  static int get fontBaseWeight => _fontBaseWeight;
+  static List<CustomFont> get fonts => List.unmodifiable(_fonts);
 
-  static String? _customFontName;
-  static String? get customFontName => _customFontName;
-
-  static const String _prefKeyFontName = 'custom_font_name';
-  static const String _prefKeyFontPath = 'custom_font_path';
-
-  static Future<String?> get _existingFontPath async {
-    final prefs = await preferences.sharedPreferences;
-    final savedPath = prefs?.getString(_prefKeyFontPath);
-    if (savedPath != null && savedPath.isNotEmpty && File(savedPath).existsSync()) {
-      return savedPath;
+  static CustomFont? get selectedFont {
+    final selectedPath = _selectedPath;
+    if (selectedPath == null) {
+      return null;
     }
-    final homeDir = await appPath.homeDirPath;
-    final ttf = File(p.join(homeDir, 'fonts', 'user_custom.ttf'));
-    if (ttf.existsSync()) return ttf.path;
-    final otf = File(p.join(homeDir, 'fonts', 'user_custom.otf'));
-    if (otf.existsSync()) return otf.path;
+    for (final font in _fonts) {
+      if (font.path == selectedPath) {
+        return font;
+      }
+    }
     return null;
   }
 
-  /// Initialize custom font from local storage on app start
+  static String? get selectedName => selectedFont?.name;
+
+  /// The family the theme paints with, or null while the default font is picked.
+  static String? get customFontFamily => fontFamilyNotifier.value;
+
+  static bool get isLoaded => fontFamilyNotifier.value != null;
+
+  static bool get isVariableFont => _selectedMetrics?.isVariable ?? false;
+
+  static int get fontBaseWeight => _selectedMetrics?.baseWeight ?? 400;
+
+  static _FontMetrics? get _selectedMetrics {
+    final selectedPath = _selectedPath;
+    return selectedPath == null ? null : _metrics[selectedPath];
+  }
+
+  /// The registered family for [font], null until the font has been loaded.
+  static String? familyOf(CustomFont font) => _families[font.path];
+
   static Future<bool> init({required bool enabled}) async {
     try {
       final prefs = await preferences.sharedPreferences;
-      _customFontName = prefs?.getString(_prefKeyFontName);
-      final fontPath = await _existingFontPath;
-
-      if (fontPath == null) {
-        _customFontName = null;
-        fontFamilyNotifier.value = null;
-        return false;
-      }
-
-      if (_customFontName == null || _customFontName!.isEmpty) {
-        _customFontName = p.basename(fontPath);
-      }
-
-      if (enabled) {
-        final success = await loadFont(fontPath, _customFontName);
-        if (success) {
-          return true;
+      final fonts = <CustomFont>[];
+      final stored = prefs?.getString(_prefKeyFonts);
+      if (stored != null && stored.isNotEmpty) {
+        for (final font in _decode(stored)) {
+          if (File(font.path).existsSync()) {
+            fonts.add(font);
+          }
         }
       }
-      return true;
+      if (fonts.isEmpty) {
+        final migrated = await _migrateLegacyFont(prefs);
+        if (migrated != null) {
+          fonts.add(migrated);
+        }
+      }
+      _fonts = fonts;
+      final storedSelection = prefs?.getString(_prefKeySelected);
+      _selectedPath = fonts.any((font) => font.path == storedSelection)
+          ? storedSelection
+          : null;
+      fontFamilyNotifier.value = null;
+      final selectedPath = _selectedPath;
+      if (enabled && selectedPath != null) {
+        final family = await _register(selectedPath);
+        if (family == null) {
+          _selectedPath = null;
+        } else {
+          fontFamilyNotifier.value = family;
+        }
+      }
+      await _persist();
+      return _fonts.isNotEmpty;
     } catch (e, stack) {
       commonPrint.log('FontManager.init failed: $e\n$stack');
       return false;
     }
   }
 
-  /// Checks whether a custom font file is present in local storage
-  static Future<bool> hasFontFile() async {
+  static Future<String?> _migrateLegacyFont(SharedPreferences? prefs) async {
+    final legacyPath = prefs?.getString(_prefKeyLegacyPath);
+    String? path;
+    if (legacyPath != null &&
+        legacyPath.isNotEmpty &&
+        File(legacyPath).existsSync()) {
+      path = legacyPath;
+    } else {
+      final homeDir = await appPath.homeDirPath;
+      for (final extension in const ['.ttf', '.otf']) {
+        final file = File(p.join(homeDir, 'fonts', 'user_custom$extension'));
+        if (file.existsSync()) {
+          path = file.path;
+          break;
+        }
+      }
+    }
+    if (path == null) {
+      return null;
+    }
+    final legacyName = prefs?.getString(_prefKeyLegacyName);
+    final name = legacyName != null && legacyName.isNotEmpty
+        ? legacyName
+        : p.basename(path);
+    return CustomFont(name: name, path: path);
+  }
+
+  static List<CustomFont> _decode(String raw) {
+    final fonts = <CustomFont>[];
     try {
-      final path = await _existingFontPath;
-      return path != null;
+      final decoded = json.decode(raw);
+      if (decoded is List) {
+        for (final item in decoded) {
+          final font = CustomFont.fromJson(item);
+          if (font != null) {
+            fonts.add(font);
+          }
+        }
+      }
     } catch (_) {
+      return const [];
+    }
+    return fonts;
+  }
+
+  static Future<void> _persist() async {
+    try {
+      final prefs = await preferences.sharedPreferences;
+      if (prefs == null) {
+        return;
+      }
+      await prefs.setString(
+        _prefKeyFonts,
+        json.encode([for (final font in _fonts) font.toJson()]),
+      );
+      final selectedPath = _selectedPath;
+      if (selectedPath == null) {
+        await prefs.remove(_prefKeySelected);
+      } else {
+        await prefs.setString(_prefKeySelected, selectedPath);
+      }
+    } catch (e, stack) {
+      commonPrint.log('FontManager.persist failed: $e\n$stack');
+    }
+  }
+
+  static Future<bool> select(CustomFont font) async {
+    final family = await _register(font.path);
+    if (family == null) {
+      return false;
+    }
+    _selectedPath = font.path;
+    fontFamilyNotifier.value = family;
+    await _persist();
+    return true;
+  }
+
+  static Future<void> selectDefault() async {
+    _selectedPath = null;
+    fontFamilyNotifier.value = null;
+    await _persist();
+  }
+
+  static Future<void> delete(CustomFont font) async {
+    _fonts = [
+      for (final item in _fonts)
+        if (item.path != font.path) item,
+    ];
+    _families.remove(font.path);
+    _metrics.remove(font.path);
+    if (_selectedPath == font.path) {
+      _selectedPath = null;
+      fontFamilyNotifier.value = null;
+    }
+    try {
+      final file = File(font.path);
+      if (await file.exists()) {
+        await file.delete();
+      }
+    } catch (e) {
+      commonPrint.log('FontManager.delete failed: $e');
+    }
+    await _persist();
+  }
+
+  /// Copies the picked font next to the others and makes it the active one, so
+  /// importing a second font keeps the first instead of replacing it.
+  static Future<bool> importAndSelect(BuildContext context) async {
+    try {
+      final picked = await picker.pickerFile(allowedExtensions: ['ttf', 'otf']);
+      if (picked == null) {
+        return false;
+      }
+      final sourcePath = picked.path;
+      if (sourcePath == null || sourcePath.isEmpty) {
+        return false;
+      }
+      final extension = p.extension(picked.name).toLowerCase();
+      if (extension != '.ttf' && extension != '.otf') {
+        return false;
+      }
+      final bytes = await File(sourcePath).readAsBytes();
+      if (bytes.isEmpty) {
+        return false;
+      }
+      final fontsDir = Directory(p.join(await appPath.homeDirPath, 'fonts'));
+      if (!await fontsDir.exists()) {
+        await fontsDir.create(recursive: true);
+      }
+      final target = await _uniqueTarget(fontsDir, picked.name, extension);
+      await File(target).writeAsBytes(bytes, flush: true);
+      var name = picked.name;
+      if (_fonts.any((font) => font.name == name)) {
+        name =
+            '${p.basenameWithoutExtension(name)} (${_fonts.length + 1})'
+            '$extension';
+      }
+      final font = CustomFont(name: name, path: target);
+      _fonts = [..._fonts, font];
+      return await select(font);
+    } catch (e, stack) {
+      commonPrint.log('FontManager.import failed: $e\n$stack');
       return false;
     }
   }
 
-  /// Ensures the font is loaded into runtime memory
-  static Future<bool> ensureLoaded() async {
-    if (isLoaded) return true;
-    try {
-      final fontPath = await _existingFontPath;
-      if (fontPath == null) return false;
-      return await loadFont(fontPath, _customFontName);
-    } catch (_) {
-      return false;
+  static Future<String> _uniqueTarget(
+    Directory directory,
+    String name,
+    String extension,
+  ) async {
+    final base = p.basenameWithoutExtension(name).trim();
+    final stem = base.isEmpty
+        ? 'font'
+        : base.replaceAll(RegExp(r'[/\\:*?"<>|]'), '_');
+    var candidate = p.join(directory.path, '$stem$extension');
+    var index = 2;
+    while (await File(candidate).exists()) {
+      candidate = p.join(directory.path, '$stem ($index)$extension');
+      index++;
     }
+    return candidate;
   }
 
-  /// Loads a font file dynamically into Flutter runtime with a fresh family name
-  static Future<bool> loadFont(String filePath, [String? displayName]) async {
+  static Future<String?> _register(String filePath) async {
+    final cached = _families[filePath];
+    if (cached != null) {
+      return cached;
+    }
     try {
       final file = File(filePath);
       if (!await file.exists()) {
-        return false;
+        return null;
       }
       final rawBytes = await file.readAsBytes();
       if (rawBytes.isEmpty) {
-        return false;
+        return null;
       }
-
       final processed = _analyzeAndProcessFont(rawBytes);
-      _isVariableFont = processed.isVariable;
-      _fontBaseWeight = processed.baseWeight;
-
-      final familyName =
-          'CustomUserFont_${DateTime.now().millisecondsSinceEpoch}';
+      final familyName = 'CustomUserFont_${filePath.hashCode.abs()}';
       final fontLoader = FontLoader(familyName);
       fontLoader.addFont(
         Future.value(
@@ -119,84 +322,17 @@ class FontManager {
           ),
         ),
       );
-
       await fontLoader.load();
-      if (displayName != null && displayName.isNotEmpty) {
-        _customFontName = displayName;
-      }
-      fontFamilyNotifier.value = familyName;
-      return true;
-    } catch (e, stack) {
-      commonPrint.log('FontManager.loadFont failed: $e\n$stack');
-      return false;
-    }
-  }
-
-  /// Opens file picker, copies chosen font to safe storage, and applies it
-  static Future<bool> pickAndApplyFont(BuildContext context) async {
-    try {
-      final file = await picker.pickerFile(
-        allowedExtensions: ['ttf', 'otf'],
+      _metrics[filePath] = _FontMetrics(
+        isVariable: processed.isVariable,
+        baseWeight: processed.baseWeight,
       );
-      if (file == null) {
-        return false;
-      }
-
-      final fileName = file.name;
-      final ext = p.extension(fileName).toLowerCase();
-      if (ext != '.ttf' && ext != '.otf') {
-        return false;
-      }
-
-      final filePath = file.path;
-      if (filePath == null || filePath.isEmpty) {
-        return false;
-      }
-      final f = File(filePath);
-      if (!await f.exists()) {
-        return false;
-      }
-      final bytes = await f.readAsBytes();
-      if (bytes.isEmpty) {
-        return false;
-      }
-
-      final homeDir = await appPath.homeDirPath;
-      final fontsDir = Directory(p.join(homeDir, 'fonts'));
-      if (!await fontsDir.exists()) {
-        await fontsDir.create(recursive: true);
-      }
-
-      final destFile = File(p.join(fontsDir.path, 'user_custom$ext'));
-      final altExt = ext == '.ttf' ? '.otf' : '.ttf';
-      final altFile = File(p.join(fontsDir.path, 'user_custom$altExt'));
-      if (await altFile.exists()) {
-        try {
-          await altFile.delete();
-        } catch (_) {}
-      }
-      await destFile.writeAsBytes(bytes);
-
-      final success = await loadFont(destFile.path, fileName);
-      if (success) {
-        _customFontName = fileName;
-        final prefs = await preferences.sharedPreferences;
-        await prefs?.setString(_prefKeyFontName, fileName);
-        await prefs?.setString(_prefKeyFontPath, destFile.path);
-        return true;
-      }
-      return false;
+      _families[filePath] = familyName;
+      return familyName;
     } catch (e, stack) {
-      commonPrint.log('FontManager.pickAndApplyFont failed: $e\n$stack');
-      return false;
+      commonPrint.log('FontManager.load failed: $e\n$stack');
+      return null;
     }
-  }
-
-  /// Disables custom font, reverting to system font
-  static void disableFont() {
-    _isVariableFont = false;
-    _fontBaseWeight = 400;
-    fontFamilyNotifier.value = null;
   }
 
   static int _calcTableChecksum(

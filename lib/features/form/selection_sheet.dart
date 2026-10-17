@@ -24,6 +24,7 @@ class SelectionSheet<T> extends ConsumerStatefulWidget {
   final Widget Function(T item, Widget title)? titleBuilder;
   final T? Function(WidgetRef ref) selectedOf;
   final ValueChanged<T> onSelected;
+  final ValueChanged<T>? onLongPressed;
   final String? emptyLabel;
   final NullStatus? loadingStatus;
 
@@ -40,6 +41,7 @@ class SelectionSheet<T> extends ConsumerStatefulWidget {
     this.titleBuilder,
     required this.selectedOf,
     required this.onSelected,
+    this.onLongPressed,
     this.emptyLabel,
     this.loadingStatus,
     this.removeOnSelect = false,
@@ -251,6 +253,9 @@ class _SelectionSheetState<T> extends ConsumerState<SelectionSheet<T>>
       position: position,
       child: DecorationListItem(
         onPressed: () => _handleSelected(item),
+        onLongPress: widget.onLongPressed == null
+            ? null
+            : () => widget.onLongPressed!(item),
         subtitle: subtitle != null ? TooltipLabel(subtitle) : null,
         title: widget.titleBuilder?.call(item, title) ?? title,
         isSelected: isSelected,

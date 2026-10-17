@@ -1,4 +1,3 @@
-import 'package:fl_clash/ui/text_style.dart';
 import 'package:material_ui/material_ui.dart';
 
 enum _HanVariant { simplified, traditional, japanese, korean }
@@ -72,11 +71,14 @@ List<String> appFontFamilyFallback({
   String? emojiFamily,
 }) {
   final base = Typography.material2021(platform: platform).black.bodyMedium!;
-  final activeEmoji = emojiFamily ?? FontFamily.twEmoji.value;
   return [
-    activeEmoji,
-    if (fontFamily != null) ?base.fontFamily,
+    // A style with no family of its own takes the first entry here as its text
+    // font, so the platform family has to lead. An emoji font in that slot drew
+    // every space at its own wide advance and hid the digits.
+    ?base.fontFamily,
     ...?base.fontFamilyFallback,
     ...?_hanFamilies[platform]?[_hanVariantOf(locales)],
+    // Only ever a fallback: an emoji font carries no Latin glyphs.
+    if (emojiFamily != null) emojiFamily,
   ];
 }

@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/manager/emoji_manager.dart';
+import 'package:fl_clash/manager/font_manager.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/config.dart';
 import 'package:fl_clash/providers/state.dart';
@@ -807,40 +808,45 @@ class _FontFamilyItem extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final appLocalizations = context.appLocalizations;
     final colorScheme = context.colorScheme;
-    final fontFamily = ref.watch(
-      themeSettingProvider.select((state) => state.fontFamily),
-    );
-    final preview = Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
-      child: Row(
-        spacing: 12,
-        children: [
-          Text(
-            'Aa',
-            style: AppTextStyle.headline
-                .of(context)
-                .copyWith(fontFamily: fontFamily),
-          ),
-          Expanded(
-            child: Text(
-              fontFamily ?? appLocalizations.defaultText,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTextStyle.subheadline
-                  .of(context)
-                  .copyWith(
-                    fontFamily: fontFamily,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-            ),
+    // The card names the picked font and previews it, so a registered family
+    // name such as CustomUserFont_… never reaches the UI.
+    final preview = ValueListenableBuilder<String?>(
+      valueListenable: FontManager.fontFamilyNotifier,
+      builder: (context, fontFamily, _) {
+        final customFontName = FontManager.selectedName;
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
+          child: Row(
+            spacing: 12,
+            children: [
+              Text(
+                'Aa',
+                style: AppTextStyle.headline
+                    .of(context)
+                    .copyWith(fontFamily: fontFamily),
+              ),
+              Expanded(
+                child: Text(
+                  customFontName ?? appLocalizations.defaultText,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyle.subheadline
+                      .of(context)
+                      .copyWith(
+                        fontFamily: fontFamily,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                ),
           ),
           GlyphIcon(
             AppGlyphs.chevronForward,
             size: 20,
             color: colorScheme.onSurfaceVariant,
           ),
-        ],
-      ),
+            ],
+          ),
+        );
+      },
     );
     final cardColor = context.raisedSurfaceLevel.colorOf(colorScheme);
     Widget card(VoidCallback onTap) => Material(

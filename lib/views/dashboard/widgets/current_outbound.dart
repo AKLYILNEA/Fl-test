@@ -387,7 +387,16 @@ class _IpText extends ConsumerWidget {
     final hideIp = ref.watch(
       appSettingProvider.select((state) => state.hideIp),
     );
-    return DashboardFitText(hideIp ? _ipMask : ip, style: style);
+    if (!hideIp) {
+      return DashboardFitText(ip, style: style);
+    }
+    return DashboardFitText(
+      _ipMask,
+      style: style.copyWith(
+        fontFamily: FontFamily.jetBrainsMono.value,
+        color: context.colorScheme.success,
+      ),
+    );
   }
 }
 
@@ -576,42 +585,20 @@ class _CountryBadgeState extends State<_CountryBadge>
 }
 
 class _Cells extends StatelessWidget {
-  const _Cells({
-    required this.quality,
-    required this.loading,
-    required this.active,
-    required this.gap,
-  });
+  const _Cells({required this.active, required this.gap});
 
-  final IpQuality? quality;
-  final bool loading;
   final bool active;
   final double gap;
 
   @override
   Widget build(BuildContext context) {
     final appLocalizations = context.appLocalizations;
-    final organization = switch (quality) {
-      IpQuality(organization: final name?) when name.isNotEmpty => name,
-      IpQuality(asn: final asn?) => 'AS$asn',
-      _ => null,
-    };
     return Row(
       spacing: gap,
       children: [
         _Cell(
           label: appLocalizations.runTime,
           value: active ? const _RunTimeValue() : const _Placeholder(),
-        ),
-        Flexible(
-          child: _Cell(
-            label: appLocalizations.ipOrganization,
-            value: organization != null
-                ? _CellText(organization)
-                : loading
-                ? SkeletonText(width: 96, style: _cellStyle(context))
-                : const _Placeholder(),
-          ),
         ),
       ],
     );
@@ -646,10 +633,16 @@ class _Cell extends StatelessWidget {
 TextStyle _cellStyle(BuildContext context) =>
     AppTextStyle.subheadline.of(context, emphasized: true).toTabular;
 
+/// The bundled mono face, so a changing figure keeps one advance per digit
+/// whatever interface font the user picked.
+TextStyle _monoCellStyle(BuildContext context) =>
+    _cellStyle(context).copyWith(fontFamily: FontFamily.jetBrainsMono.value);
+
 class _CellText extends StatelessWidget {
-  const _CellText(this.text);
+  const _CellText(this.text, {this.monospace = false});
 
   final String text;
+  final bool monospace;
 
   @override
   Widget build(BuildContext context) {
@@ -657,7 +650,7 @@ class _CellText extends StatelessWidget {
       text,
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
-      style: _cellStyle(context),
+      style: monospace ? _monoCellStyle(context) : _cellStyle(context),
     );
   }
 }
@@ -676,7 +669,7 @@ class _RunTimeValue extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return _CellText(getTimeText(ref.watch(runTimeProvider)));
+    return _CellText(getTimeText(ref.watch(runTimeProvider)), monospace: true);
   }
 }
 
