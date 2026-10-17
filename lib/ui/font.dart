@@ -68,9 +68,12 @@ List<String> appFontFamilyFallback({
   required TargetPlatform platform,
   required Iterable<Locale> locales,
   String? fontFamily,
+  String? emojiFamily,
 }) {
   final base = Typography.material2021(platform: platform).black.bodyMedium!;
+  final activeEmoji = emojiFamily ?? FontFamily.twEmoji.value;
   return [
+    activeEmoji,
     if (fontFamily != null) ?base.fontFamily,
     ...?base.fontFamilyFallback,
     ...?_hanFamilies[platform]?[_hanVariantOf(locales)],

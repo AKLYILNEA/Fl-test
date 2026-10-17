@@ -53,9 +53,17 @@ ThemeData watchAppTheme(WidgetRef ref, Brightness brightness) {
     ?getLocaleForString(locale),
     ...WidgetsBinding.instance.platformDispatcher.locales,
   ];
+  final customFont = FontManager.customFontFamily;
+  final effectiveFontFamily = (customFont != null && customFont.isNotEmpty)
+      ? customFont
+      : themeSetting.fontFamily;
+  final currentEmojiStyle = EmojiManager.currentStyle;
+
   final inputs = (
     platform: defaultTargetPlatform,
     themeSetting: themeSetting,
+    customFont: customFont,
+    emojiStyle: currentEmojiStyle.name,
     colorScheme: colorScheme,
     plainDark: plainDark,
     locales: locales.join(','),
@@ -71,11 +79,12 @@ ThemeData watchAppTheme(WidgetRef ref, Brightness brightness) {
     pageTransitionsTheme: _pageTransitionsTheme,
     actionIconTheme: _actionIconTheme,
     colorScheme: colorScheme,
-    fontFamily: themeSetting.fontFamily,
+    fontFamily: effectiveFontFamily,
     fontFamilyFallback: appFontFamilyFallback(
       platform: defaultTargetPlatform,
       locales: locales,
-      fontFamily: themeSetting.fontFamily,
+      fontFamily: effectiveFontFamily,
+      emojiFamily: currentEmojiStyle.family,
     ),
     extensions: [
       if (brightness == Brightness.dark)

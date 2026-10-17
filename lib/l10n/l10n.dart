@@ -7836,6 +7836,26 @@ class AppLocalizations {
       args: [],
     );
   }
+
+  /// `Emoji font`
+  String get emojiStyle {
+    return Intl.message(
+      'Emoji font',
+      name: 'emojiStyle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Custom font`
+  String get customFont {
+    return Intl.message(
+      'Custom font',
+      name: 'customFont',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {

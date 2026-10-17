@@ -30,6 +30,7 @@ class SelectionSheet<T> extends ConsumerStatefulWidget {
   /// A picked item collapses out instead of the sheet closing, which it does
   /// once the last item is picked.
   final bool removeOnSelect;
+  final List<IconButtonData> iconActions;
 
   const SelectionSheet({
     super.key,
@@ -42,6 +43,7 @@ class SelectionSheet<T> extends ConsumerStatefulWidget {
     this.emptyLabel,
     this.loadingStatus,
     this.removeOnSelect = false,
+    this.iconActions = const [],
   });
 
   @override
@@ -288,6 +290,7 @@ class _SelectionSheetState<T> extends ConsumerState<SelectionSheet<T>>
         _countOf(widget.sections) >= sheetSearchMinItemCount;
     return CommonScaffold(
       title: widget.title,
+      iconActions: widget.iconActions,
       searchState: searchable
           ? AppBarSearchState(onSearch: _handleSearch)
           : null,

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:fl_clash/ui/context.dart';
 import 'package:fl_clash/ui/scroll_behavior.dart';
@@ -143,7 +144,7 @@ class SnapSheetRoute<T> extends PopupRoute<T> with SheetCoverRouteMixin<T> {
         onDismiss: onDismiss,
       );
     }
-    return AnimatedModalBarrier(
+    final barrier = AnimatedModalBarrier(
       color: animation!.drive(
         ColorTween(begin: color.withValues(alpha: 0), end: color),
       ),
@@ -151,6 +152,28 @@ class SnapSheetRoute<T> extends PopupRoute<T> with SheetCoverRouteMixin<T> {
       semanticsLabel: barrierLabel,
       barrierSemanticsDismissible: semanticsDismissible,
       onDismiss: onDismiss,
+    );
+    return RepaintBoundary(
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          FadeTransition(
+            opacity: animation!,
+            child: AnimatedBuilder(
+              animation: animation!,
+              builder: (_, _) => BackdropFilter(
+                filter: ui.ImageFilter.blur(
+                  sigmaX: 5 * animation!.value.clamp(0.0, 1.0),
+                  sigmaY: 5 * animation!.value.clamp(0.0, 1.0),
+                  tileMode: ui.TileMode.clamp,
+                ),
+                child: const SizedBox.expand(),
+              ),
+            ),
+          ),
+          barrier,
+        ],
+      ),
     );
   }
 

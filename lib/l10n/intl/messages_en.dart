@@ -304,6 +304,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "allReferencedProxyProviders": MessageLookupByLibrary.simpleMessage(
       "All referenced proxy providers",
     ),
+    "customFont": MessageLookupByLibrary.simpleMessage("Custom font"),
+    "emojiStyle": MessageLookupByLibrary.simpleMessage("Emoji font"),
     "allowBypass": MessageLookupByLibrary.simpleMessage(
       "Allow apps to bypass VPN",
     ),

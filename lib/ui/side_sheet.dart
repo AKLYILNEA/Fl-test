@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:fl_clash/ui/color.dart';
 import 'package:fl_clash/ui/drag_back.dart';
@@ -394,13 +395,35 @@ class ModalSideSheetRoute<T> extends PopupRoute<T>
           end: barrierColor,
         ).chain(CurveTween(curve: barrierCurve)),
       );
-      return AnimatedModalBarrier(
+      final barrier = AnimatedModalBarrier(
         color: color,
         dismissible: barrierDismissible,
         semanticsLabel: barrierLabel,
         barrierSemanticsDismissible: semanticsDismissible,
         clipDetailsNotifier: _clipDetailsNotifier,
         semanticsOnTapHint: barrierOnTapHint,
+      );
+      return RepaintBoundary(
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            FadeTransition(
+              opacity: animation!.drive(CurveTween(curve: barrierCurve)),
+              child: AnimatedBuilder(
+                animation: animation!,
+                builder: (_, _) => BackdropFilter(
+                  filter: ui.ImageFilter.blur(
+                    sigmaX: 5 * animation!.value.clamp(0.0, 1.0),
+                    sigmaY: 5 * animation!.value.clamp(0.0, 1.0),
+                    tileMode: ui.TileMode.clamp,
+                  ),
+                  child: const SizedBox.expand(),
+                ),
+              ),
+            ),
+            barrier,
+          ],
+        ),
       );
     } else {
       return ModalBarrier(

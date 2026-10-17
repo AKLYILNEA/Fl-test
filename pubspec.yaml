@@ -116,6 +116,12 @@ flutter:
     - family: Twemoji
       fonts:
         - asset: assets/fonts/Twemoji.Mozilla.ttf
+    - family: OpenMoji
+      fonts:
+        - asset: assets/fonts/Openmoji.ttf
+    - family: Samsung
+      fonts:
+        - asset: assets/fonts/Samsung.ttf
 flutter_intl:
   enabled: true
   class_name: AppLocalizations

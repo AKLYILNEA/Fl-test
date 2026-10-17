@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:fl_clash/ui/color.dart';
 import 'package:fl_clash/ui/context.dart';
@@ -122,7 +123,7 @@ mixin AlertMotionRouteMixin<T> on PopupRoute<T> {
         onDismiss: onBarrierDismiss,
       );
     }
-    return AnimatedModalBarrier(
+    final barrier = AnimatedModalBarrier(
       color: _spring.drive(
         ColorTween(begin: barrierColor.withValues(alpha: 0), end: barrierColor),
       ),
@@ -130,6 +131,28 @@ mixin AlertMotionRouteMixin<T> on PopupRoute<T> {
       semanticsLabel: barrierLabel,
       barrierSemanticsDismissible: semanticsDismissible,
       onDismiss: onBarrierDismiss,
+    );
+    return RepaintBoundary(
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          FadeTransition(
+            opacity: _spring,
+            child: AnimatedBuilder(
+              animation: _spring,
+              builder: (_, _) => BackdropFilter(
+                filter: ui.ImageFilter.blur(
+                  sigmaX: 5 * _spring.value.clamp(0.0, 1.0),
+                  sigmaY: 5 * _spring.value.clamp(0.0, 1.0),
+                  tileMode: ui.TileMode.clamp,
+                ),
+                child: const SizedBox.expand(),
+              ),
+            ),
+          ),
+          barrier,
+        ],
+      ),
     );
   }
 

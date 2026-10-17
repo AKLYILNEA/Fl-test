@@ -258,6 +258,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "allReferencedProxyProviders": MessageLookupByLibrary.simpleMessage(
       "全部被引用的代理集",
     ),
+    "customFont": MessageLookupByLibrary.simpleMessage("自定义字体"),
+    "emojiStyle": MessageLookupByLibrary.simpleMessage("Emoji字体"),
     "allowBypass": MessageLookupByLibrary.simpleMessage("允许应用绕过VPN"),
     "allowLan": MessageLookupByLibrary.simpleMessage("局域网代理"),
     "allowedIps": MessageLookupByLibrary.simpleMessage("允许的 IP"),

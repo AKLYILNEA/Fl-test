@@ -65,9 +65,10 @@ class EmojiText extends StatelessWidget {
   });
 
   /// The spans [EmojiText] lays [text] out in, emoji in their own font.
-  static TextSpan spanOf(String text, TextStyle? style) {
+  static TextSpan spanOf(String text, TextStyle? style, {String? emojiFamily}) {
     final List<TextSpan> spans = [];
     final matches = emojiRegex().allMatches(text);
+    final targetFamily = emojiFamily ?? EmojiManager.currentFamily ?? FontFamily.twEmoji.value;
 
     int lastMatchEnd = 0;
     for (final match in matches) {
@@ -83,7 +84,8 @@ class EmojiText extends StatelessWidget {
         TextSpan(
           text: match.group(0),
           style: (style ?? const TextStyle()).copyWith(
-            fontFamily: FontFamily.twEmoji.value,
+            fontFamily: targetFamily,
+            fontFamilyFallback: [targetFamily],
           ),
         ),
       );
@@ -119,11 +121,16 @@ class EmojiText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text.rich(
-      spanOf(text, style),
-      style: style,
-      maxLines: maxLines,
-      overflow: overflow ?? TextOverflow.clip,
+    return ValueListenableBuilder<EmojiStyle>(
+      valueListenable: EmojiManager.emojiStyleNotifier,
+      builder: (context, emojiStyle, _) {
+        return Text.rich(
+          spanOf(text, style, emojiFamily: emojiStyle.family),
+          style: style,
+          maxLines: maxLines,
+          overflow: overflow ?? TextOverflow.clip,
+        );
+      },
     );
   }
 }

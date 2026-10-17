@@ -4,6 +4,8 @@ import 'color.dart';
 
 enum FontFamily {
   twEmoji('Twemoji'),
+  openMoji('OpenMoji'),
+  samsung('Samsung'),
   jetBrainsMono('JetBrainsMono');
 
   final String value;

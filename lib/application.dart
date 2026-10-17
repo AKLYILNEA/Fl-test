@@ -146,38 +146,48 @@ class ApplicationState extends ConsumerState<Application> {
           appSettingProvider.select((state) => state.locale),
         );
         final themeProps = ref.watch(themeSettingProvider);
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          navigatorKey: globalState.navigatorKey,
-          onNavigationNotification: (_) => true,
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            AppUiLocalizations.delegate,
-            ...GlobalMaterialLocalizations.delegates,
-          ],
-          builder: (context, child) {
-            return ThemeCrossFade(
-              child: buildManagerStack(
-                isDesktop: system.isDesktop,
-                onConnectivityChanged: _handleConnectivityChanged,
-                terminateSignals: _terminateSignals,
-                child: RemoteFocusAdapter(
-                  enabled: system.isTV,
-                  floatingKeyboard: app?.floatingKeyboard,
-                  child: child!,
-                ),
-              ),
+        return ValueListenableBuilder<String?>(
+          valueListenable: FontManager.fontFamilyNotifier,
+          builder: (_, __, _) {
+            return ValueListenableBuilder<EmojiStyle>(
+              valueListenable: EmojiManager.emojiStyleNotifier,
+              builder: (_, __, _) {
+                return MaterialApp(
+                  debugShowCheckedModeBanner: false,
+                  navigatorKey: globalState.navigatorKey,
+                  onNavigationNotification: (_) => true,
+                  localizationsDelegates: const [
+                    AppLocalizations.delegate,
+                    AppUiLocalizations.delegate,
+                    ...GlobalMaterialLocalizations.delegates,
+                  ],
+                  builder: (context, child) {
+                    return ThemeCrossFade(
+                      child: buildManagerStack(
+                        isDesktop: system.isDesktop,
+                        onConnectivityChanged: _handleConnectivityChanged,
+                        terminateSignals: _terminateSignals,
+                        child: RemoteFocusAdapter(
+                          enabled: system.isTV,
+                          floatingKeyboard: app?.floatingKeyboard,
+                          child: child!,
+                        ),
+                      ),
+                    );
+                  },
+                  scrollBehavior: const BaseScrollBehavior(),
+                  title: appName,
+                  locale: getLocaleForString(locale),
+                  supportedLocales: AppLocalizations.delegate.supportedLocales,
+                  themeMode: themeProps.themeMode,
+                  theme: watchAppTheme(ref, Brightness.light),
+                  darkTheme: watchAppTheme(ref, Brightness.dark),
+                  themeAnimationStyle: AnimationStyle.noAnimation,
+                  home: KeyboardInsetHold(child: child!),
+                );
+              },
             );
           },
-          scrollBehavior: const BaseScrollBehavior(),
-          title: appName,
-          locale: getLocaleForString(locale),
-          supportedLocales: AppLocalizations.delegate.supportedLocales,
-          themeMode: themeProps.themeMode,
-          theme: watchAppTheme(ref, Brightness.light),
-          darkTheme: watchAppTheme(ref, Brightness.dark),
-          themeAnimationStyle: AnimationStyle.noAnimation,
-          home: KeyboardInsetHold(child: child!),
         );
       },
       child: const HomePage(),

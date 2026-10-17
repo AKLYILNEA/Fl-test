@@ -3,6 +3,8 @@ import 'dart:math';
 
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
+import 'package:fl_clash/manager/emoji_manager.dart';
+import 'package:fl_clash/manager/font_manager.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/config.dart';
 import 'package:fl_clash/providers/state.dart';
@@ -856,19 +858,42 @@ class _FontFamilyItem extends ConsumerWidget {
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-          child: context.isMobileView
-              ? OpenContainer<void>(
-                  closedShape: AppShape.lg,
-                  closedColor: cardColor,
-                  closedBuilder: (_, open) => card(open),
-                  openBuilder: (_, _) => const FontFamilyView(),
-                )
-              : card(
-                  () => showSheet<void>(
-                    context: context,
-                    builder: (_) => const FontFamilyView(),
-                  ),
-                ),
+          child: Column(
+            spacing: 12,
+            children: [
+              context.isMobileView
+                  ? OpenContainer<void>(
+                      closedShape: AppShape.lg,
+                      closedColor: cardColor,
+                      closedBuilder: (_, open) => card(open),
+                      openBuilder: (_, _) => const FontFamilyView(),
+                    )
+                  : card(
+                      () => showSheet<void>(
+                        context: context,
+                        builder: (_) => const FontFamilyView(),
+                      ),
+                    ),
+              ValueListenableBuilder<EmojiStyle>(
+                valueListenable: EmojiManager.emojiStyleNotifier,
+                builder: (context, currentEmojiStyle, _) {
+                  return generateSection(
+                    items: [
+                      ListItem<EmojiStyle>.options(
+                        title: Text(appLocalizations.emojiStyle),
+                        options: EmojiStyle.values,
+                        value: currentEmojiStyle,
+                        textBuilder: (style) => style.label,
+                        onChanged: (style) async {
+                          await EmojiManager.setStyle(style);
+                        },
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ],
     );
