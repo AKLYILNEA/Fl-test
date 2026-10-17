@@ -359,27 +359,32 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || 'flclash123456' }}
         run: |
           python3 - << 'EOF'
-          import os, base64
+          import base64, os, sys
 
-          raw = os.environ.get("KEYSTORE_BASE64", "")
-          cleaned = "".join(raw.split())
-          if cleaned:
-              data = base64.b64decode(cleaned, validate=False)
-              os.makedirs("android/app", exist_ok=True)
-              with open("android/app/keystore.jks", "wb") as f:
-                  f.write(data)
-              alias = os.environ.get("KEY_ALIAS")
-              spass = os.environ.get("STORE_PASSWORD")
-              kpass = os.environ.get("KEY_PASSWORD")
-              with open("android/local.properties", "a", encoding="utf-8") as f:
-                  f.write(f"\nkeyAlias={alias}\nstorePassword={spass}\nkeyPassword={kpass}\n")
-              print("Keystore file written successfully.")
-          else:
-              print("No KEYSTORE secret found.")
+          raw = "".join(os.environ.get("KEYSTORE_BASE64", "").split())
+          if not raw:
+              sys.exit(
+                  "The KEYSTORE secret is empty. An APK signed with the per-machine "
+                  "debug key changes certificate on every run and cannot be installed "
+                  "over the existing app, so the build stops here."
+              )
+          raw += "=" * (-len(raw) % 4)
+          data = base64.b64decode(raw, validate=True)
+          os.makedirs("android/app", exist_ok=True)
+          with open("android/app/keystore.jks", "wb") as f:
+              f.write(data)
+          with open("android/local.properties", "a", encoding="utf-8") as f:
+              f.write(
+                  f"\nkeyAlias={os.environ['KEY_ALIAS']}\n"
+                  f"storePassword={os.environ['STORE_PASSWORD']}\n"
+                  f"keyPassword={os.environ['KEY_PASSWORD']}\n"
+              )
+          print(f"Keystore written: {len(data)} bytes")
           EOF
-          if [ -f android/app/keystore.jks ]; then
-            keytool -importkeystore -srckeystore android/app/keystore.jks -srcstorepass "${{ secrets.STORE_PASSWORD || 'flclash123456' }}" -destkeystore android/app/keystore_pkcs12.jks -deststoretype PKCS12 -deststorepass "${{ secrets.STORE_PASSWORD || 'flclash123456' }}" -destkeypass "${{ secrets.KEY_PASSWORD || 'flclash123456' }}" -noprompt 2>/dev/null && mv -f android/app/keystore_pkcs12.jks android/app/keystore.jks || true
-          fi
+          # Catches a truncated secret or a password that does not match the
+          # store before Gradle turns it into a silent debug-signed APK.
+          keytool -list -keystore android/app/keystore.jks -storepass "$STORE_PASSWORD" -alias "$KEY_ALIAS"
+          keytool -list -v -keystore android/app/keystore.jks -storepass "$STORE_PASSWORD" -alias "$KEY_ALIAS" | grep -E 'SHA256:'
 
       - name: Setup Go
         uses: actions/setup-go@v5
@@ -454,7 +459,28 @@ jobs:
           path: ./dist
           overwrite: true
 
+      - name: Verify Android signature
+        if: startsWith(matrix.platform,'android')
+        env:
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS || 'flclash' }}
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD || 'flclash123456' }}
+        run: |
+          apk=$(ls dist/*.apk | head -n 1)
+          apksigner=$(ls "$ANDROID_HOME"/build-tools/*/apksigner 2>/dev/null | sort -V | tail -n 1)
+          expected=$(keytool -list -v -keystore android/app/keystore.jks -storepass "$STORE_PASSWORD" -alias "$KEY_ALIAS" | sed -n 's/.*SHA256: *//p' | tr -d ':' | tr 'A-F' 'a-f')
+          actual=$("$apksigner" verify --print-certs "$apk" | sed -n 's/.*SHA-256 digest: *//p' | head -n 1 | tr -d ':' | tr 'A-F' 'a-f')
+          echo "keystore: $expected"
+          echo "apk:      $actual"
+          if [ -z "$expected" ] || [ -z "$actual" ]; then
+            echo "::warning::Could not compare the two certificates; check $apk by hand."
+          elif [ "$expected" != "$actual" ]; then
+            echo "::error::$apk is not signed with the release keystore."
+            exit 1
+          fi
+
   upload:
+    # action-gh-release needs a tag, and a branch push has no version to publish.
+    if: startsWith(github.ref, 'refs/tags/')
     permissions:
       contents: write
     needs: [ build ]

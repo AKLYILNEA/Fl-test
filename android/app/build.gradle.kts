@@ -68,9 +68,6 @@ android {
             isShrinkResources = true
             if (hasReleaseSigning) {
                 signingConfig = signingConfigs.getByName("release")
-            } else {
-                signingConfig = signingConfigs.getByName("debug")
-                applicationIdSuffix = ".dev"
             }
 
             proguardFiles(
@@ -83,6 +80,22 @@ android {
     sourceSets {
         // Unit tests live under android/tests/ instead of each module's src/test.
         getByName("test").java.setSrcDirs(listOf("../tests/app"))
+    }
+}
+
+// A release APK must carry the project's own signing key. Falling back to the
+// per-machine debug key used to change the certificate on every machine and to
+// switch the applicationId to the ".dev" variant, which cannot be installed
+// over a release build.
+tasks.configureEach {
+    if (name.startsWith("assembleRelease") || name.startsWith("bundleRelease")) {
+        doFirst {
+            check(hasReleaseSigning) {
+                "Release signing is not configured. Put the keystore at " +
+                    "android/app/keystore.jks and set keyAlias, storePassword and " +
+                    "keyPassword in android/local.properties."
+            }
+        }
     }
 }
 
