@@ -55,9 +55,19 @@ ThemeData watchAppTheme(WidgetRef ref, Brightness brightness) {
     ...WidgetsBinding.instance.platformDispatcher.locales,
   ];
   final customFont = FontManager.customFontFamily;
+  final configuredFont = themeSetting.fontFamily;
+  // A family an older build wrote for a custom font is dead once that font is
+  // registered under a fresh name: an unknown family makes every style fall
+  // through to its fallback list, which is where wide spaces and missing digits
+  // came from.
+  final systemFont = configuredFont == null ||
+          configuredFont.isEmpty ||
+          configuredFont.startsWith('CustomUserFont_')
+      ? null
+      : configuredFont;
   final effectiveFontFamily = (customFont != null && customFont.isNotEmpty)
       ? customFont
-      : themeSetting.fontFamily;
+      : systemFont;
   final currentEmojiStyle = EmojiManager.currentStyle;
 
   final inputs = (

@@ -73,12 +73,11 @@ List<String> appFontFamilyFallback({
   final base = Typography.material2021(platform: platform).black.bodyMedium!;
   return [
     // A style with no family of its own takes the first entry here as its text
-    // font, so the platform family has to lead. An emoji font in that slot drew
-    // every space at its own wide advance and hid the digits.
-    ?base.fontFamily,
+    // font, so nothing is listed ahead of the platform family, and the emoji
+    // family only joins a list that already pins a text font.
+    if (fontFamily != null) ?base.fontFamily,
     ...?base.fontFamilyFallback,
     ...?_hanFamilies[platform]?[_hanVariantOf(locales)],
-    // Only ever a fallback: an emoji font carries no Latin glyphs.
-    if (emojiFamily != null) emojiFamily,
+    if (fontFamily != null && emojiFamily != null) emojiFamily,
   ];
 }

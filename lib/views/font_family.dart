@@ -22,6 +22,16 @@ class _FontFamilyViewState extends State<FontFamilyView> {
   }
 
   Future<void> _handleDeleteFont(CustomFont font) async {
+    final appLocalizations = context.appLocalizations;
+    final result = await dialogs.showMessage(
+      title: appLocalizations.tip,
+      message: TextSpan(text: appLocalizations.deleteTip(font.name)),
+      destructive: true,
+      confirmText: appLocalizations.delete,
+    );
+    if (result != true || !mounted) {
+      return;
+    }
     await FontManager.delete(font);
     if (!mounted) {
       return;

@@ -518,6 +518,7 @@ class _RenderContainerTransition extends RenderBox
   RenderBox? get _open => childForSlot(_Slot.open);
 
   final _clipLayer = LayerHandle<ContainerLayer>();
+  final _closedTransformLayer = LayerHandle<TransformLayer>();
 
   void _handleStatus(AnimationStatus _) => markNeedsPaint();
 
@@ -548,32 +549,29 @@ class _RenderContainerTransition extends RenderBox
   @override
   void dispose() {
     _clipLayer.layer = null;
+    _closedTransformLayer.layer = null;
     super.dispose();
   }
 
   Rect? get _closedRect => _route._closedRect.value;
 
   /// The container's rect, or null once the route has settled.
-  ///
-  /// It grows on the vertical axis only: a rect that also travelled sideways
-  /// read as a diagonal slide rather than the row expanding into its page.
   Rect? get _rect {
     if (_route._settled) {
       return null;
     }
     final full = Offset.zero & size;
+    return Rect.lerp(_closedRect ?? full, full, _route._progress)!;
+  }
+
+  Matrix4? _closedTransform(Rect rect) {
     final closedRect = _closedRect;
-    if (closedRect == null) {
-      return full;
+    if (closedRect == null || closedRect.width == 0) {
+      return null;
     }
-    final t = _route._progress;
-    double lerp(double from, double to) => from + (to - from) * t;
-    return Rect.fromLTRB(
-      0,
-      lerp(closedRect.top, 0),
-      size.width,
-      lerp(closedRect.bottom, size.height),
-    );
+    final scale = rect.width / closedRect.width;
+    return Matrix4.translationValues(rect.left, rect.top, 0)
+      ..scaleByDouble(scale, scale, 1, 1);
   }
 
   @override
@@ -593,6 +591,7 @@ class _RenderContainerTransition extends RenderBox
     final rect = _rect;
     if (rect == null) {
       _clipLayer.layer = null;
+      _closedTransformLayer.layer = null;
       context.canvas.drawRect(offset & size, Paint()..color = _settledColor);
       context.paintChild(_open!, offset);
       return;
@@ -605,15 +604,22 @@ class _RenderContainerTransition extends RenderBox
     } else {
       context.canvas.drawPath(path.shift(offset), color);
     }
-    final closedRect = _closedRect;
     void paintContents(PaintingContext context, Offset offset) {
       final closed = _closed;
-      if (closed != null && closedRect != null) {
-        // The tile stays where it was; the band around it is what grows.
-        context.paintChild(closed, offset + closedRect.topLeft);
+      final transform = _closedTransform(rect);
+      if (closed != null && transform != null) {
+        _closedTransformLayer.layer = context.pushTransform(
+          closed.needsCompositing,
+          offset,
+          transform,
+          (context, offset) => context.paintChild(closed, offset),
+          oldLayer: _closedTransformLayer.layer,
+        );
+      } else {
+        _closedTransformLayer.layer = null;
       }
-      // The page only slides down the axis the band grows on, so the two never
-      // move against each other sideways.
+      // The page rises with the container on the vertical axis only: following
+      // the rect's left edge too made the page slide diagonally out of its row.
       context.paintChild(_open!, offset + Offset(0, rect.top));
     }
 
@@ -645,9 +651,9 @@ class _RenderContainerTransition extends RenderBox
       return;
     }
     if (identical(child, _closed)) {
-      final closedRect = _closedRect;
-      if (closedRect != null) {
-        transform.translateByDouble(closedRect.left, closedRect.top, 0, 1);
+      final closedTransform = _closedTransform(rect);
+      if (closedTransform != null) {
+        transform.multiply(closedTransform);
       }
       return;
     }
