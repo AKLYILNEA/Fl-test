@@ -352,13 +352,34 @@ jobs:
 
       - name: Setup Android Signing
         if: startsWith(matrix.platform,'android')
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS || 'flclash' }}
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD || 'flclash123456' }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || 'flclash123456' }}
         run: |
-          echo "${{ secrets.KEYSTORE }}" | base64 --decode > android/app/keystore.jks
-          {
-            echo "keyAlias=${{ secrets.KEY_ALIAS || 'flclash' }}"
-            echo "storePassword=${{ secrets.STORE_PASSWORD || 'flclash123456' }}"
-            echo "keyPassword=${{ secrets.KEY_PASSWORD || 'flclash123456' }}"
-          } >> android/local.properties
+          python3 - << 'EOF'
+          import os, base64
+
+          raw = os.environ.get("KEYSTORE_BASE64", "")
+          cleaned = "".join(raw.split())
+          if cleaned:
+              data = base64.b64decode(cleaned, validate=False)
+              os.makedirs("android/app", exist_ok=True)
+              with open("android/app/keystore.jks", "wb") as f:
+                  f.write(data)
+              alias = os.environ.get("KEY_ALIAS")
+              spass = os.environ.get("STORE_PASSWORD")
+              kpass = os.environ.get("KEY_PASSWORD")
+              with open("android/local.properties", "a", encoding="utf-8") as f:
+                  f.write(f"\nkeyAlias={alias}\nstorePassword={spass}\nkeyPassword={kpass}\n")
+              print("Keystore file written successfully.")
+          else:
+              print("No KEYSTORE secret found.")
+          EOF
+          if [ -f android/app/keystore.jks ]; then
+            keytool -importkeystore -srckeystore android/app/keystore.jks -srcstorepass "${{ secrets.STORE_PASSWORD || 'flclash123456' }}" -destkeystore android/app/keystore_pkcs12.jks -deststoretype PKCS12 -deststorepass "${{ secrets.STORE_PASSWORD || 'flclash123456' }}" -destkeypass "${{ secrets.KEY_PASSWORD || 'flclash123456' }}" -noprompt 2>/dev/null && mv -f android/app/keystore_pkcs12.jks android/app/keystore.jks || true
+          fi
 
       - name: Setup Go
         uses: actions/setup-go@v5
