@@ -60,12 +60,16 @@ android {
     buildTypes {
         debug {
             isMinifyEnabled = false
-            applicationIdSuffix = ".dev"
+            applicationIdSuffix = ".debug"
         }
 
         release {
             isMinifyEnabled = true
             isShrinkResources = true
+            // The install this fork ships as, and the one whose data survives an
+            // in-place update. The native namespace stays com.follow.clash, so the
+            // Kotlin components and method channels keep their names.
+            applicationIdSuffix = ".dev"
             if (hasReleaseSigning) {
                 signingConfig = signingConfigs.getByName("release")
             }
@@ -84,9 +88,8 @@ android {
 }
 
 // A release APK must carry the project's own signing key. Falling back to the
-// per-machine debug key used to change the certificate on every machine and to
-// switch the applicationId to the ".dev" variant, which cannot be installed
-// over a release build.
+// per-machine debug key changed the certificate on every machine and could not
+// be installed over an existing release.
 tasks.configureEach {
     if (name.startsWith("assembleRelease") || name.startsWith("bundleRelease")) {
         doFirst {
