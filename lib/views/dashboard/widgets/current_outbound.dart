@@ -175,8 +175,6 @@ class _CurrentOutboundCardState extends ConsumerState<CurrentOutboundCard>
                       else
                         const SizedBox(height: 16),
                       _Cells(
-                        quality: quality,
-                        loading: loading,
                         active: isStart && !suspended,
                         gap: metrics.cellGap,
                       ),

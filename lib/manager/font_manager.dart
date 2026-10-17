@@ -132,7 +132,7 @@ class FontManager {
     }
   }
 
-  static Future<String?> _migrateLegacyFont(SharedPreferences? prefs) async {
+  static Future<CustomFont?> _migrateLegacyFont(SharedPreferences? prefs) async {
     final legacyPath = prefs?.getString(_prefKeyLegacyPath);
     String? path;
     if (legacyPath != null &&
