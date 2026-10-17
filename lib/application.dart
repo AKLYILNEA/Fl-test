@@ -148,10 +148,10 @@ class ApplicationState extends ConsumerState<Application> {
         final themeProps = ref.watch(themeSettingProvider);
         return ValueListenableBuilder<String?>(
           valueListenable: FontManager.fontFamilyNotifier,
-          builder: (_, __, _) {
+          builder: (context, currentFont, child) {
             return ValueListenableBuilder<EmojiStyle>(
               valueListenable: EmojiManager.emojiStyleNotifier,
-              builder: (_, __, _) {
+              builder: (context, emojiStyle, child) {
                 return MaterialApp(
                   debugShowCheckedModeBanner: false,
                   navigatorKey: globalState.navigatorKey,
