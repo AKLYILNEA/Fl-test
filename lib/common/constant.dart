@@ -14,7 +14,7 @@ const appHelperService = 'FlClashHelperService';
 const coreManifestName = 'manifest.json';
 const browserUa =
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
-const packageName = 'com.ak.flclash';
+const packageName = 'com.follow.clash';
 final unixSocketPath = '/tmp/FlClashSocket_${Random().nextInt(10000)}.sock';
 final windowsPipeName = '\\\\.\\pipe\\FlClashCore_${_randomPipeId()}';
 const helperPort = 47890;
