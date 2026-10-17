@@ -148,15 +148,16 @@ class FontManager {
         return false;
       }
 
-      Uint8List? bytes = file.bytes;
-      if (bytes == null && file.path != null && file.path!.isNotEmpty) {
-        final f = File(file.path!);
-        if (await f.exists()) {
-          bytes = await f.readAsBytes();
-        }
+      final filePath = file.path;
+      if (filePath == null || filePath.isEmpty) {
+        return false;
       }
-
-      if (bytes == null || bytes.isEmpty) {
+      final f = File(filePath);
+      if (!await f.exists()) {
+        return false;
+      }
+      final bytes = await f.readAsBytes();
+      if (bytes.isEmpty) {
         return false;
       }
 

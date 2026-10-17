@@ -14,6 +14,7 @@ import 'common/app_data.dart';
 import 'common/common.dart';
 import 'common/preferences_store.dart';
 import 'common/window.dart';
+import 'manager/manager.dart';
 
 void main(List<String> args) {
   runZonedGuarded(

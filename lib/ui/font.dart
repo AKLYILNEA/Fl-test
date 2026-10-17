@@ -1,3 +1,4 @@
+import 'package:fl_clash/ui/text_style.dart';
 import 'package:material_ui/material_ui.dart';
 
 enum _HanVariant { simplified, traditional, japanese, korean }
