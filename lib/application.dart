@@ -141,17 +141,17 @@ class ApplicationState extends ConsumerState<Application> {
   @override
   Widget build(context) {
     return Consumer(
-      builder: (_, ref, child) {
+      builder: (_, ref, homePage) {
         final locale = ref.watch(
           appSettingProvider.select((state) => state.locale),
         );
         final themeProps = ref.watch(themeSettingProvider);
         return ValueListenableBuilder<String?>(
           valueListenable: FontManager.fontFamilyNotifier,
-          builder: (context, currentFont, child) {
+          builder: (context, currentFont, _) {
             return ValueListenableBuilder<EmojiStyle>(
               valueListenable: EmojiManager.emojiStyleNotifier,
-              builder: (context, emojiStyle, child) {
+              builder: (context, emojiStyle, _) {
                 return MaterialApp(
                   debugShowCheckedModeBanner: false,
                   navigatorKey: globalState.navigatorKey,
@@ -183,7 +183,7 @@ class ApplicationState extends ConsumerState<Application> {
                   theme: watchAppTheme(ref, Brightness.light),
                   darkTheme: watchAppTheme(ref, Brightness.dark),
                   themeAnimationStyle: AnimationStyle.noAnimation,
-                  home: KeyboardInsetHold(child: child!),
+                  home: KeyboardInsetHold(child: homePage!),
                 );
               },
             );
