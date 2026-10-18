@@ -35,10 +35,6 @@ const double _pressGrowth = 1 / 8;
 const double _maxPressGrowth = 16;
 const double _lensGrowth = 8;
 const double _lensMagnify = 0.16;
-
-/// How close the lens has to be, in destinations, for the destination it is over
-/// to magnify when the lens is following a drag rather than a chosen target.
-const double _magnifyReach = 0.02;
 const double _liftSnap = 0.975;
 const double _liftRelease = 0.04;
 const double _hoverMagnet = 0.2;
@@ -800,6 +796,11 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar>
   Offset? _cursor;
   final ValueNotifier<double?> _hoverAt = ValueNotifier(null);
 
+  /// True while a finger is on the bar. A drag magnifies whatever it slides
+  /// over, as upstream did; a tap only magnifies the destination it lands on, so
+  /// the destinations on the way there do not swell.
+  final ValueNotifier<bool> _following = ValueNotifier(false);
+
   int get _lastIndex => math.max(0, widget.destinations.length - 1);
 
   int get _selectedIndex => widget.selectedIndex.clamp(0, _lastIndex);
@@ -851,6 +852,7 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar>
     _glowSpread.dispose();
     _touchGlow.dispose();
     _hoverAt.dispose();
+    _following.dispose();
     super.dispose();
   }
 
@@ -1009,6 +1011,7 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar>
       return;
     }
     _pointer = event.pointer;
+    _following.value = true;
     _tracker = VelocityTracker.withKind(event.kind)
       ..addPosition(event.timeStamp, event.localPosition);
     _hoverShow.springTo(0, _fadeSpring);
@@ -1034,6 +1037,7 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar>
       return;
     }
     _pointer = null;
+    _following.value = false;
     final tracker = _tracker;
     _tracker = null;
     if (event is PointerUpEvent && tracker != null) {
@@ -1207,6 +1211,7 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar>
                               child: _FloatingBarItem(
                                 destination: destination,
                                 selected: index == _selectedIndex,
+                                following: _following,
                                 index: index,
                                 part: part,
                                 lens: _lens,
@@ -1500,6 +1505,7 @@ class _FloatingBarItem extends StatefulWidget {
   const _FloatingBarItem({
     required this.destination,
     required this.selected,
+    required this.following,
     required this.index,
     required this.part,
     required this.lens,
@@ -1515,6 +1521,10 @@ class _FloatingBarItem extends StatefulWidget {
 
   final NavigationDockDestination destination;
   final bool selected;
+
+  /// Whether a finger is dragging the lens, which is when upstream magnified
+  /// every destination it passed over instead of only the chosen one.
+  final ValueListenable<bool> following;
   final int index;
 
   /// Only [_LensPart.inside] is drawn bare: it stands over the lens, while
@@ -1568,6 +1578,7 @@ class _FloatingBarItemState extends State<_FloatingBarItem> {
       jelly: widget.jelly,
       lift: widget.lift,
       selected: widget.selected,
+      following: widget.following,
       parallax: widget.parallax,
       index: widget.index,
       color: tint,
@@ -1644,6 +1655,7 @@ class _LensTint extends SingleChildRenderObjectWidget {
     required this.jelly,
     required this.lift,
     required this.selected,
+    required this.following,
     required this.parallax,
     required this.index,
     required this.color,
@@ -1661,6 +1673,10 @@ class _LensTint extends SingleChildRenderObjectWidget {
   /// while a drag moves it. The destinations it travels over on the way to
   /// another one keep their own size.
   final bool selected;
+
+  /// True while a finger is on the bar: a drag magnifies everything the lens
+  /// passes over, as upstream did.
+  final ValueListenable<bool> following;
   final ValueListenable<double> parallax;
   final int index;
   final Color color;
@@ -1675,6 +1691,7 @@ class _LensTint extends SingleChildRenderObjectWidget {
       jelly: jelly,
       lift: lift,
       selected: selected,
+      following: following,
       parallax: parallax,
       index: index,
       color: color,
@@ -1691,6 +1708,7 @@ class _LensTint extends SingleChildRenderObjectWidget {
       ..jelly = jelly
       ..lift = lift
       ..selected = selected
+      ..following = following
       ..parallax = parallax
       ..index = index
       ..color = color
@@ -1706,6 +1724,7 @@ class _RenderLensTint extends RenderProxyBox {
     required ValueListenable<double> jelly,
     required ValueListenable<double> lift,
     required bool selected,
+    required ValueListenable<bool> following,
     required ValueListenable<double> parallax,
     required int index,
     required Color color,
@@ -1716,6 +1735,7 @@ class _RenderLensTint extends RenderProxyBox {
        _jelly = jelly,
        _lift = lift,
        _selected = selected,
+       _following = following,
        _parallax = parallax,
        _index = index,
        _color = color,
@@ -1793,6 +1813,19 @@ class _RenderLensTint extends RenderProxyBox {
     markNeedsPaint();
   }
 
+  ValueListenable<bool> _following;
+  set following(ValueListenable<bool> value) {
+    if (value == _following) {
+      return;
+    }
+    if (attached) {
+      _following.removeListener(markNeedsPaint);
+      value.addListener(markNeedsPaint);
+    }
+    _following = value;
+    markNeedsPaint();
+  }
+
   ValueListenable<double> _parallax;
   set parallax(ValueListenable<double> value) {
     if (value == _parallax) {
@@ -1839,6 +1872,7 @@ class _RenderLensTint extends RenderProxyBox {
     _lens.addListener(markNeedsPaint);
     _jelly.addListener(markNeedsPaint);
     _lift.addListener(markNeedsPaint);
+    _following.addListener(markNeedsPaint);
     _parallax.addListener(markNeedsPaint);
   }
 
@@ -1847,6 +1881,7 @@ class _RenderLensTint extends RenderProxyBox {
     _lens.removeListener(markNeedsPaint);
     _jelly.removeListener(markNeedsPaint);
     _lift.removeListener(markNeedsPaint);
+    _following.removeListener(markNeedsPaint);
     _parallax.removeListener(markNeedsPaint);
     super.detach();
   }
@@ -1928,13 +1963,11 @@ class _RenderLensTint extends RenderProxyBox {
       return;
     }
     final rest = _motion(1);
-    // Upstream magnifies whatever the lens covers; here only the destination the
-    // lens belongs to, or the one it is resting on, does that, so the ones it
-    // travels over on the way to another destination keep their size.
+    // Upstream magnifies whatever the lens covers. That is kept while a finger
+    // drags the lens; a tap that sends the lens to another destination only
+    // magnifies the destination it lands on.
     final magnified = _motion(
-      _selected || (_lens.value - _index).abs() < _magnifyReach
-          ? 1 + _lensMagnify * _lift.value
-          : 1,
+      _following.value || _selected ? 1 + _lensMagnify * _lift.value : 1,
     );
     final bounds = Offset.zero & size;
     Rect moved(Matrix4? motion) =>

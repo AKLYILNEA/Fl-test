@@ -560,6 +560,10 @@ class _OutboundIpLine extends StatelessWidget {
     }
     final line = Row(
       spacing: 4,
+      // Baseline, not centre: the emoji font's line box is taller than the
+      // surrounding text's, so centring the boxes left the flag sitting low.
+      crossAxisAlignment: CrossAxisAlignment.baseline,
+      textBaseline: TextBaseline.alphabetic,
       children: [
         if (flag != null)
           // EmojiText, not a hardcoded Twemoji family: the flag follows the emoji
