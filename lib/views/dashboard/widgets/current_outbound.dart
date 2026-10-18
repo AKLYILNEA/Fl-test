@@ -16,6 +16,7 @@ import 'package:fl_clash/views/dashboard/probe_start_hold.dart';
 import 'package:fl_clash/views/dashboard/style.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:material_new_shapes/material_new_shapes.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -534,6 +535,66 @@ class _CountryBadgeState extends State<_CountryBadge>
       foreground.withValues(alpha: enabled && _hovered ? 0.08 : 0),
       DashboardColors.of(context).tone2,
     );
+    final flagAsset = getCountryFlagSvg(code);
+    final showFlag = flagAsset != null && !widget.checking;
+
+    final Widget flagWidget = SizedBox.square(
+      key: ValueKey(flagAsset),
+      dimension: size,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          SvgPicture.asset(
+            flagAsset ?? '',
+            width: size,
+            height: size,
+            fit: BoxFit.contain,
+          ),
+          if (_focused)
+            CustomPaint(
+              size: Size.square(size),
+              painter: ShapePainter(
+                path: shapePathOf(MaterialShapes.clover4Leaf),
+                color: Colors.transparent,
+                ring: focusRingSide(colorScheme),
+              ),
+            ),
+        ],
+      ),
+    );
+
+    final Widget cloverBadge = SizedBox.square(
+      key: const ValueKey('clover_original'),
+      dimension: size,
+      child: AnimatedBuilder(
+        animation: _turns,
+        builder: (_, child) => ShapeBadge(
+          shape: MaterialShapes.clover4Leaf,
+          color: color,
+          size: size,
+          rotation: _turns.value * 2 * math.pi,
+          ring: _focused ? focusRingSide(colorScheme) : null,
+          child: child,
+        ),
+        child: code == null || code.isEmpty || widget.checking
+            ? GlyphIcon(
+                AppGlyphs.proxies,
+                size: size * 0.42,
+                color: foreground,
+              )
+            : Text(
+                code.toUpperCase(),
+                maxLines: 1,
+                style: AppTextStyle.footnote
+                    .of(context, emphasized: true)
+                    .copyWith(
+                      color: foreground,
+                      letterSpacing: 0.04 * AppTextStyle.footnote.size,
+                    ),
+              ),
+      ),
+    );
+
     return Tooltip(
       message: tooltip,
       child: Semantics(
@@ -548,32 +609,23 @@ class _CountryBadgeState extends State<_CountryBadge>
           splashFactory: NoSplash.splashFactory,
           child: ElasticPress(
             enabled: enabled,
-            child: AnimatedBuilder(
-              animation: _turns,
-              builder: (_, child) => ShapeBadge(
-                shape: MaterialShapes.clover4Leaf,
-                color: color,
-                size: size,
-                rotation: _turns.value * 2 * math.pi,
-                ring: _focused ? focusRingSide(colorScheme) : null,
-                child: child,
-              ),
-              child: code == null || code.isEmpty
-                  ? GlyphIcon(
-                      AppGlyphs.proxies,
-                      size: size * 0.42,
-                      color: foreground,
-                    )
-                  : Text(
-                      code.toUpperCase(),
-                      maxLines: 1,
-                      style: AppTextStyle.footnote
-                          .of(context, emphasized: true)
-                          .copyWith(
-                            color: foreground,
-                            letterSpacing: 0.04 * AppTextStyle.footnote.size,
-                          ),
-                    ),
+            child: AnimatedSwitcher(
+              duration: context.motionDuration(const Duration(milliseconds: 350)),
+              switchInCurve: Curves.easeInOut,
+              switchOutCurve: Curves.easeInOut,
+              layoutBuilder: (currentChild, previousChildren) {
+                return Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    ...previousChildren,
+                    if (currentChild != null) currentChild,
+                  ],
+                );
+              },
+              transitionBuilder: (child, animation) {
+                return FadeTransition(opacity: animation, child: child);
+              },
+              child: showFlag ? flagWidget : cloverBadge,
             ),
           ),
         ),
