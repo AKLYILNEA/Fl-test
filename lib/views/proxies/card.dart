@@ -91,14 +91,21 @@ class ProxyCard extends ConsumerWidget {
     return icon;
   }
 
-  /// The emoji a name starts with, which stands in for an icon when the proxy has
-  /// none of its own.
-  static String? _leadingEmojiOf(String name) {
-    final match = emojiRegex().firstMatch(name);
-    if (match == null || match.start != 0) {
+  /// The emoji that stands in for an icon when the proxy has none of its own,
+  /// plus the name with the leading emoji removed. A name that starts with
+  /// whitespace still counts.
+  static ({String emoji, String name})? _emojiOf(String name) {
+    final emoji = emojiRegex().firstMatch(name)?.group(0);
+    if (emoji == null || emoji.isEmpty) {
       return null;
     }
-    return match.group(0);
+    var rest = name.trimLeft();
+    var match = emojiRegex().matchAsPrefix(rest);
+    while (match != null) {
+      rest = rest.substring(match.end).trimLeft();
+      match = emojiRegex().matchAsPrefix(rest);
+    }
+    return (emoji: emoji, name: rest.isEmpty ? name : rest);
   }
 
   Widget _buildNameRow(
@@ -111,16 +118,11 @@ class ProxyCard extends ConsumerWidget {
     );
     final showsIcon = iconStyle != ProxiesIconStyle.hidden;
     final configured = showsIcon ? _configuredIconOf(ref) : null;
-    final emoji = showsIcon && configured == null
-        ? _leadingEmojiOf(proxy.name)
-        : null;
-    final rest = emoji == null
-        ? proxy.name
-        : proxy.name.substring(emoji.length).trimLeft();
+    final emoji = showsIcon && configured == null ? _emojiOf(proxy.name) : null;
     final name = _buildProxyNameText(
       context,
       color: color,
-      text: rest.isEmpty ? proxy.name : rest,
+      text: emoji?.name,
     );
     if (configured == null && emoji == null) {
       return name;
@@ -143,7 +145,7 @@ class ProxyCard extends ConsumerWidget {
                     ),
                   )
                 : EmojiText(
-                    emoji!,
+                    emoji!.emoji,
                     style: TextStyle(
                       fontSize: size * 0.75,
                       height: 1.2,

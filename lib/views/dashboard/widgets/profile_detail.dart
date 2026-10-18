@@ -209,14 +209,6 @@ class _ProfileDetailSheetState extends ConsumerState<ProfileDetailSheet>
                           ),
                         ],
                       ),
-                  ],
-                ),
-                // Providers sit above the plain profile facts rather than at the
-                // bottom of the sheet.
-                if (providers.isNotEmpty)
-                  ExternalProvidersSliver(providers: providers),
-                SliverList.list(
-                  children: [
                     generateSection(
                       title: appLocalizations.profile,
                       items: [
@@ -237,6 +229,8 @@ class _ProfileDetailSheetState extends ConsumerState<ProfileDetailSheet>
                     ),
                   ],
                 ),
+                if (providers.isNotEmpty)
+                  ExternalProvidersSliver(providers: providers),
               ],
             ),
           ),

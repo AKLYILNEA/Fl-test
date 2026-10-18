@@ -71,7 +71,11 @@ class _ExternalProvidersSliverState
   @override
   Widget build(BuildContext context) {
     final appLocalizations = context.appLocalizations;
-    final providers = widget.providers;
+    // Proxy providers above rule sets, each keeping the order the config gave.
+    final providers = [
+      ...widget.providers.where((provider) => provider.isProxy),
+      ...widget.providers.where((provider) => !provider.isProxy),
+    ];
     return SliverMainAxisGroup(
       slivers: [
         SliverToBoxAdapter(
@@ -315,9 +319,9 @@ class _ExternalProviderItem extends StatelessWidget {
       title: ChipTitle(
         title: provider.name,
         expire: provider.subscriptionInfo?.expireDate,
-        // Same mark the profile cards use: a provider with no expiry is valid
-        // for good.
-        chip: provider.subscriptionInfo?.expireDate == null
+        // Only a proxy provider can be valid for good; a rule set has no such
+        // mark.
+        chip: provider.isProxy && provider.subscriptionInfo?.expireDate == null
             ? appLocalizations.infiniteTime
             : null,
       ),
