@@ -1,9 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 
-import 'package:fl_clash/ui/barrier.dart';
 import 'package:fl_clash/ui/context.dart';
-import 'package:fl_clash/ui/liquid_glass.dart';
 import 'package:fl_clash/ui/scroll_behavior.dart';
 import 'package:fl_clash/ui/shape.dart';
 import 'package:fl_clash/ui/surface.dart';
@@ -154,21 +152,9 @@ class SnapSheetRoute<T> extends PopupRoute<T> with SheetCoverRouteMixin<T> {
       barrierSemanticsDismissible: semanticsDismissible,
       onDismiss: onDismiss,
     );
-    // Liquid glass already refracts what is behind it, and a blurred barrier on
-    // top of it is what made sheets heavy on phones.
-    final navigatorContext = navigator?.context;
-    if (navigatorContext != null && LiquidGlassScope.of(navigatorContext)) {
-      return barrier;
-    }
-    return RepaintBoundary(
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          FadeTransition(opacity: animation!, child: const BarrierBlur()),
-          barrier,
-        ],
-      ),
-    );
+    // Sheets keep the plain barrier: upstream draws no blur behind them, and a
+    // full-window blur on top of the sheet is what made them stutter on Windows.
+    return barrier;
   }
 
   @override

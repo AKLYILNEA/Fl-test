@@ -561,15 +561,20 @@ class ProxyGroupsSummaryCard extends ConsumerWidget {
       metrics: _figureMetricsOf(density),
     );
     if (density.isDesktop) {
+      // The card has a fixed height here, so the figure takes the space below the
+      // header and centres in it; spacers collapsed when the height was short and
+      // left the figure hugging the header.
       return DashboardCard(
         semanticLabel: appLocalizations.proxyGroup,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _GroupsHeader(groups: groups),
-            const Spacer(),
-            if (groups.isEmpty) const _GroupsEmptySummary() else figure,
-            const Spacer(),
+            Expanded(
+              child: Center(
+                child: groups.isEmpty ? const _GroupsEmptySummary() : figure,
+              ),
+            ),
           ],
         ),
       );

@@ -290,8 +290,8 @@ class _ConfigStatsState extends ConsumerState<_ConfigStats>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             spacing: 16,
             children: [
-              item(stats?.groups, appLocalizations.proxyGroup),
               item(stats?.proxies, appLocalizations.proxies),
+              item(stats?.groups, appLocalizations.proxyGroup),
               item(stats?.rules, appLocalizations.rules),
             ],
           ),

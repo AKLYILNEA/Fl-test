@@ -1,9 +1,7 @@
 import 'dart:math' as math;
 
-import 'package:fl_clash/ui/barrier.dart';
 import 'package:fl_clash/ui/color.dart';
 import 'package:fl_clash/ui/drag_back.dart';
-import 'package:fl_clash/ui/liquid_glass.dart';
 import 'package:fl_clash/ui/shape.dart';
 import 'package:fl_clash/ui/sheet_navigator.dart';
 import 'package:fl_clash/ui/surface.dart';
@@ -404,24 +402,7 @@ class ModalSideSheetRoute<T> extends PopupRoute<T>
         clipDetailsNotifier: _clipDetailsNotifier,
         semanticsOnTapHint: barrierOnTapHint,
       );
-      // Liquid glass already refracts what is behind it, and a blurred barrier
-      // on top of it is what made sheets heavy on phones.
-      final navigatorContext = navigator?.context;
-      if (navigatorContext != null && LiquidGlassScope.of(navigatorContext)) {
-        return barrier;
-      }
-      return RepaintBoundary(
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            FadeTransition(
-              opacity: animation!.drive(CurveTween(curve: barrierCurve)),
-              child: const BarrierBlur(),
-            ),
-            barrier,
-          ],
-        ),
-      );
+      return barrier;
     } else {
       return ModalBarrier(
         dismissible: barrierDismissible,
