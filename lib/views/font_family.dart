@@ -3,6 +3,7 @@ import 'package:fl_clash/features/form/form.dart';
 import 'package:fl_clash/manager/font_manager.dart';
 import 'package:fl_clash/ui/icons/icons.dart';
 import 'package:fl_clash/widgets/widgets.dart';
+import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 
 class FontFamilyView extends StatefulWidget {
@@ -80,7 +81,7 @@ class _FontFamilyViewState extends State<FontFamilyView> {
       titleBuilder: (font, title) {
         if (font == null) {
           return Text(
-            title,
+            appLocalizations.defaultText,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: _defaultStyle(),
