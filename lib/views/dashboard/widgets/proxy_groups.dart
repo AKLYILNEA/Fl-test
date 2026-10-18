@@ -350,11 +350,20 @@ class _GroupsFigure extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // The figure is the count alone; the unit label read as clutter next to it.
-    final count = Text(
-      '${groups.length}',
+    final count = Text.rich(
+      TextSpan(
+        children: [
+          TextSpan(
+            text: '${groups.length}',
+            style: DashboardText.figure(context, metrics.style),
+          ),
+          TextSpan(
+            text: ' ${context.appLocalizations.groupCountUnit}',
+            style: DashboardText.unit(context),
+          ),
+        ],
+      ),
       maxLines: 1,
-      style: DashboardText.figure(context, metrics.style),
     );
     return DashboardCappedRow(
       start: count,
@@ -561,20 +570,14 @@ class ProxyGroupsSummaryCard extends ConsumerWidget {
       metrics: _figureMetricsOf(density),
     );
     if (density.isDesktop) {
-      // The card has a fixed height here, so the figure takes the space below the
-      // header and centres in it; spacers collapsed when the height was short and
-      // left the figure hugging the header.
       return DashboardCard(
         semanticLabel: appLocalizations.proxyGroup,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _GroupsHeader(groups: groups),
-            Expanded(
-              child: Center(
-                child: groups.isEmpty ? const _GroupsEmptySummary() : figure,
-              ),
-            ),
+            const Spacer(),
+            if (groups.isEmpty) const _GroupsEmptySummary() else figure,
           ],
         ),
       );
@@ -582,24 +585,20 @@ class ProxyGroupsSummaryCard extends ConsumerWidget {
     return DashboardCard(
       semanticLabel: appLocalizations.proxyGroup,
       onTap: groups.isEmpty ? null : () => showProxiesSheet(context),
-      // Centred: a landscape cell is taller than this content, and pinning it to
-      // the top left the figure hugging the header.
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _GroupsHeader(groups: groups),
-            const SizedBox(height: 12),
-            if (groups.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 12),
-                child: _GroupsEmpty(),
-              )
-            else
-              figure,
-          ],
-        ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _GroupsHeader(groups: groups),
+          const SizedBox(height: 12),
+          if (groups.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: _GroupsEmpty(),
+            )
+          else
+            figure,
+        ],
       ),
     );
   }
