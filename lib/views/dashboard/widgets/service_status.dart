@@ -562,10 +562,9 @@ class _OutboundIpLine extends StatelessWidget {
       spacing: 4,
       children: [
         if (flag != null)
-          Text(
-            flag.countryFlagEmoji,
-            style: style?.copyWith(fontFamily: FontFamily.twEmoji.value),
-          ),
+          // EmojiText, not a hardcoded Twemoji family: the flag follows the emoji
+          // font the user picked, like every other emoji in the interface.
+          EmojiText(flag.countryFlagEmoji, style: style),
         if (ip != null)
           Flexible(
             child: IpQualityText(ip: ip.ip, style: style),
