@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:fl_clash/ui/context.dart';
+import 'package:fl_clash/ui/liquid_glass.dart';
 import 'package:fl_clash/ui/scroll_behavior.dart';
 import 'package:fl_clash/ui/shape.dart';
 import 'package:fl_clash/ui/surface.dart';
@@ -153,6 +154,12 @@ class SnapSheetRoute<T> extends PopupRoute<T> with SheetCoverRouteMixin<T> {
       barrierSemanticsDismissible: semanticsDismissible,
       onDismiss: onDismiss,
     );
+    // Liquid glass already refracts what is behind it, and a blurred barrier on
+    // top of it is what made sheets heavy on phones.
+    final navigatorContext = navigator?.context;
+    if (navigatorContext != null && LiquidGlassScope.of(navigatorContext)) {
+      return barrier;
+    }
     return RepaintBoundary(
       child: Stack(
         fit: StackFit.expand,

@@ -338,22 +338,13 @@ class ProfileItem extends ConsumerWidget {
     return time == null || time.isEmpty ? lead : '$lead · $time';
   }
 
-  Widget _buildTrailing(BuildContext context, {required bool isUpdating}) {
-    return AnimatedSwitcher(
-      duration: context.motionDuration(commonDuration),
-      layoutBuilder: (currentChild, previousChildren) => Stack(
-        alignment: AlignmentDirectional.centerEnd,
-        children: [...previousChildren, ?currentChild],
-      ),
-      child: isUpdating
-          ? const CommonCircleLoading(key: ValueKey('updating'), size: 24)
-          : LastUpdateTimeText(
-              key: const ValueKey('lastUpdate'),
-              lastUpdateDate: profile.lastUpdateDate,
-              style: AppTextStyle.footnote.of(context).toLighter,
-              compact: true,
-            ),
-    );
+  Widget? _buildTrailing(BuildContext context, {required bool isUpdating}) {
+    // The card's subtitle already carries the "x days ago"; the row on the right
+    // only shows that a sync is running.
+    if (!isUpdating) {
+      return null;
+    }
+    return const CommonCircleLoading(size: 24);
   }
 
   Future<void> _handleCopyLink(BuildContext context) async {
@@ -507,7 +498,7 @@ class ProfileItem extends ConsumerWidget {
               if (profile.type == ProfileType.custom)
                 _GroupsCountChip(profileId: profile.id)
               else
-                _buildTrailing(context, isUpdating: isUpdating),
+                ?_buildTrailing(context, isUpdating: isUpdating),
               if (isSelected) const SelectionBadge(size: 24),
             ],
           ),

@@ -908,8 +908,6 @@ class _FontFamilyItem extends ConsumerWidget {
 class _TextScaleFactorItem extends ConsumerStatefulWidget {
   const _TextScaleFactorItem();
 
-  static const _step = 0.05;
-
   @override
   ConsumerState<_TextScaleFactorItem> createState() =>
       _TextScaleFactorItemState();
@@ -938,8 +936,6 @@ class _TextScaleFactorItemState extends ConsumerState<_TextScaleFactorItem> {
     final scale = _draft ?? (textScale.enable ? textScale.scale : systemScale);
     final percent = '${(scale * 100).round()}%';
     final level = context.raisedSurfaceLevel;
-    final divisions =
-        ((maxTextScale - minTextScale) / _TextScaleFactorItem._step).round();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1057,7 +1053,6 @@ class _TextScaleFactorItemState extends ConsumerState<_TextScaleFactorItem> {
                                 padding: EdgeInsets.zero,
                                 min: minTextScale,
                                 max: maxTextScale,
-                                divisions: divisions,
                                 value: scale,
                                 label: percent,
                                 onChanged: textScale.enable

@@ -132,6 +132,12 @@ mixin AlertMotionRouteMixin<T> on PopupRoute<T> {
       barrierSemanticsDismissible: semanticsDismissible,
       onDismiss: onBarrierDismiss,
     );
+    // Liquid glass already refracts what is behind it, and a blurred barrier on
+    // top of it is what made dialogs heavy on phones.
+    final navigatorContext = navigator?.context;
+    if (navigatorContext != null && LiquidGlassScope.of(navigatorContext)) {
+      return barrier;
+    }
     return RepaintBoundary(
       child: Stack(
         fit: StackFit.expand,
