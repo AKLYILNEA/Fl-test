@@ -82,7 +82,7 @@ class ProxyCard extends ConsumerWidget {
     final iconStyle = ref.watch(
       proxiesStyleSettingProvider.select((state) => state.iconStyle),
     );
-    if (iconStyle == ProxiesIconStyle.none) {
+    if (iconStyle == ProxiesIconStyle.hidden) {
       return null;
     }
     final icon = ref.watch(groupsProvider).getGroup(proxy.name)?.icon;
