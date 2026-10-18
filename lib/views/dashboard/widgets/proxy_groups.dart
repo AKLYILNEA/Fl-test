@@ -15,7 +15,7 @@ import 'card.dart';
 import 'connections_table.dart';
 import 'current_outbound.dart';
 
-const _stackedIcons = 4;
+const _stackedIcons = 5;
 
 /// The inset of a block's corner, so the icon tile inside it is concentric.
 const _blockInset = 10.0;

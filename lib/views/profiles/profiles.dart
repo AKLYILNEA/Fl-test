@@ -321,17 +321,21 @@ class ProfileItem extends ConsumerWidget {
       profile.type == ProfileType.url ? profile.subscriptionInfo : null;
 
   String _subtitle(BuildContext context) {
-    final info = _subscriptionInfo;
-    if (info != null && info.usage != null) {
-      final used = info.upload + info.download;
-      return '${used.traffic.show} / ${info.total.traffic.show}';
-    }
     final appLocalizations = context.appLocalizations;
-    return switch (profile.type) {
-      ProfileType.url => appLocalizations.remote,
-      ProfileType.file => appLocalizations.local,
-      ProfileType.custom => appLocalizations.custom,
-    };
+    final info = _subscriptionInfo;
+    final time = profile.lastUpdateDate?.getLastUpdateTimeDesc(
+      context,
+      compact: true,
+    );
+    final lead = info != null && info.usage != null
+        ? '${(info.upload + info.download).traffic.show} / '
+              '${info.total.traffic.show}'
+        : switch (profile.type) {
+            ProfileType.url => appLocalizations.remote,
+            ProfileType.file => appLocalizations.lastUpdated,
+            ProfileType.custom => appLocalizations.custom,
+          };
+    return time == null || time.isEmpty ? lead : '$lead · $time';
   }
 
   Widget _buildTrailing(BuildContext context, {required bool isUpdating}) {
@@ -510,6 +514,15 @@ class ProfileItem extends ConsumerWidget {
           title: _ProfileCardTitle(
             profile: profile,
             expire: subscriptionInfo?.expireDate,
+            // A profile that never expires still says so in the pill, and a file
+            // says where it comes from, now that the subtitle carries the time.
+            chip: subscriptionInfo?.expireDate != null
+                ? null
+                : switch (profile.type) {
+                    ProfileType.url => context.appLocalizations.infiniteTime,
+                    ProfileType.file => context.appLocalizations.local,
+                    ProfileType.custom => null,
+                  },
             subtitle: _subtitle(context),
           ),
         ),
@@ -522,11 +535,13 @@ class _ProfileCardTitle extends StatelessWidget {
   const _ProfileCardTitle({
     required this.profile,
     required this.expire,
+    required this.chip,
     required this.subtitle,
   });
 
   final Profile profile;
   final DateTime? expire;
+  final String? chip;
   final String subtitle;
 
   @override
@@ -537,6 +552,7 @@ class _ProfileCardTitle extends StatelessWidget {
       children: [
         ChipTitle(
           title: profile.realLabel,
+          chip: chip,
           expire: expire,
           style: AppTextStyle.headline.of(context),
         ),
