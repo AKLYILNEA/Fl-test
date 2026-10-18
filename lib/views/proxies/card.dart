@@ -1,4 +1,3 @@
-import 'package:emoji_regex/emoji_regex.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
@@ -51,31 +50,25 @@ class ProxyCard extends ConsumerWidget {
 
   Measure get measure => globalState.measure;
 
-  Widget _buildProxyNameText(
-    BuildContext context, {
-    Color? color,
-    String? text,
-  }) {
-    final name = text ?? proxy.name;
-    final style = AppTextStyle.subheadline.of(context).copyWith(color: color);
+  Widget _buildProxyNameText(BuildContext context) {
     if (type == ProxyCardType.compact) {
       return SizedBox(
         height: measure.textHeight(AppTextStyle.subheadline) * 1,
         child: EmojiText(
-          name,
+          proxy.name,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: style,
+          style: AppTextStyle.subheadline.of(context),
         ),
       );
     } else {
       return SizedBox(
         height: measure.textHeight(AppTextStyle.subheadline) * 2,
         child: EmojiText(
-          name,
+          proxy.name,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
-          style: style,
+          style: AppTextStyle.subheadline.of(context),
         ),
       );
     }
@@ -91,40 +84,15 @@ class ProxyCard extends ConsumerWidget {
     return icon;
   }
 
-  /// The emoji that stands in for an icon when the proxy has none of its own,
-  /// plus the name with the leading emoji removed. A name that starts with
-  /// whitespace still counts.
-  static ({String emoji, String name})? _emojiOf(String name) {
-    final emoji = emojiRegex().firstMatch(name)?.group(0);
-    if (emoji == null || emoji.isEmpty) {
-      return null;
-    }
-    var rest = name.trimLeft();
-    var match = emojiRegex().matchAsPrefix(rest);
-    while (match != null) {
-      rest = rest.substring(match.end).trimLeft();
-      match = emojiRegex().matchAsPrefix(rest);
-    }
-    return (emoji: emoji, name: rest.isEmpty ? name : rest);
-  }
-
-  Widget _buildNameRow(
-    BuildContext context,
-    WidgetRef ref, {
-    Color? color,
-  }) {
+  Widget _buildNameRow(BuildContext context, WidgetRef ref) {
+    final name = _buildProxyNameText(context);
     final iconStyle = ref.watch(
       proxiesStyleSettingProvider.select((state) => state.iconStyle),
     );
-    final showsIcon = iconStyle != ProxiesIconStyle.hidden;
-    final configured = showsIcon ? _configuredIconOf(ref) : null;
-    final emoji = showsIcon && configured == null ? _emojiOf(proxy.name) : null;
-    final name = _buildProxyNameText(
-      context,
-      color: color,
-      text: emoji?.name,
-    );
-    if (configured == null && emoji == null) {
+    final icon = iconStyle == ProxiesIconStyle.hidden
+        ? null
+        : _configuredIconOf(ref);
+    if (icon == null) {
       return name;
     }
     final size = measure.textHeight(AppTextStyle.subheadline);
@@ -136,22 +104,13 @@ class ProxyCard extends ConsumerWidget {
           dimension: size,
           child: FittedBox(
             fit: BoxFit.contain,
-            child: configured != null
-                ? IconTheme.merge(
-                    data: IconThemeData(size: size),
-                    child: CommonTargetIcon(
-                      src: configured,
-                      fallback: GroupMonogram(proxy.name),
-                    ),
-                  )
-                : EmojiText(
-                    emoji!.emoji,
-                    style: TextStyle(
-                      fontSize: size * 0.75,
-                      height: 1.2,
-                      color: color,
-                    ),
-                  ),
+            child: IconTheme.merge(
+              data: IconThemeData(size: size),
+              child: CommonTargetIcon(
+                src: icon,
+                fallback: GroupMonogram(proxy.name),
+              ),
+            ),
           ),
         ),
         const SizedBox(width: 4),

@@ -136,6 +136,7 @@
   "bind": "Bind",
   "connectivity": "Connectivity: ",
   "webDAVConfiguration": "WebDAV configuration",
+  "wakelock": "Keep screen on",
   "address": "Address",
   "addressHelp": "WebDAV server address",
   "addressTip": "Please enter a valid WebDAV address",

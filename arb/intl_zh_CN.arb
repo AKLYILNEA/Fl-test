@@ -136,6 +136,7 @@
   "bind": "绑定",
   "connectivity": "连通性：",
   "webDAVConfiguration": "WebDAV配置",
+  "wakelock": "亮屏锁",
   "address": "地址",
   "addressHelp": "WebDAV服务器地址",
   "addressTip": "请输入有效的WebDAV地址",

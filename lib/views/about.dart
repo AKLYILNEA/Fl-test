@@ -14,7 +14,14 @@ class Contributor {
   final String avatar;
   final String name;
 
-  const Contributor({required this.avatar, required this.name});
+  /// What this contributor did; defaults to the app icon credit.
+  final String? description;
+
+  const Contributor({
+    required this.avatar,
+    required this.name,
+    this.description,
+  });
 }
 
 class AboutView extends ConsumerWidget {
@@ -23,6 +30,11 @@ class AboutView extends ConsumerWidget {
   static const _contributors = [
     Contributor(avatar: 'assets/images/avatar/june2.jpg', name: 'June2'),
     Contributor(avatar: 'assets/images/avatar/arue.jpg', name: 'Arue'),
+    Contributor(
+      avatar: 'assets/images/avatar/aaANDkk.jpg',
+      name: 'aaANDkk',
+      description: '二次开发构建',
+    ),
   ];
 
   Future<void> _checkUpdate(BuildContext context, WidgetRef ref) async {
@@ -116,7 +128,9 @@ class AboutView extends ConsumerWidget {
                     foregroundImage: AssetImage(contributor.avatar),
                   ),
                   title: Text(contributor.name),
-                  subtitle: Text(appLocalizations.appIconDesign),
+                  subtitle: Text(
+                    contributor.description ?? appLocalizations.appIconDesign,
+                  ),
                 ),
             ],
           ),

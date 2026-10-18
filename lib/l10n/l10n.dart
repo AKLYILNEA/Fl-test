@@ -1730,6 +1730,11 @@ class AppLocalizations {
     return Intl.message('Disabled', name: 'disabled', desc: '', args: []);
   }
 
+  /// `Keep screen on`
+  String get wakelock {
+    return Intl.message('Keep screen on', name: 'wakelock', desc: '', args: []);
+  }
+
   /// `UWP loopback exemption`
   String get loopback {
     return Intl.message(
