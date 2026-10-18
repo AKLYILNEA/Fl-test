@@ -350,20 +350,10 @@ class _GroupsFigure extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final count = Text.rich(
-      TextSpan(
-        children: [
-          TextSpan(
-            text: '${groups.length}',
-            style: DashboardText.figure(context, metrics.style),
-          ),
-          TextSpan(
-            text: ' ${context.appLocalizations.groupCountUnit}',
-            style: DashboardText.unit(context),
-          ),
-        ],
-      ),
+    final count = Text(
+      '${groups.length}',
       maxLines: 1,
+      style: DashboardText.figure(context, metrics.style),
     );
     return DashboardCappedRow(
       start: count,
