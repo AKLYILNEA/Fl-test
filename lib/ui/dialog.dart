@@ -1,6 +1,6 @@
 import 'dart:math' as math;
-import 'dart:ui' as ui;
 
+import 'package:fl_clash/ui/barrier.dart';
 import 'package:fl_clash/ui/color.dart';
 import 'package:fl_clash/ui/context.dart';
 import 'package:fl_clash/ui/input.dart';
@@ -142,20 +142,7 @@ mixin AlertMotionRouteMixin<T> on PopupRoute<T> {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          FadeTransition(
-            opacity: _spring,
-            child: AnimatedBuilder(
-              animation: _spring,
-              builder: (_, _) => BackdropFilter(
-                filter: ui.ImageFilter.blur(
-                  sigmaX: 5 * _spring.value.clamp(0.0, 1.0),
-                  sigmaY: 5 * _spring.value.clamp(0.0, 1.0),
-                  tileMode: ui.TileMode.clamp,
-                ),
-                child: const SizedBox.expand(),
-              ),
-            ),
-          ),
+          FadeTransition(opacity: _spring, child: const BarrierBlur()),
           barrier,
         ],
       ),

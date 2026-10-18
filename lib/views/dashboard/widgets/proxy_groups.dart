@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
@@ -278,10 +280,12 @@ class ProxyGroupsCard extends ConsumerWidget {
                 const Expanded(child: _GroupsEmpty(fit: true))
               else ...[
                 SizedBox(
-                  height:
-                      connectionsTableTop(density, scale) -
-                      padding.top -
-                      DashboardCardHeader.height * scale,
+                  height: math.max(
+                    0,
+                    connectionsTableTop(density, scale) -
+                        padding.top -
+                        DashboardCardHeader.height * scale,
+                  ),
                 ),
                 Expanded(child: tiles),
               ],
@@ -573,20 +577,24 @@ class ProxyGroupsSummaryCard extends ConsumerWidget {
     return DashboardCard(
       semanticLabel: appLocalizations.proxyGroup,
       onTap: groups.isEmpty ? null : () => showProxiesSheet(context),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _GroupsHeader(groups: groups),
-          const SizedBox(height: 12),
-          if (groups.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 12),
-              child: _GroupsEmpty(),
-            )
-          else
-            figure,
-        ],
+      // Centred: a landscape cell is taller than this content, and pinning it to
+      // the top left the figure hugging the header.
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _GroupsHeader(groups: groups),
+            const SizedBox(height: 12),
+            if (groups.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 12),
+                child: _GroupsEmpty(),
+              )
+            else
+              figure,
+          ],
+        ),
       ),
     );
   }

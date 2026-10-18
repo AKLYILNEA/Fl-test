@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
-import 'dart:ui' as ui;
 
+import 'package:fl_clash/ui/barrier.dart';
 import 'package:fl_clash/ui/context.dart';
 import 'package:fl_clash/ui/liquid_glass.dart';
 import 'package:fl_clash/ui/scroll_behavior.dart';
@@ -164,20 +164,7 @@ class SnapSheetRoute<T> extends PopupRoute<T> with SheetCoverRouteMixin<T> {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          FadeTransition(
-            opacity: animation!,
-            child: AnimatedBuilder(
-              animation: animation!,
-              builder: (_, _) => BackdropFilter(
-                filter: ui.ImageFilter.blur(
-                  sigmaX: 5 * animation!.value.clamp(0.0, 1.0),
-                  sigmaY: 5 * animation!.value.clamp(0.0, 1.0),
-                  tileMode: ui.TileMode.clamp,
-                ),
-                child: const SizedBox.expand(),
-              ),
-            ),
-          ),
+          FadeTransition(opacity: animation!, child: const BarrierBlur()),
           barrier,
         ],
       ),

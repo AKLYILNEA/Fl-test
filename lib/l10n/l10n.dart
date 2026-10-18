@@ -1735,6 +1735,16 @@ class AppLocalizations {
     return Intl.message('Keep screen on', name: 'wakelock', desc: '', args: []);
   }
 
+  /// `Secondary development build`
+  String get secondaryDevelopmentBuild {
+    return Intl.message(
+      'Secondary development build',
+      name: 'secondaryDevelopmentBuild',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `UWP loopback exemption`
   String get loopback {
     return Intl.message(

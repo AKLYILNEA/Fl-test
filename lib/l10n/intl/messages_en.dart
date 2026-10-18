@@ -1842,6 +1842,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "whitelistMode": MessageLookupByLibrary.simpleMessage("Whitelist mode"),
     "writeToSystem": MessageLookupByLibrary.simpleMessage("Write to system"),
+    "secondaryDevelopmentBuild": MessageLookupByLibrary.simpleMessage(
+      "Secondary development build",
+    ),
     "wakelock": MessageLookupByLibrary.simpleMessage("Keep screen on"),
     "writeToSystemDesc": MessageLookupByLibrary.simpleMessage(
       "Write to system also sets the system clock; Android ignores it.",

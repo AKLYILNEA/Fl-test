@@ -137,6 +137,7 @@
   "connectivity": "Connectivity: ",
   "webDAVConfiguration": "WebDAV configuration",
   "wakelock": "Keep screen on",
+  "secondaryDevelopmentBuild": "Secondary development build",
   "address": "Address",
   "addressHelp": "WebDAV server address",
   "addressTip": "Please enter a valid WebDAV address",

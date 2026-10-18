@@ -14,13 +14,13 @@ class Contributor {
   final String avatar;
   final String name;
 
-  /// What this contributor did; defaults to the app icon credit.
-  final String? description;
+  /// Says this is the fork's own build rather than an icon credit.
+  final bool secondaryDevelopment;
 
   const Contributor({
     required this.avatar,
     required this.name,
-    this.description,
+    this.secondaryDevelopment = false,
   });
 }
 
@@ -28,13 +28,13 @@ class AboutView extends ConsumerWidget {
   const AboutView({super.key});
 
   static const _contributors = [
-    Contributor(avatar: 'assets/images/avatar/june2.jpg', name: 'June2'),
-    Contributor(avatar: 'assets/images/avatar/arue.jpg', name: 'Arue'),
     Contributor(
       avatar: 'assets/images/avatar/aaANDkk.jpg',
       name: 'aaANDkk',
-      description: '二次开发构建',
+      secondaryDevelopment: true,
     ),
+    Contributor(avatar: 'assets/images/avatar/june2.jpg', name: 'June2'),
+    Contributor(avatar: 'assets/images/avatar/arue.jpg', name: 'Arue'),
   ];
 
   Future<void> _checkUpdate(BuildContext context, WidgetRef ref) async {
@@ -129,7 +129,9 @@ class AboutView extends ConsumerWidget {
                   ),
                   title: Text(contributor.name),
                   subtitle: Text(
-                    contributor.description ?? appLocalizations.appIconDesign,
+                    contributor.secondaryDevelopment
+                        ? appLocalizations.secondaryDevelopmentBuild
+                        : appLocalizations.appIconDesign,
                   ),
                 ),
             ],

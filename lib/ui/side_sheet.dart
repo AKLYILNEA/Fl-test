@@ -1,6 +1,6 @@
 import 'dart:math' as math;
-import 'dart:ui' as ui;
 
+import 'package:fl_clash/ui/barrier.dart';
 import 'package:fl_clash/ui/color.dart';
 import 'package:fl_clash/ui/drag_back.dart';
 import 'package:fl_clash/ui/liquid_glass.dart';
@@ -416,17 +416,7 @@ class ModalSideSheetRoute<T> extends PopupRoute<T>
           children: [
             FadeTransition(
               opacity: animation!.drive(CurveTween(curve: barrierCurve)),
-              child: AnimatedBuilder(
-                animation: animation!,
-                builder: (_, _) => BackdropFilter(
-                  filter: ui.ImageFilter.blur(
-                    sigmaX: 5 * animation!.value.clamp(0.0, 1.0),
-                    sigmaY: 5 * animation!.value.clamp(0.0, 1.0),
-                    tileMode: ui.TileMode.clamp,
-                  ),
-                  child: const SizedBox.expand(),
-                ),
-              ),
+              child: const BarrierBlur(),
             ),
             barrier,
           ],

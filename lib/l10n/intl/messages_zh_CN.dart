@@ -1060,7 +1060,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "proxiesRemovedTip": m65,
     "proxiesReplacedTip": m66,
     "proxyChains": MessageLookupByLibrary.simpleMessage("代理链"),
-    "proxyGroup": MessageLookupByLibrary.simpleMessage("策略组"),
+    "proxyGroup": MessageLookupByLibrary.simpleMessage("策略"),
     "proxyGroupEmpty": MessageLookupByLibrary.simpleMessage("策略组为空"),
     "proxyGroupInUse": m67,
     "proxyGroupsAfterStart": MessageLookupByLibrary.simpleMessage(
@@ -1432,6 +1432,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "vpnEnableDesc": MessageLookupByLibrary.simpleMessage(
       "VPN 通过 VpnService 自动路由系统所有流量。",
     ),
+    "secondaryDevelopmentBuild": MessageLookupByLibrary.simpleMessage("二次开发构建"),
     "wakelock": MessageLookupByLibrary.simpleMessage("亮屏锁"),
     "webDAVConfiguration": MessageLookupByLibrary.simpleMessage("WebDAV配置"),
     "whitelistMode": MessageLookupByLibrary.simpleMessage("白名单模式"),
