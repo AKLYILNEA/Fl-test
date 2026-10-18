@@ -320,6 +320,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "allReferencedProxyProviders": MessageLookupByLibrary.simpleMessage(
       "Tous les fournisseurs de proxys référencés",
     ),
+    "customFont": MessageLookupByLibrary.simpleMessage("Police personnalisée"),
+    "emojiStyle": MessageLookupByLibrary.simpleMessage("Police d'emojis"),
     "allowBypass": MessageLookupByLibrary.simpleMessage(
       "Autoriser les apps à contourner le VPN",
     ),
@@ -1988,6 +1990,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "writeToSystem": MessageLookupByLibrary.simpleMessage(
       "Écrire dans le système",
     ),
+    "secondaryDevelopmentBuild": MessageLookupByLibrary.simpleMessage(
+      "Version de développement secondaire",
+    ),
+    "wakelock": MessageLookupByLibrary.simpleMessage("Maintenir l'écran allumé"),
     "writeToSystemDesc": MessageLookupByLibrary.simpleMessage(
       "Écrire dans le système règle aussi l’horloge système ; Android l’ignore.",
     ),
