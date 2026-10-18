@@ -291,7 +291,7 @@ class _ConfigStatsState extends ConsumerState<_ConfigStats>
             spacing: 16,
             children: [
               item(stats?.proxies, appLocalizations.proxies),
-              item(stats?.groups, appLocalizations.proxyGroup),
+              item(stats?.groups, appLocalizations.strategy),
               item(stats?.rules, appLocalizations.rules),
             ],
           ),

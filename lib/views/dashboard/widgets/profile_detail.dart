@@ -259,7 +259,7 @@ class _StatsGrid extends StatelessWidget {
     final stats = this.stats;
     final tiles = [
       (appLocalizations.proxies, stats?.proxies),
-      (appLocalizations.proxyGroup, stats?.groups),
+      (appLocalizations.strategy, stats?.groups),
       (appLocalizations.rules, stats?.rules),
       (appLocalizations.providers, stats?.providers),
     ];

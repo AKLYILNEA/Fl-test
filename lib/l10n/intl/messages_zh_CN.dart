@@ -1060,7 +1060,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "proxiesRemovedTip": m65,
     "proxiesReplacedTip": m66,
     "proxyChains": MessageLookupByLibrary.simpleMessage("代理链"),
-    "proxyGroup": MessageLookupByLibrary.simpleMessage("策略"),
+    "proxyGroup": MessageLookupByLibrary.simpleMessage("策略组"),
     "proxyGroupEmpty": MessageLookupByLibrary.simpleMessage("策略组为空"),
     "proxyGroupInUse": m67,
     "proxyGroupsAfterStart": MessageLookupByLibrary.simpleMessage(
