@@ -9,6 +9,10 @@ enum EmojiStyle {
   openMoji(
     family: 'OpenMoji',
     label: 'Openmoji',
+  ),
+  samsung(
+    family: 'Samsung',
+    label: 'Samsung',
   );
 
   final String family;
