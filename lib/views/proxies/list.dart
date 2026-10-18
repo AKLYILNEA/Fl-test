@@ -643,7 +643,6 @@ class ListHeader extends ConsumerWidget {
             _GroupActions(
               isExpand: isExpand,
               isDelayTesting: isDelayTesting,
-              groupType: group.type.name,
               onScrollToSelected: () {
                 onScrollToSelected(groupName);
               },
@@ -851,7 +850,6 @@ class _GroupActions extends StatelessWidget {
   const _GroupActions({
     required this.isExpand,
     required this.isDelayTesting,
-    required this.groupType,
     required this.onScrollToSelected,
     required this.onDelayTest,
     required this.onToggle,
@@ -859,7 +857,6 @@ class _GroupActions extends StatelessWidget {
 
   final bool isExpand;
   final bool isDelayTesting;
-  final String groupType;
   final VoidCallback onScrollToSelected;
   final VoidCallback onDelayTest;
   final VoidCallback onToggle;
@@ -888,13 +885,6 @@ class _GroupActions extends StatelessWidget {
                       : const GlyphIcon(AppGlyphs.bolt),
                 ),
               ],
-            )
-          else
-            Text(
-              groupType,
-              style: AppTextStyle.caption1
-                  .of(context, emphasized: true)
-                  .toLight,
             ),
           const SizedBox(width: 6),
           ElasticPress(

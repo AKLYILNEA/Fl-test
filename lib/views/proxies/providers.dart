@@ -315,6 +315,11 @@ class _ExternalProviderItem extends StatelessWidget {
       title: ChipTitle(
         title: provider.name,
         expire: provider.subscriptionInfo?.expireDate,
+        // Same mark the profile cards use: a provider with no expiry is valid
+        // for good.
+        chip: provider.subscriptionInfo?.expireDate == null
+            ? appLocalizations.infiniteTime
+            : null,
       ),
       subtitle: Text(switch (provider.type) {
         'Proxy' => appLocalizations.proxiesCount(count, count.compact),

@@ -51,13 +51,18 @@ class ProxyCard extends ConsumerWidget {
 
   Measure get measure => globalState.measure;
 
-  Widget _buildProxyNameText(BuildContext context, {Color? color}) {
+  Widget _buildProxyNameText(
+    BuildContext context, {
+    Color? color,
+    String? text,
+  }) {
+    final name = text ?? proxy.name;
     final style = AppTextStyle.subheadline.of(context).copyWith(color: color);
     if (type == ProxyCardType.compact) {
       return SizedBox(
         height: measure.textHeight(AppTextStyle.subheadline) * 1,
         child: EmojiText(
-          proxy.name,
+          name,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: style,
@@ -67,7 +72,7 @@ class ProxyCard extends ConsumerWidget {
       return SizedBox(
         height: measure.textHeight(AppTextStyle.subheadline) * 2,
         child: EmojiText(
-          proxy.name,
+          name,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: style,
@@ -77,22 +82,23 @@ class ProxyCard extends ConsumerWidget {
   }
 
   /// A proxy that is itself a group shows the icon configured for that group, as
-  /// bettbox does, unless the name already carries its own emoji.
-  String? _iconOf(WidgetRef ref) {
-    final iconStyle = ref.watch(
-      proxiesStyleSettingProvider.select((state) => state.iconStyle),
-    );
-    if (iconStyle == ProxiesIconStyle.hidden) {
-      return null;
-    }
+  /// bettbox does.
+  String? _configuredIconOf(WidgetRef ref) {
     final icon = ref.watch(groupsProvider).getGroup(proxy.name)?.icon;
     if (icon == null || icon.isEmpty) {
       return null;
     }
-    if (emojiRegex().hasMatch(proxy.name)) {
+    return icon;
+  }
+
+  /// The emoji a name starts with, which stands in for an icon when the proxy has
+  /// none of its own.
+  static String? _leadingEmojiOf(String name) {
+    final match = emojiRegex().firstMatch(name);
+    if (match == null || match.start != 0) {
       return null;
     }
-    return icon;
+    return match.group(0);
   }
 
   Widget _buildNameRow(
@@ -100,28 +106,50 @@ class ProxyCard extends ConsumerWidget {
     WidgetRef ref, {
     Color? color,
   }) {
-    final name = _buildProxyNameText(context, color: color);
-    final icon = _iconOf(ref);
-    if (icon == null) {
+    final iconStyle = ref.watch(
+      proxiesStyleSettingProvider.select((state) => state.iconStyle),
+    );
+    final showsIcon = iconStyle != ProxiesIconStyle.hidden;
+    final configured = showsIcon ? _configuredIconOf(ref) : null;
+    final emoji = showsIcon && configured == null
+        ? _leadingEmojiOf(proxy.name)
+        : null;
+    final rest = emoji == null
+        ? proxy.name
+        : proxy.name.substring(emoji.length).trimLeft();
+    final name = _buildProxyNameText(
+      context,
+      color: color,
+      text: rest.isEmpty ? proxy.name : rest,
+    );
+    if (configured == null && emoji == null) {
       return name;
     }
+    final size = measure.textHeight(AppTextStyle.subheadline);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox.square(
-          dimension: measure.textHeight(AppTextStyle.subheadline),
+          dimension: size,
           child: FittedBox(
             fit: BoxFit.contain,
-            child: IconTheme.merge(
-              data: IconThemeData(
-                size: measure.textHeight(AppTextStyle.subheadline),
-              ),
-              child: CommonTargetIcon(
-                src: icon,
-                fallback: GroupMonogram(proxy.name),
-              ),
-            ),
+            child: configured != null
+                ? IconTheme.merge(
+                    data: IconThemeData(size: size),
+                    child: CommonTargetIcon(
+                      src: configured,
+                      fallback: GroupMonogram(proxy.name),
+                    ),
+                  )
+                : EmojiText(
+                    emoji!,
+                    style: TextStyle(
+                      fontSize: size * 0.75,
+                      height: 1.2,
+                      color: color,
+                    ),
+                  ),
           ),
         ),
         const SizedBox(width: 4),
@@ -147,21 +175,16 @@ class ProxyCard extends ConsumerWidget {
               proxyNameProvider(groupName).select((name) => name == proxy.name),
             );
         final colorScheme = context.colorScheme;
-        // A picked node fills its card with the theme's primary, the way the
-        // dashboard's picked mode does, so its own texts take that foreground
-        // instead of the surface's.
-        final foreground = inUse ? colorScheme.onPrimary : null;
         final delayText = _DelayText(
           proxy: proxy,
           testUrl: testUrl,
           alignment: isLoose ? Alignment.centerLeft : Alignment.centerRight,
-          foreground: foreground,
         );
         final typeStyle = AppTextStyle.footnote
             .of(context)
             .copyWith(
               overflow: TextOverflow.ellipsis,
-              color: foreground?.opacity80 ?? colorScheme.onSurface.opacity80,
+              color: colorScheme.onSurface.opacity80,
             );
         final details = isLoose
             ? Column(
@@ -204,31 +227,32 @@ class ProxyCard extends ConsumerWidget {
             );
           },
           isSelected: inUse,
-          fillsSelection: inUse,
-          child: Container(
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  spacing: 4,
-                  children: [
-                    Expanded(
-                      child: _buildNameRow(
-                        context,
-                        ref,
-                        color: foreground,
-                      ),
-                    ),
-                    if (pinned) SelectionBadge.preferred(inUse: inUse),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                details,
-              ],
+          // The chip tint the profile cards use, not a filled primary: the card
+          // keeps its own text colours.
+          child: DecoratedBox(
+            decoration: ShapeDecoration(
+              color: inUse ? colorScheme.primary.opacity15 : Colors.transparent,
+              shape: AppShape.all(AppCorner.lg),
+            ),
+            child: Container(
+              alignment: Alignment.centerLeft,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    spacing: 4,
+                    children: [
+                      Expanded(child: _buildNameRow(context, ref)),
+                      if (pinned) SelectionBadge.preferred(inUse: inUse),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  details,
+                ],
+              ),
             ),
           ),
         );
@@ -267,16 +291,11 @@ class _DelayText extends ConsumerStatefulWidget {
     required this.proxy,
     required this.testUrl,
     required this.alignment,
-    this.foreground,
   });
 
   final Proxy proxy;
   final String? testUrl;
   final Alignment alignment;
-
-  /// Set while the card is filled with the primary colour, so the small icons
-  /// stay legible on it.
-  final Color? foreground;
 
   @override
   ConsumerState<_DelayText> createState() => _DelayTextState();
@@ -380,9 +399,7 @@ class _DelayTextState extends ConsumerState<_DelayText> {
                       DelayTestPhase.queued => GlyphIcon(
                         AppGlyphs.clock,
                         size: measure.textHeight(AppTextStyle.caption2),
-                        color:
-                            widget.foreground?.opacity38 ??
-                            context.colorScheme.onSurfaceVariant.opacity38,
+                        color: context.colorScheme.onSurfaceVariant.opacity38,
                       ),
                       null => Tooltip(
                         message: context.appLocalizations.delayTest,
@@ -392,7 +409,6 @@ class _DelayTextState extends ConsumerState<_DelayText> {
                           child: GlyphIcon(
                             AppGlyphs.bolt,
                             size: measure.textHeight(AppTextStyle.caption2),
-                            color: widget.foreground,
                           ),
                         ),
                       ),
