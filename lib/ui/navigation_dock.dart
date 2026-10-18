@@ -35,6 +35,11 @@ const double _pressGrowth = 1 / 8;
 const double _maxPressGrowth = 16;
 const double _lensGrowth = 8;
 const double _lensMagnify = 0.16;
+
+/// How close, in destinations, the lens has to settle before a destination
+/// starts to magnify. Small enough that a lens crossing it on the way elsewhere
+/// only brushes the ramp.
+const double _magnifyReach = 0.1;
 const double _liftSnap = 0.975;
 const double _liftRelease = 0.04;
 const double _hoverMagnet = 0.2;
@@ -1530,7 +1535,14 @@ class _FloatingBarItem extends StatefulWidget {
   State<_FloatingBarItem> createState() => _FloatingBarItemState();
 }
 
-class _FloatingBarItemState extends State<_FloatingBarItem> {
+class _FloatingBarItemState extends State<_FloatingBarItem>
+    with SingleTickerProviderStateMixin {
+  /// Ramps this destination's magnification in and out, so a lens travelling
+  /// past on its way to another destination does not swell it on the way.
+  late final AnimationController _magnify = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 220),
+  );
   late final Map<Type, Action<Intent>> _actions = {
     ActivateIntent: CallbackAction<ActivateIntent>(
       onInvoke: (_) {
@@ -1540,6 +1552,38 @@ class _FloatingBarItemState extends State<_FloatingBarItem> {
     ),
   };
   bool _focused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.lens.addListener(_handleLens);
+    _handleLens();
+  }
+
+  @override
+  void didUpdateWidget(covariant _FloatingBarItem oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.lens != widget.lens) {
+      oldWidget.lens.removeListener(_handleLens);
+      widget.lens.addListener(_handleLens);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.lens.removeListener(_handleLens);
+    _magnify.dispose();
+    super.dispose();
+  }
+
+  void _handleLens() {
+    final near = (widget.lens.value - widget.index).abs() < _magnifyReach;
+    if (near) {
+      _magnify.forward();
+    } else {
+      _magnify.reverse();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1563,6 +1607,7 @@ class _FloatingBarItemState extends State<_FloatingBarItem> {
       lensWidth: widget.lensWidth,
       jelly: widget.jelly,
       lift: widget.lift,
+      magnify: _magnify,
       parallax: widget.parallax,
       index: widget.index,
       color: tint,
@@ -1638,6 +1683,7 @@ class _LensTint extends SingleChildRenderObjectWidget {
     required this.lensWidth,
     required this.jelly,
     required this.lift,
+    required this.magnify,
     required this.parallax,
     required this.index,
     required this.color,
@@ -1650,6 +1696,7 @@ class _LensTint extends SingleChildRenderObjectWidget {
   final double lensWidth;
   final ValueListenable<double> jelly;
   final ValueListenable<double> lift;
+  final ValueListenable<double> magnify;
   final ValueListenable<double> parallax;
   final int index;
   final Color color;
@@ -1663,6 +1710,7 @@ class _LensTint extends SingleChildRenderObjectWidget {
       lensWidth: lensWidth,
       jelly: jelly,
       lift: lift,
+      magnify: magnify,
       parallax: parallax,
       index: index,
       color: color,
@@ -1678,6 +1726,7 @@ class _LensTint extends SingleChildRenderObjectWidget {
       ..lensWidth = lensWidth
       ..jelly = jelly
       ..lift = lift
+      ..magnify = magnify
       ..parallax = parallax
       ..index = index
       ..color = color
@@ -1692,6 +1741,7 @@ class _RenderLensTint extends RenderProxyBox {
     required double lensWidth,
     required ValueListenable<double> jelly,
     required ValueListenable<double> lift,
+    required ValueListenable<double> magnify,
     required ValueListenable<double> parallax,
     required int index,
     required Color color,
@@ -1701,6 +1751,7 @@ class _RenderLensTint extends RenderProxyBox {
        _lensWidth = lensWidth,
        _jelly = jelly,
        _lift = lift,
+       _magnify = magnify,
        _parallax = parallax,
        _index = index,
        _color = color,
@@ -1769,6 +1820,19 @@ class _RenderLensTint extends RenderProxyBox {
     markNeedsPaint();
   }
 
+  ValueListenable<double> _magnify;
+  set magnify(ValueListenable<double> value) {
+    if (value == _magnify) {
+      return;
+    }
+    if (attached) {
+      _magnify.removeListener(markNeedsPaint);
+      value.addListener(markNeedsPaint);
+    }
+    _magnify = value;
+    markNeedsPaint();
+  }
+
   ValueListenable<double> _parallax;
   set parallax(ValueListenable<double> value) {
     if (value == _parallax) {
@@ -1815,6 +1879,7 @@ class _RenderLensTint extends RenderProxyBox {
     _lens.addListener(markNeedsPaint);
     _jelly.addListener(markNeedsPaint);
     _lift.addListener(markNeedsPaint);
+    _magnify.addListener(markNeedsPaint);
     _parallax.addListener(markNeedsPaint);
   }
 
@@ -1823,6 +1888,7 @@ class _RenderLensTint extends RenderProxyBox {
     _lens.removeListener(markNeedsPaint);
     _jelly.removeListener(markNeedsPaint);
     _lift.removeListener(markNeedsPaint);
+    _magnify.removeListener(markNeedsPaint);
     _parallax.removeListener(markNeedsPaint);
     super.detach();
   }
@@ -1904,7 +1970,9 @@ class _RenderLensTint extends RenderProxyBox {
       return;
     }
     final rest = _motion(1);
-    final magnified = _motion(1 + _lensMagnify * _lift.value);
+    final magnified = _motion(
+      1 + _lensMagnify * _lift.value * _magnify.value,
+    );
     final bounds = Offset.zero & size;
     Rect moved(Matrix4? motion) =>
         motion == null ? bounds : MatrixUtils.transformRect(motion, bounds);
