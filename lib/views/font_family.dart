@@ -39,6 +39,22 @@ class _FontFamilyViewState extends State<FontFamilyView> {
     setState(() {});
   }
 
+  /// What the app paints with when no custom font is picked. The theme carries
+  /// the selected custom family, so a bare `Text` here would preview that font
+  /// under the "default" entry instead of the real default.
+  TextStyle _defaultStyle() {
+    final platform = defaultTargetPlatform;
+    final base = Typography.material2021(platform: platform).black.bodyMedium!;
+    return TextStyle(
+      fontFamily: base.fontFamily,
+      fontFamilyFallback: appFontFamilyFallback(
+        platform: platform,
+        locales: WidgetsBinding.instance.platformDispatcher.locales,
+        fontFamily: base.fontFamily,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final appLocalizations = context.appLocalizations;
@@ -63,7 +79,12 @@ class _FontFamilyViewState extends State<FontFamilyView> {
       labelBuilder: (font) => font?.name ?? appLocalizations.defaultText,
       titleBuilder: (font, title) {
         if (font == null) {
-          return title;
+          return Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: _defaultStyle(),
+          );
         }
         final family = FontManager.familyOf(font);
         if (family == null) {
