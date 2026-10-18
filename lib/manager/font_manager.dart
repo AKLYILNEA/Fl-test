@@ -116,12 +116,20 @@ class FontManager {
           : null;
       fontFamilyNotifier.value = null;
       final selectedPath = _selectedPath;
-      if (enabled && selectedPath != null) {
-        final family = await _register(selectedPath);
-        if (family == null) {
-          _selectedPath = null;
-        } else {
-          fontFamilyNotifier.value = family;
+      if (enabled) {
+        // Every font is registered, not just the selected one: the list previews
+        // each face in its own typeface, and a family that was never loaded
+        // previews as whatever the theme paints instead.
+        for (final font in _fonts) {
+          await _register(font.path);
+        }
+        if (selectedPath != null) {
+          final family = _families[selectedPath];
+          if (family == null) {
+            _selectedPath = null;
+          } else {
+            fontFamilyNotifier.value = family;
+          }
         }
       }
       await _persist();

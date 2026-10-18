@@ -188,7 +188,9 @@ class _DesktopDashboard extends StatelessWidget {
         final half = columns ~/ 2;
         final summaries = row([
           (half, const ConnectionStatsCard()),
-          (half, const ProxyGroupsSummaryCard()),
+          // The tile list, not the count: a landscape window wants the groups
+          // themselves, two to a row and scrolling.
+          (half, const ProxyGroupsCard()),
         ]);
         if (columns == 2) {
           return SingleChildScrollView(
