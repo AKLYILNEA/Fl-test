@@ -631,7 +631,12 @@ class ListHeader extends ConsumerWidget {
               child: Row(
                 children: [
                   _GroupIcon(src: group.icon, name: groupName),
-                  Flexible(child: _GroupSummary(groupName: groupName)),
+                  Flexible(
+                    child: _GroupSummary(
+                      groupName: groupName,
+                      groupType: group.type,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -762,9 +767,10 @@ class _GroupIcon extends ConsumerWidget {
 }
 
 class _GroupSummary extends StatelessWidget {
-  const _GroupSummary({required this.groupName});
+  const _GroupSummary({required this.groupName, required this.groupType});
 
   final String groupName;
+  final GroupType groupType;
 
   @override
   Widget build(BuildContext context) {
@@ -779,30 +785,64 @@ class _GroupSummary extends StatelessWidget {
           style: AppTextStyle.callout.of(context, emphasized: true),
         ),
         const SizedBox(height: 2),
-        Flexible(flex: 1, child: _SelectedProxyName(groupName: groupName)),
+        Flexible(
+          flex: 1,
+          child: _SelectedProxyLine(groupName: groupName, groupType: groupType),
+        ),
       ],
     );
   }
 }
 
-class _SelectedProxyName extends ConsumerWidget {
-  const _SelectedProxyName({required this.groupName});
+/// The group's kind and the node it picked, on one line under the name: kind ·
+/// node icon node, the way bettbox lays it out.
+class _SelectedProxyLine extends ConsumerWidget {
+  const _SelectedProxyLine({required this.groupName, required this.groupType});
 
   final String groupName;
+  final GroupType groupType;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final proxyName = ref
         .watch(selectedProxyNameProvider(groupName))
         .takeFirstValid([]);
-    if (proxyName.isEmpty) {
-      return const SizedBox.shrink();
-    }
-    return EmojiText(
-      proxyName,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: AppTextStyle.caption1.of(context, emphasized: true).toLight,
+    final style = AppTextStyle.caption1.of(context, emphasized: true).toLight;
+    final icon = proxyName.isEmpty
+        ? null
+        : ref.watch(groupsProvider).getGroup(proxyName)?.icon;
+    final iconSize = style.fontSize ?? AppTextStyle.caption1.size;
+    return Row(
+      children: [
+        Text(groupType.name, style: style),
+        if (proxyName.isNotEmpty) ...[
+          Text(' · ', style: style),
+          if (icon != null && icon.isNotEmpty) ...[
+            SizedBox.square(
+              dimension: iconSize,
+              child: FittedBox(
+                fit: BoxFit.contain,
+                child: IconTheme.merge(
+                  data: IconThemeData(size: iconSize, color: style.color),
+                  child: CommonTargetIcon(
+                    src: icon,
+                    fallback: GroupMonogram(proxyName),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 4),
+          ],
+          Flexible(
+            child: EmojiText(
+              proxyName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: style,
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

@@ -1011,7 +1011,6 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar>
       return;
     }
     _pointer = event.pointer;
-    _following.value = true;
     _tracker = VelocityTracker.withKind(event.kind)
       ..addPosition(event.timeStamp, event.localPosition);
     _hoverShow.springTo(0, _fadeSpring);
@@ -1076,6 +1075,9 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar>
         return;
       }
       _dragging = true;
+      // Only a drag magnifies what it slides over; a tap (even one that
+      // interrupts a running travel) keeps the magnification for its target.
+      _following.value = true;
     }
     final size = context.size!;
     final overshoot =

@@ -558,27 +558,28 @@ class _OutboundIpLine extends StatelessWidget {
     if (flag == null && ip == null && !pending && fallback == null) {
       return _NoValue(style: style);
     }
+    final flagEmoji = flag?.countryFlagEmoji ?? '';
+    // One paragraph per line: the flag rides in the address text as a leading
+    // span, so it sits on that line's baseline like every other emoji beside
+    // text in the app, instead of carrying a line box of its own.
     final line = Row(
       spacing: 4,
-      // Baseline, not centre: the emoji font's line box is taller than the
-      // surrounding text's, so centring the boxes left the flag sitting low.
-      crossAxisAlignment: CrossAxisAlignment.baseline,
-      textBaseline: TextBaseline.alphabetic,
       children: [
-        if (flag != null)
-          // EmojiText, not a hardcoded Twemoji family: the flag follows the emoji
-          // font the user picked, like every other emoji in the interface.
-          EmojiText(flag.countryFlagEmoji, style: style),
         if (ip != null)
           Flexible(
-            child: IpQualityText(ip: ip.ip, style: style),
+            child: IpQualityText(
+              ip: ip.ip,
+              style: style,
+              leading: flagEmoji.isEmpty ? null : flagEmoji,
+            ),
           )
-        else if (pending)
-          Flexible(child: SkeletonText(width: 88, style: style))
-        else if (fallback != null)
+        else if (pending) ...[
+          if (flagEmoji.isNotEmpty) EmojiText(flagEmoji, style: style),
+          Flexible(child: SkeletonText(width: 88, style: style)),
+        ] else if (fallback != null)
           Flexible(
-            child: Text(
-              fallback,
+            child: EmojiText(
+              flagEmoji.isEmpty ? fallback : '$flagEmoji $fallback',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: style,
