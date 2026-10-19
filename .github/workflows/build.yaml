@@ -43,10 +43,10 @@ jobs:
       - name: Setup Android Signing
         if: startsWith(matrix.platform,'android')
         env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS || 'flclash' }}
-          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD || 'flclash123456' }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || 'flclash123456' }}
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE || secrets.FLCLASH || secrets.flclash }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS || secrets.FLCLASH_KEY_ALIAS || 'flclash' }}
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD || secrets.FLCLASH_STORE_PASSWORD || 'flclash123456' }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || secrets.FLCLASH_KEY_PASSWORD || 'flclash123456' }}
         run: |
           python3 - << 'EOF'
           import base64, os, sys
@@ -139,8 +139,8 @@ jobs:
       - name: Verify Android signature
         if: startsWith(matrix.platform,'android')
         env:
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS || 'flclash' }}
-          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD || 'flclash123456' }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS || secrets.FLCLASH_KEY_ALIAS || 'flclash' }}
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD || secrets.FLCLASH_STORE_PASSWORD || 'flclash123456' }}
         run: |
           apk=$(ls dist/*.apk | head -n 1)
           apksigner=$(ls "$ANDROID_HOME"/build-tools/*/apksigner 2>/dev/null | sort -V | tail -n 1)
