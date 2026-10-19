@@ -130,10 +130,10 @@ class AppLocalizations {
     );
   }
 
-  /// `Outbound mode`
+  /// `Outbound`
   String get outboundMode {
     return Intl.message(
-      'Outbound mode',
+      'Outbound',
       name: 'outboundMode',
       desc: '',
       args: [],

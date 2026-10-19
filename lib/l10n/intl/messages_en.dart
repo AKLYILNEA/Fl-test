@@ -1262,7 +1262,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "outbound": MessageLookupByLibrary.simpleMessage("Outbound"),
     "outboundExit": MessageLookupByLibrary.simpleMessage("Exit"),
     "outboundIp": MessageLookupByLibrary.simpleMessage("Outbound IP"),
-    "outboundMode": MessageLookupByLibrary.simpleMessage("Outbound mode"),
+    "outboundMode": MessageLookupByLibrary.simpleMessage("Outbound"),
     "overrideDestination": MessageLookupByLibrary.simpleMessage(
       "Override destination",
     ),

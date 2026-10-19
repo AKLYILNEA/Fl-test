@@ -12,7 +12,7 @@
   "resources": "Resources",
   "trafficUsage": "Traffic usage",
   "networkSpeed": "Network speed",
-  "outboundMode": "Outbound mode",
+  "outboundMode": "Outbound",
   "serviceStatus": "Service status",
   "serviceRestricted": "Access restricted",
   "serviceAvailable": "Available",
