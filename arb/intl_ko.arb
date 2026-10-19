@@ -944,7 +944,7 @@
   "allReferencedProxyProviders": "참조된 모든 프록시 공급자",
   "emojiStyle": "이모지 글꼴",
   "customFont": "사용자 지정 글꼴",
-  "nodeCount": "?? ?",
-  "ruleCount": "?? ??",
-  "providerCount": "???"
+  "nodeCount": "노드 수",
+  "ruleCount": "규칙 항목",
+  "providerCount": "제공자"
 }

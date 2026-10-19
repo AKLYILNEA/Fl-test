@@ -944,7 +944,7 @@
   "allReferencedProxyProviders": "参照されているすべてのプロキシプロバイダー",
   "emojiStyle": "絵文字フォント",
   "customFont": "カスタムフォント",
-  "nodeCount": "????",
-  "ruleCount": "?????",
-  "providerCount": "???"
+  "nodeCount": "ノード数",
+  "ruleCount": "ルール項目",
+  "providerCount": "プロバイダー"
 }

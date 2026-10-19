@@ -321,8 +321,8 @@ class MessageLookup extends MessageLookupByLibrary {
       "Tous les fournisseurs de proxys référencés",
     ),
     "customFont": MessageLookupByLibrary.simpleMessage("Police personnalisée"),
-    "nodeCount": MessageLookupByLibrary.simpleMessage("N?uds"),
-    "ruleCount": MessageLookupByLibrary.simpleMessage("R?gles"),
+    "nodeCount": MessageLookupByLibrary.simpleMessage("Nœuds"),
+    "ruleCount": MessageLookupByLibrary.simpleMessage("Règles"),
     "providerCount": MessageLookupByLibrary.simpleMessage("Fournisseurs"),
     "emojiStyle": MessageLookupByLibrary.simpleMessage("Police d'emojis"),
     "allowBypass": MessageLookupByLibrary.simpleMessage(

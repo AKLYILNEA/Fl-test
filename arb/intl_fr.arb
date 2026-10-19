@@ -944,7 +944,7 @@
   "allReferencedProxyProviders": "Tous les fournisseurs de proxys référencés",
   "emojiStyle": "Police d'emojis",
   "customFont": "Police personnalisée",
-  "nodeCount": "N?uds",
-  "ruleCount": "R?gles",
+  "nodeCount": "Nœuds",
+  "ruleCount": "Règles",
   "providerCount": "Fournisseurs"
 }

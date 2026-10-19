@@ -944,7 +944,7 @@
   "allReferencedProxyProviders": "Все используемые провайдеры прокси",
   "emojiStyle": "Шрифт эмодзи",
   "customFont": "Пользовательский шрифт",
-  "nodeCount": "????",
-  "ruleCount": "???????",
-  "providerCount": "??????????"
+  "nodeCount": "Узлы",
+  "ruleCount": "Правила",
+  "providerCount": "Провайдеры"
 }

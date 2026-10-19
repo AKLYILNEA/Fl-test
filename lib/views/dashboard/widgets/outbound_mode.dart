@@ -40,11 +40,13 @@ class OutboundModeBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final density = DashboardDensityScope.of(context);
+    final scale = DashboardDensityScope.scaleOf(context);
     final mode = ref.watch(
       patchClashConfigProvider.select((state) => state.mode),
     );
     final appLocalizations = context.appLocalizations;
     final outer = dashboardCardRadius(density) - _inset;
+    final buttonHeight = (density.isCompact ? 40.0 : 44.0) * scale;
     final style = AppTextStyle.subheadline.of(context, emphasized: true);
     return DashboardCard(
       semanticLabel: appLocalizations.outboundMode,
@@ -54,22 +56,24 @@ class OutboundModeBar extends ConsumerWidget {
         _inset,
         _inset,
       ),
-      child: LayoutBuilder(
-        builder: (context, constraints) => Row(
+      child: SizedBox(
+        height: buttonHeight,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             GlyphIcon(
               AppGlyphs.split,
               size: 18,
               color: context.colorScheme.onSurfaceVariant,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 6),
             Text(
               appLocalizations.outboundMode,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: DashboardText.cardTitle(context),
+              style: DashboardText.cardTitle(context).copyWith(fontSize: 14),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
             Expanded(
               child: DashboardConnectedGroup(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -85,28 +89,31 @@ class OutboundModeBar extends ConsumerWidget {
                         background: DashboardColors.of(context).tone,
                         semanticLabel: item.label,
                         onTap: () => _changeMode(ref, item),
-                        builder: (foreground) => Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            GlyphIcon(
-                              _glyphOf(item),
-                              size: 16,
-                              color: foreground,
-                            ),
-                            const SizedBox(width: 4),
-                            Flexible(
-                              child: Text(
-                                item.label,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: style.copyWith(
-                                  color: foreground,
-                                  fontSize: 13,
+                        builder: (foreground) => SizedBox(
+                          height: buttonHeight,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              GlyphIcon(
+                                _glyphOf(item),
+                                size: 16,
+                                color: foreground,
+                              ),
+                              const SizedBox(width: 4),
+                              Flexible(
+                                child: Text(
+                                  item.label,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: style.copyWith(
+                                    color: foreground,
+                                    fontSize: 13,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),

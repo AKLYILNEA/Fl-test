@@ -139,7 +139,7 @@ class ProfilesCard extends ConsumerWidget {
           : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.max,
+        mainAxisSize: mobile ? MainAxisSize.min : MainAxisSize.max,
         children: [
           DashboardCardHeader(
             glyph: AppGlyphs.profiles,
@@ -202,7 +202,7 @@ class ProfilesCard extends ConsumerWidget {
               },
             ),
           if (profile != null) ...[
-            const Spacer(),
+            if (mobile) const SizedBox(height: 14) else const Spacer(),
             if (usage != null)
               _UsageMeter(usage: usage, figure: figure, gap: mobile ? 8 : 6)
             else
