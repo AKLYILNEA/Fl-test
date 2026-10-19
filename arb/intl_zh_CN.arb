@@ -943,5 +943,8 @@
   "allReferencedProxies": "全部被引用的代理",
   "allReferencedProxyProviders": "全部被引用的代理集",
   "emojiStyle": "Emoji字体",
-  "customFont": "自定义字体"
+  "customFont": "自定义字体",
+  "nodeCount": "???",
+  "ruleCount": "???",
+  "providerCount": "???"
 }

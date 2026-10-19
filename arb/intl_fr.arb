@@ -943,5 +943,8 @@
   "allReferencedProxies": "Tous les proxys référencés",
   "allReferencedProxyProviders": "Tous les fournisseurs de proxys référencés",
   "emojiStyle": "Police d'emojis",
-  "customFont": "Police personnalisée"
+  "customFont": "Police personnalisée",
+  "nodeCount": "N?uds",
+  "ruleCount": "R?gles",
+  "providerCount": "Fournisseurs"
 }

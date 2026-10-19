@@ -320,6 +320,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "Todos los proveedores de proxies referenciados",
     ),
     "customFont": MessageLookupByLibrary.simpleMessage("Fuente personalizada"),
+    "nodeCount": MessageLookupByLibrary.simpleMessage("Nodos"),
+    "ruleCount": MessageLookupByLibrary.simpleMessage("Reglas"),
+    "providerCount": MessageLookupByLibrary.simpleMessage("Proveedores"),
     "emojiStyle": MessageLookupByLibrary.simpleMessage("Fuente de emojis"),
     "allowBypass": MessageLookupByLibrary.simpleMessage(
       "Permitir que las apps eludan la VPN",

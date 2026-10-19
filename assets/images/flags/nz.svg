@@ -9,7 +9,7 @@
       <use xlink:href="#petal-soft-nz-source-nz-a" transform="rotate(72 0 0)"/>
       <use xlink:href="#petal-soft-nz-source-nz-a" transform="rotate(-72 0 0)"/>
       <use xlink:href="#petal-soft-nz-source-nz-a" transform="scale(-1 1)rotate(72)"/>
-    </g></defs><g clip-path="url(#petal-soft-nz-clip)"><path d="M 256 54.8111 A 142.3218 142.3218 0 0 1 457.1889 256 A 142.3218 142.3218 0 0 1 256 457.1889 A 142.3218 142.3218 0 0 1 54.8111 256 A 142.3218 142.3218 0 0 1 256 54.8111 Z" fill="#fff"/><g transform="translate(16, 16) scale(0.9375)">
+    </g></defs><g transform="translate(8.96, 8.96) scale(0.965)"><g clip-path="url(#petal-soft-nz-clip)"><path d="M 256 54.8111 A 142.3218 142.3218 0 0 1 457.1889 256 A 142.3218 142.3218 0 0 1 256 457.1889 A 142.3218 142.3218 0 0 1 54.8111 256 A 142.3218 142.3218 0 0 1 256 54.8111 Z" fill="#fff"/><g transform="translate(16, 16) scale(0.9375)">
   
   <path fill="#00247d" fill-rule="evenodd" d="M0 0h512v512H0z"/>
   <g transform="translate(382 276) scale(0.78) translate(-382 -276)"><g transform="translate(-148.7 90.5)scale(.60566)">
@@ -33,4 +33,4 @@
   <path fill="#c8102e" d="m92 162 5.5 17L21 256H0v-1.5zm62-6 27 4 75 73.5V256zM256 0l-96 98-2-22 75-76zM0 .5 96.5 95 67 91 0 24.5z"/>
   <path fill="#fff" d="M88 0v256h80V0zM0 88v80h256V88z"/>
   <path fill="#c8102e" d="M0 104v48h256v-48zM104 0v256h48V0z"/>
-</g><path d="M 256 54.8111 A 142.3218 142.3218 0 0 1 457.1889 256 A 142.3218 142.3218 0 0 1 256 457.1889 A 142.3218 142.3218 0 0 1 54.8111 256 A 142.3218 142.3218 0 0 1 256 54.8111 Z" fill="url(#petal-soft-nz-shade)"/></g><path d="M 256 54.8111 A 142.3218 142.3218 0 0 1 457.1889 256 A 142.3218 142.3218 0 0 1 256 457.1889 A 142.3218 142.3218 0 0 1 54.8111 256 A 142.3218 142.3218 0 0 1 256 54.8111 Z" fill="none" stroke="#1f2937" stroke-width="24" stroke-opacity="0.25" stroke-linejoin="round"/></svg>
+</g><path d="M 256 54.8111 A 142.3218 142.3218 0 0 1 457.1889 256 A 142.3218 142.3218 0 0 1 256 457.1889 A 142.3218 142.3218 0 0 1 54.8111 256 A 142.3218 142.3218 0 0 1 256 54.8111 Z" fill="url(#petal-soft-nz-shade)"/></g></g><path d="M 256 54.8111 A 142.3218 142.3218 0 0 1 457.1889 256 A 142.3218 142.3218 0 0 1 256 457.1889 A 142.3218 142.3218 0 0 1 54.8111 256 A 142.3218 142.3218 0 0 1 256 54.8111 Z" fill="none" stroke="currentColor" stroke-width="24" stroke-opacity="0.25" stroke-linejoin="round"/></svg>

@@ -34,7 +34,7 @@
     <linearGradient xlink:href="#petal-soft-ni-source-ni-a" id="petal-soft-ni-source-ni-y" x1="47.9" x2="61.7" y1="3054.2" y2="3054.2" gradientTransform="scale(9.12405 .1096)" gradientUnits="userSpaceOnUse"/>
     <clipPath id="petal-soft-ni-source-ni-c">
       <path d="m500 226.4-63.7 110.3h127.4z"/>
-    </clipPath></defs><g clip-path="url(#petal-soft-ni-clip)"><path d="M 256 54.8111 A 142.3218 142.3218 0 0 1 457.1889 256 A 142.3218 142.3218 0 0 1 256 457.1889 A 142.3218 142.3218 0 0 1 54.8111 256 A 142.3218 142.3218 0 0 1 256 54.8111 Z" fill="#fff"/><g transform="translate(16, 16) scale(0.9375)">
+    </clipPath></defs><g transform="translate(8.96, 8.96) scale(0.965)"><g clip-path="url(#petal-soft-ni-clip)"><path d="M 256 54.8111 A 142.3218 142.3218 0 0 1 457.1889 256 A 142.3218 142.3218 0 0 1 256 457.1889 A 142.3218 142.3218 0 0 1 54.8111 256 A 142.3218 142.3218 0 0 1 256 54.8111 Z" fill="#fff"/><g transform="translate(16, 16) scale(0.9375)">
   
   <path fill="#0067c6" d="M0 0h512v512H0z"/>
   <path fill="#fff" d="M0 170.7h512v170.6H0z"/>
@@ -126,4 +126,4 @@
     <path fill="#fff" d="m550 324.6 4 .3 2.9.3-.4-.5c-.6.2-4.4-.2-6.4 0z"/>
   </g>
   <path fill="#c8a400" d="m256 191.9-27.4 47.5-28 48.6h110.8L284 240.5zm0 2.5 27 46.7 26.3 45.6H202.8l26.9-46.6z"/>
-</g><path d="M 256 54.8111 A 142.3218 142.3218 0 0 1 457.1889 256 A 142.3218 142.3218 0 0 1 256 457.1889 A 142.3218 142.3218 0 0 1 54.8111 256 A 142.3218 142.3218 0 0 1 256 54.8111 Z" fill="url(#petal-soft-ni-shade)"/></g><path d="M 256 54.8111 A 142.3218 142.3218 0 0 1 457.1889 256 A 142.3218 142.3218 0 0 1 256 457.1889 A 142.3218 142.3218 0 0 1 54.8111 256 A 142.3218 142.3218 0 0 1 256 54.8111 Z" fill="none" stroke="#1f2937" stroke-width="24" stroke-opacity="0.25" stroke-linejoin="round"/></svg>
+</g><path d="M 256 54.8111 A 142.3218 142.3218 0 0 1 457.1889 256 A 142.3218 142.3218 0 0 1 256 457.1889 A 142.3218 142.3218 0 0 1 54.8111 256 A 142.3218 142.3218 0 0 1 256 54.8111 Z" fill="url(#petal-soft-ni-shade)"/></g></g><path d="M 256 54.8111 A 142.3218 142.3218 0 0 1 457.1889 256 A 142.3218 142.3218 0 0 1 256 457.1889 A 142.3218 142.3218 0 0 1 54.8111 256 A 142.3218 142.3218 0 0 1 256 54.8111 Z" fill="none" stroke="currentColor" stroke-width="24" stroke-opacity="0.25" stroke-linejoin="round"/></svg>

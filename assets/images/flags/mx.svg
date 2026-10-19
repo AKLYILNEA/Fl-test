@@ -6,7 +6,7 @@
     <linearGradient id="petal-soft-mx-source-mx-a">
       <stop offset="0" stop-color="#fff"/>
       <stop offset="1" stop-color="#f15770"/>
-    </linearGradient></defs><g clip-path="url(#petal-soft-mx-clip)"><path d="M 256 54.8111 A 142.3218 142.3218 0 0 1 457.1889 256 A 142.3218 142.3218 0 0 1 256 457.1889 A 142.3218 142.3218 0 0 1 54.8111 256 A 142.3218 142.3218 0 0 1 256 54.8111 Z" fill="#fff"/><g transform="translate(16, 16) scale(0.9375)">
+    </linearGradient></defs><g transform="translate(8.96, 8.96) scale(0.965)"><g clip-path="url(#petal-soft-mx-clip)"><path d="M 256 54.8111 A 142.3218 142.3218 0 0 1 457.1889 256 A 142.3218 142.3218 0 0 1 256 457.1889 A 142.3218 142.3218 0 0 1 54.8111 256 A 142.3218 142.3218 0 0 1 256 54.8111 Z" fill="#fff"/><g transform="translate(16, 16) scale(0.9375)">
   
   <path fill="#ce1126" d="M341.3 0H512v512H341.3z"/>
   <path fill="#fff" d="M170.7 0h170.6v512H170.7z"/>
@@ -374,4 +374,4 @@
   <path fill="#f9c83a" d="m235.7 220 .3.3-.4-.1z"/>
   <path fill="#8f4620" d="M236 220.3h-.6l.2-.1z"/>
   <path fill="#977c2e" d="M240.7 255.3s.4 0 .5-.3c.2-.2 0 .3 0 .3l-.3.1z"/>
-</g><path d="M 256 54.8111 A 142.3218 142.3218 0 0 1 457.1889 256 A 142.3218 142.3218 0 0 1 256 457.1889 A 142.3218 142.3218 0 0 1 54.8111 256 A 142.3218 142.3218 0 0 1 256 54.8111 Z" fill="url(#petal-soft-mx-shade)"/></g><path d="M 256 54.8111 A 142.3218 142.3218 0 0 1 457.1889 256 A 142.3218 142.3218 0 0 1 256 457.1889 A 142.3218 142.3218 0 0 1 54.8111 256 A 142.3218 142.3218 0 0 1 256 54.8111 Z" fill="none" stroke="#1f2937" stroke-width="24" stroke-opacity="0.25" stroke-linejoin="round"/></svg>
+</g><path d="M 256 54.8111 A 142.3218 142.3218 0 0 1 457.1889 256 A 142.3218 142.3218 0 0 1 256 457.1889 A 142.3218 142.3218 0 0 1 54.8111 256 A 142.3218 142.3218 0 0 1 256 54.8111 Z" fill="url(#petal-soft-mx-shade)"/></g></g><path d="M 256 54.8111 A 142.3218 142.3218 0 0 1 457.1889 256 A 142.3218 142.3218 0 0 1 256 457.1889 A 142.3218 142.3218 0 0 1 54.8111 256 A 142.3218 142.3218 0 0 1 256 54.8111 Z" fill="none" stroke="currentColor" stroke-width="24" stroke-opacity="0.25" stroke-linejoin="round"/></svg>

@@ -310,6 +310,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "Все используемые провайдеры прокси",
     ),
     "customFont": MessageLookupByLibrary.simpleMessage("Пользовательский шрифт"),
+    "nodeCount": MessageLookupByLibrary.simpleMessage("????"),
+    "ruleCount": MessageLookupByLibrary.simpleMessage("???????"),
+    "providerCount": MessageLookupByLibrary.simpleMessage("??????????"),
     "emojiStyle": MessageLookupByLibrary.simpleMessage("Шрифт эмодзи"),
     "allowBypass": MessageLookupByLibrary.simpleMessage(
       "Разрешить приложениям обходить VPN",

@@ -7871,6 +7871,36 @@ class AppLocalizations {
       args: [],
     );
   }
+
+  /// `Proxies`
+  String get nodeCount {
+    return Intl.message(
+      'Proxies',
+      name: 'nodeCount',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Rules`
+  String get ruleCount {
+    return Intl.message(
+      'Rules',
+      name: 'ruleCount',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Providers`
+  String get providerCount {
+    return Intl.message(
+      'Providers',
+      name: 'providerCount',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {

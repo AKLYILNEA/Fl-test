@@ -10,7 +10,7 @@
       </g>
       <use xlink:href="#petal-soft-ve-source-ve-b" width="180" height="120" transform="rotate(-72)"/>
       <use xlink:href="#petal-soft-ve-source-ve-c" width="180" height="120" transform="rotate(144)"/>
-    </g></defs><g clip-path="url(#petal-soft-ve-clip)"><path d="M 256 54.8111 A 142.3218 142.3218 0 0 1 457.1889 256 A 142.3218 142.3218 0 0 1 256 457.1889 A 142.3218 142.3218 0 0 1 54.8111 256 A 142.3218 142.3218 0 0 1 256 54.8111 Z" fill="#fff"/><g transform="translate(16, 16) scale(0.9375)">
+    </g></defs><g transform="translate(8.96, 8.96) scale(0.965)"><g clip-path="url(#petal-soft-ve-clip)"><path d="M 256 54.8111 A 142.3218 142.3218 0 0 1 457.1889 256 A 142.3218 142.3218 0 0 1 256 457.1889 A 142.3218 142.3218 0 0 1 54.8111 256 A 142.3218 142.3218 0 0 1 256 54.8111 Z" fill="#fff"/><g transform="translate(16, 16) scale(0.9375)">
   
   <path fill="#cf142b" d="M0 0h512v512H0z"/>
   <path fill="#00247d" d="M0 0h512v341.3H0z"/>
@@ -23,4 +23,4 @@
     <use href="#petal-soft-ve-source-ve-e" xlink:href="#petal-soft-ve-source-ve-e" width="180" height="120" transform="rotate(40)"/>
   </g>
   <use href="#petal-soft-ve-source-ve-f" xlink:href="#petal-soft-ve-source-ve-f" width="180" height="120" transform="rotate(-80 256.3 358.4)"/>
-</g><path d="M 256 54.8111 A 142.3218 142.3218 0 0 1 457.1889 256 A 142.3218 142.3218 0 0 1 256 457.1889 A 142.3218 142.3218 0 0 1 54.8111 256 A 142.3218 142.3218 0 0 1 256 54.8111 Z" fill="url(#petal-soft-ve-shade)"/></g><path d="M 256 54.8111 A 142.3218 142.3218 0 0 1 457.1889 256 A 142.3218 142.3218 0 0 1 256 457.1889 A 142.3218 142.3218 0 0 1 54.8111 256 A 142.3218 142.3218 0 0 1 256 54.8111 Z" fill="none" stroke="#1f2937" stroke-width="24" stroke-opacity="0.25" stroke-linejoin="round"/></svg>
+</g><path d="M 256 54.8111 A 142.3218 142.3218 0 0 1 457.1889 256 A 142.3218 142.3218 0 0 1 256 457.1889 A 142.3218 142.3218 0 0 1 54.8111 256 A 142.3218 142.3218 0 0 1 256 54.8111 Z" fill="url(#petal-soft-ve-shade)"/></g></g><path d="M 256 54.8111 A 142.3218 142.3218 0 0 1 457.1889 256 A 142.3218 142.3218 0 0 1 256 457.1889 A 142.3218 142.3218 0 0 1 54.8111 256 A 142.3218 142.3218 0 0 1 256 54.8111 Z" fill="none" stroke="currentColor" stroke-width="24" stroke-opacity="0.25" stroke-linejoin="round"/></svg>

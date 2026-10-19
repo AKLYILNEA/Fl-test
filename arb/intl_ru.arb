@@ -943,5 +943,8 @@
   "allReferencedProxies": "Все используемые прокси",
   "allReferencedProxyProviders": "Все используемые провайдеры прокси",
   "emojiStyle": "Шрифт эмодзи",
-  "customFont": "Пользовательский шрифт"
+  "customFont": "Пользовательский шрифт",
+  "nodeCount": "????",
+  "ruleCount": "???????",
+  "providerCount": "??????????"
 }

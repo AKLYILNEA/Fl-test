@@ -538,6 +538,7 @@ class _CountryBadgeState extends State<_CountryBadge>
     final flagAsset = getCountryFlagSvg(code);
     final showFlag = flagAsset != null && !widget.checking;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final Widget flagWidget = SizedBox.square(
       key: ValueKey(flagAsset),
       dimension: size,
@@ -549,6 +550,11 @@ class _CountryBadgeState extends State<_CountryBadge>
             width: size,
             height: size,
             fit: BoxFit.contain,
+            theme: SvgTheme(
+              currentColor: isDark
+                  ? const Color(0xFFFFFFFF)
+                  : const Color(0xFF1F2937),
+            ),
           ),
           if (_focused)
             CustomPaint(

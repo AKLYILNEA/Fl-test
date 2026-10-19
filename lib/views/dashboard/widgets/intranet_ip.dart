@@ -79,7 +79,7 @@ class IntranetIpCard extends ConsumerWidget {
       semanticLabel: appLocalizations.intranetIP,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: mobile ? MainAxisSize.min : MainAxisSize.max,
+        mainAxisSize: MainAxisSize.max,
         children: [
           DashboardCardHeader(
             glyph: AppGlyphs.devices,
@@ -114,7 +114,7 @@ class IntranetIpCard extends ConsumerWidget {
               },
             ),
           ),
-          if (mobile) const SizedBox(height: 14) else const Spacer(),
+          const Spacer(),
           LayoutBuilder(
             builder: (context, constraints) {
               final title = appLocalizations.allowLan;
