@@ -267,12 +267,12 @@ class _ConfigStatsState extends ConsumerState<_ConfigStats>
             ? AppTextStyle.subheadline
             : AppTextStyle.title2)
         .of(context, emphasized: true)
-        .copyWith(color: colorScheme.onSurface, letterSpacing: 0);
+        .copyWith(color: colorScheme.onSurface, letterSpacing: 0, height: 1.0);
     final labelStyle = (density.isCompact
             ? AppTextStyle.caption2
             : AppTextStyle.caption1)
         .of(context)
-        .copyWith(color: colorScheme.onSurfaceVariant);
+        .copyWith(color: colorScheme.onSurfaceVariant, height: 1.0);
 
     Widget box(int? value, String name) => Expanded(
       child: Container(
@@ -282,7 +282,7 @@ class _ConfigStatsState extends ConsumerState<_ConfigStats>
           shape: AppShape.all(radius),
         ),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             if (value != null)
@@ -291,7 +291,6 @@ class _ConfigStatsState extends ConsumerState<_ConfigStats>
               Text('—', maxLines: 1, style: figureStyle)
             else
               SkeletonText(width: 28, style: figureStyle),
-            const SizedBox(height: 2),
             Text(
               name,
               maxLines: 1,

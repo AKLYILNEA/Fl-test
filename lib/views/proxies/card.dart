@@ -38,6 +38,7 @@ class ProxyCard extends ConsumerWidget {
   final GroupType groupType;
   final ProxyCardType type;
   final String? testUrl;
+  final bool isTabMode;
 
   const ProxyCard({
     super.key,
@@ -46,6 +47,7 @@ class ProxyCard extends ConsumerWidget {
     required this.proxy,
     required this.groupType,
     required this.type,
+    this.isTabMode = false,
   });
 
   Measure get measure => globalState.measure;
@@ -175,6 +177,8 @@ class ProxyCard extends ConsumerWidget {
                   ],
                 ),
               );
+        final showTint = !isTabMode && inUse;
+        final showCheckmark = isTabMode && inUse;
         return CommonCard(
           radius: AppCorner.lg,
           enterActionsOnRight: true,
@@ -188,11 +192,11 @@ class ProxyCard extends ConsumerWidget {
             );
           },
           isSelected: inUse,
-          // The chip tint the profile cards use, not a filled primary: the card
-          // keeps its own text colours.
+          // The chip tint the profile cards use in list mode, not a filled primary:
+          // the card keeps its own text colours. Tab mode uses checkmark badge.
           child: DecoratedBox(
             decoration: ShapeDecoration(
-              color: inUse ? colorScheme.primary.opacity15 : Colors.transparent,
+              color: showTint ? colorScheme.primary.opacity15 : Colors.transparent,
               shape: AppShape.all(AppCorner.lg),
             ),
             child: Container(
@@ -207,7 +211,9 @@ class ProxyCard extends ConsumerWidget {
                     spacing: 4,
                     children: [
                       Expanded(child: _buildNameRow(context, ref)),
-                      if (pinned) SelectionBadge.preferred(inUse: inUse),
+                      if (showCheckmark) const SelectionBadge(size: 20),
+                      if (pinned && !showCheckmark)
+                        SelectionBadge.preferred(inUse: inUse),
                     ],
                   ),
                   const SizedBox(height: 8),
