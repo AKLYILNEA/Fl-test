@@ -361,7 +361,7 @@ class _GroupsFigure extends StatelessWidget {
             alignment: PlaceholderAlignment.baseline,
             baseline: TextBaseline.alphabetic,
             child: Transform.translate(
-              offset: const Offset(0, -2),
+              offset: const Offset(0, -1),
               child: Text(
                 ' ${context.appLocalizations.groupCountUnit}',
                 style: DashboardText.unit(context),
