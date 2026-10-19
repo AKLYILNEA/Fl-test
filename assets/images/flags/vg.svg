@@ -3,7 +3,7 @@
 <linearGradient id="petal-soft-vg-source-vg-a" x1="103.1" x2="92.6" y1="111.3" y2="107.8" gradientTransform="matrix(.99614 0 0 2.25255 703.8 -75)" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="red"/>
       <stop offset="1" stop-color="#ff0"/>
-    </linearGradient></defs><path d="M 256 54.8111 A 142.3218 142.3218 0 0 1 457.1889 256 A 142.3218 142.3218 0 0 1 256 457.1889 A 142.3218 142.3218 0 0 1 54.8111 256 A 142.3218 142.3218 0 0 1 256 54.8111 Z" fill="none" stroke="currentColor" stroke-width="32" stroke-opacity="0.25" stroke-linejoin="round"/><g clip-path="url(#petal-soft-vg-clip)"><path d="M 256 54.8111 A 142.3218 142.3218 0 0 1 457.1889 256 A 142.3218 142.3218 0 0 1 256 457.1889 A 142.3218 142.3218 0 0 1 54.8111 256 A 142.3218 142.3218 0 0 1 256 54.8111 Z" fill="#fff"/><g transform="translate(16, 16) scale(0.9375)">
+    </linearGradient></defs><path d="M 256 54.8111 A 142.3218 142.3218 0 0 1 457.1889 256 A 142.3218 142.3218 0 0 1 256 457.1889 A 142.3218 142.3218 0 0 1 54.8111 256 A 142.3218 142.3218 0 0 1 256 54.8111 Z" fill="none" stroke="currentColor" stroke-width="48" stroke-opacity="0.25" stroke-linejoin="round"/><g clip-path="url(#petal-soft-vg-clip)"><path d="M 256 54.8111 A 142.3218 142.3218 0 0 1 457.1889 256 A 142.3218 142.3218 0 0 1 256 457.1889 A 142.3218 142.3218 0 0 1 54.8111 256 A 142.3218 142.3218 0 0 1 256 54.8111 Z" fill="#fff"/><g transform="translate(16, 16) scale(0.9375)">
   
   <path fill="#006" d="M0 0h512v512H0Z"/>
   <g transform="translate(366 288) scale(0.88) translate(-384 -256)" data-petal-territory="vg"><g transform="translate(-282.6 18.3)scale(.73883)">

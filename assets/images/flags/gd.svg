@@ -9,7 +9,7 @@
       <use xlink:href="#petal-soft-gd-source-gd-b" width="100%" height="100%" transform="rotate(144)"/>
       <use xlink:href="#petal-soft-gd-source-gd-b" width="100%" height="100%" transform="rotate(-144)"/>
       <use xlink:href="#petal-soft-gd-source-gd-b" width="100%" height="100%" transform="rotate(-72)"/>
-    </g></defs><path d="M 256 54.8111 A 142.3218 142.3218 0 0 1 457.1889 256 A 142.3218 142.3218 0 0 1 256 457.1889 A 142.3218 142.3218 0 0 1 54.8111 256 A 142.3218 142.3218 0 0 1 256 54.8111 Z" fill="none" stroke="currentColor" stroke-width="32" stroke-opacity="0.25" stroke-linejoin="round"/><g clip-path="url(#petal-soft-gd-clip)"><path d="M 256 54.8111 A 142.3218 142.3218 0 0 1 457.1889 256 A 142.3218 142.3218 0 0 1 256 457.1889 A 142.3218 142.3218 0 0 1 54.8111 256 A 142.3218 142.3218 0 0 1 256 54.8111 Z" fill="#fff"/><g transform="translate(16, 16) scale(0.9375)">
+    </g></defs><path d="M 256 54.8111 A 142.3218 142.3218 0 0 1 457.1889 256 A 142.3218 142.3218 0 0 1 256 457.1889 A 142.3218 142.3218 0 0 1 54.8111 256 A 142.3218 142.3218 0 0 1 256 54.8111 Z" fill="none" stroke="currentColor" stroke-width="48" stroke-opacity="0.25" stroke-linejoin="round"/><g clip-path="url(#petal-soft-gd-clip)"><path d="M 256 54.8111 A 142.3218 142.3218 0 0 1 457.1889 256 A 142.3218 142.3218 0 0 1 256 457.1889 A 142.3218 142.3218 0 0 1 54.8111 256 A 142.3218 142.3218 0 0 1 256 54.8111 Z" fill="#fff"/><g transform="translate(16, 16) scale(0.9375)">
   
   <path fill="#ce1126" d="M0 0h512v512H0z"/>
   <path fill="#007a5e" d="M71.7 71.7h368.6v368.6H71.7z"/>
