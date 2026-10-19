@@ -350,9 +350,6 @@ class _GroupsFigure extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final unit = context.appLocalizations.groupCountUnit;
-    final separator =
-        Localizations.localeOf(context).languageCode.startsWith('zh') ? '' : ' ';
     final count = Text.rich(
       TextSpan(
         children: [
@@ -361,7 +358,7 @@ class _GroupsFigure extends StatelessWidget {
             style: DashboardText.figure(context, metrics.style),
           ),
           TextSpan(
-            text: '$separator$unit',
+            text: ' ${context.appLocalizations.groupCountUnit}',
             style: DashboardText.unit(context),
           ),
         ],

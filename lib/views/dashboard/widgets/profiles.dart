@@ -291,11 +291,14 @@ class _ConfigStatsState extends ConsumerState<_ConfigStats>
               Text('—', maxLines: 1, style: figureStyle)
             else
               SkeletonText(width: 28, style: figureStyle),
-            Text(
-              name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: labelStyle,
+            Transform.translate(
+              offset: const Offset(0, -3),
+              child: Text(
+                name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: labelStyle,
+              ),
             ),
           ],
         ),
