@@ -357,9 +357,16 @@ class _GroupsFigure extends StatelessWidget {
             text: '${groups.length}',
             style: DashboardText.figure(context, metrics.style),
           ),
-          TextSpan(
-            text: ' ${context.appLocalizations.groupCountUnit}',
-            style: DashboardText.unit(context),
+          WidgetSpan(
+            alignment: PlaceholderAlignment.baseline,
+            baseline: TextBaseline.alphabetic,
+            child: Transform.translate(
+              offset: const Offset(0, -2),
+              child: Text(
+                ' ${context.appLocalizations.groupCountUnit}',
+                style: DashboardText.unit(context),
+              ),
+            ),
           ),
         ],
       ),
