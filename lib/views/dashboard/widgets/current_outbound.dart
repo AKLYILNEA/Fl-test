@@ -166,7 +166,6 @@ class _CurrentOutboundCardState extends ConsumerState<CurrentOutboundCard>
                         onRefresh: () => _refresh(ipInfo?.ip),
                         active: isStart && !suspended,
                         metrics: metrics,
-                        large: !density.isDesktop,
                       ),
                       if (density.isDesktop)
                         const Spacer()
@@ -278,7 +277,6 @@ class _ExitRow extends StatelessWidget {
     required this.onRefresh,
     required this.active,
     required this.metrics,
-    required this.large,
   });
 
   final IpInfo? info;
@@ -288,7 +286,6 @@ class _ExitRow extends StatelessWidget {
   final VoidCallback onRefresh;
   final bool active;
   final _OutboundMetrics metrics;
-  final bool large;
 
   @override
   Widget build(BuildContext context) {
@@ -335,20 +332,22 @@ class _ExitRow extends StatelessWidget {
           onRefresh: onRefresh,
         ),
         Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                height:
-                    metrics.ip.leading * DashboardDensityScope.scaleOf(context),
-                child: Align(
-                  alignment: AlignmentDirectional.centerStart,
+          child: SizedBox(
+            height: metrics.badgeSize,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 3),
                   child: ip,
                 ),
-              ),
-              const SizedBox(height: 4),
-              _RunTimeSubText(active: active, large: large),
-            ],
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 1),
+                  child: _RunTimeSubText(active: active),
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -380,31 +379,24 @@ class _IpText extends ConsumerWidget {
   }
 }
 
-double _chipHeight(bool large) => large ? 28 : 24;
-
 class _RunTimeSubText extends ConsumerWidget {
-  const _RunTimeSubText({required this.active, required this.large});
+  const _RunTimeSubText({required this.active});
 
   final bool active;
-  final bool large;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final style = _monoCellStyle(context).copyWith(
+      fontSize: 14,
+      height: 1.1,
       color: active
           ? context.colorScheme.onSurfaceVariant
           : context.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
     );
-    return SizedBox(
-      height: _chipHeight(large),
-      child: Align(
-        alignment: AlignmentDirectional.centerStart,
-        child: Text(
-          active ? getTimeText(ref.watch(runTimeProvider)) : '00:00:00',
-          maxLines: 1,
-          style: style,
-        ),
-      ),
+    return Text(
+      active ? getTimeText(ref.watch(runTimeProvider)) : '00:00:00',
+      maxLines: 1,
+      style: style,
     );
   }
 }
