@@ -292,7 +292,7 @@ class _ConfigStatsState extends ConsumerState<_ConfigStats>
             else
               SkeletonText(width: 28, style: figureStyle),
             Transform.translate(
-              offset: const Offset(0, -3),
+              offset: const Offset(0, -2),
               child: Text(
                 name,
                 maxLines: 1,
