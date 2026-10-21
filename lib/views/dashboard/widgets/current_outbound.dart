@@ -339,11 +339,11 @@ class _ExitRow extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(top: 1.5),
+                  padding: const EdgeInsets.only(top: 0.5),
                   child: ip,
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 1),
+                  padding: const EdgeInsets.only(bottom: 1.5),
                   child: _RunTimeSubText(active: active),
                 ),
               ],
