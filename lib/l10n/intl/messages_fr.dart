@@ -1093,6 +1093,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "ipFlagVpn": MessageLookupByLibrary.simpleMessage("VPN"),
     "ipFlags": MessageLookupByLibrary.simpleMessage("Indicateurs"),
     "ipOrganization": MessageLookupByLibrary.simpleMessage("Organisation"),
+    "proxyNode": MessageLookupByLibrary.simpleMessage("Nœud proxy"),
     "ipQualityFailed": MessageLookupByLibrary.simpleMessage(
       "Impossible de déterminer le type de l’IP",
     ),

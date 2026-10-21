@@ -743,6 +743,7 @@
   "ipFlagTor": "Tor",
   "ipFlagAbuser": "Abuse history",
   "ipOrganization": "Organization",
+  "proxyNode": "Proxy Node",
   "ipAsn": "ASN",
   "ipQualitySource": "Answered by",
   "ipQualitySources": "Sources",

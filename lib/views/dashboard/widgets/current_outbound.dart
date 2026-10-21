@@ -16,7 +16,6 @@ import 'package:fl_clash/views/dashboard/probe_start_hold.dart';
 import 'package:fl_clash/views/dashboard/style.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:material_new_shapes/material_new_shapes.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -535,72 +534,6 @@ class _CountryBadgeState extends State<_CountryBadge>
       foreground.withValues(alpha: enabled && _hovered ? 0.08 : 0),
       DashboardColors.of(context).tone2,
     );
-    final flagAsset = getCountryFlagSvg(code);
-    final showFlag = flagAsset != null && !widget.checking;
-
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final Widget flagWidget = SizedBox.square(
-      key: ValueKey(flagAsset),
-      dimension: size,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          SvgPicture.asset(
-            flagAsset ?? '',
-            width: size,
-            height: size,
-            fit: BoxFit.contain,
-            theme: SvgTheme(
-              currentColor: isDark
-                  ? const Color(0xFFFFFFFF)
-                  : const Color(0xFF1F2937),
-            ),
-          ),
-          if (_focused)
-            CustomPaint(
-              size: Size.square(size),
-              painter: ShapePainter(
-                path: shapePathOf(MaterialShapes.clover4Leaf),
-                color: Colors.transparent,
-                ring: focusRingSide(colorScheme),
-              ),
-            ),
-        ],
-      ),
-    );
-
-    final Widget cloverBadge = SizedBox.square(
-      key: const ValueKey('clover_original'),
-      dimension: size,
-      child: AnimatedBuilder(
-        animation: _turns,
-        builder: (_, child) => ShapeBadge(
-          shape: MaterialShapes.clover4Leaf,
-          color: color,
-          size: size,
-          rotation: _turns.value * 2 * math.pi,
-          ring: _focused ? focusRingSide(colorScheme) : null,
-          child: child,
-        ),
-        child: code == null || code.isEmpty || widget.checking
-            ? GlyphIcon(
-                AppGlyphs.proxies,
-                size: size * 0.42,
-                color: foreground,
-              )
-            : Text(
-                code.toUpperCase(),
-                maxLines: 1,
-                style: AppTextStyle.footnote
-                    .of(context, emphasized: true)
-                    .copyWith(
-                      color: foreground,
-                      letterSpacing: 0.04 * AppTextStyle.footnote.size,
-                    ),
-              ),
-      ),
-    );
-
     return Tooltip(
       message: tooltip,
       child: Semantics(
@@ -615,23 +548,32 @@ class _CountryBadgeState extends State<_CountryBadge>
           splashFactory: NoSplash.splashFactory,
           child: ElasticPress(
             enabled: enabled,
-            child: AnimatedSwitcher(
-              duration: context.motionDuration(const Duration(milliseconds: 350)),
-              switchInCurve: Curves.easeInOut,
-              switchOutCurve: Curves.easeInOut,
-              layoutBuilder: (currentChild, previousChildren) {
-                return Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    ...previousChildren,
-                    if (currentChild != null) currentChild,
-                  ],
-                );
-              },
-              transitionBuilder: (child, animation) {
-                return FadeTransition(opacity: animation, child: child);
-              },
-              child: showFlag ? flagWidget : cloverBadge,
+            child: AnimatedBuilder(
+              animation: _turns,
+              builder: (_, child) => ShapeBadge(
+                shape: MaterialShapes.clover4Leaf,
+                color: color,
+                size: size,
+                rotation: _turns.value * 2 * math.pi,
+                ring: _focused ? focusRingSide(colorScheme) : null,
+                child: child,
+              ),
+              child: code == null || code.isEmpty
+                  ? GlyphIcon(
+                      AppGlyphs.proxies,
+                      size: size * 0.42,
+                      color: foreground,
+                    )
+                  : Text(
+                      code.toUpperCase(),
+                      maxLines: 1,
+                      style: AppTextStyle.footnote
+                          .of(context, emphasized: true)
+                          .copyWith(
+                            color: foreground,
+                            letterSpacing: 0.04 * AppTextStyle.footnote.size,
+                          ),
+                    ),
             ),
           ),
         ),
@@ -655,6 +597,12 @@ class _Cells extends StatelessWidget {
         _Cell(
           label: appLocalizations.runTime,
           value: active ? const _RunTimeValue() : const _Placeholder(),
+        ),
+        Flexible(
+          child: _Cell(
+            label: appLocalizations.proxyNode,
+            value: active ? const _ProxyNodeValue() : const _Placeholder(),
+          ),
         ),
       ],
     );
@@ -726,6 +674,61 @@ class _RunTimeValue extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return _CellText(getTimeText(ref.watch(runTimeProvider)), monospace: true);
+  }
+}
+
+class _ProxyNodeValue extends ConsumerWidget {
+  const _ProxyNodeValue();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final entry = ref.watch(
+      outboundIpProbeProvider.select((state) => state.entryOf(routedOutbound)),
+    );
+    final exit = entry.stamp?.chains.firstOrNull;
+    if (exit != null && exit.isNotEmpty) {
+      return _NodeCellText(exit);
+    }
+    final groups = ref.watch(currentGroupsStateProvider).value;
+    final currentGroupName = ref.watch(
+      currentProfileProvider.select((state) => state?.currentGroupName),
+    );
+    final group = groups.where((g) => g.name == currentGroupName).firstOrNull ??
+        groups.firstOrNull;
+    if (group != null) {
+      final selected = ref.watch(
+        realSelectedProxyStateProvider(group.name).select((state) => state.proxyName),
+      );
+      if (selected.isNotEmpty) {
+        return _NodeCellText(selected);
+      }
+    }
+    if (entry.isLoading) {
+      return SkeletonText(width: 80, style: _cellStyle(context));
+    }
+    return const _Placeholder();
+  }
+}
+
+class _NodeCellText extends StatelessWidget {
+  const _NodeCellText(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = _cellStyle(context);
+    return Tooltip(
+      message: text,
+      child: EmojiText(
+        text,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: isBuiltinOutbound(text)
+            ? style.copyWith(color: context.colorScheme.onSurfaceVariant)
+            : style,
+      ),
+    );
   }
 }
 

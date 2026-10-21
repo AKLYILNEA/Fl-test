@@ -6143,6 +6143,16 @@ class AppLocalizations {
     );
   }
 
+  /// `Proxy Node`
+  String get proxyNode {
+    return Intl.message(
+      'Proxy Node',
+      name: 'proxyNode',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `ASN`
   String get ipAsn {
     return Intl.message('ASN', name: 'ipAsn', desc: '', args: []);

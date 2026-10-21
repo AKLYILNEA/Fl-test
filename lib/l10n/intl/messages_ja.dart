@@ -875,6 +875,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "ipFlagVpn": MessageLookupByLibrary.simpleMessage("VPN"),
     "ipFlags": MessageLookupByLibrary.simpleMessage("検出"),
     "ipOrganization": MessageLookupByLibrary.simpleMessage("組織"),
+    "proxyNode": MessageLookupByLibrary.simpleMessage("プロキシノード"),
     "ipQualityFailed": MessageLookupByLibrary.simpleMessage(
       "IP タイプを判定できませんでした",
     ),

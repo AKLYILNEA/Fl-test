@@ -743,6 +743,7 @@
   "ipFlagTor": "Tor",
   "ipFlagAbuser": "Злоупотребления",
   "ipOrganization": "Организация",
+  "proxyNode": "Прокси-узел",
   "ipAsn": "ASN",
   "ipQualitySource": "Источник ответа",
   "ipQualitySources": "Источники",

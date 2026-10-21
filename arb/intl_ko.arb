@@ -743,6 +743,7 @@
   "ipFlagTor": "Tor",
   "ipFlagAbuser": "악용 이력",
   "ipOrganization": "조직",
+  "proxyNode": "프록시 노드",
   "ipAsn": "ASN",
   "ipQualitySource": "응답 출처",
   "ipQualitySources": "출처",

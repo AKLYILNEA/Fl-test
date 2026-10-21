@@ -743,6 +743,7 @@
   "ipFlagTor": "Tor",
   "ipFlagAbuser": "滥用记录",
   "ipOrganization": "组织",
+  "proxyNode": "代理节点",
   "ipAsn": "ASN",
   "ipQualitySource": "采用来源",
   "ipQualitySources": "各来源",
