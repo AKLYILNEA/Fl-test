@@ -157,7 +157,10 @@ class _CurrentOutboundCardState extends ConsumerState<CurrentOutboundCard>
                           ),
                         ],
                       ),
-                      SizedBox(height: metrics.ipTop),
+                      if (density.isDesktop)
+                        const Spacer()
+                      else
+                        SizedBox(height: metrics.ipTop),
                       _ExitRow(
                         info: ipInfo,
                         failed: failed,
@@ -333,14 +336,17 @@ class _ExitRow extends StatelessWidget {
           onRefresh: onRefresh,
         ),
         Expanded(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ip,
-              const SizedBox(height: 2),
-              _RunTimeSubText(active: active),
-            ],
+          child: Transform.translate(
+            offset: const Offset(0, -1),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ip,
+                const SizedBox(height: 2),
+                _RunTimeSubText(active: active),
+              ],
+            ),
           ),
         ),
       ],
@@ -550,6 +556,7 @@ class _Cell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cellHeight = MediaQuery.textScalerOf(context).scale(20.0);
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -561,7 +568,13 @@ class _Cell extends StatelessWidget {
           style: DashboardText.label(context),
         ),
         const SizedBox(height: 2),
-        value,
+        SizedBox(
+          height: cellHeight,
+          child: Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: value,
+          ),
+        ),
       ],
     );
   }
