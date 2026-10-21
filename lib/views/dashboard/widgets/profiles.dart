@@ -261,47 +261,83 @@ class _ConfigStatsState extends ConsumerState<_ConfigStats>
       final counts? => profileStatsOf(counts, providers),
       null => null,
     };
+    final desktop = density.isDesktop;
     final radius = density.isCompact ? 16.0 : 20.0;
-    final boxHeight = density.isCompact ? 44.0 : 58.0;
-    final figureStyle = (density.isCompact
-            ? AppTextStyle.subheadline
-            : AppTextStyle.title2)
-        .of(context, emphasized: true)
-        .copyWith(color: colorScheme.onSurface, letterSpacing: 0, height: 1.0);
-    final labelStyle = (density.isCompact
-            ? AppTextStyle.caption2
-            : AppTextStyle.caption1)
-        .of(context)
-        .copyWith(color: colorScheme.onSurfaceVariant, height: 1.0);
+    final boxHeight = desktop
+        ? (density.isCompact ? 48.0 : 58.0)
+        : 58.0;
+    final figureStyle = desktop
+        ? DashboardText.rowTitle(
+            context,
+          ).copyWith(color: colorScheme.onSurface, letterSpacing: 0)
+        : (density.isCompact
+                ? AppTextStyle.subheadline
+                : AppTextStyle.title2)
+            .of(context, emphasized: true)
+            .copyWith(
+              color: colorScheme.onSurface,
+              letterSpacing: 0,
+              height: 1.0,
+            );
+    final labelStyle = desktop
+        ? DashboardText.label(context)
+        : (density.isCompact
+                ? AppTextStyle.caption2
+                : AppTextStyle.caption1)
+            .of(context)
+            .copyWith(color: colorScheme.onSurfaceVariant, height: 1.0);
+    final vPad = density.isCompact ? 6.0 : 11.0;
 
     Widget box(int? value, String name) => Expanded(
       child: Container(
         height: boxHeight,
+        padding: desktop
+            ? EdgeInsets.symmetric(vertical: vPad, horizontal: 4)
+            : null,
         decoration: ShapeDecoration(
           color: DashboardColors.of(context).tone,
           shape: AppShape.all(radius),
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            if (value != null)
-              Text(dashboardCount(value), maxLines: 1, style: figureStyle)
-            else if (configCountsFailed)
-              Text('—', maxLines: 1, style: figureStyle)
-            else
-              SkeletonText(width: 28, style: figureStyle),
-            Transform.translate(
-              offset: const Offset(0, -2),
-              child: Text(
-                name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: labelStyle,
+        child: desktop
+            ? Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  if (value != null)
+                    Text(dashboardCount(value), maxLines: 1, style: figureStyle)
+                  else if (configCountsFailed)
+                    Text('—', maxLines: 1, style: figureStyle)
+                  else
+                    SkeletonText(width: 28, style: figureStyle),
+                  Text(
+                    name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: labelStyle,
+                  ),
+                ],
+              )
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  if (value != null)
+                    Text(dashboardCount(value), maxLines: 1, style: figureStyle)
+                  else if (configCountsFailed)
+                    Text('—', maxLines: 1, style: figureStyle)
+                  else
+                    SkeletonText(width: 28, style: figureStyle),
+                  Transform.translate(
+                    offset: const Offset(0, -2),
+                    child: Text(
+                      name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: labelStyle,
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
       ),
     );
 
