@@ -4,7 +4,6 @@ import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/common/service_probe.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/features/features.dart';
-import 'package:fl_clash/features/ip_quality/labels.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/ip_quality.dart';
 import 'package:fl_clash/providers/outbound_ip.dart';
@@ -165,8 +164,7 @@ class _CurrentOutboundCardState extends ConsumerState<CurrentOutboundCard>
                         loading: loading,
                         checking: phase == ProbePhase.probing || qualityLoading,
                         onRefresh: () => _refresh(ipInfo?.ip),
-                        quality: quality,
-                        active: isStart,
+                        active: isStart && !suspended,
                         metrics: metrics,
                         large: !density.isDesktop,
                       ),
@@ -278,7 +276,6 @@ class _ExitRow extends StatelessWidget {
     required this.loading,
     required this.checking,
     required this.onRefresh,
-    required this.quality,
     required this.active,
     required this.metrics,
     required this.large,
@@ -289,7 +286,6 @@ class _ExitRow extends StatelessWidget {
   final bool loading;
   final bool checking;
   final VoidCallback onRefresh;
-  final IpQuality? quality;
   final bool active;
   final _OutboundMetrics metrics;
   final bool large;
@@ -351,21 +347,7 @@ class _ExitRow extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 4),
-              if (failed)
-                SizedBox(
-                  height: _chipHeight(large),
-                  child: Align(
-                    alignment: AlignmentDirectional.centerStart,
-                    child: Text(
-                      appLocalizations.tapIconToRetry,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: DashboardText.label(context),
-                    ),
-                  ),
-                )
-              else
-                _IpChips(quality: quality, loading: loading, large: large),
+              _RunTimeSubText(active: active, large: large),
             ],
           ),
         ),
@@ -400,56 +382,27 @@ class _IpText extends ConsumerWidget {
 
 double _chipHeight(bool large) => large ? 28 : 24;
 
-const _chipSkeletonWidths = [48.0, 72.0];
+class _RunTimeSubText extends ConsumerWidget {
+  const _RunTimeSubText({required this.active, required this.large});
 
-class _IpChips extends StatelessWidget {
-  const _IpChips({
-    required this.quality,
-    required this.loading,
-    required this.large,
-  });
-
-  final IpQuality? quality;
-  final bool loading;
+  final bool active;
   final bool large;
 
   @override
-  Widget build(BuildContext context) {
-    final quality = this.quality;
-    final height = _chipHeight(large);
-    // Chips that do not fit wrap onto a clipped second line; the details
-    // sheet still lists them all.
+  Widget build(BuildContext context, WidgetRef ref) {
+    final style = _monoCellStyle(context).copyWith(
+      color: active
+          ? context.colorScheme.onSurfaceVariant
+          : context.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+    );
     return SizedBox(
-      height: height,
-      child: ClipRect(
-        child: Wrap(
-          spacing: 6,
-          runSpacing: height,
-          children: switch (quality) {
-            final quality? => [
-              DashboardChip(label: quality.type.label(context), large: large),
-              DashboardChip(
-                label:
-                    '${context.appLocalizations.ipQualityShort} ${quality.level.label(context)}',
-                tone: switch (quality.level) {
-                  IpQualityLevel.good => DashboardChipTone.ok,
-                  IpQualityLevel.normal => DashboardChipTone.idle,
-                  IpQualityLevel.risky => DashboardChipTone.warn,
-                },
-                large: large,
-              ),
-            ],
-            null when loading => [
-              for (final width in _chipSkeletonWidths)
-                SkeletonPill(width: width, height: height),
-            ],
-            null => [
-              DashboardChip(
-                label: context.appLocalizations.ipTypeUnknown,
-                large: large,
-              ),
-            ],
-          },
+      height: _chipHeight(large),
+      child: Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: Text(
+          active ? getTimeText(ref.watch(runTimeProvider)) : '00:00:00',
+          maxLines: 1,
+          style: style,
         ),
       ),
     );
@@ -592,13 +545,8 @@ class _Cells extends StatelessWidget {
   Widget build(BuildContext context) {
     final appLocalizations = context.appLocalizations;
     return Row(
-      spacing: gap,
       children: [
-        _Cell(
-          label: appLocalizations.runTime,
-          value: active ? const _RunTimeValue() : const _Placeholder(),
-        ),
-        Flexible(
+        Expanded(
           child: _Cell(
             label: appLocalizations.proxyNode,
             value: active ? const _ProxyNodeValue() : const _Placeholder(),
@@ -665,15 +613,6 @@ class _Placeholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text('—', maxLines: 1, style: _cellStyle(context));
-  }
-}
-
-class _RunTimeValue extends ConsumerWidget {
-  const _RunTimeValue();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return _CellText(getTimeText(ref.watch(runTimeProvider)), monospace: true);
   }
 }
 
