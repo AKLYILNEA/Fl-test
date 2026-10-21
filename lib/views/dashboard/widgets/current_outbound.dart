@@ -606,25 +606,22 @@ class _ProxyNodeValue extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final mode = ref.watch(
-      patchClashConfigProvider.select((state) => state.mode),
+    final entry = ref.watch(
+      outboundIpProbeProvider.select((state) => state.entryOf(routedOutbound)),
     );
-    if (mode == Mode.direct) {
-      return _NodeCellText(context.appLocalizations.direct);
+    if (entry.isLoading) {
+      return SkeletonText(width: 80, style: _cellStyle(context));
     }
-
+    final exit = entry.stamp?.chains.firstOrNull;
+    if (exit != null && exit.isNotEmpty) {
+      return _NodeCellText(exit);
+    }
     final groups = ref.watch(currentGroupsStateProvider).value;
     final currentGroupName = ref.watch(
       currentProfileProvider.select((state) => state?.currentGroupName),
     );
-    final group = switch (mode) {
-      Mode.global => groups.where((g) => g.name == GroupName.GLOBAL.name).firstOrNull,
-      Mode.rule => groups.where((g) => g.name == currentGroupName).firstOrNull ??
-          groups.where((g) => g.name != GroupName.GLOBAL.name).firstOrNull ??
-          groups.firstOrNull,
-      Mode.direct => null,
-    };
-
+    final group = groups.where((g) => g.name == currentGroupName).firstOrNull ??
+        groups.firstOrNull;
     if (group != null) {
       final selected = ref.watch(
         realSelectedProxyStateProvider(group.name).select((state) => state.proxyName),
@@ -633,15 +630,6 @@ class _ProxyNodeValue extends ConsumerWidget {
         return _NodeCellText(selected);
       }
     }
-
-    final entry = ref.watch(
-      outboundIpProbeProvider.select((state) => state.entryOf(routedOutbound)),
-    );
-    final exit = entry.stamp?.chains.firstOrNull;
-    if (exit != null && exit.isNotEmpty) {
-      return _NodeCellText(exit);
-    }
-
     return const _Placeholder();
   }
 }
