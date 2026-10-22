@@ -226,9 +226,9 @@ class _OutboundMetrics {
       ip: AppTextStyle.title1,
       buttonSize: 104,
       buttonSlot: 120,
-      decorationSize: 240,
-      decorationEnd: -39,
-      decorationTop: -62,
+      decorationSize: 250,
+      decorationEnd: -44,
+      decorationTop: -67,
     ),
     DashboardDensity.compact => _OutboundMetrics(
       padding: dashboardCardPadding(density),
@@ -239,9 +239,9 @@ class _OutboundMetrics {
       ip: AppTextStyle.title2,
       buttonSize: 84,
       buttonSlot: 100,
-      decorationSize: 208,
-      decorationEnd: -43,
-      decorationTop: -54,
+      decorationSize: 216,
+      decorationEnd: -47,
+      decorationTop: -58,
     ),
     DashboardDensity.mobile => const _OutboundMetrics(
       padding: EdgeInsetsDirectional.fromSTEB(20, 18, 16, 18),
@@ -252,9 +252,9 @@ class _OutboundMetrics {
       ip: AppTextStyle.title2,
       buttonSize: 88,
       buttonSlot: 88,
-      decorationSize: 200,
-      decorationEnd: -40,
-      decorationTop: -46,
+      decorationSize: 206,
+      decorationEnd: -43,
+      decorationTop: -49,
     ),
   };
 
