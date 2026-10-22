@@ -227,7 +227,7 @@ class _OutboundMetrics {
       buttonSize: 104,
       buttonSlot: 120,
       decorationSize: 268,
-      decorationEnd: -53,
+      decorationEnd: -52,
       decorationTop: -76,
     ),
     DashboardDensity.compact => _OutboundMetrics(
@@ -240,7 +240,7 @@ class _OutboundMetrics {
       buttonSize: 84,
       buttonSlot: 100,
       decorationSize: 232,
-      decorationEnd: -55,
+      decorationEnd: -46,
       decorationTop: -66,
     ),
     DashboardDensity.mobile => const _OutboundMetrics(
