@@ -262,17 +262,12 @@ class _ConfigStatsState extends ConsumerState<_ConfigStats>
       null => null,
     };
     final desktop = density.isDesktop;
-    final radius = density.isCompact ? 16.0 : 20.0;
-    final boxHeight = desktop
-        ? (density.isCompact ? 48.0 : 58.0)
-        : 58.0;
+    final boxHeight = desktop ? 56.0 : 58.0;
     final figureStyle = desktop
         ? DashboardText.rowTitle(
             context,
           ).copyWith(color: colorScheme.onSurface, letterSpacing: 0)
-        : (density.isCompact
-                ? AppTextStyle.subheadline
-                : AppTextStyle.title2)
+        : AppTextStyle.title2
             .of(context, emphasized: true)
             .copyWith(
               color: colorScheme.onSurface,
@@ -281,22 +276,19 @@ class _ConfigStatsState extends ConsumerState<_ConfigStats>
             );
     final labelStyle = desktop
         ? DashboardText.label(context)
-        : (density.isCompact
-                ? AppTextStyle.caption2
-                : AppTextStyle.caption1)
+        : AppTextStyle.caption1
             .of(context)
             .copyWith(color: colorScheme.onSurfaceVariant, height: 1.0);
-    final vPad = density.isCompact ? 6.0 : 11.0;
 
     Widget box(int? value, String name) => Expanded(
       child: Container(
         height: boxHeight,
         padding: desktop
-            ? EdgeInsets.symmetric(vertical: vPad, horizontal: 4)
+            ? const EdgeInsets.symmetric(vertical: 10, horizontal: 4)
             : null,
         decoration: ShapeDecoration(
           color: DashboardColors.of(context).tone,
-          shape: AppShape.all(radius),
+          shape: AppShape.all(20),
         ),
         child: desktop
             ? Column(
@@ -342,7 +334,7 @@ class _ConfigStatsState extends ConsumerState<_ConfigStats>
     );
 
     return Row(
-      spacing: density.isCompact ? 6 : 8,
+      spacing: 8,
       children: [
         box(stats?.providers, appLocalizations.providerCount),
         box(stats?.proxies, appLocalizations.nodeCount),
