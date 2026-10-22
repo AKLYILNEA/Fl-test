@@ -873,7 +873,8 @@ class _FontFamilyItem extends ConsumerWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
           child: Column(
-            spacing: 12,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: 8,
             children: [
               context.isMobileView
                   ? OpenContainer<void>(
