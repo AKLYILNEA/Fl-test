@@ -26,7 +26,7 @@ bool isBuiltinOutbound(String name) => _builtinOutbounds.contains(name);
 
 const _ipMask = '*****';
 
-const _decorationGrowth = 0.12;
+const _decorationGrowth = 0.08;
 
 const _decorationTurn = 2 * math.pi / 12;
 
@@ -226,9 +226,9 @@ class _OutboundMetrics {
       ip: AppTextStyle.title1,
       buttonSize: 104,
       buttonSlot: 120,
-      decorationSize: 250,
-      decorationEnd: -44,
-      decorationTop: -67,
+      decorationSize: 262,
+      decorationEnd: -50,
+      decorationTop: -73,
     ),
     DashboardDensity.compact => _OutboundMetrics(
       padding: dashboardCardPadding(density),
@@ -239,9 +239,9 @@ class _OutboundMetrics {
       ip: AppTextStyle.title2,
       buttonSize: 84,
       buttonSlot: 100,
-      decorationSize: 216,
-      decorationEnd: -47,
-      decorationTop: -58,
+      decorationSize: 226,
+      decorationEnd: -52,
+      decorationTop: -63,
     ),
     DashboardDensity.mobile => const _OutboundMetrics(
       padding: EdgeInsetsDirectional.fromSTEB(20, 18, 16, 18),
@@ -252,9 +252,9 @@ class _OutboundMetrics {
       ip: AppTextStyle.title2,
       buttonSize: 88,
       buttonSlot: 88,
-      decorationSize: 206,
-      decorationEnd: -43,
-      decorationTop: -49,
+      decorationSize: 216,
+      decorationEnd: -48,
+      decorationTop: -54,
     ),
   };
 
