@@ -891,19 +891,17 @@ class _FontFamilyItem extends ConsumerWidget {
               ValueListenableBuilder<EmojiStyle>(
                 valueListenable: EmojiManager.emojiStyleNotifier,
                 builder: (context, currentEmojiStyle, _) {
-                  return generateSection(
-                    items: [
-                      ListItem<EmojiStyle>.options(
-                        title: Text(appLocalizations.emojiStyle),
-                        options: EmojiStyle.values,
-                        value: currentEmojiStyle,
-                        textBuilder: (style) => style.label,
-                        onChanged: (style) async {
-                          await EmojiManager.setStyle(style);
-                        },
-                      ),
-                    ],
-                  );
+                  return generateGroup([
+                    ListItem<EmojiStyle>.options(
+                      title: Text(appLocalizations.emojiStyle),
+                      options: EmojiStyle.values,
+                      value: currentEmojiStyle,
+                      textBuilder: (style) => style.label,
+                      onChanged: (style) async {
+                        await EmojiManager.setStyle(style);
+                      },
+                    ),
+                  ]);
                 },
               ),
             ],
