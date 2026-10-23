@@ -564,6 +564,12 @@ class _EditorTitleField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobileView = ViewScope.isMobileOf(context);
+    final pushed = isMobileView &&
+        ModalRoute.of(context)?.impliesAppBarDismissal == true;
+    final style = pushed
+        ? AppTextStyle.headline.of(context)
+        : AppTextStyle.pageTitle.of(context);
     return TextField(
       maxLength: TextInputLimits.name,
       enabled: enabled,
@@ -573,7 +579,7 @@ class _EditorTitleField extends StatelessWidget {
         counter: const SizedBox(),
         hintText: context.appLocalizations.unnamed,
       ),
-      style: AppTextStyle.pageTitle.of(context),
+      style: style,
       autofocus: false,
     );
   }
