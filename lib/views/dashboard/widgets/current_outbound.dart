@@ -625,7 +625,8 @@ class _ProxyNodeValue extends ConsumerWidget {
     if (entry.isLoading) {
       return SkeletonText(width: 80, style: _cellStyle(context));
     }
-    final exit = entry.stamp?.chains.firstOrNull;
+    final hit = entry.stamp?.hits.firstOrNull;
+    final exit = (hit?.exit.isNotEmpty ?? false) ? hit?.exit : hit?.proxy;
     if (exit != null && exit.isNotEmpty) {
       return _NodeCellText(exit);
     }
