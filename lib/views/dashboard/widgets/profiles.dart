@@ -321,6 +321,7 @@ class _ConfigStatsState extends ConsumerState<_ConfigStats>
               ),
             )
           : Container(
+              height: 58,
               decoration: ShapeDecoration(
                 color: DashboardColors.of(context).tone,
                 shape: AppShape.all(20),
