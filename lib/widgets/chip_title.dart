@@ -74,6 +74,7 @@ class ChipTitle extends StatelessWidget {
   final String title;
   final String? chip;
   final DateTime? expire;
+  final String? expireText;
   final TextStyle? style;
 
   const ChipTitle({
@@ -81,12 +82,13 @@ class ChipTitle extends StatelessWidget {
     required this.title,
     this.chip,
     this.expire,
+    this.expireText,
     this.style,
   });
 
   static const _gap = 8.0;
 
-  bool _fitsExpire(BuildContext context, double maxWidth, DateTime expire) {
+  bool _fitsExpire(BuildContext context, double maxWidth, String label) {
     final chip = this.chip;
     final titleWidth = MeasureScope.of(context)
         .computeTextSize(
@@ -95,7 +97,7 @@ class ChipTitle extends StatelessWidget {
         .width;
     final chipsWidth =
         (chip == null ? 0 : TitleChip.widthOf(context, chip) + _gap) +
-        ExpireChip.widthOf(context, expire) +
+        TitleChip.widthOf(context, label) +
         _gap;
     return maxWidth - chipsWidth >= min(titleWidth, maxWidth / 2);
   }
@@ -105,6 +107,7 @@ class ChipTitle extends StatelessWidget {
     final style = this.style;
     final chip = this.chip;
     final expire = this.expire;
+    final expireText = this.expireText;
     final text = Text(
       title,
       style: style,
@@ -116,25 +119,34 @@ class ChipTitle extends StatelessWidget {
       overflow: TextOverflow.ellipsis,
       textWidthBasis: TextWidthBasis.longestLine,
     );
-    if (chip == null && expire == null) {
+    final expireLabel = expire?.show ?? expireText;
+    if (chip == null && expireLabel == null) {
       return text;
     }
     final colorScheme = context.colorScheme;
+    final expireBadge = switch ((expire, expireText)) {
+      (final expire?, _) => ExpireChip(expire: expire),
+      (null, final text?) => TitleChip(
+          label: text,
+          color: colorScheme.primary,
+        ),
+      _ => null,
+    };
     Widget row({required bool showExpire}) => Row(
       spacing: _gap,
       children: [
         Flexible(child: text),
         if (chip != null)
           TitleChip(label: chip, color: colorScheme.primary),
-        if (showExpire && expire != null) ExpireChip(expire: expire),
+        if (showExpire && expireBadge != null) expireBadge,
       ],
     );
-    if (expire == null) {
+    if (expireLabel == null) {
       return row(showExpire: false);
     }
     return LayoutBuilder(
       builder: (context, constraints) =>
-          row(showExpire: _fitsExpire(context, constraints.maxWidth, expire)),
+          row(showExpire: _fitsExpire(context, constraints.maxWidth, expireLabel)),
     );
   }
 }

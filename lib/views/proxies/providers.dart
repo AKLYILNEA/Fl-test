@@ -321,12 +321,11 @@ class _ExternalProviderItem extends StatelessWidget {
       onPressed: onPressed,
       title: ChipTitle(
         title: provider.name,
+        chip: usage == null ? null : count.compact,
         expire: subscriptionInfo?.expireDate,
-        // Only a proxy provider can be valid for good; a rule set has no such
-        // mark.
-        chip: provider.isProxy && subscriptionInfo?.expireDate == null
+        expireText: provider.isProxy && subscriptionInfo?.expireDate == null
             ? appLocalizations.infiniteTime
-            : (usage == null ? null : count.compact),
+            : null,
       ),
       subtitle: switch ((subscriptionInfo, usage)) {
         (final info?, final usage?) => _TrafficMeter(info: info, usage: usage),
