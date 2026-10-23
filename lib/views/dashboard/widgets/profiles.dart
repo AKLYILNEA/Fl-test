@@ -292,28 +292,29 @@ class _ConfigStatsState extends ConsumerState<_ConfigStats>
     }
 
     Widget box(int? value, String name) {
-      // Desktop takes the same block, inset and line heights as the LAN proxy row
-      // in the card beside it, so the two cards' bottom rows sit on the same
-      // lines instead of guessing at a height.
+      // Desktop keeps the LAN proxy row's block, insets and line heights, so the
+      // two cards' bottom rows sit on the same lines; the text inside is centred
+      // in the block.
       final content = desktop
           ? DashboardBlock(
               radius: 20,
-              padding: const EdgeInsets.fromLTRB(10, 10, 12, 10),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 10,
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   SizedBox(
                     height: titleLeading,
-                    child: Align(
-                      alignment: AlignmentDirectional.centerStart,
-                      child: valueText(value),
-                    ),
+                    child: Center(child: valueText(value)),
                   ),
                   Text(
                     name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
                     style: labelStyle,
                   ),
                 ],
