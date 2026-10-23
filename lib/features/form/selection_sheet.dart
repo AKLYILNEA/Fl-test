@@ -25,6 +25,7 @@ class SelectionSheet<T> extends ConsumerStatefulWidget {
   final T? Function(WidgetRef ref) selectedOf;
   final ValueChanged<T> onSelected;
   final ValueChanged<T>? onLongPressed;
+  final List<CommonPopupMenuItem>? Function(T item)? menuBuilder;
   final String? emptyLabel;
   final NullStatus? loadingStatus;
 
@@ -42,6 +43,7 @@ class SelectionSheet<T> extends ConsumerStatefulWidget {
     required this.selectedOf,
     required this.onSelected,
     this.onLongPressed,
+    this.menuBuilder,
     this.emptyLabel,
     this.loadingStatus,
     this.removeOnSelect = false,
@@ -253,12 +255,14 @@ class _SelectionSheetState<T> extends ConsumerState<SelectionSheet<T>>
         overflow: TextOverflow.ellipsis,
       ),
     );
+    final menuItems = widget.menuBuilder?.call(item);
+    final hasMenu = menuItems != null && menuItems.isNotEmpty;
     final row = ItemPositionProvider(
       key: isRevealTarget ? _selectedKey : null,
       position: position,
       child: DecorationListItem(
         onPressed: () => _handleSelected(item),
-        onLongPress: widget.onLongPressed == null
+        onLongPress: hasMenu || widget.onLongPressed == null
             ? null
             : () => widget.onLongPressed!(item),
         subtitle: subtitle != null ? TooltipLabel(subtitle) : null,
@@ -267,14 +271,17 @@ class _SelectionSheetState<T> extends ConsumerState<SelectionSheet<T>>
         trailing: isSelected ? const SelectionCheck() : null,
       ),
     );
+    final itemWidget = hasMenu
+        ? ContextMenuRegion(menuItems: menuItems, child: row)
+        : row;
     if (!widget.removeOnSelect) {
-      return row;
+      return itemWidget;
     }
     return EntryTransition(
       key: ValueKey(item),
       animation: _transitions.animationOf(item),
       leaving: _transitions.isLeaving(item),
-      child: row,
+      child: itemWidget,
     );
   }
 

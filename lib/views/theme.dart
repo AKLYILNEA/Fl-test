@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:fl_clash/common/common.dart';
@@ -8,6 +9,7 @@ import 'package:fl_clash/manager/font_manager.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/config.dart';
 import 'package:fl_clash/providers/state.dart';
+import 'package:fl_clash/state.dart';
 import 'package:fl_clash/ui/icons/icons.dart';
 import 'package:fl_clash/views/font_family.dart';
 import 'package:fl_clash/views/theme_preview.dart';
@@ -813,6 +815,42 @@ class _SidebarBlurItem extends StatelessWidget {
 class _FontFamilyItem extends ConsumerWidget {
   const _FontFamilyItem();
 
+  Future<void> _handleExportFont(BuildContext context, CustomFont font) async {
+    final appLocalizations = context.appLocalizations;
+    final res = await globalState.safeRun<bool>(() async {
+      final file = File(font.path);
+      if (!await file.exists()) {
+        return false;
+      }
+      final value = await picker.saveFile(
+        font.name,
+        await file.readAsBytes(),
+      );
+      if (value == null) return false;
+      return true;
+    }, title: appLocalizations.tip);
+    if (res == true && context.mounted) {
+      context.showNotifier(
+        appLocalizations.exportSuccess,
+        level: MessageLevel.success,
+      );
+    }
+  }
+
+  Future<void> _handleDeleteFont(BuildContext context, CustomFont font) async {
+    final appLocalizations = context.appLocalizations;
+    final result = await dialogs.showMessage(
+      title: appLocalizations.tip,
+      message: TextSpan(text: appLocalizations.deleteTip(font.name)),
+      destructive: true,
+      confirmText: appLocalizations.delete,
+    );
+    if (result != true || !context.mounted) {
+      return;
+    }
+    await FontManager.delete(font);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final appLocalizations = context.appLocalizations;
@@ -846,24 +884,46 @@ class _FontFamilyItem extends ConsumerWidget {
                         color: colorScheme.onSurfaceVariant,
                       ),
                 ),
-          ),
-          GlyphIcon(
-            AppGlyphs.chevronForward,
-            size: 20,
-            color: colorScheme.onSurfaceVariant,
-          ),
+              ),
+              GlyphIcon(
+                AppGlyphs.chevronForward,
+                size: 20,
+                color: colorScheme.onSurfaceVariant,
+              ),
             ],
           ),
         );
       },
     );
     final cardColor = context.raisedSurfaceLevel.colorOf(colorScheme);
-    Widget card(VoidCallback onTap) => Material(
-      color: cardColor,
-      shape: AppShape.lg,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(customBorder: AppShape.lg, onTap: onTap, child: preview),
-    );
+    Widget card(VoidCallback onTap) {
+      final selectedFont = FontManager.selectedFont;
+      final menuItems = selectedFont == null
+          ? null
+          : [
+              CommonPopupMenuItem(
+                glyph: AppGlyphs.export,
+                label: appLocalizations.exportFile,
+                onPressed: () => _handleExportFont(context, selectedFont),
+              ),
+              CommonPopupMenuItem(
+                danger: true,
+                glyph: AppGlyphs.delete,
+                label: appLocalizations.delete,
+                onPressed: () => _handleDeleteFont(context, selectedFont),
+              ),
+            ];
+      final cardWidget = Material(
+        color: cardColor,
+        shape: AppShape.lg,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(customBorder: AppShape.lg, onTap: onTap, child: preview),
+      );
+      if (menuItems == null || menuItems.isEmpty) {
+        return cardWidget;
+      }
+      return ContextMenuRegion(menuItems: menuItems, child: cardWidget);
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/features/form/form.dart';
 import 'package:fl_clash/manager/font_manager.dart';
+import 'package:fl_clash/state.dart';
 import 'package:fl_clash/ui/icons/icons.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/foundation.dart';
@@ -20,6 +23,28 @@ class _FontFamilyViewState extends State<FontFamilyView> {
       return;
     }
     setState(() {});
+  }
+
+  Future<void> _handleExportFont(CustomFont font) async {
+    final appLocalizations = context.appLocalizations;
+    final res = await globalState.safeRun<bool>(() async {
+      final file = File(font.path);
+      if (!await file.exists()) {
+        return false;
+      }
+      final value = await picker.saveFile(
+        font.name,
+        await file.readAsBytes(),
+      );
+      if (value == null) return false;
+      return true;
+    }, title: appLocalizations.tip);
+    if (res == true && mounted) {
+      context.showNotifier(
+        appLocalizations.exportSuccess,
+        level: MessageLevel.success,
+      );
+    }
   }
 
   Future<void> _handleDeleteFont(CustomFont font) async {
@@ -99,11 +124,23 @@ class _FontFamilyViewState extends State<FontFamilyView> {
         );
       },
       selectedOf: (_) => FontManager.selectedFont,
-      onLongPressed: (font) async {
+      menuBuilder: (font) {
         if (font == null) {
-          return;
+          return null;
         }
-        await _handleDeleteFont(font);
+        return [
+          CommonPopupMenuItem(
+            glyph: AppGlyphs.export,
+            label: appLocalizations.exportFile,
+            onPressed: () => _handleExportFont(font),
+          ),
+          CommonPopupMenuItem(
+            danger: true,
+            glyph: AppGlyphs.delete,
+            label: appLocalizations.delete,
+            onPressed: () => _handleDeleteFont(font),
+          ),
+        ];
       },
       onSelected: (font) async {
         if (font == null) {
