@@ -263,7 +263,9 @@ class _ConfigStatsState extends ConsumerState<_ConfigStats>
     };
     final desktop = density.isDesktop;
     final titleStyle = DashboardText.rowTitle(context);
-    final titleLeading = titleStyle.leading ?? 20;
+    // The LAN proxy row's title uses this same style, so its line height is what
+    // puts the two cards' bottom rows on the same lines.
+    final titleLeading = AppTextStyle.subheadline.leading;
     final figureStyle = desktop
         ? titleStyle.copyWith(color: colorScheme.onSurface, letterSpacing: 0)
         : AppTextStyle.title2
