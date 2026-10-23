@@ -614,6 +614,29 @@ class _Placeholder extends StatelessWidget {
   }
 }
 
+String? _parseNodeFromExit(String? exit) {
+  if (exit == null || exit.isEmpty) return null;
+  if (exit.startsWith('"')) {
+    final buffer = StringBuffer();
+    var escaped = false;
+    for (var i = 1; i < exit.length; i++) {
+      final char = exit[i];
+      if (escaped) {
+        buffer.write(char);
+        escaped = false;
+      } else if (char == r'\') {
+        escaped = true;
+      } else if (char == '"') {
+        return buffer.toString();
+      } else {
+        buffer.write(char);
+      }
+    }
+    return buffer.toString();
+  }
+  return exit;
+}
+
 class _ProxyNodeValue extends ConsumerWidget {
   const _ProxyNodeValue();
 
@@ -626,9 +649,10 @@ class _ProxyNodeValue extends ConsumerWidget {
       return SkeletonText(width: 80, style: _cellStyle(context));
     }
     final hit = entry.stamp?.hits.firstOrNull;
-    final exit = (hit?.exit.isNotEmpty ?? false) ? hit?.exit : hit?.proxy;
-    if (exit != null && exit.isNotEmpty) {
-      return _NodeCellText(exit);
+    final nodeName = _parseNodeFromExit(hit?.exit) ??
+        (hit?.proxy.isNotEmpty ?? false ? hit?.proxy : null);
+    if (nodeName != null && nodeName.isNotEmpty) {
+      return _NodeCellText(nodeName);
     }
     final groups = ref.watch(currentGroupsStateProvider).value;
     final currentGroupName = ref.watch(
