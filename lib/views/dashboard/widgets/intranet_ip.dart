@@ -57,18 +57,11 @@ class IntranetIpCard extends ConsumerWidget {
             radius: 20,
             icon: 38,
           )
-        : density.isCompact
-        ? (
-            padding: const EdgeInsets.fromLTRB(10, 10, 12, 10),
-            titleStart: 14,
-            radius: 20,
-            icon: 36,
-          )
         : (
             padding: const EdgeInsets.fromLTRB(10, 10, 12, 10),
             titleStart: 14,
             radius: 20,
-            icon: 38,
+            icon: 36,
           );
     final style = DashboardText.figure(
       context,

@@ -262,9 +262,7 @@ class _ConfigStatsState extends ConsumerState<_ConfigStats>
       null => null,
     };
     final desktop = density.isDesktop;
-    final boxHeight = desktop
-        ? (density.isCompact ? 56.0 : 58.0)
-        : 58.0;
+    final boxHeight = 56.0;
     final figureStyle = desktop
         ? DashboardText.rowTitle(
             context,
