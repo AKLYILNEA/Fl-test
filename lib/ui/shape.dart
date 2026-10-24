@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui' show ClipOp, lerpDouble;
 
+import 'package:fl_clash/common/system.dart';
 import 'package:material_ui/material_ui.dart';
 
 abstract final class AppCorner {
@@ -66,47 +67,131 @@ abstract final class AppRadius {
   );
 }
 
+/// Rounded superellipse that renders true continuous corners on desktop (Skia).
+///
+/// On mobile (Android/iOS), Impeller natively accelerates [Canvas.drawRSuperellipse],
+/// so [SuperellipseBorder] immediately delegates all painting to official [super].
+/// On desktop (Windows/macOS/Linux), Skia falls back to plain rounded rectangles;
+/// this border caches the analytical superellipse path on desktop to provide
+/// smooth iOS-style continuous corners without performance overhead.
+class SuperellipseBorder extends RoundedSuperellipseBorder {
+  const SuperellipseBorder({super.side, super.borderRadius});
+
+  static final Map<Object, Path> _outerPathCache = <Object, Path>{};
+  static const int _outerPathCacheLimit = 256;
+
+  @override
+  Path getOuterPath(Rect rect, {TextDirection? textDirection}) {
+    if (!system.isDesktop) {
+      return super.getOuterPath(rect, textDirection: textDirection);
+    }
+    final key = Object.hash(rect, borderRadius, textDirection);
+    final cached = _outerPathCache[key];
+    if (cached != null) {
+      return cached;
+    }
+    final path = super.getOuterPath(rect, textDirection: textDirection);
+    if (_outerPathCache.length >= _outerPathCacheLimit) {
+      _outerPathCache.remove(_outerPathCache.keys.first);
+    }
+    _outerPathCache[key] = path;
+    return path;
+  }
+
+  @override
+  void paintInterior(
+    Canvas canvas,
+    Rect rect,
+    Paint paint, {
+    TextDirection? textDirection,
+  }) {
+    if (!system.isDesktop) {
+      super.paintInterior(canvas, rect, paint, textDirection: textDirection);
+      return;
+    }
+    canvas.drawPath(getOuterPath(rect, textDirection: textDirection), paint);
+  }
+
+  @override
+  SuperellipseBorder copyWith({
+    BorderSide? side,
+    BorderRadiusGeometry? borderRadius,
+  }) {
+    return SuperellipseBorder(
+      side: side ?? this.side,
+      borderRadius: borderRadius ?? this.borderRadius,
+    );
+  }
+
+  @override
+  ShapeBorder scale(double t) {
+    return SuperellipseBorder(
+      side: side.scale(t),
+      borderRadius: borderRadius * t,
+    );
+  }
+
+  @override
+  ShapeBorder? lerpFrom(ShapeBorder? a, double t) {
+    final res = super.lerpFrom(a, t);
+    return res is RoundedSuperellipseBorder
+        ? SuperellipseBorder(side: res.side, borderRadius: res.borderRadius)
+        : res;
+  }
+
+  @override
+  ShapeBorder? lerpTo(ShapeBorder? b, double t) {
+    final res = super.lerpTo(b, t);
+    return res is RoundedSuperellipseBorder
+        ? SuperellipseBorder(side: res.side, borderRadius: res.borderRadius)
+        : res;
+  }
+}
+
 abstract final class AppShape {
-  static const RoundedSuperellipseBorder none = RoundedSuperellipseBorder();
-  static const RoundedSuperellipseBorder xs = RoundedSuperellipseBorder(
+  static const SuperellipseBorder none = SuperellipseBorder();
+  static const SuperellipseBorder xs = SuperellipseBorder(
     borderRadius: AppRadius.xs,
   );
-  static const RoundedSuperellipseBorder sm = RoundedSuperellipseBorder(
+  static const SuperellipseBorder sm = SuperellipseBorder(
     borderRadius: AppRadius.sm,
   );
-  static const RoundedSuperellipseBorder md = RoundedSuperellipseBorder(
+  static const SuperellipseBorder md = SuperellipseBorder(
     borderRadius: AppRadius.md,
   );
-  static const RoundedSuperellipseBorder lg = RoundedSuperellipseBorder(
+  static const SuperellipseBorder lg = SuperellipseBorder(
     borderRadius: AppRadius.lg,
   );
-  static const RoundedSuperellipseBorder xl = RoundedSuperellipseBorder(
+  static const SuperellipseBorder xl = SuperellipseBorder(
     borderRadius: AppRadius.xl,
   );
-  static const RoundedSuperellipseBorder xxl = RoundedSuperellipseBorder(
+  static const SuperellipseBorder xxl = SuperellipseBorder(
     borderRadius: AppRadius.xxl,
   );
+  // Full capsule/stadium stays official RoundedSuperellipseBorder:
+  // a full capsule is geometrically identical on all curves and keeps the floating
+  // dock and pill tags at zero overhead on native GPU pipelines.
   static const RoundedSuperellipseBorder full = RoundedSuperellipseBorder(
     borderRadius: AppRadius.full,
   );
   static const CircleBorder circle = CircleBorder();
   static const AppInputBorder input = AppInputBorder();
 
-  static RoundedSuperellipseBorder all(double corner) =>
-      RoundedSuperellipseBorder(borderRadius: AppRadius.all(corner));
+  static SuperellipseBorder all(double corner) =>
+      SuperellipseBorder(borderRadius: AppRadius.all(corner));
 
-  static RoundedSuperellipseBorder top(double corner) =>
-      RoundedSuperellipseBorder(borderRadius: AppRadius.top(corner));
+  static SuperellipseBorder top(double corner) =>
+      SuperellipseBorder(borderRadius: AppRadius.top(corner));
 
-  static RoundedSuperellipseBorder vertical({
+  static SuperellipseBorder vertical({
     double top = AppCorner.none,
     double bottom = AppCorner.none,
-  }) => RoundedSuperellipseBorder(
+  }) => SuperellipseBorder(
     borderRadius: AppRadius.vertical(top: top, bottom: bottom),
   );
 
-  static RoundedSuperellipseBorder of(BorderRadius borderRadius) =>
-      RoundedSuperellipseBorder(borderRadius: borderRadius);
+  static SuperellipseBorder of(BorderRadius borderRadius) =>
+      SuperellipseBorder(borderRadius: borderRadius);
 }
 
 class AppInputBorder extends InputBorder {
