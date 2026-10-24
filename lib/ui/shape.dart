@@ -77,25 +77,30 @@ abstract final class AppRadius {
 class SuperellipseBorder extends RoundedSuperellipseBorder {
   const SuperellipseBorder({super.side, super.borderRadius});
 
-  static final Map<Object, Path> _outerPathCache = <Object, Path>{};
-  static const int _outerPathCacheLimit = 256;
+  static final Map<Object, Path> _pathSizeCache = <Object, Path>{};
+  static const int _pathCacheLimit = 256;
+
+  Path _getPathForSize(Size size, TextDirection? textDirection) {
+    final key = Object.hash(size, borderRadius, textDirection);
+    final cached = _pathSizeCache[key];
+    if (cached != null) {
+      return cached;
+    }
+    final path = super.getOuterPath(Offset.zero & size, textDirection: textDirection);
+    if (_pathSizeCache.length >= _pathCacheLimit) {
+      _pathSizeCache.remove(_pathSizeCache.keys.first);
+    }
+    _pathSizeCache[key] = path;
+    return path;
+  }
 
   @override
   Path getOuterPath(Rect rect, {TextDirection? textDirection}) {
     if (!system.isDesktop) {
       return super.getOuterPath(rect, textDirection: textDirection);
     }
-    final key = Object.hash(rect, borderRadius, textDirection);
-    final cached = _outerPathCache[key];
-    if (cached != null) {
-      return cached;
-    }
-    final path = super.getOuterPath(rect, textDirection: textDirection);
-    if (_outerPathCache.length >= _outerPathCacheLimit) {
-      _outerPathCache.remove(_outerPathCache.keys.first);
-    }
-    _outerPathCache[key] = path;
-    return path;
+    final localPath = _getPathForSize(rect.size, textDirection);
+    return rect.topLeft == Offset.zero ? localPath : localPath.shift(rect.topLeft);
   }
 
   @override
@@ -109,7 +114,15 @@ class SuperellipseBorder extends RoundedSuperellipseBorder {
       super.paintInterior(canvas, rect, paint, textDirection: textDirection);
       return;
     }
-    canvas.drawPath(getOuterPath(rect, textDirection: textDirection), paint);
+    final localPath = _getPathForSize(rect.size, textDirection);
+    if (rect.topLeft == Offset.zero) {
+      canvas.drawPath(localPath, paint);
+    } else {
+      canvas.save();
+      canvas.translate(rect.left, rect.top);
+      canvas.drawPath(localPath, paint);
+      canvas.restore();
+    }
   }
 
   @override

@@ -916,7 +916,7 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar>
   VelocityTracker? _tracker;
   Offset? _cursor;
   final ValueNotifier<double?> _hoverAt = ValueNotifier(null);
-  final ValueNotifier<bool> _following = ValueNotifier(false);
+  final ValueNotifier<bool> _isDragging = ValueNotifier(false);
 
   int get _lastIndex => math.max(0, widget.destinations.length - 1);
 
@@ -969,7 +969,7 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar>
     _glowSpread.dispose();
     _touchGlow.dispose();
     _hoverAt.dispose();
-    _following.dispose();
+    _isDragging.dispose();
     super.dispose();
   }
 
@@ -1127,7 +1127,6 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar>
     if (_pointer != null || event.buttons & kPrimaryButton == 0) {
       return;
     }
-    _following.value = true;
     _pointer = event.pointer;
     _tracker = VelocityTracker.withKind(event.kind)
       ..addPosition(event.timeStamp, event.localPosition);
@@ -1153,7 +1152,7 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar>
     if (event.pointer != _pointer) {
       return;
     }
-    _following.value = false;
+    _isDragging.value = false;
     _pointer = null;
     final tracker = _tracker;
     _tracker = null;
@@ -1175,7 +1174,7 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar>
     if (widget.destinations.isEmpty) {
       return;
     }
-    _following.value = true;
+    _isDragging.value = false;
     final index = _indexAt(_positionAt(localPosition));
     _pressedIndex = index;
     _pressX = localPosition.dx;
@@ -1194,6 +1193,7 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar>
         return;
       }
       _dragging = true;
+      _isDragging.value = true;
     }
     final size = context.size!;
     final overshoot =
@@ -1237,7 +1237,7 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar>
   }
 
   void _release({required bool commit}) {
-    _following.value = false;
+    _isDragging.value = false;
     final index = _pressedIndex;
     if (index == null) {
       return;
@@ -1336,7 +1336,7 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar>
                                 jelly: _jelly,
                                 parallax: _parallax[index],
                                 lift: _lift,
-                                following: _following,
+                                isDragging: _isDragging,
                                 labelStyle: labelStyle.copyWith(
                                   fontSize: _labelSize * labelScale,
                                 ),
@@ -1630,7 +1630,7 @@ class _FloatingBarItem extends StatefulWidget {
     required this.jelly,
     required this.parallax,
     required this.lift,
-    required this.following,
+    required this.isDragging,
     required this.labelStyle,
     required this.labelHeight,
     required this.labelOverflows,
@@ -1649,7 +1649,7 @@ class _FloatingBarItem extends StatefulWidget {
   final ValueListenable<double> jelly;
   final ValueListenable<double> parallax;
   final ValueListenable<double> lift;
-  final ValueListenable<bool> following;
+  final ValueListenable<bool> isDragging;
   final TextStyle? labelStyle;
   final double labelHeight;
   final bool labelOverflows;
@@ -1695,7 +1695,7 @@ class _FloatingBarItemState extends State<_FloatingBarItem> {
       parallax: widget.parallax,
       index: widget.index,
       selected: widget.selected,
-      following: widget.following,
+      isDragging: widget.isDragging,
       color: tint,
       textDirection: Directionality.of(context),
       child: Padding(
@@ -1772,7 +1772,7 @@ class _LensTint extends SingleChildRenderObjectWidget {
     required this.parallax,
     required this.index,
     required this.selected,
-    required this.following,
+    required this.isDragging,
     required this.color,
     required this.textDirection,
     super.child,
@@ -1786,7 +1786,7 @@ class _LensTint extends SingleChildRenderObjectWidget {
   final ValueListenable<double> parallax;
   final int index;
   final bool selected;
-  final ValueListenable<bool> following;
+  final ValueListenable<bool> isDragging;
   final Color color;
   final TextDirection textDirection;
 
@@ -1801,7 +1801,7 @@ class _LensTint extends SingleChildRenderObjectWidget {
       parallax: parallax,
       index: index,
       selected: selected,
-      following: following,
+      isDragging: isDragging,
       color: color,
       textDirection: textDirection,
     );
@@ -1818,7 +1818,7 @@ class _LensTint extends SingleChildRenderObjectWidget {
       ..parallax = parallax
       ..index = index
       ..selected = selected
-      ..following = following
+      ..isDragging = isDragging
       ..color = color
       ..textDirection = textDirection;
   }
@@ -1834,7 +1834,7 @@ class _RenderLensTint extends RenderProxyBox {
     required ValueListenable<double> parallax,
     required int index,
     required bool selected,
-    required ValueListenable<bool> following,
+    required ValueListenable<bool> isDragging,
     required Color color,
     required TextDirection textDirection,
   }) : _part = part,
@@ -1845,7 +1845,7 @@ class _RenderLensTint extends RenderProxyBox {
        _parallax = parallax,
        _index = index,
        _selected = selected,
-       _following = following,
+       _isDragging = isDragging,
        _color = color,
        _textDirection = textDirection;
 
@@ -1943,9 +1943,17 @@ class _RenderLensTint extends RenderProxyBox {
     markNeedsPaint();
   }
 
-  ValueListenable<bool> _following;
-  set following(ValueListenable<bool> value) {
-    _following = value;
+  ValueListenable<bool> _isDragging;
+  set isDragging(ValueListenable<bool> value) {
+    if (value == _isDragging) {
+      return;
+    }
+    if (attached) {
+      _isDragging.removeListener(markNeedsPaint);
+      value.addListener(markNeedsPaint);
+    }
+    _isDragging = value;
+    markNeedsPaint();
   }
 
   Color _color;
@@ -1973,6 +1981,7 @@ class _RenderLensTint extends RenderProxyBox {
     _jelly.addListener(markNeedsPaint);
     _lift.addListener(markNeedsPaint);
     _parallax.addListener(markNeedsPaint);
+    _isDragging.addListener(markNeedsPaint);
   }
 
   @override
@@ -1981,6 +1990,7 @@ class _RenderLensTint extends RenderProxyBox {
     _jelly.removeListener(markNeedsPaint);
     _lift.removeListener(markNeedsPaint);
     _parallax.removeListener(markNeedsPaint);
+    _isDragging.removeListener(markNeedsPaint);
     super.detach();
   }
 
@@ -2061,8 +2071,8 @@ class _RenderLensTint extends RenderProxyBox {
       return;
     }
     final rest = _motion(1);
-    final following = _following.value;
-    final isTarget = following || _selected || _lens.target.round() == _index;
+    final isTarget =
+        _isDragging.value || _selected || _lens.target.round() == _index;
     final magnified = _motion(isTarget ? 1 + _lensMagnify * _lift.value : 1);
     final bounds = Offset.zero & size;
     Rect moved(Matrix4? motion) =>
