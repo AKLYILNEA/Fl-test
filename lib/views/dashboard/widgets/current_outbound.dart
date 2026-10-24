@@ -532,29 +532,18 @@ class _Cells extends StatelessWidget {
   final bool active;
   final double gap;
 
-  // 放宽约 2 个字符的显示宽度（subheadline 字号为 15，两个中文字符约 30~32dp）
-  static const _extraWidth = 32.0;
-
   @override
   Widget build(BuildContext context) {
     final appLocalizations = context.appLocalizations;
-    final extra = MediaQuery.textScalerOf(context).scale(_extraWidth);
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final totalWidth = constraints.maxWidth + extra;
-        return OverflowBox(
-          alignment: AlignmentDirectional.centerStart,
-          minWidth: 0,
-          maxWidth: totalWidth,
-          child: SizedBox(
-            width: totalWidth,
-            child: _Cell(
-              label: appLocalizations.proxyNode,
-              value: active ? const _ProxyNodeValue() : const _Placeholder(),
-            ),
+    return Row(
+      children: [
+        Expanded(
+          child: _Cell(
+            label: appLocalizations.proxyNode,
+            value: active ? const _ProxyNodeValue() : const _Placeholder(),
           ),
-        );
-      },
+        ),
+      ],
     );
   }
 }
