@@ -40,7 +40,7 @@ class Navigation implements NavigationPort {
         label: PageLabel.requests,
         builder: (_) =>
             const RequestsView(key: GlobalObjectKey(PageLabel.requests)),
-        modes: [NavigationItemMode.desktop, NavigationItemMode.moreFull],
+        modes: [NavigationItemMode.moreFull],
       ),
       NavigationItem(
         glyph: AppGlyphs.connections,
