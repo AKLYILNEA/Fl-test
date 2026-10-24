@@ -616,7 +616,11 @@ class _BadgePainter extends CustomPainter {
     );
     final dot = this.dot;
     if (dot == null) {
-      canvas.drawRSuperellipse(tile, Paint()..color = color);
+      if (system.isDesktop) {
+        canvas.drawPath(Path()..addRSuperellipse(tile), Paint()..color = color);
+      } else {
+        canvas.drawRSuperellipse(tile, Paint()..color = color);
+      }
       return;
     }
     final center = size.bottomRight(Offset(-dotRadius, -dotRadius));

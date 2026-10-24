@@ -162,23 +162,23 @@ class SuperellipseBorder extends RoundedSuperellipseBorder {
 }
 
 abstract final class AppShape {
-  static const RoundedSuperellipseBorder none = RoundedSuperellipseBorder();
-  static const RoundedSuperellipseBorder xs = RoundedSuperellipseBorder(
+  static const SuperellipseBorder none = SuperellipseBorder();
+  static const SuperellipseBorder xs = SuperellipseBorder(
     borderRadius: AppRadius.xs,
   );
-  static const RoundedSuperellipseBorder sm = RoundedSuperellipseBorder(
+  static const SuperellipseBorder sm = SuperellipseBorder(
     borderRadius: AppRadius.sm,
   );
-  static const RoundedSuperellipseBorder md = RoundedSuperellipseBorder(
+  static const SuperellipseBorder md = SuperellipseBorder(
     borderRadius: AppRadius.md,
   );
-  static const RoundedSuperellipseBorder lg = RoundedSuperellipseBorder(
+  static const SuperellipseBorder lg = SuperellipseBorder(
     borderRadius: AppRadius.lg,
   );
-  static const RoundedSuperellipseBorder xl = RoundedSuperellipseBorder(
+  static const SuperellipseBorder xl = SuperellipseBorder(
     borderRadius: AppRadius.xl,
   );
-  static const RoundedSuperellipseBorder xxl = RoundedSuperellipseBorder(
+  static const SuperellipseBorder xxl = SuperellipseBorder(
     borderRadius: AppRadius.xxl,
   );
   static const RoundedSuperellipseBorder full = RoundedSuperellipseBorder(
@@ -187,21 +187,21 @@ abstract final class AppShape {
   static const CircleBorder circle = CircleBorder();
   static const AppInputBorder input = AppInputBorder();
 
-  static RoundedSuperellipseBorder all(double corner) =>
-      RoundedSuperellipseBorder(borderRadius: AppRadius.all(corner));
+  static SuperellipseBorder all(double corner) =>
+      SuperellipseBorder(borderRadius: AppRadius.all(corner));
 
-  static RoundedSuperellipseBorder top(double corner) =>
-      RoundedSuperellipseBorder(borderRadius: AppRadius.top(corner));
+  static SuperellipseBorder top(double corner) =>
+      SuperellipseBorder(borderRadius: AppRadius.top(corner));
 
-  static RoundedSuperellipseBorder vertical({
+  static SuperellipseBorder vertical({
     double top = AppCorner.none,
     double bottom = AppCorner.none,
-  }) => RoundedSuperellipseBorder(
+  }) => SuperellipseBorder(
     borderRadius: AppRadius.vertical(top: top, bottom: bottom),
   );
 
-  static RoundedSuperellipseBorder of(BorderRadius borderRadius) =>
-      RoundedSuperellipseBorder(borderRadius: borderRadius);
+  static SuperellipseBorder of(BorderRadius borderRadius) =>
+      SuperellipseBorder(borderRadius: borderRadius);
 }
 
 class AppInputBorder extends InputBorder {
@@ -214,8 +214,8 @@ class AppInputBorder extends InputBorder {
   final BorderRadius borderRadius;
   final double gapPadding;
 
-  RoundedSuperellipseBorder get _shape =>
-      RoundedSuperellipseBorder(borderRadius: borderRadius, side: borderSide);
+  SuperellipseBorder get _shape =>
+      SuperellipseBorder(borderRadius: borderRadius, side: borderSide);
 
   @override
   bool get isOutline => true;
@@ -346,128 +346,59 @@ class AppInputBorder extends InputBorder {
 }
 
 extension AppShapeThemeExt on ThemeData {
-  ThemeData get withAppShapes {
-    if (!system.isDesktop) {
-      return copyWith(
-        cardTheme: cardTheme.copyWith(shape: AppShape.md),
-        dialogTheme: dialogTheme.copyWith(shape: AppShape.all(AppCorner.alert)),
-        bottomSheetTheme: bottomSheetTheme.copyWith(
-          shape: AppShape.top(AppCorner.xxl),
-        ),
-        snackBarTheme: snackBarTheme.copyWith(shape: AppShape.xs),
-        tooltipTheme: tooltipTheme.copyWith(
-          // A decoration replaces Material's tooltip colours too, so restate them.
-          decoration: ShapeDecoration(
-            shape: AppShape.xs,
-            color: switch (brightness) {
-              Brightness.dark => Colors.white.withAlpha(230),
-              Brightness.light => Colors.grey[700]!.withAlpha(230),
-            },
-          ),
-        ),
-        chipTheme: chipTheme.copyWith(shape: AppShape.sm),
-        popupMenuTheme: popupMenuTheme.copyWith(shape: AppShape.md),
-        menuTheme: MenuThemeData(
-          style: (menuTheme.style ?? const MenuStyle()).copyWith(
-            shape: const WidgetStatePropertyAll(AppShape.md),
-          ),
-        ),
-        inputDecorationTheme: inputDecorationTheme.copyWith(border: AppShape.input),
-        floatingActionButtonTheme: floatingActionButtonTheme.copyWith(
-          shape: AppShape.md,
-        ),
-        navigationBarTheme: navigationBarTheme.copyWith(
-          indicatorShape: AppShape.full,
-        ),
-        navigationRailTheme: navigationRailTheme.copyWith(
-          indicatorShape: AppShape.full,
-        ),
-        progressIndicatorTheme: progressIndicatorTheme.copyWith(
-          borderRadius: AppRadius.full,
-        ),
-        filledButtonTheme: FilledButtonThemeData(
-          style: filledButtonTheme.style?.merge(_pillButton) ?? _pillButton,
-        ),
-        textButtonTheme: TextButtonThemeData(
-          style: textButtonTheme.style?.merge(_pillButton) ?? _pillButton,
-        ),
-        outlinedButtonTheme: OutlinedButtonThemeData(
-          style: outlinedButtonTheme.style?.merge(_pillButton) ?? _pillButton,
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: elevatedButtonTheme.style?.merge(_pillButton) ?? _pillButton,
-        ),
-        iconButtonTheme: IconButtonThemeData(
-          style: iconButtonTheme.style?.merge(_pillButton) ?? _pillButton,
-        ),
-      );
-    }
-    return copyWith(
-      cardTheme: cardTheme.copyWith(
-        shape: const SuperellipseBorder(borderRadius: AppRadius.md),
+  ThemeData get withAppShapes => copyWith(
+    cardTheme: cardTheme.copyWith(shape: AppShape.md),
+    dialogTheme: dialogTheme.copyWith(shape: AppShape.all(AppCorner.alert)),
+    bottomSheetTheme: bottomSheetTheme.copyWith(
+      shape: AppShape.top(AppCorner.xxl),
+    ),
+    snackBarTheme: snackBarTheme.copyWith(shape: AppShape.xs),
+    tooltipTheme: tooltipTheme.copyWith(
+      // A decoration replaces Material's tooltip colours too, so restate them.
+      decoration: ShapeDecoration(
+        shape: AppShape.xs,
+        color: switch (brightness) {
+          Brightness.dark => Colors.white.withAlpha(230),
+          Brightness.light => Colors.grey[700]!.withAlpha(230),
+        },
       ),
-      dialogTheme: dialogTheme.copyWith(
-        shape: SuperellipseBorder(borderRadius: AppRadius.all(AppCorner.alert)),
+    ),
+    chipTheme: chipTheme.copyWith(shape: AppShape.sm),
+    popupMenuTheme: popupMenuTheme.copyWith(shape: AppShape.md),
+    menuTheme: MenuThemeData(
+      style: (menuTheme.style ?? const MenuStyle()).copyWith(
+        shape: const WidgetStatePropertyAll(AppShape.md),
       ),
-      bottomSheetTheme: bottomSheetTheme.copyWith(
-        shape: SuperellipseBorder(borderRadius: AppRadius.top(AppCorner.xxl)),
-      ),
-      snackBarTheme: snackBarTheme.copyWith(
-        shape: const SuperellipseBorder(borderRadius: AppRadius.xs),
-      ),
-      tooltipTheme: tooltipTheme.copyWith(
-        // A decoration replaces Material's tooltip colours too, so restate them.
-        decoration: ShapeDecoration(
-          shape: const SuperellipseBorder(borderRadius: AppRadius.xs),
-          color: switch (brightness) {
-            Brightness.dark => Colors.white.withAlpha(230),
-            Brightness.light => Colors.grey[700]!.withAlpha(230),
-          },
-        ),
-      ),
-      chipTheme: chipTheme.copyWith(
-        shape: const SuperellipseBorder(borderRadius: AppRadius.sm),
-      ),
-      popupMenuTheme: popupMenuTheme.copyWith(
-        shape: const SuperellipseBorder(borderRadius: AppRadius.md),
-      ),
-      menuTheme: MenuThemeData(
-        style: (menuTheme.style ?? const MenuStyle()).copyWith(
-          shape: const WidgetStatePropertyAll(
-            SuperellipseBorder(borderRadius: AppRadius.md),
-          ),
-        ),
-      ),
-      inputDecorationTheme: inputDecorationTheme.copyWith(border: AppShape.input),
-      floatingActionButtonTheme: floatingActionButtonTheme.copyWith(
-        shape: const SuperellipseBorder(borderRadius: AppRadius.md),
-      ),
-      navigationBarTheme: navigationBarTheme.copyWith(
-        indicatorShape: AppShape.full,
-      ),
-      navigationRailTheme: navigationRailTheme.copyWith(
-        indicatorShape: AppShape.full,
-      ),
-      progressIndicatorTheme: progressIndicatorTheme.copyWith(
-        borderRadius: AppRadius.full,
-      ),
-      filledButtonTheme: FilledButtonThemeData(
-        style: filledButtonTheme.style?.merge(_pillButton) ?? _pillButton,
-      ),
-      textButtonTheme: TextButtonThemeData(
-        style: textButtonTheme.style?.merge(_pillButton) ?? _pillButton,
-      ),
-      outlinedButtonTheme: OutlinedButtonThemeData(
-        style: outlinedButtonTheme.style?.merge(_pillButton) ?? _pillButton,
-      ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: elevatedButtonTheme.style?.merge(_pillButton) ?? _pillButton,
-      ),
-      iconButtonTheme: IconButtonThemeData(
-        style: iconButtonTheme.style?.merge(_pillButton) ?? _pillButton,
-      ),
-    );
-  }
+    ),
+    inputDecorationTheme: inputDecorationTheme.copyWith(border: AppShape.input),
+    floatingActionButtonTheme: floatingActionButtonTheme.copyWith(
+      shape: AppShape.md,
+    ),
+    navigationBarTheme: navigationBarTheme.copyWith(
+      indicatorShape: AppShape.full,
+    ),
+    navigationRailTheme: navigationRailTheme.copyWith(
+      indicatorShape: AppShape.full,
+    ),
+    progressIndicatorTheme: progressIndicatorTheme.copyWith(
+      borderRadius: AppRadius.full,
+    ),
+    filledButtonTheme: FilledButtonThemeData(
+      style: filledButtonTheme.style?.merge(_pillButton) ?? _pillButton,
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: textButtonTheme.style?.merge(_pillButton) ?? _pillButton,
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: outlinedButtonTheme.style?.merge(_pillButton) ?? _pillButton,
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: elevatedButtonTheme.style?.merge(_pillButton) ?? _pillButton,
+    ),
+    iconButtonTheme: IconButtonThemeData(
+      style: iconButtonTheme.style?.merge(_pillButton) ?? _pillButton,
+    ),
+  );
 }
 
 const _pillButton = ButtonStyle(shape: WidgetStatePropertyAll(AppShape.full));
