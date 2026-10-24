@@ -159,9 +159,7 @@ abstract final class AppShape {
   static const SuperellipseBorder xxl = SuperellipseBorder(
     borderRadius: AppRadius.xxl,
   );
-  /// Stadium/pill: kept as native [RoundedSuperellipseBorder] so continuous animations,
-  /// floating docks, and liquid glass lenses run at full GPU speed.
-  static const RoundedSuperellipseBorder full = RoundedSuperellipseBorder(
+  static const SuperellipseBorder full = SuperellipseBorder(
     borderRadius: AppRadius.full,
   );
   static const CircleBorder circle = CircleBorder();
