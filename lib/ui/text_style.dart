@@ -5,7 +5,8 @@ import 'color.dart';
 enum FontFamily {
   twEmoji('Twemoji'),
   openMoji('OpenMoji'),
-  jetBrainsMono('JetBrainsMono');
+  mapleMono('MapleMono'),
+  jetBrainsMono('MapleMono');
 
   final String value;
 
@@ -17,8 +18,10 @@ extension TextStyleExtension on TextStyle {
 
   TextStyle get toLighter => copyWith(color: color?.opacity60);
 
-  TextStyle get toJetBrainsMono =>
-      copyWith(fontFamily: FontFamily.jetBrainsMono.value);
+  TextStyle get toMapleMono =>
+      copyWith(fontFamily: FontFamily.mapleMono.value);
+
+  TextStyle get toJetBrainsMono => toMapleMono;
 
   TextStyle get toTabular =>
       copyWith(fontFeatures: const [FontFeature.tabularFigures()]);

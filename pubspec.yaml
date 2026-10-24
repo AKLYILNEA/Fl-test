@@ -113,9 +113,16 @@ flutter:
   shaders:
     - shaders/liquid_glass.frag
   fonts:
+    - family: MapleMono
+      fonts:
+        - asset: assets/fonts/MapleMono-Regular.ttf
+        - asset: assets/fonts/MapleMono-Bold.ttf
+          weight: 700
     - family: JetBrainsMono
       fonts:
-        - asset: assets/fonts/JetBrainsMono-Regular.ttf
+        - asset: assets/fonts/MapleMono-Regular.ttf
+        - asset: assets/fonts/MapleMono-Bold.ttf
+          weight: 700
     - family: Twemoji
       fonts:
         - asset: assets/fonts/Twemoji.Mozilla.ttf

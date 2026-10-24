@@ -758,7 +758,7 @@ class _CodeEditorState extends ConsumerState<_CodeEditor> {
     final appFont = AppTextStyle.footnote.of(context);
     final textStyle = TextStyle(
       fontSize: fontSize.value,
-      fontFamily: FontFamily.jetBrainsMono.value,
+      fontFamily: FontFamily.mapleMono.value,
       fontFamilyFallback: [
         EmojiManager.currentFamily ?? FontFamily.twEmoji.value,
         ?appFont.fontFamily,

@@ -372,7 +372,7 @@ class _IpText extends ConsumerWidget {
     return DashboardFitText(
       _ipMask,
       style: style.copyWith(
-        fontFamily: FontFamily.jetBrainsMono.value,
+        fontFamily: FontFamily.mapleMono.value,
         color: context.colorScheme.success,
       ),
     );
@@ -587,7 +587,7 @@ TextStyle _cellStyle(BuildContext context) =>
 /// The bundled mono face, so a changing figure keeps one advance per digit
 /// whatever interface font the user picked.
 TextStyle _monoCellStyle(BuildContext context) =>
-    _cellStyle(context).copyWith(fontFamily: FontFamily.jetBrainsMono.value);
+    _cellStyle(context).copyWith(fontFamily: FontFamily.mapleMono.value);
 
 class _CellText extends StatelessWidget {
   const _CellText(this.text, {this.monospace = false});
