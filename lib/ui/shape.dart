@@ -162,49 +162,52 @@ class SuperellipseBorder extends RoundedSuperellipseBorder {
 }
 
 abstract final class AppShape {
-  static const SuperellipseBorder none = SuperellipseBorder();
-  static const SuperellipseBorder xs = SuperellipseBorder(
-    borderRadius: AppRadius.xs,
-  );
-  static const SuperellipseBorder sm = SuperellipseBorder(
-    borderRadius: AppRadius.sm,
-  );
-  static const SuperellipseBorder md = SuperellipseBorder(
-    borderRadius: AppRadius.md,
-  );
-  static const SuperellipseBorder lg = SuperellipseBorder(
-    borderRadius: AppRadius.lg,
-  );
-  static const SuperellipseBorder xl = SuperellipseBorder(
-    borderRadius: AppRadius.xl,
-  );
-  static const SuperellipseBorder xxl = SuperellipseBorder(
-    borderRadius: AppRadius.xxl,
-  );
-  // Full capsule/stadium stays official RoundedSuperellipseBorder:
-  // a full capsule is geometrically identical on all curves and keeps the floating
-  // dock and pill tags at zero overhead on native GPU pipelines.
+  static final RoundedSuperellipseBorder none = system.isDesktop
+      ? const SuperellipseBorder()
+      : const RoundedSuperellipseBorder();
+  static final RoundedSuperellipseBorder xs = system.isDesktop
+      ? const SuperellipseBorder(borderRadius: AppRadius.xs)
+      : const RoundedSuperellipseBorder(borderRadius: AppRadius.xs);
+  static final RoundedSuperellipseBorder sm = system.isDesktop
+      ? const SuperellipseBorder(borderRadius: AppRadius.sm)
+      : const RoundedSuperellipseBorder(borderRadius: AppRadius.sm);
+  static final RoundedSuperellipseBorder md = system.isDesktop
+      ? const SuperellipseBorder(borderRadius: AppRadius.md)
+      : const RoundedSuperellipseBorder(borderRadius: AppRadius.md);
+  static final RoundedSuperellipseBorder lg = system.isDesktop
+      ? const SuperellipseBorder(borderRadius: AppRadius.lg)
+      : const RoundedSuperellipseBorder(borderRadius: AppRadius.lg);
+  static final RoundedSuperellipseBorder xl = system.isDesktop
+      ? const SuperellipseBorder(borderRadius: AppRadius.xl)
+      : const RoundedSuperellipseBorder(borderRadius: AppRadius.xl);
+  static final RoundedSuperellipseBorder xxl = system.isDesktop
+      ? const SuperellipseBorder(borderRadius: AppRadius.xxl)
+      : const RoundedSuperellipseBorder(borderRadius: AppRadius.xxl);
   static const RoundedSuperellipseBorder full = RoundedSuperellipseBorder(
     borderRadius: AppRadius.full,
   );
   static const CircleBorder circle = CircleBorder();
   static const AppInputBorder input = AppInputBorder();
 
-  static SuperellipseBorder all(double corner) =>
-      SuperellipseBorder(borderRadius: AppRadius.all(corner));
+  static RoundedSuperellipseBorder all(double corner) => system.isDesktop
+      ? SuperellipseBorder(borderRadius: AppRadius.all(corner))
+      : RoundedSuperellipseBorder(borderRadius: AppRadius.all(corner));
 
-  static SuperellipseBorder top(double corner) =>
-      SuperellipseBorder(borderRadius: AppRadius.top(corner));
+  static RoundedSuperellipseBorder top(double corner) => system.isDesktop
+      ? SuperellipseBorder(borderRadius: AppRadius.top(corner))
+      : RoundedSuperellipseBorder(borderRadius: AppRadius.top(corner));
 
-  static SuperellipseBorder vertical({
+  static RoundedSuperellipseBorder vertical({
     double top = AppCorner.none,
     double bottom = AppCorner.none,
-  }) => SuperellipseBorder(
-    borderRadius: AppRadius.vertical(top: top, bottom: bottom),
-  );
+  }) => system.isDesktop
+      ? SuperellipseBorder(borderRadius: AppRadius.vertical(top: top, bottom: bottom))
+      : RoundedSuperellipseBorder(borderRadius: AppRadius.vertical(top: top, bottom: bottom));
 
-  static SuperellipseBorder of(BorderRadius borderRadius) =>
-      SuperellipseBorder(borderRadius: borderRadius);
+  static RoundedSuperellipseBorder of(BorderRadius borderRadius) =>
+      system.isDesktop
+          ? SuperellipseBorder(borderRadius: borderRadius)
+          : RoundedSuperellipseBorder(borderRadius: borderRadius);
 }
 
 class AppInputBorder extends InputBorder {
@@ -370,7 +373,7 @@ extension AppShapeThemeExt on ThemeData {
     popupMenuTheme: popupMenuTheme.copyWith(shape: AppShape.md),
     menuTheme: MenuThemeData(
       style: (menuTheme.style ?? const MenuStyle()).copyWith(
-        shape: const WidgetStatePropertyAll(AppShape.md),
+        shape: WidgetStatePropertyAll(AppShape.md),
       ),
     ),
     inputDecorationTheme: inputDecorationTheme.copyWith(border: AppShape.input),

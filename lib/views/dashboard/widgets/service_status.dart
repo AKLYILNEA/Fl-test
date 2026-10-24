@@ -614,10 +614,9 @@ class _BadgePainter extends CustomPainter {
       bounds,
       Radius.circular(radius),
     );
-    final tilePath = Path()..addRSuperellipse(tile);
     final dot = this.dot;
     if (dot == null) {
-      canvas.drawPath(tilePath, Paint()..color = color);
+      canvas.drawRSuperellipse(tile, Paint()..color = color);
       return;
     }
     final center = size.bottomRight(Offset(-dotRadius, -dotRadius));
@@ -627,7 +626,7 @@ class _BadgePainter extends CustomPainter {
       ..drawPath(
         Path.combine(
           PathOperation.difference,
-          tilePath,
+          Path()..addRSuperellipse(tile),
           gap,
         ),
         Paint()..color = color,

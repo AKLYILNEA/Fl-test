@@ -9,7 +9,7 @@ const _suggestionItemGap = 4.0;
 const _suggestionItemPadding = 10.0;
 const _suggestionMinWidth = 160.0;
 const _suggestionDetailGap = 16.0;
-const _suggestionItemShape = AppShape.sm;
+final _suggestionItemShape = AppShape.sm;
 final _suggestionShape = AppShape.all(AppCorner.sm + _suggestionInset);
 
 class EditorCompletionPopup extends StatefulWidget {

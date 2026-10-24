@@ -487,7 +487,7 @@ class WindowHeaderBar extends StatelessWidget {
                         getCaptionButtonSize(height),
                       ),
                       padding: const WidgetStatePropertyAll(EdgeInsets.zero),
-                      shape: const WidgetStatePropertyAll(AppShape.none),
+                      shape: WidgetStatePropertyAll(AppShape.none),
                       foregroundColor: WidgetStatePropertyAll(
                         context.colorScheme.onSurface,
                       ),

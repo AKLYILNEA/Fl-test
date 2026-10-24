@@ -56,7 +56,7 @@ class RecordListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const shape = AppShape.xl;
+    final shape = AppShape.xl;
     final level = context.raisedSurfaceLevel;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
