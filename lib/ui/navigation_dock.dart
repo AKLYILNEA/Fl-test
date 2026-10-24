@@ -2024,8 +2024,10 @@ class _RenderLensTint extends RenderProxyBox {
       return;
     }
     final rest = _motion(1);
-    final isTarget = _lens.target.round() == _index;
-    final magnified = _motion(isTarget ? 1 + _lensMagnify * _lift.value : 1);
+    final isMidwayPassing = (_lens.target - _index).abs() > 0.5 &&
+        (_lens.target - _lens.value).abs() > 0.4;
+    final magnified =
+        _motion(isMidwayPassing ? 1.0 : 1 + _lensMagnify * _lift.value);
     final bounds = Offset.zero & size;
     Rect moved(Matrix4? motion) =>
         motion == null ? bounds : MatrixUtils.transformRect(motion, bounds);
