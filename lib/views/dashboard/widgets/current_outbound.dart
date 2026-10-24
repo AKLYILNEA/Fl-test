@@ -14,6 +14,7 @@ import 'package:fl_clash/views/dashboard/layout.dart';
 import 'package:fl_clash/views/dashboard/probe_start_hold.dart';
 import 'package:fl_clash/views/dashboard/style.dart';
 import 'package:fl_clash/widgets/widgets.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_new_shapes/material_new_shapes.dart';
 import 'package:material_ui/material_ui.dart';
@@ -217,43 +218,43 @@ class _OutboundMetrics {
   });
 
   factory _OutboundMetrics.of(DashboardDensity density) => switch (density) {
-    DashboardDensity.standard => const _OutboundMetrics(
-      padding: EdgeInsetsDirectional.fromSTEB(22, 20, 14, 20),
-      gap: 8,
+    DashboardDensity.standard => _OutboundMetrics(
+      padding: dashboardCardPadding(density),
+      gap: 16,
       ipTop: 10,
       cellGap: 28,
       badgeSize: 48,
       ip: AppTextStyle.title1,
       buttonSize: 104,
-      buttonSlot: 104,
+      buttonSlot: 120,
       decorationSize: 268,
-      decorationEnd: -36,
+      decorationEnd: -52,
       decorationTop: -76,
     ),
-    DashboardDensity.compact => const _OutboundMetrics(
-      padding: EdgeInsetsDirectional.fromSTEB(20, 16, 12, 16),
-      gap: 8,
+    DashboardDensity.compact => _OutboundMetrics(
+      padding: dashboardCardPadding(density),
+      gap: 16,
       ipTop: 8,
       cellGap: 22,
       badgeSize: 40,
       ip: AppTextStyle.title2,
       buttonSize: 84,
-      buttonSlot: 84,
+      buttonSlot: 100,
       decorationSize: 232,
-      decorationEnd: -30,
+      decorationEnd: -46,
       decorationTop: -66,
     ),
     DashboardDensity.mobile => const _OutboundMetrics(
-      padding: EdgeInsetsDirectional.fromSTEB(20, 18, 12, 18),
-      gap: 8,
+      padding: EdgeInsetsDirectional.fromSTEB(20, 18, 16, 18),
+      gap: 10,
       ipTop: 12,
       cellGap: 24,
       badgeSize: 48,
       ip: AppTextStyle.title2,
-      buttonSize: 80,
-      buttonSlot: 80,
-      decorationSize: 208,
-      decorationEnd: -40,
+      buttonSize: 88,
+      buttonSlot: 88,
+      decorationSize: 216,
+      decorationEnd: -48,
       decorationTop: -54,
     ),
   };
@@ -672,6 +673,65 @@ class _ProxyNodeValue extends ConsumerWidget {
   }
 }
 
+class _ExtendWidth extends SingleChildRenderObjectWidget {
+  const _ExtendWidth({required this.extraWidth, super.child});
+
+  final double extraWidth;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderExtendWidth(extraWidth);
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    _RenderExtendWidth renderObject,
+  ) {
+    renderObject.extraWidth = extraWidth;
+  }
+}
+
+class _RenderExtendWidth extends RenderShiftedBox {
+  _RenderExtendWidth(this._extraWidth) : super(null);
+
+  double _extraWidth;
+
+  set extraWidth(double value) {
+    if (_extraWidth == value) return;
+    _extraWidth = value;
+    markNeedsLayout();
+  }
+
+  @override
+  Size computeDryLayout(covariant BoxConstraints constraints) {
+    final child = this.child;
+    if (child == null) return constraints.smallest;
+    final childConstraints = constraints.copyWith(
+      maxWidth: constraints.maxWidth.isFinite
+          ? constraints.maxWidth + _extraWidth
+          : constraints.maxWidth,
+    );
+    return constraints.constrain(child.getDryLayout(childConstraints));
+  }
+
+  @override
+  void performLayout() {
+    final child = this.child;
+    if (child == null) {
+      size = constraints.smallest;
+      return;
+    }
+    final childConstraints = constraints.copyWith(
+      maxWidth: constraints.maxWidth.isFinite
+          ? constraints.maxWidth + _extraWidth
+          : constraints.maxWidth,
+    );
+    child.layout(childConstraints, parentUsesSize: true);
+    size = constraints.constrain(child.size);
+    (child.parentData! as BoxParentData).offset = Offset.zero;
+  }
+}
+
 class _NodeCellText extends StatelessWidget {
   const _NodeCellText(this.text);
 
@@ -680,15 +740,19 @@ class _NodeCellText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final style = _cellStyle(context);
+    final extraWidth = MediaQuery.textScalerOf(context).scale(30.0);
     return Tooltip(
       message: text,
-      child: EmojiText(
-        text,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: isBuiltinOutbound(text)
-            ? style.copyWith(color: context.colorScheme.onSurfaceVariant)
-            : style,
+      child: _ExtendWidth(
+        extraWidth: extraWidth,
+        child: EmojiText(
+          text,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: isBuiltinOutbound(text)
+              ? style.copyWith(color: context.colorScheme.onSurfaceVariant)
+              : style,
+        ),
       ),
     );
   }
