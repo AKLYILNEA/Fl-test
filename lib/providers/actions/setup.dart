@@ -619,10 +619,11 @@ class SetupAction extends _$SetupAction {
         setupState: setupState,
         patchConfig: patchClashConfig,
       );
-      return switch (res.base) {
+      final yamlContent = switch (res.base) {
         final base? => await _core.buildProfile(base),
         null => res.yaml,
       };
+      return unescapeYamlUnicode(yamlContent);
     } catch (e) {
       dialogs.showNotifier(e.toString(), level: MessageLevel.error);
     }
