@@ -56,8 +56,8 @@ ProfileStats profileStatsOf(
 
 ({String md5, ConfigCounts counts})? _countsCache;
 
-final ValueNotifier<ConfigCounts?> configCountsNotifier =
-    ValueNotifier<ConfigCounts?>(_cachedCounts());
+ValueNotifier<ConfigCounts?> get configCountsNotifier =>
+    globalState.configCountsNotifier;
 
 // package:yaml holds a document in many times its size.
 const _maxCountedConfigBytes = 8 << 20;
@@ -79,23 +79,38 @@ ConfigCounts? _countConfigFile(String path) {
     return null;
   }
   final config = loadYaml(file.readAsStringSync());
-  return configCountsOf(config is Map ? config : const {});
+  if (config is! Map) return null;
+  int lengthOf(Object? value) => value is List ? value.length : 0;
+  final rules = config['rules'] ?? config['rule'];
+  return (
+    groups: lengthOf(config['proxy-groups']),
+    proxies: lengthOf(config['proxies']),
+    rules: lengthOf(rules),
+  );
 }
 
 /// Parsed in an isolate: a large profile takes far longer than a frame.
-Future<ConfigCounts?> _loadCounts() async {
+Future<ConfigCounts?> _loadCounts([int? profileId]) async {
   if (cachedConfigCounts() case final counts?) {
-    configCountsNotifier.value = counts;
     return counts;
   }
+  final saved = await preferences.getAppliedConfigCounts();
+  if (saved != null) {
+    globalState.lastConfigCounts = saved;
+    return saved;
+  }
   final md5 = globalState.lastConfigMd5;
-  final counts = await compute(_countConfigFile, await appPath.configFilePath);
+  ConfigCounts? counts =
+      await compute(_countConfigFile, await appPath.configFilePath);
+  if (counts == null && profileId != null) {
+    final profilePath = await appPath.getProfilePath(profileId.toString());
+    counts = await compute(_countConfigFile, profilePath);
+  }
   if (md5 != null && counts != null) {
     _countsCache = (md5: md5, counts: counts);
   }
   if (counts != null) {
     globalState.lastConfigCounts = counts;
-    configCountsNotifier.value = counts;
     unawaited(preferences.saveAppliedConfigCounts(counts));
   }
   return counts;
@@ -106,6 +121,7 @@ mixin ConfigCountsWatch<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   bool configCountsFailed = false;
   var _generation = 0;
   AppLifecycleListener? _lifecycleListener;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -137,7 +153,7 @@ mixin ConfigCountsWatch<T extends ConsumerStatefulWidget> on ConsumerState<T> {
 
   void _handleResume() {
     if (!mounted) return;
-    final cached = cachedConfigCounts();
+    final cached = cachedConfigCounts() ?? configCountsNotifier.value;
     if (cached != null) {
       if (cached != configCounts) {
         setState(() {
@@ -151,14 +167,19 @@ mixin ConfigCountsWatch<T extends ConsumerStatefulWidget> on ConsumerState<T> {
   }
 
   Future<void> _reloadCounts() async {
+    if (_isLoading) return;
+    _isLoading = true;
     final generation = ++_generation;
     ConfigCounts? counts;
     var failed = false;
     try {
-      counts = await _loadCounts();
+      final profileId = ref.read(currentProfileIdProvider);
+      counts = await _loadCounts(profileId);
     } catch (error) {
       commonPrint.log('read applied config error: $error');
       failed = true;
+    } finally {
+      _isLoading = false;
     }
     if (!mounted || generation != _generation) {
       return;
@@ -167,36 +188,38 @@ mixin ConfigCountsWatch<T extends ConsumerStatefulWidget> on ConsumerState<T> {
       configCounts = counts ?? cachedConfigCounts() ?? configCounts;
       configCountsFailed = failed && configCounts == null;
     });
-    if (counts != null) {
-      configCountsNotifier.value = counts;
-    }
   }
 
   /// Called from build: groups refresh after every applied setup.
   void watchConfigCounts() {
-    final cached = cachedConfigCounts();
+    final cached = cachedConfigCounts() ?? configCountsNotifier.value;
     if (cached != null && cached != configCounts) {
       configCounts = cached;
       configCountsFailed = false;
-    } else if (configCounts == null && !configCountsFailed) {
+    } else if (configCounts == null && !configCountsFailed && !_isLoading) {
       unawaited(_reloadCounts());
     }
 
-    ref.listen(currentProfileProvider, (_, _) {
-      final cached = cachedConfigCounts();
-      if (cached == null) {
-        unawaited(_reloadCounts());
-      } else if (cached != configCounts) {
-        _generation++;
+    ref.listen(currentProfileIdProvider, (_, profileId) {
+      final cached = cachedConfigCounts() ?? configCountsNotifier.value;
+      if (cached != null) {
         setState(() {
           configCounts = cached;
           configCountsFailed = false;
         });
+      } else {
+        unawaited(_reloadCounts());
+      }
+    });
+
+    ref.listen(providersProvider, (_, _) {
+      if (mounted) {
+        setState(() {});
       }
     });
 
     ref.listen(groupsProvider, (_, _) {
-      final cached = cachedConfigCounts();
+      final cached = cachedConfigCounts() ?? configCountsNotifier.value;
       if (cached == null) {
         unawaited(_reloadCounts());
       } else if (cached != configCounts) {

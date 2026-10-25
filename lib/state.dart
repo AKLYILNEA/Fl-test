@@ -31,7 +31,11 @@ class GlobalState {
   }
 
   String? lastConfigMd5;
-  ConfigCounts? lastConfigCounts;
+  final configCountsNotifier = ValueNotifier<ConfigCounts?>(null);
+  ConfigCounts? get lastConfigCounts => configCountsNotifier.value;
+  set lastConfigCounts(ConfigCounts? value) {
+    configCountsNotifier.value = value;
+  }
   bool isAttach = false;
 
   GlobalState._internal();

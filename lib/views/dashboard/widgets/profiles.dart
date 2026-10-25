@@ -256,9 +256,20 @@ class _ConfigStatsState extends ConsumerState<_ConfigStats>
     final providers = ref.watch(providersProvider);
     final appLocalizations = context.appLocalizations;
     final colorScheme = context.colorScheme;
-    final stats = switch (configCounts ?? cachedConfigCounts()) {
+    final effectiveCounts =
+        configCounts ?? cachedConfigCounts() ?? configCountsNotifier.value;
+    final stats = switch (effectiveCounts) {
       final counts? => profileStatsOf(counts, providers),
-      null => null,
+      null => providers.isNotEmpty
+          ? (
+              groups: 0,
+              proxies: providers
+                  .where((p) => p.type == 'Proxy')
+                  .fold(0, (sum, p) => sum + p.count),
+              rules: 0,
+              providers: providers.length,
+            )
+          : null,
     };
     final desktop = density.isDesktop;
     final titleStyle = DashboardText.rowTitle(context);

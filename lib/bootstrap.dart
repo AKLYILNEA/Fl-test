@@ -101,6 +101,10 @@ class Bootstrap {
   ) async {
     await _claimDataDirectory();
     globalState.packageInfo = await PackageInfo.fromPlatform();
+    final appliedCounts = await preferences.getAppliedConfigCounts();
+    if (appliedCounts != null) {
+      globalState.lastConfigCounts = appliedCounts;
+    }
     var config = await migration.run();
     _bootDecision = await bootGuard.evaluate(
       profileId: config.currentProfileId,
