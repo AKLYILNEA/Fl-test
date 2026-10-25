@@ -43,6 +43,32 @@ func namedProxy(name string) constant.Proxy {
 // selectorGroup builds a real Selector over a compatible provider, so the
 // selection paths under test run against mihomo's own group rather than a stub
 // that could agree with a wrong assumption.
+func urlTestGroup(t *testing.T, name string, members ...string) constant.Proxy {
+	t.Helper()
+
+	proxies := make([]constant.Proxy, 0, len(members))
+	for _, member := range members {
+		proxies = append(proxies, namedProxy(member))
+	}
+
+	health := provider.NewHealthCheck(proxies, "", 0, 0, true, nil)
+	pd, err := provider.NewCompatibleProvider(name+"-provider", proxies, health)
+	if err != nil {
+		t.Fatalf("NewCompatibleProvider: %v", err)
+	}
+
+	group, err := outboundgroup.NewURLTest(
+		outboundgroup.GroupCommonOption{Name: name},
+		outboundgroup.URLTestOption{},
+		adapter.NewProxy(outbound.NewCompatible()),
+		[]cp.ProxyProvider{pd},
+	)
+	if err != nil {
+		t.Fatalf("NewURLTest: %v", err)
+	}
+	return adapter.NewProxy(group)
+}
+
 func selectorGroup(t *testing.T, name string, members ...string) constant.Proxy {
 	t.Helper()
 
@@ -90,6 +116,25 @@ func groupNow(t *testing.T, proxy constant.Proxy) string {
 // names through unvalidated and let Selector resolve them at dial time. A name
 // that never comes back has to degrade to the group's first member rather than
 // break the group.
+func TestReconcileDynamicGroupsResolvesFallbackState(t *testing.T) {
+	group := urlTestGroup(t, "auto", "node-1", "node-2")
+	tunnel.UpdateProxies(map[string]constant.Proxy{"auto": group}, nil)
+	t.Cleanup(func() { tunnel.UpdateProxies(nil, nil) })
+
+	// Manually force fallback pseudo-name to simulate cold-start empty-provider state
+	if selector, ok := adapterAs[outboundgroup.SelectAble](group); ok {
+		selector.ForceSet("COMPATIBLE")
+	}
+
+	selectMu.Lock()
+	reconcileDynamicGroupsLocked(nil)
+	selectMu.Unlock()
+
+	if got := groupNow(t, group); got != "node-1" {
+		t.Errorf("dynamic group resolved to %q, want first member node-1 after reconciling stale fallback", got)
+	}
+}
+
 func TestPatchSelectGroupRestoresASelectionWithoutValidatingIt(t *testing.T) {
 	group := selectorGroup(t, "group", "node-a", "node-b")
 	tunnel.UpdateProxies(map[string]constant.Proxy{"group": group}, nil)
