@@ -49,58 +49,31 @@ func adapterAs[T any](proxy constant.Proxy) (group T, ok bool) {
 	return group, ok
 }
 
-func isDynamicProxyGroupType(adapterType constant.AdapterType) bool {
-	switch adapterType {
-	case constant.URLTest, constant.Fallback, constant.LoadBalance:
-		return true
-	default:
-		return false
-	}
-}
-
-// reconcileDynamicGroupsLocked resets and re-evaluates dynamic groups (URLTest / Fallback / LoadBalance)
-// whose members were loaded after initialization, clearing stale fallback states like COMPATIBLE or REJECT.
-func reconcileDynamicGroupsLocked(mapping map[string]string) {
-	proxies := tunnel.AllProxies()
-	for name, proxy := range proxies {
-		if proxy == nil || !isDynamicProxyGroupType(proxy.Type()) {
+// A provider that loads after its group leaves the group holding the empty
+// fallback: URLTest caches that pick for ten seconds and Fallback keeps it in
+// selected, and mihomo exposes no reset for either. ForceSet is the only lever.
+func reconcileDynamicGroupsLocked() {
+	for _, proxy := range tunnel.AllProxies() {
+		if proxy == nil {
 			continue
 		}
-		group, ok := adapterAs[outboundgroup.ProxyGroup](proxy)
+		switch proxy.Type() {
+		case constant.URLTest, constant.Fallback:
+		default:
+			continue
+		}
+		group, ok := adapterAs[pickableGroup](proxy)
 		if !ok {
-			continue
-		}
-		selector, ok := adapterAs[outboundgroup.SelectAble](proxy)
-		if !ok {
-			continue
-		}
-
-		members := group.Proxies()
-		if len(members) == 0 {
-			continue
-		}
-		names := make([]string, 0, len(members))
-		for _, m := range members {
-			if m != nil {
-				names = append(names, m.Name())
-			}
-		}
-		if len(names) == 0 {
 			continue
 		}
 
 		now := group.Now()
-		if !slices.Contains(names, now) {
-			if mapping != nil {
-				if selected, exist := mapping[name]; exist && slices.Contains(names, selected) {
-					selector.ForceSet(selected)
-					_ = group.Now()
-					continue
-				}
-			}
-			selector.ForceSet("")
-			_ = group.Now()
+		if slices.ContainsFunc(group.Proxies(), func(member constant.Proxy) bool {
+			return member != nil && member.Name() == now
+		}) {
+			continue
 		}
+		group.ForceSet("")
 	}
 }
 
@@ -140,7 +113,7 @@ func proxyGroupNames(
 
 func handleGetProxies() ProxiesData {
 	selectMu.Lock()
-	reconcileDynamicGroupsLocked(nil)
+	reconcileDynamicGroupsLocked()
 	selectMu.Unlock()
 
 	proxies := tunnel.AllProxies()
@@ -182,35 +155,6 @@ func proxyView(proxy constant.Proxy) any {
 	view["name"] = node.Name
 	if isBuiltInGlobal(proxy) {
 		view["hidden"] = true
-	}
-	if isDynamicProxyGroupType(proxy.Type()) {
-		if all, ok := view["all"].([]any); ok && len(all) > 0 {
-			now, _ := view["now"].(string)
-			isMember := false
-			for _, m := range all {
-				if mStr, ok := m.(string); ok && mStr == now {
-					isMember = true
-					break
-				}
-			}
-			if !isMember {
-				if group, ok := adapterAs[outboundgroup.ProxyGroup](proxy); ok {
-					realNow := group.Now()
-					for _, m := range all {
-						if mStr, ok := m.(string); ok && mStr == realNow {
-							view["now"] = realNow
-							isMember = true
-							break
-						}
-					}
-				}
-				if !isMember {
-					if first, ok := all[0].(string); ok {
-						view["now"] = first
-					}
-				}
-			}
-		}
 	}
 	return view
 }
@@ -274,7 +218,7 @@ func patchSelectGroup(mapping map[string]string) {
 			selector.ForceSet(selected)
 		}
 	}
-	reconcileDynamicGroupsLocked(mapping)
+	reconcileDynamicGroupsLocked()
 }
 
 // Tailscale and EasyTier register a DNS client under the proxy name when built
