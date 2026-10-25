@@ -75,15 +75,24 @@ func reconcileDynamicGroupsLocked(mapping map[string]string) {
 			continue
 		}
 
-		all := group.All()
-		if len(all) == 0 {
+		members := group.Proxies()
+		if len(members) == 0 {
+			continue
+		}
+		names := make([]string, 0, len(members))
+		for _, m := range members {
+			if m != nil {
+				names = append(names, m.Name())
+			}
+		}
+		if len(names) == 0 {
 			continue
 		}
 
 		now := group.Now()
-		if !slices.Contains(all, now) {
+		if !slices.Contains(names, now) {
 			if mapping != nil {
-				if selected, exist := mapping[name]; exist && slices.Contains(all, selected) {
+				if selected, exist := mapping[name]; exist && slices.Contains(names, selected) {
 					selector.ForceSet(selected)
 					_ = group.Now()
 					continue
