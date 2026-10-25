@@ -56,10 +56,15 @@ ProfileStats profileStatsOf(
 
 ({String md5, ConfigCounts counts})? _countsCache;
 
+final ValueNotifier<ConfigCounts?> configCountsNotifier =
+    ValueNotifier<ConfigCounts?>(_cachedCounts());
+
 // package:yaml holds a document in many times its size.
 const _maxCountedConfigBytes = 8 << 20;
 
-ConfigCounts? _cachedCounts() {
+ConfigCounts? _cachedCounts() => cachedConfigCounts();
+
+ConfigCounts? cachedConfigCounts() {
   if (globalState.lastConfigCounts case final counts?) {
     return counts;
   }
@@ -70,7 +75,7 @@ ConfigCounts? _cachedCounts() {
 
 ConfigCounts? _countConfigFile(String path) {
   final file = File(path);
-  if (file.lengthSync() > _maxCountedConfigBytes) {
+  if (!file.existsSync() || file.lengthSync() > _maxCountedConfigBytes) {
     return null;
   }
   final config = loadYaml(file.readAsStringSync());
@@ -79,7 +84,8 @@ ConfigCounts? _countConfigFile(String path) {
 
 /// Parsed in an isolate: a large profile takes far longer than a frame.
 Future<ConfigCounts?> _loadCounts() async {
-  if (_cachedCounts() case final counts?) {
+  if (cachedConfigCounts() case final counts?) {
+    configCountsNotifier.value = counts;
     return counts;
   }
   final md5 = globalState.lastConfigMd5;
@@ -87,18 +93,59 @@ Future<ConfigCounts?> _loadCounts() async {
   if (md5 != null && counts != null) {
     _countsCache = (md5: md5, counts: counts);
   }
+  if (counts != null) {
+    globalState.lastConfigCounts = counts;
+    configCountsNotifier.value = counts;
+    unawaited(preferences.saveAppliedConfigCounts(counts));
+  }
   return counts;
 }
 
 mixin ConfigCountsWatch<T extends ConsumerStatefulWidget> on ConsumerState<T> {
-  ConfigCounts? configCounts = _cachedCounts();
+  ConfigCounts? configCounts = cachedConfigCounts();
   bool configCountsFailed = false;
   var _generation = 0;
+  AppLifecycleListener? _lifecycleListener;
 
   @override
   void initState() {
     super.initState();
+    configCountsNotifier.addListener(_handleCountsNotifier);
+    _lifecycleListener = AppLifecycleListener(onResume: _handleResume);
     if (configCounts == null) {
+      unawaited(_reloadCounts());
+    }
+  }
+
+  @override
+  void dispose() {
+    configCountsNotifier.removeListener(_handleCountsNotifier);
+    _lifecycleListener?.dispose();
+    super.dispose();
+  }
+
+  void _handleCountsNotifier() {
+    if (!mounted) return;
+    final newCounts = configCountsNotifier.value;
+    if (newCounts != null && newCounts != configCounts) {
+      setState(() {
+        configCounts = newCounts;
+        configCountsFailed = false;
+      });
+    }
+  }
+
+  void _handleResume() {
+    if (!mounted) return;
+    final cached = cachedConfigCounts();
+    if (cached != null) {
+      if (cached != configCounts) {
+        setState(() {
+          configCounts = cached;
+          configCountsFailed = false;
+        });
+      }
+    } else {
       unawaited(_reloadCounts());
     }
   }
@@ -117,15 +164,39 @@ mixin ConfigCountsWatch<T extends ConsumerStatefulWidget> on ConsumerState<T> {
       return;
     }
     setState(() {
-      configCounts = counts ?? configCounts;
-      configCountsFailed = failed || counts == null;
+      configCounts = counts ?? cachedConfigCounts() ?? configCounts;
+      configCountsFailed = failed && configCounts == null;
     });
+    if (counts != null) {
+      configCountsNotifier.value = counts;
+    }
   }
 
   /// Called from build: groups refresh after every applied setup.
   void watchConfigCounts() {
+    final cached = cachedConfigCounts();
+    if (cached != null && cached != configCounts) {
+      configCounts = cached;
+      configCountsFailed = false;
+    } else if (configCounts == null && !configCountsFailed) {
+      unawaited(_reloadCounts());
+    }
+
+    ref.listen(currentProfileProvider, (_, _) {
+      final cached = cachedConfigCounts();
+      if (cached == null) {
+        unawaited(_reloadCounts());
+      } else if (cached != configCounts) {
+        _generation++;
+        setState(() {
+          configCounts = cached;
+          configCountsFailed = false;
+        });
+      }
+    });
+
     ref.listen(groupsProvider, (_, _) {
-      final cached = _cachedCounts();
+      final cached = cachedConfigCounts();
       if (cached == null) {
         unawaited(_reloadCounts());
       } else if (cached != configCounts) {
@@ -193,7 +264,7 @@ class _ProfileDetailSheetState extends ConsumerState<ProfileDetailSheet>
                 SliverList.list(
                   children: [
                     _StatsGrid(
-                      stats: switch (configCounts) {
+                      stats: switch (configCounts ?? cachedConfigCounts()) {
                         final counts? => profileStatsOf(counts, providers),
                         null => null,
                       },

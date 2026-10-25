@@ -256,7 +256,7 @@ class _ConfigStatsState extends ConsumerState<_ConfigStats>
     final providers = ref.watch(providersProvider);
     final appLocalizations = context.appLocalizations;
     final colorScheme = context.colorScheme;
-    final stats = switch (configCounts) {
+    final stats = switch (configCounts ?? cachedConfigCounts()) {
       final counts? => profileStatsOf(counts, providers),
       null => null,
     };

@@ -155,6 +155,7 @@ class SetupAction extends _$SetupAction {
     _startTime = await serviceStartTime();
     if (_isRunning) {
       globalState.lastConfigMd5 = await preferences.getAppliedConfigMd5();
+      globalState.lastConfigCounts = await preferences.getAppliedConfigCounts();
       await _run(true, initialize: true, resume: true);
     } else if (ref.read(appSettingProvider).autoRun) {
       await setRunning(true, initialize: true);
@@ -755,6 +756,7 @@ class SetupAction extends _$SetupAction {
     if (!profileFailed && yamlMd5 == globalState.lastConfigMd5 && !force) {
       _appliedInputs = inputs;
       globalState.lastConfigCounts = realProfile.counts;
+      unawaited(preferences.saveAppliedConfigCounts(realProfile.counts));
       await preloadInvoke?.call();
       return _SetupTaskResult.completed;
     }
@@ -788,6 +790,7 @@ class SetupAction extends _$SetupAction {
           );
           if (message.isNotEmpty) {
             globalState.lastConfigCounts = configCountsOf(const {});
+            unawaited(preferences.saveAppliedConfigCounts(globalState.lastConfigCounts));
             await globalState.safeRun(() => onUpdated?.call());
             throw MessageException(message);
           }
@@ -801,6 +804,7 @@ class SetupAction extends _$SetupAction {
         globalState.lastConfigMd5 = yamlMd5;
         globalState.lastConfigCounts =
             realProfile?.counts ?? configCountsOf(const {});
+        unawaited(preferences.saveAppliedConfigCounts(globalState.lastConfigCounts));
         _appliedInputs = inputs;
         if (system.isAndroid) {
           await preferences.saveAppliedConfigMd5(yamlMd5);
