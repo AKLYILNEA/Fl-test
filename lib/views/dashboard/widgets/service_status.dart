@@ -230,14 +230,21 @@ class _ServiceStatusCardState extends ConsumerState<ServiceStatusCard>
             chevron: mobile,
             share: 0.65,
             trailing: [
-              if (!stacked) ?verdict,
-              if (!mobile)
+              if (mobile) ...[
+                if (!stacked) ?verdict,
+              ] else
                 Transform.translate(
                   offset: const Offset(8, 0),
-                  child: DashboardIconButton(
-                    glyph: AppGlyphs.chevronForward,
-                    tooltip: appLocalizations.serviceStatus,
-                    onPressed: openSheet,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (!stacked) ?verdict,
+                      DashboardIconButton(
+                        glyph: AppGlyphs.chevronForward,
+                        tooltip: appLocalizations.serviceStatus,
+                        onPressed: openSheet,
+                      ),
+                    ],
                   ),
                 ),
             ],
