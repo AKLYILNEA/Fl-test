@@ -174,7 +174,7 @@ class _ServiceStatusCardState extends ConsumerState<ServiceStatusCard>
     final mobile = !density.isDesktop;
     final appLocalizations = context.appLocalizations;
     // At most four: what the Core checks at once (serviceCheckConcurrency).
-    final shownCount = (mobile ? 1 : 2) * widget.columns;
+    final shownCount = 2 * widget.columns;
     final stacked = widget.columns == 1;
     final shown = ref
         .watch(enabledServiceTargetsProvider)
@@ -309,6 +309,10 @@ class _ServiceGrid extends StatelessWidget {
                 Expanded(
                   child: _ServiceCell(service: service, height: cellHeight),
                 ),
+              for (var i = 0;
+                  i < columns - services.skip(start).take(columns).length;
+                  i++)
+                const Expanded(child: SizedBox.shrink()),
             ],
           ),
       ],

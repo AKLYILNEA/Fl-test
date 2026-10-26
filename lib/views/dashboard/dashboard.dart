@@ -81,18 +81,18 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
             )
           : null,
       iconActions: [
+        if (editable && !editing)
+          IconButtonData(
+            glyph: AppGlyphs.edit,
+            tooltip: appLocalizations.editDashboard,
+            onPressed: () => _setEditing(true),
+          ),
         if (desktopPlatforms.contains(platform) && !editing)
           IconButtonData(
             glyph: AppGlyphs.sun,
             tooltip: appLocalizations.wakelock,
             isSelected: ref.watch(wakelockProvider),
             onPressed: () => ref.read(wakelockProvider.notifier).toggle(),
-          ),
-        if (editable && !editing)
-          IconButtonData(
-            glyph: AppGlyphs.edit,
-            tooltip: appLocalizations.editDashboard,
-            onPressed: () => _setEditing(true),
           ),
       ],
       // The providers learn a resize a frame late, too late for the cards.
@@ -218,7 +218,16 @@ class _DesktopDashboard extends StatelessWidget {
                 ),
                 sized(
                   middleHeight,
-                  row(const [(1, ServiceStatusCard()), (1, MemoryInfo())]),
+                  row([
+                    (
+                      1,
+                      ServiceStatusCard(
+                        columns:
+                            column >= _servicePairColumnMin * scale ? 2 : 1,
+                      ),
+                    ),
+                    (1, const MemoryInfo()),
+                  ]),
                 ),
                 sized(summaryHeight, summaries),
               ],
