@@ -228,25 +228,16 @@ class _ServiceStatusCardState extends ConsumerState<ServiceStatusCard>
             glyph: AppGlyphs.verified,
             title: appLocalizations.serviceStatus,
             chevron: mobile,
+            share: 0.65,
             trailing: [
               if (!stacked) ?verdict,
               if (!mobile)
                 Transform.translate(
                   offset: const Offset(8, 0),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (!stacked)
-                        _CheckAllButton(
-                          loading: shown.any(state.isLoading),
-                          onPressed: () => _services.refresh(shown),
-                        ),
-                      DashboardIconButton(
-                        glyph: AppGlyphs.chevronForward,
-                        tooltip: appLocalizations.serviceStatus,
-                        onPressed: openSheet,
-                      ),
-                    ],
+                  child: DashboardIconButton(
+                    glyph: AppGlyphs.chevronForward,
+                    tooltip: appLocalizations.serviceStatus,
+                    onPressed: openSheet,
                   ),
                 ),
             ],
@@ -402,28 +393,6 @@ class _ServiceCell extends StatelessWidget {
                 ),
               ),
       ),
-    );
-  }
-}
-
-class _CheckAllButton extends StatelessWidget {
-  const _CheckAllButton({required this.loading, required this.onPressed});
-
-  final bool loading;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    if (loading) {
-      return const SizedBox.square(
-        dimension: 32,
-        child: Center(child: CommonCircleLoading(size: 18)),
-      );
-    }
-    return DashboardIconButton(
-      glyph: AppGlyphs.bolt,
-      tooltip: context.appLocalizations.serviceCheckAll,
-      onPressed: onPressed,
     );
   }
 }

@@ -92,6 +92,7 @@ class DashboardCardHeader extends StatelessWidget {
     this.leading = const [],
     this.trailing = const [],
     this.chevron = false,
+    this.share,
   });
 
   static const height = 24.0;
@@ -104,6 +105,7 @@ class DashboardCardHeader extends StatelessWidget {
   final List<Widget> leading;
   final List<Widget> trailing;
   final bool chevron;
+  final double? share;
 
   @override
   Widget build(BuildContext context) {
@@ -149,6 +151,7 @@ class DashboardCardHeader extends StatelessWidget {
                 ? start
                 : DashboardCappedRow(
                     start: start,
+                    share: share ?? 0.5,
                     end: Row(
                       mainAxisSize: MainAxisSize.min,
                       spacing: 8,
