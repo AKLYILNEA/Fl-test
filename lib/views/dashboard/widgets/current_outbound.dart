@@ -341,7 +341,10 @@ class _ExitRow extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ip,
+              Transform.translate(
+                offset: const Offset(0, -0.5),
+                child: ip,
+              ),
               const SizedBox(height: 2),
               _RunTimeSubText(active: active),
             ],
