@@ -298,7 +298,7 @@ class _ExitRow extends StatelessWidget {
       context,
       metrics.ip,
       color: active ? colorScheme.onSurface : colorScheme.onSurfaceVariant,
-    ).copyWith(letterSpacing: 0);
+    ).copyWith(letterSpacing: 0, height: 1.15);
     final info = this.info;
     final appLocalizations = context.appLocalizations;
     final Widget ip = info != null
@@ -337,17 +337,14 @@ class _ExitRow extends StatelessWidget {
           onRefresh: onRefresh,
         ),
         Expanded(
-          child: Transform.translate(
-            offset: const Offset(0, -2.5),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ip,
-                const SizedBox(height: 2),
-                _RunTimeSubText(active: active),
-              ],
-            ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ip,
+              const SizedBox(height: 2),
+              _RunTimeSubText(active: active),
+            ],
           ),
         ),
       ],
