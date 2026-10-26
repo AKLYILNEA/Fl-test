@@ -342,7 +342,7 @@ class _ExitRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Transform.translate(
-                offset: const Offset(0, -0.5),
+                offset: const Offset(0, -1),
                 child: ip,
               ),
               const SizedBox(height: 2),
