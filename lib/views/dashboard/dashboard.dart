@@ -20,7 +20,7 @@ import 'widgets/widgets.dart';
 
 // Narrower columns leave a pair of service cells too tight for a status, so
 // the grid stacks them in one.
-const _servicePairColumnMin = 290.0;
+const _servicePairColumnMin = 240.0;
 
 const _maxColumnWidth = 440.0;
 

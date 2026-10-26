@@ -163,6 +163,7 @@ class _Spring extends ChangeNotifier implements ValueListenable<double> {
   SpringDescription? _spring;
   double _now = 0;
   double _start = 0;
+  bool isGesture = false;
 
   @override
   double get value => _value;
@@ -203,6 +204,7 @@ class _Spring extends ChangeNotifier implements ValueListenable<double> {
 
   void jumpTo(double value) {
     _simulation = null;
+    isGesture = false;
     _ticker.stop();
     _value = value;
     notifyListeners();
@@ -215,6 +217,7 @@ class _Spring extends ChangeNotifier implements ValueListenable<double> {
     if (simulation.isDone(time)) {
       _value = _target;
       _simulation = null;
+      isGesture = false;
       _ticker.stop();
     } else {
       _value = simulation.x(time);
@@ -948,6 +951,7 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar>
     _leanContent();
     final rest = _lensRest;
     if (_pressedIndex == null && _lens.target != rest) {
+      _lens.isGesture = false;
       _lens.springTo(rest, _travelSpring);
     }
   }
@@ -1176,6 +1180,7 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar>
     _pressX = localPosition.dx;
     _dragging = false;
     _dropping = false;
+    _lens.isGesture = false;
     _lift.springTo(1, _liftSpring);
     _lens.springTo(index.toDouble(), _travelSpring);
   }
@@ -1190,6 +1195,7 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar>
       }
       _dragging = true;
     }
+    _lens.isGesture = true;
     final size = context.size!;
     final overshoot =
         localPosition.dx - localPosition.dx.clamp(0.0, size.width);
@@ -1236,9 +1242,13 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar>
     if (index == null) {
       return;
     }
+    final wasDragging = _dragging;
     _pressedIndex = null;
     _dragging = false;
     _dropping = true;
+    if (!wasDragging) {
+      _lens.isGesture = false;
+    }
     _lens.springTo((commit ? index : _selectedIndex).toDouble(), _travelSpring);
     _dropLift();
     if (commit && index != widget.selectedIndex) {
@@ -2024,7 +2034,8 @@ class _RenderLensTint extends RenderProxyBox {
       return;
     }
     final rest = _motion(1);
-    final isMidwayPassing = (_lens.target - _index).abs() > 0.5 &&
+    final isMidwayPassing = !_lens.isGesture &&
+        (_lens.target - _index).abs() > 0.5 &&
         (_lens.target - _lens.value).abs() > 0.4;
     final magnified =
         _motion(isMidwayPassing ? 1.0 : 1 + _lensMagnify * _lift.value);
