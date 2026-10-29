@@ -805,9 +805,7 @@ class _SelectedProxyLine extends ConsumerWidget {
         ? null
         : ref.watch(groupsProvider).getGroup(proxyName)?.icon;
     final textScaler = MediaQuery.textScalerOf(context);
-    final iconSize = textScaler.scale(
-      style.fontSize ?? AppTextStyle.caption1.size,
-    );
+    final iconSize = textScaler.scale(AppTextStyle.caption1.leading);
     return Row(
       children: [
         Text(groupType.name, style: style),
