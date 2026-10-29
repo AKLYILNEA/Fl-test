@@ -4,6 +4,7 @@ import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/common/service_probe.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/features/features.dart';
+import 'package:fl_clash/features/ip_quality/labels.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/ip_quality.dart';
 import 'package:fl_clash/providers/outbound_ip.dart';
@@ -176,6 +177,8 @@ class _CurrentOutboundCardState extends ConsumerState<CurrentOutboundCard>
                       else
                         const SizedBox(height: 16),
                       _Cells(
+                        quality: quality,
+                        loading: loading,
                         active: isStart && !suspended,
                         gap: metrics.cellGap,
                       ),
@@ -591,20 +594,41 @@ class _CountryBadgeState extends State<_CountryBadge>
 }
 
 class _Cells extends StatelessWidget {
-  const _Cells({required this.active, required this.gap});
+  const _Cells({
+    required this.quality,
+    required this.loading,
+    required this.active,
+    required this.gap,
+  });
 
+  final IpQuality? quality;
+  final bool loading;
   final bool active;
   final double gap;
 
   @override
   Widget build(BuildContext context) {
     final appLocalizations = context.appLocalizations;
+    final typeLabel = quality?.type.label(context);
+    final Widget typeValue = !active
+        ? const _Placeholder()
+        : typeLabel != null
+        ? Tooltip(
+            message: typeLabel,
+            child: _CellText(typeLabel),
+          )
+        : loading
+        ? SkeletonText(width: 48, style: _cellStyle(context))
+        : const _Placeholder();
+
     return Row(
       children: [
+        _RunTimeCell(active: active),
+        SizedBox(width: gap),
         Expanded(
           child: _Cell(
-            label: appLocalizations.runTime,
-            value: active ? const _RunTimeValue() : const _Placeholder(),
+            label: appLocalizations.ipType,
+            value: typeValue,
           ),
         ),
       ],
@@ -672,12 +696,52 @@ class _Placeholder extends StatelessWidget {
   }
 }
 
-class _RunTimeValue extends ConsumerWidget {
-  const _RunTimeValue();
+double _runTimeSlotWidth(BuildContext context, int hourDigits) {
+  final style = _cellStyle(context);
+  final labelStyle = DashboardText.label(context);
+  final count = math.max(2, hourDigits);
+  final template8 = '${'8' * count}:88:88';
+  final template0 = '${'0' * count}:00:00';
+  final template4 = '${'4' * count}:44:44';
+  final template9 = '${'9' * count}:99:99';
+  final w8 = globalState.measure.computeTextSize(Text(template8, style: style)).width;
+  final w0 = globalState.measure.computeTextSize(Text(template0, style: style)).width;
+  final w4 = globalState.measure.computeTextSize(Text(template4, style: style)).width;
+  final w9 = globalState.measure.computeTextSize(Text(template9, style: style)).width;
+  final valueWidth = math.max(math.max(w8, w0), math.max(w4, w9));
+  final labelWidth = globalState.measure.computeTextSize(
+    Text(context.appLocalizations.runTime, style: labelStyle),
+  ).width;
+  return math.max(valueWidth, labelWidth) + 1.0;
+}
+
+class _RunTimeCell extends ConsumerWidget {
+  const _RunTimeCell({required this.active});
+
+  final bool active;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return _CellText(getTimeText(ref.watch(runTimeProvider)));
+    final appLocalizations = context.appLocalizations;
+    final String timeText;
+    final int hourDigits;
+    if (active) {
+      timeText = getTimeText(ref.watch(runTimeProvider));
+      final colon = timeText.indexOf(':');
+      hourDigits = colon == -1 ? 2 : math.max(2, colon);
+    } else {
+      timeText = '—';
+      hourDigits = 2;
+    }
+    final slotWidth = _runTimeSlotWidth(context, hourDigits);
+
+    return SizedBox(
+      width: slotWidth,
+      child: _Cell(
+        label: appLocalizations.runTime,
+        value: _CellText(timeText),
+      ),
+    );
   }
 }
 
