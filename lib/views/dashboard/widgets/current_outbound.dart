@@ -696,6 +696,16 @@ class _Placeholder extends StatelessWidget {
   }
 }
 
+double _measureTextWidth(BuildContext context, String text, TextStyle style) {
+  final painter = TextPainter(
+    text: TextSpan(text: text, style: style),
+    textDirection: Directionality.of(context),
+    textScaler: MediaQuery.textScalerOf(context),
+    maxLines: 1,
+  )..layout();
+  return painter.width;
+}
+
 double _runTimeSlotWidth(BuildContext context, int hourDigits) {
   final style = _cellStyle(context);
   final labelStyle = DashboardText.label(context);
@@ -704,14 +714,16 @@ double _runTimeSlotWidth(BuildContext context, int hourDigits) {
   final template0 = '${'0' * count}:00:00';
   final template4 = '${'4' * count}:44:44';
   final template9 = '${'9' * count}:99:99';
-  final w8 = globalState.measure.computeTextSize(Text(template8, style: style)).width;
-  final w0 = globalState.measure.computeTextSize(Text(template0, style: style)).width;
-  final w4 = globalState.measure.computeTextSize(Text(template4, style: style)).width;
-  final w9 = globalState.measure.computeTextSize(Text(template9, style: style)).width;
+  final w8 = _measureTextWidth(context, template8, style);
+  final w0 = _measureTextWidth(context, template0, style);
+  final w4 = _measureTextWidth(context, template4, style);
+  final w9 = _measureTextWidth(context, template9, style);
   final valueWidth = math.max(math.max(w8, w0), math.max(w4, w9));
-  final labelWidth = globalState.measure.computeTextSize(
-    Text(context.appLocalizations.runTime, style: labelStyle),
-  ).width;
+  final labelWidth = _measureTextWidth(
+    context,
+    context.appLocalizations.runTime,
+    labelStyle,
+  );
   return math.max(valueWidth, labelWidth) + 1.0;
 }
 
