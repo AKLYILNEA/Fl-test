@@ -140,10 +140,10 @@ class AppLocalizations {
     );
   }
 
-  /// `Service status`
+  /// `Service`
   String get serviceStatus {
     return Intl.message(
-      'Service status',
+      'Service',
       name: 'serviceStatus',
       desc: '',
       args: [],

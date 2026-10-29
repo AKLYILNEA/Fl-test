@@ -1694,7 +1694,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "serviceShownOnDashboard": MessageLookupByLibrary.simpleMessage(
       "Shown on the dashboard",
     ),
-    "serviceStatus": MessageLookupByLibrary.simpleMessage("Service status"),
+    "serviceStatus": MessageLookupByLibrary.simpleMessage("Service"),
     "serviceUnavailable": MessageLookupByLibrary.simpleMessage("Unavailable"),
     "serviceUnsupportedRegion": MessageLookupByLibrary.simpleMessage(
       "Region not supported",

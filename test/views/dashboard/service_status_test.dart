@@ -935,7 +935,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('Service status'));
+    await tester.tap(find.byTooltip('Service'));
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Manage services'));
     await tester.pumpAndSettle();
