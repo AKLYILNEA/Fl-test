@@ -346,7 +346,7 @@ class _ExitRow extends StatelessWidget {
                 child: ip,
               ),
               const SizedBox(height: 2),
-              _RunTimeSubText(active: active),
+              _ProxyNodeSubText(active: active),
             ],
           ),
         ),
@@ -379,24 +379,87 @@ class _IpText extends ConsumerWidget {
   }
 }
 
-class _RunTimeSubText extends ConsumerWidget {
-  const _RunTimeSubText({required this.active});
+String? _parseNodeFromExit(String? exit) {
+  if (exit == null || exit.isEmpty) return null;
+  if (exit.startsWith('"')) {
+    final buffer = StringBuffer();
+    var escaped = false;
+    for (var i = 1; i < exit.length; i++) {
+      final char = exit[i];
+      if (escaped) {
+        buffer.write(char);
+        escaped = false;
+      } else if (char == r'\') {
+        escaped = true;
+      } else if (char == '"') {
+        return buffer.toString();
+      } else {
+        buffer.write(char);
+      }
+    }
+    return buffer.toString();
+  }
+  return exit;
+}
+
+class _ProxyNodeSubText extends ConsumerWidget {
+  const _ProxyNodeSubText({required this.active});
 
   final bool active;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final style = _monoCellStyle(context).copyWith(
+    final style = _cellStyle(context).copyWith(
       fontSize: 14,
       height: 1.1,
       color: active
           ? context.colorScheme.onSurfaceVariant
           : context.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
     );
-    return Text(
-      active ? getTimeText(ref.watch(runTimeProvider)) : '00:00:00',
-      maxLines: 1,
-      style: style,
+    if (!active) {
+      return Text('—', maxLines: 1, style: style);
+    }
+    final entry = ref.watch(
+      outboundIpProbeProvider.select((state) => state.entryOf(routedOutbound)),
+    );
+    if (entry.isLoading) {
+      return SkeletonText(width: 80, style: style);
+    }
+    final hit = entry.stamp?.hits.firstOrNull;
+    final nodeName = _parseNodeFromExit(hit?.exit) ??
+        (hit?.proxy.isNotEmpty ?? false ? hit?.proxy : null);
+    if (nodeName != null && nodeName.isNotEmpty) {
+      return _buildNode(context, nodeName, style);
+    }
+    final groups = ref.watch(currentGroupsStateProvider).value;
+    final currentGroupName = ref.watch(
+      currentProfileProvider.select((state) => state?.currentGroupName),
+    );
+    final group = groups.where((g) => g.name == currentGroupName).firstOrNull ??
+        groups.firstOrNull;
+    if (group != null) {
+      final selected = ref.watch(
+        realSelectedProxyStateProvider(group.name).select((state) => state.proxyName),
+      );
+      if (selected.isNotEmpty) {
+        return _buildNode(context, selected, style);
+      }
+    }
+    return Text('—', maxLines: 1, style: style);
+  }
+
+  Widget _buildNode(BuildContext context, String name, TextStyle style) {
+    final nodeStyle = isBuiltinOutbound(name)
+        ? style.copyWith(color: context.colorScheme.onSurfaceVariant)
+        : style.copyWith(color: context.colorScheme.onSurface);
+    return Tooltip(
+      message: name,
+      child: EmojiText(
+        name,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: nodeStyle,
+      ),
     );
   }
 }
@@ -540,8 +603,8 @@ class _Cells extends StatelessWidget {
       children: [
         Expanded(
           child: _Cell(
-            label: appLocalizations.proxyNode,
-            value: active ? const _ProxyNodeValue() : const _Placeholder(),
+            label: appLocalizations.runTime,
+            value: active ? const _RunTimeValue() : const _Placeholder(),
           ),
         ),
       ],
@@ -584,16 +647,10 @@ class _Cell extends StatelessWidget {
 TextStyle _cellStyle(BuildContext context) =>
     AppTextStyle.subheadline.of(context, emphasized: true).toTabular;
 
-/// The bundled mono face, so a changing figure keeps one advance per digit
-/// whatever interface font the user picked.
-TextStyle _monoCellStyle(BuildContext context) =>
-    _cellStyle(context).copyWith(fontFamily: FontFamily.mapleMono.value);
-
 class _CellText extends StatelessWidget {
-  const _CellText(this.text, {this.monospace = false});
+  const _CellText(this.text);
 
   final String text;
-  final bool monospace;
 
   @override
   Widget build(BuildContext context) {
@@ -601,7 +658,7 @@ class _CellText extends StatelessWidget {
       text,
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
-      style: monospace ? _monoCellStyle(context) : _cellStyle(context),
+      style: _cellStyle(context),
     );
   }
 }
@@ -615,146 +672,12 @@ class _Placeholder extends StatelessWidget {
   }
 }
 
-String? _parseNodeFromExit(String? exit) {
-  if (exit == null || exit.isEmpty) return null;
-  if (exit.startsWith('"')) {
-    final buffer = StringBuffer();
-    var escaped = false;
-    for (var i = 1; i < exit.length; i++) {
-      final char = exit[i];
-      if (escaped) {
-        buffer.write(char);
-        escaped = false;
-      } else if (char == r'\') {
-        escaped = true;
-      } else if (char == '"') {
-        return buffer.toString();
-      } else {
-        buffer.write(char);
-      }
-    }
-    return buffer.toString();
-  }
-  return exit;
-}
-
-class _ProxyNodeValue extends ConsumerWidget {
-  const _ProxyNodeValue();
+class _RunTimeValue extends ConsumerWidget {
+  const _RunTimeValue();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final entry = ref.watch(
-      outboundIpProbeProvider.select((state) => state.entryOf(routedOutbound)),
-    );
-    if (entry.isLoading) {
-      return SkeletonText(width: 80, style: _cellStyle(context));
-    }
-    final hit = entry.stamp?.hits.firstOrNull;
-    final nodeName = _parseNodeFromExit(hit?.exit) ??
-        (hit?.proxy.isNotEmpty ?? false ? hit?.proxy : null);
-    if (nodeName != null && nodeName.isNotEmpty) {
-      return _NodeCellText(nodeName);
-    }
-    final groups = ref.watch(currentGroupsStateProvider).value;
-    final currentGroupName = ref.watch(
-      currentProfileProvider.select((state) => state?.currentGroupName),
-    );
-    final group = groups.where((g) => g.name == currentGroupName).firstOrNull ??
-        groups.firstOrNull;
-    if (group != null) {
-      final selected = ref.watch(
-        realSelectedProxyStateProvider(group.name).select((state) => state.proxyName),
-      );
-      if (selected.isNotEmpty) {
-        return _NodeCellText(selected);
-      }
-    }
-    return const _Placeholder();
-  }
-}
-
-class _ExtendWidth extends SingleChildRenderObjectWidget {
-  const _ExtendWidth({required this.extraWidth, super.child});
-
-  final double extraWidth;
-
-  @override
-  RenderObject createRenderObject(BuildContext context) =>
-      _RenderExtendWidth(extraWidth);
-
-  @override
-  void updateRenderObject(
-    BuildContext context,
-    _RenderExtendWidth renderObject,
-  ) {
-    renderObject.extraWidth = extraWidth;
-  }
-}
-
-class _RenderExtendWidth extends RenderShiftedBox {
-  _RenderExtendWidth(this._extraWidth) : super(null);
-
-  double _extraWidth;
-
-  set extraWidth(double value) {
-    if (_extraWidth == value) return;
-    _extraWidth = value;
-    markNeedsLayout();
-  }
-
-  @override
-  Size computeDryLayout(covariant BoxConstraints constraints) {
-    final child = this.child;
-    if (child == null) return constraints.smallest;
-    final childConstraints = constraints.copyWith(
-      maxWidth: constraints.maxWidth.isFinite
-          ? constraints.maxWidth + _extraWidth
-          : constraints.maxWidth,
-    );
-    return constraints.constrain(child.getDryLayout(childConstraints));
-  }
-
-  @override
-  void performLayout() {
-    final child = this.child;
-    if (child == null) {
-      size = constraints.smallest;
-      return;
-    }
-    final childConstraints = constraints.copyWith(
-      maxWidth: constraints.maxWidth.isFinite
-          ? constraints.maxWidth + _extraWidth
-          : constraints.maxWidth,
-    );
-    child.layout(childConstraints, parentUsesSize: true);
-    size = constraints.constrain(child.size);
-    (child.parentData! as BoxParentData).offset = Offset.zero;
-  }
-}
-
-class _NodeCellText extends StatelessWidget {
-  const _NodeCellText(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final style = _cellStyle(context);
-    final extraWidth = MediaQuery.textScalerOf(context).scale(30.0);
-    return Tooltip(
-      message: text,
-      child: _ExtendWidth(
-        extraWidth: extraWidth,
-        child: EmojiText(
-          text,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: isBuiltinOutbound(text)
-              ? style.copyWith(color: context.colorScheme.onSurfaceVariant)
-              : style,
-        ),
-      ),
-    );
+    return _CellText(getTimeText(ref.watch(runTimeProvider)));
   }
 }
 
