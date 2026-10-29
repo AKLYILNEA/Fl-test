@@ -742,7 +742,7 @@ class _RunTimeCell extends ConsumerWidget {
       final colon = timeText.indexOf(':');
       hourDigits = colon == -1 ? 2 : math.max(2, colon);
     } else {
-      timeText = '—';
+      timeText = '00:00:00';
       hourDigits = 2;
     }
     final slotWidth = _runTimeSlotWidth(context, hourDigits);
