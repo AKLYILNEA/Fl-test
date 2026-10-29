@@ -387,11 +387,11 @@ class _ServiceCell extends StatelessWidget {
                   padding: const EdgeInsetsDirectional.fromSTEB(
                     _inset,
                     0,
-                    12,
+                    8,
                     0,
                   ),
                   child: Row(
-                    spacing: 8,
+                    spacing: 6,
                     children: [
                       badge,
                       Expanded(child: text),
