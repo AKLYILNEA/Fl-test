@@ -219,6 +219,29 @@ class _MemorySummary extends StatelessWidget {
         color: DashboardColors.of(context).series2,
       ),
     ];
+    final legendItems = [
+      for (final part in parts)
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          spacing: 6,
+          children: [
+            DecoratedBox(
+              decoration: ShapeDecoration(
+                color: part.color,
+                shape: AppShape.circle,
+              ),
+              child: const SizedBox.square(dimension: 8),
+            ),
+            Text(part.label, style: DashboardText.label(context)),
+            Text(
+              '${part.bytes.traffic.value} ${part.bytes.traffic.unit}',
+              style: AppTextStyle.footnote
+                  .of(context, emphasized: true)
+                  .toTabular,
+            ),
+          ],
+        ),
+    ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: mobile ? MainAxisSize.min : MainAxisSize.max,
@@ -245,33 +268,19 @@ class _MemorySummary extends StatelessWidget {
           ],
         ),
         SizedBox(height: compact ? 8 : 10),
-        Wrap(
-          spacing: 16,
-          runSpacing: 4,
-          children: [
-            for (final part in parts)
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                spacing: 6,
-                children: [
-                  DecoratedBox(
-                    decoration: ShapeDecoration(
-                      color: part.color,
-                      shape: AppShape.circle,
-                    ),
-                    child: const SizedBox.square(dimension: 8),
-                  ),
-                  Text(part.label, style: DashboardText.label(context)),
-                  Text(
-                    '${part.bytes.traffic.value} ${part.bytes.traffic.unit}',
-                    style: AppTextStyle.footnote
-                        .of(context, emphasized: true)
-                        .toTabular,
-                  ),
-                ],
-              ),
-          ],
-        ),
+        if (!mobile)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            spacing: 4,
+            children: legendItems,
+          )
+        else
+          Wrap(
+            spacing: 16,
+            runSpacing: 4,
+            children: legendItems,
+          ),
       ],
     );
   }
