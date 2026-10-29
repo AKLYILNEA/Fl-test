@@ -141,7 +141,7 @@ class ProfilesCard extends ConsumerWidget {
         mainAxisSize: mobile ? MainAxisSize.min : MainAxisSize.max,
         children: [
           DashboardCardHeader(
-            glyph: AppGlyphs.profiles,
+            glyph: AppGlyphs.rocket,
             title: appLocalizations.profile,
             chevron: mobile,
             trailing: [

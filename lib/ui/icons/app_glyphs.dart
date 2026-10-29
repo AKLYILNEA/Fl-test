@@ -24,25 +24,41 @@ abstract final class AppGlyphs {
 
   static const profiles = Glyph([
     GlyphPolyline([
-      GlyphVertex(5, 3, 2.5),
-      GlyphVertex(13.5, 3, 1),
-      GlyphVertex(19, 8.5, 1),
-      GlyphVertex(19, 21, 2.5),
-      GlyphVertex(5, 21, 2.5),
+      GlyphVertex(3.5, 5.0, 2.0),
+      GlyphVertex(9.0, 5.0, 1.2),
+      GlyphVertex(11.0, 7.0, 1.2),
+      GlyphVertex(20.5, 7.0, 2.0),
+      GlyphVertex(20.5, 19.5, 2.0),
+      GlyphVertex(3.5, 19.5, 2.0),
     ], closed: true),
     GlyphPolyline([
-      GlyphVertex(13.5, 3.2),
-      GlyphVertex(13.5, 8.5, 1.5),
-      GlyphVertex(18.8, 8.5),
+      GlyphVertex(3.5, 8.5),
+      GlyphVertex(20.5, 8.5),
     ], role: GlyphRole.detail),
+  ]);
+
+  static const rocket = Glyph([
     GlyphPolyline([
-      GlyphVertex(8.5, 12.5),
-      GlyphVertex(15.5, 12.5),
-    ], role: GlyphRole.detail),
+      GlyphVertex(12.0, 2.5, 1.8),
+      GlyphVertex(16.5, 9.5, 3.5),
+      GlyphVertex(15.5, 17.0, 1.2),
+      GlyphVertex(13.2, 17.0, 0.6),
+      GlyphVertex(12.0, 19.5, 0.8),
+      GlyphVertex(10.8, 17.0, 0.6),
+      GlyphVertex(8.5, 17.0, 1.2),
+      GlyphVertex(7.5, 9.5, 3.5),
+    ], closed: true),
     GlyphPolyline([
-      GlyphVertex(8.5, 16),
-      GlyphVertex(13, 16),
-    ], role: GlyphRole.detail),
+      GlyphVertex(7.8, 12.0, 0.6),
+      GlyphVertex(4.5, 16.8, 1.2),
+      GlyphVertex(7.8, 15.5, 0.6),
+    ], closed: true),
+    GlyphPolyline([
+      GlyphVertex(16.2, 12.0, 0.6),
+      GlyphVertex(19.5, 16.8, 1.2),
+      GlyphVertex(16.2, 15.5, 0.6),
+    ], closed: true),
+    GlyphCircle(12.0, 9.5, 1.8, role: GlyphRole.detail),
   ]);
 
   static const requests = Glyph([

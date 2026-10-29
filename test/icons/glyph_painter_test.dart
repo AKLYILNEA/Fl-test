@@ -13,6 +13,7 @@ final _glyphs = {
   'dashboard': AppGlyphs.dashboard,
   'proxies': AppGlyphs.proxies,
   'profiles': AppGlyphs.profiles,
+  'rocket': AppGlyphs.rocket,
   'requests': AppGlyphs.requests,
   'connections': AppGlyphs.connections,
   'dns': AppGlyphs.dns,
