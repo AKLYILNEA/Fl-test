@@ -804,7 +804,10 @@ class _SelectedProxyLine extends ConsumerWidget {
     final icon = proxyName.isEmpty
         ? null
         : ref.watch(groupsProvider).getGroup(proxyName)?.icon;
-    final iconSize = style.fontSize ?? AppTextStyle.caption1.size;
+    final textScaler = MediaQuery.textScalerOf(context);
+    final iconSize = textScaler.scale(
+      style.fontSize ?? AppTextStyle.caption1.size,
+    );
     return Row(
       children: [
         Text(groupType.name, style: style),
@@ -824,7 +827,7 @@ class _SelectedProxyLine extends ConsumerWidget {
                 ),
               ),
             ),
-            const SizedBox(width: 4),
+            SizedBox(width: textScaler.scale(4)),
           ],
           Flexible(
             child: EmojiText(
