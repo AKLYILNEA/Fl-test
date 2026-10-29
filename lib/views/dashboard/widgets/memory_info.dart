@@ -269,11 +269,35 @@ class _MemorySummary extends StatelessWidget {
         ),
         SizedBox(height: compact ? 8 : 10),
         if (!mobile)
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            spacing: 4,
-            children: legendItems,
+          SizedBox(
+            width: double.infinity,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              spacing: 4,
+              children: [
+                for (final part in parts)
+                  Row(
+                    children: [
+                      DecoratedBox(
+                        decoration: ShapeDecoration(
+                          color: part.color,
+                          shape: AppShape.circle,
+                        ),
+                        child: const SizedBox.square(dimension: 8),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(part.label, style: DashboardText.label(context)),
+                      const Spacer(),
+                      Text(
+                        '${part.bytes.traffic.value} ${part.bytes.traffic.unit}',
+                        style: AppTextStyle.footnote
+                            .of(context, emphasized: true)
+                            .toTabular,
+                      ),
+                    ],
+                  ),
+              ],
+            ),
           )
         else
           Wrap(
