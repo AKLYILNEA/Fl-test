@@ -610,9 +610,7 @@ class _Cells extends StatelessWidget {
   Widget build(BuildContext context) {
     final appLocalizations = context.appLocalizations;
     final typeLabel = quality?.type.label(context);
-    final Widget typeValue = !active
-        ? const _Placeholder()
-        : typeLabel != null
+    final Widget typeValue = typeLabel != null
         ? Tooltip(
             message: typeLabel,
             child: _CellText(typeLabel),
