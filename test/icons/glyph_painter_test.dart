@@ -101,6 +101,7 @@ final _glyphs = {
   'layers': AppGlyphs.layers,
   'dock': AppGlyphs.dock,
   'sun': AppGlyphs.sun,
+  'sunnyLow': AppGlyphs.sunnyLow,
   'pureBlack': AppGlyphs.pureBlack,
   'palette': AppGlyphs.palette,
   'paintbrush': AppGlyphs.paintbrush,

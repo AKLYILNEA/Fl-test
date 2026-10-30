@@ -1367,6 +1367,34 @@ abstract final class AppGlyphs {
     ], role: GlyphRole.line),
   ]);
 
+  static const sunnyLow = Glyph([
+    GlyphPath('M6.6 13.5A5.5 5.5 0 0 1 17.4 13.5Z'),
+    GlyphPolyline([
+      GlyphVertex(2.5, 13.75),
+      GlyphVertex(21.5, 13.75),
+    ], role: GlyphRole.line),
+    GlyphPolyline([
+      GlyphVertex(6.5, 16.75),
+      GlyphVertex(17.5, 16.75),
+    ], role: GlyphRole.line),
+    GlyphPolyline([
+      GlyphVertex(10.0, 19.75),
+      GlyphVertex(14.0, 19.75),
+    ], role: GlyphRole.line),
+    GlyphPolyline([
+      GlyphVertex(12.0, 2.5),
+      GlyphVertex(12.0, 4.5),
+    ], role: GlyphRole.line),
+    GlyphPolyline([
+      GlyphVertex(5.2, 5.2),
+      GlyphVertex(6.8, 6.8),
+    ], role: GlyphRole.line),
+    GlyphPolyline([
+      GlyphVertex(18.8, 5.2),
+      GlyphVertex(17.2, 6.8),
+    ], role: GlyphRole.line),
+  ]);
+
   static const dock = Glyph([
     GlyphBox(2.5, 6.0, 21.5, 18.0, 3.5),
     GlyphCircle(7.8, 12.0, 1.8, role: GlyphRole.detail, solid: true),

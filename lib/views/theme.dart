@@ -80,7 +80,7 @@ class _ThemeModeItem extends ConsumerWidget {
       liquidGlass: liquidGlass,
     );
     return PreviewChoiceGroup<ThemeMode>(
-      info: Info(label: appLocalizations.themeMode, glyph: AppGlyphs.sun),
+      info: Info(label: appLocalizations.themeMode, glyph: AppGlyphs.sunnyLow),
       value: themeMode,
       choices: [
         PreviewChoice(
