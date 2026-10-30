@@ -969,9 +969,9 @@
   "alreadyInLocalProxies": "本地代理中已有 {name}",
   "emojiStyle": "Emoji字體",
   "customFont": "自定義字體",
-  "nodeCount": "節點數",
-  "ruleCount": "規則項",
-  "providerCount": "提供者",
+  "nodeCount": "代理節點",
+  "ruleCount": "路由規則",
+  "providerCount": "外部資源",
   "zhHant": "繁體中文",
   "currentProfile": "當前配置"
 }
