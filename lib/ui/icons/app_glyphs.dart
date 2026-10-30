@@ -1354,16 +1354,12 @@ abstract final class AppGlyphs {
   ]);
 
   static const dock = Glyph([
-    GlyphBox(2.75, 10.5, 21.25, 19.5, 2.0),
+    GlyphBox(2.5, 6.0, 21.5, 18.0, 3.5),
+    GlyphCircle(7.8, 12.0, 1.8, role: GlyphRole.detail, solid: true),
     GlyphPolyline([
-      GlyphVertex(12, 16.0),
-      GlyphVertex(12, 3.5),
-    ], role: GlyphRole.line),
-    GlyphPolyline([
-      GlyphVertex(7.5, 8.0),
-      GlyphVertex(12, 3.5, 0.4),
-      GlyphVertex(16.5, 8.0),
-    ], role: GlyphRole.line),
+      GlyphVertex(11.4, 12.0),
+      GlyphVertex(17.2, 12.0),
+    ], role: GlyphRole.detail),
   ]);
 
   static const pureBlack = Glyph([
