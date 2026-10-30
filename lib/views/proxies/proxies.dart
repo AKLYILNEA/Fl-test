@@ -86,9 +86,9 @@ class _ProxiesViewState extends ConsumerState<ProxiesView> {
       ),
       _optionsMenuItem(
         glyph: switch (style.cardType) {
-          ProxyCardType.expand => AppGlyphs.cardLarge,
-          ProxyCardType.shrink => AppGlyphs.cardMedium,
-          ProxyCardType.min => AppGlyphs.cardSmall,
+          ProxyCardType.loose => AppGlyphs.cardLarge,
+          ProxyCardType.standard => AppGlyphs.cardMedium,
+          ProxyCardType.compact => AppGlyphs.cardSmall,
         },
         label: appLocalizations.size,
         options: ProxyCardType.values,
