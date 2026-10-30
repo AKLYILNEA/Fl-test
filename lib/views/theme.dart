@@ -644,7 +644,7 @@ class _NavigationBarItem extends ConsumerWidget {
     return PreviewChoiceGroup<bool>(
       info: Info(
         label: appLocalizations.navigationBarStyle,
-        glyph: AppGlyphs.layers,
+        glyph: AppGlyphs.dock,
       ),
       value: floatingBar,
       choices: [

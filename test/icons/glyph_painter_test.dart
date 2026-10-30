@@ -99,6 +99,7 @@ final _glyphs = {
   'puzzle': AppGlyphs.puzzle,
   'customize': AppGlyphs.customize,
   'layers': AppGlyphs.layers,
+  'dock': AppGlyphs.dock,
   'sun': AppGlyphs.sun,
   'pureBlack': AppGlyphs.pureBlack,
   'palette': AppGlyphs.palette,

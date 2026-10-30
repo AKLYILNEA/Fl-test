@@ -44,7 +44,7 @@
   "ja": "日语",
   "ko": "韩语",
   "ru": "俄语",
-  "zhCN": "中文简体",
+  "zhCN": "简体中文",
   "theme": "主题",
   "extend": "扩展",
   "runtimeConfig": "运行时配置",
@@ -959,7 +959,7 @@
   "autoInclude": "自动包含",
   "allReferencedProxies": "全部被引用的代理",
   "allReferencedProxyProviders": "全部被引用的代理集",
-"clearDnsCache": "清除DNS缓存",
+  "clearDnsCache": "清除DNS缓存",
   "dnsCacheCleared": "DNS缓存已清除",
   "clearDnsCacheFailed": "清除DNS缓存失败",
   "select": "选中",
@@ -971,5 +971,7 @@
   "customFont": "自定义字体",
   "nodeCount": "节点数",
   "ruleCount": "规则项",
-  "providerCount": "提供者"
+  "providerCount": "提供者",
+  "zhHant": "繁体中文",
+  "currentProfile": "当前配置"
 }

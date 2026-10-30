@@ -959,7 +959,7 @@
   "autoInclude": "自動で含める",
   "allReferencedProxies": "参照されているすべてのプロキシ",
   "allReferencedProxyProviders": "参照されているすべてのプロキシプロバイダー",
-"clearDnsCache": "DNSキャッシュをクリア",
+  "clearDnsCache": "DNSキャッシュをクリア",
   "dnsCacheCleared": "DNSキャッシュをクリアしました",
   "clearDnsCacheFailed": "DNSキャッシュのクリアに失敗しました",
   "select": "選択",
@@ -971,5 +971,7 @@
   "customFont": "カスタムフォント",
   "nodeCount": "ノード数",
   "ruleCount": "ルール項目",
-  "providerCount": "プロバイダー"
+  "providerCount": "プロバイダー",
+  "zhHant": "繁体字中国語",
+  "currentProfile": "現在のプロファイル"
 }

@@ -959,7 +959,7 @@
   "autoInclude": "자동 포함",
   "allReferencedProxies": "참조된 모든 프록시",
   "allReferencedProxyProviders": "참조된 모든 프록시 공급자",
-"clearDnsCache": "DNS 캐시 지우기",
+  "clearDnsCache": "DNS 캐시 지우기",
   "dnsCacheCleared": "DNS 캐시를 지웠습니다",
   "clearDnsCacheFailed": "DNS 캐시를 지우지 못했습니다",
   "select": "선택",
@@ -971,5 +971,7 @@
   "customFont": "사용자 지정 글꼴",
   "nodeCount": "노드 수",
   "ruleCount": "규칙 항목",
-  "providerCount": "제공자"
+  "providerCount": "제공자",
+  "zhHant": "중국어 번체",
+  "currentProfile": "현재 프로필"
 }

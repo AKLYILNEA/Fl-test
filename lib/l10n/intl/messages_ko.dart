@@ -1122,7 +1122,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "privateKey": MessageLookupByLibrary.simpleMessage("개인 키"),
     "privateKeyPassphrase": MessageLookupByLibrary.simpleMessage("개인 키 암호"),
     "process": MessageLookupByLibrary.simpleMessage("프로세스"),
-    "profile": MessageLookupByLibrary.simpleMessage("프로필"),
+    "currentProfile": MessageLookupByLibrary.simpleMessage("현재 프로필"),
+        "profile": MessageLookupByLibrary.simpleMessage("프로필"),
     "profileAutoUpdateIntervalInvalidValidationDesc":
         MessageLookupByLibrary.simpleMessage("올바른 간격을 입력하세요"),
     "profileAutoUpdateIntervalNullValidationDesc":
@@ -1619,6 +1620,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "yearsAgo": m84,
     "yearsAgoShort": m85,
     "yes": MessageLookupByLibrary.simpleMessage("예"),
-    "zhCN": MessageLookupByLibrary.simpleMessage("중국어 간체"),
+    "zhHant": MessageLookupByLibrary.simpleMessage("중국어 번체"),
+        "zhCN": MessageLookupByLibrary.simpleMessage("중국어 간체"),
   };
 }

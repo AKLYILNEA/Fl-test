@@ -24,41 +24,48 @@ abstract final class AppGlyphs {
 
   static const profiles = Glyph([
     GlyphPolyline([
-      GlyphVertex(3.5, 5.0, 2.0),
-      GlyphVertex(9.0, 5.0, 1.2),
-      GlyphVertex(11.0, 7.0, 1.2),
-      GlyphVertex(20.5, 7.0, 2.0),
-      GlyphVertex(20.5, 19.5, 2.0),
-      GlyphVertex(3.5, 19.5, 2.0),
+      GlyphVertex(2.75, 4.5, 2.0),
+      GlyphVertex(8.5, 4.5, 1.2),
+      GlyphVertex(10.5, 6.5, 1.2),
+      GlyphVertex(21.25, 6.5, 2.0),
+      GlyphVertex(21.25, 19.5, 2.0),
+      GlyphVertex(2.75, 19.5, 2.0),
     ], closed: true),
     GlyphPolyline([
-      GlyphVertex(3.5, 8.5),
-      GlyphVertex(20.5, 8.5),
+      GlyphVertex(2.75, 8.75),
+      GlyphVertex(8.0, 8.75, 1.2),
+      GlyphVertex(10.0, 6.75, 1.2),
+      GlyphVertex(21.25, 6.75),
     ], role: GlyphRole.detail),
   ]);
 
   static const rocket = Glyph([
+    GlyphPath(
+      'M19.7 2.51L19.04 2.31C16.64 1.56 14.03 2.21 12.26 3.98L11.27 4.98'
+      'C9.9 3.95 7.94 4.06 6.7 5.3L5.45 6.55'
+      'A0.8 0.8 0 0 0 5.45 7.61L7.05 9.2L6.87 9.38'
+      'A1.6 1.6 0 0 0 6.87 11.85L7.36 12.35L5.97 13.14'
+      'A0.8 0.8 0 0 0 5.81 14.32L9.7 18.21'
+      'A0.8 0.8 0 0 0 10.88 18.06L11.67 16.66L12.17 17.16'
+      'A1.6 1.6 0 0 0 14.65 17.16L14.82 16.98L16.41 18.57'
+      'A0.8 0.8 0 0 0 17.47 18.57L18.72 17.33'
+      'C19.96 16.08 20.07 14.13 19.04 12.76L20.04 11.76'
+      'C21.81 9.99 22.46 7.38 21.72 4.99L21.51 4.32'
+      'C21.24 3.46 20.56 2.78 19.7 2.51Z',
+    ),
+    GlyphCircle(14.82, 9.2, 1.8, role: GlyphRole.detail),
     GlyphPolyline([
-      GlyphVertex(12.0, 2.5, 1.8),
-      GlyphVertex(16.5, 9.5, 3.5),
-      GlyphVertex(15.5, 17.0, 1.2),
-      GlyphVertex(13.2, 17.0, 0.6),
-      GlyphVertex(12.0, 19.5, 0.8),
-      GlyphVertex(10.8, 17.0, 0.6),
-      GlyphVertex(8.5, 17.0, 1.2),
-      GlyphVertex(7.5, 9.5, 3.5),
-    ], closed: true),
+      GlyphVertex(6.3, 17.7),
+      GlyphVertex(3.7, 20.3),
+    ], role: GlyphRole.line),
     GlyphPolyline([
-      GlyphVertex(7.8, 12.0, 0.6),
-      GlyphVertex(4.5, 16.8, 1.2),
-      GlyphVertex(7.8, 15.5, 0.6),
-    ], closed: true),
+      GlyphVertex(4.7, 15.4),
+      GlyphVertex(2.6, 17.5),
+    ], role: GlyphRole.line),
     GlyphPolyline([
-      GlyphVertex(16.2, 12.0, 0.6),
-      GlyphVertex(19.5, 16.8, 1.2),
-      GlyphVertex(16.2, 15.5, 0.6),
-    ], closed: true),
-    GlyphCircle(12.0, 9.5, 1.8, role: GlyphRole.detail),
+      GlyphVertex(8.6, 19.3),
+      GlyphVertex(6.5, 21.4),
+    ], role: GlyphRole.line),
   ]);
 
   static const requests = Glyph([
@@ -1319,38 +1326,43 @@ abstract final class AppGlyphs {
   ]);
 
   static const sun = Glyph([
-    GlyphCircle(12, 12, 4),
+    GlyphPath('M6.6 13.5A5.5 5.5 0 0 1 17.4 13.5Z'),
     GlyphPolyline([
-      GlyphVertex(12, 2.9),
-      GlyphVertex(12, 4.4),
+      GlyphVertex(2.5, 13.75),
+      GlyphVertex(21.5, 13.75),
     ], role: GlyphRole.line),
     GlyphPolyline([
-      GlyphVertex(12, 19.6),
-      GlyphVertex(12, 21.1),
+      GlyphVertex(6.5, 16.75),
+      GlyphVertex(17.5, 16.75),
     ], role: GlyphRole.line),
     GlyphPolyline([
-      GlyphVertex(2.9, 12),
-      GlyphVertex(4.4, 12),
+      GlyphVertex(10.0, 19.75),
+      GlyphVertex(14.0, 19.75),
     ], role: GlyphRole.line),
     GlyphPolyline([
-      GlyphVertex(19.6, 12),
-      GlyphVertex(21.1, 12),
+      GlyphVertex(12.0, 2.5),
+      GlyphVertex(12.0, 4.5),
     ], role: GlyphRole.line),
     GlyphPolyline([
-      GlyphVertex(5.57, 5.57),
-      GlyphVertex(6.63, 6.63),
+      GlyphVertex(5.2, 5.2),
+      GlyphVertex(6.8, 6.8),
     ], role: GlyphRole.line),
     GlyphPolyline([
-      GlyphVertex(18.43, 5.57),
-      GlyphVertex(17.37, 6.63),
+      GlyphVertex(18.8, 5.2),
+      GlyphVertex(17.2, 6.8),
+    ], role: GlyphRole.line),
+  ]);
+
+  static const dock = Glyph([
+    GlyphBox(2.75, 10.5, 21.25, 19.5, 2.0),
+    GlyphPolyline([
+      GlyphVertex(12, 16.0),
+      GlyphVertex(12, 3.5),
     ], role: GlyphRole.line),
     GlyphPolyline([
-      GlyphVertex(5.57, 18.43),
-      GlyphVertex(6.63, 17.37),
-    ], role: GlyphRole.line),
-    GlyphPolyline([
-      GlyphVertex(18.43, 18.43),
-      GlyphVertex(17.37, 17.37),
+      GlyphVertex(7.5, 8.0),
+      GlyphVertex(12, 3.5, 0.4),
+      GlyphVertex(16.5, 8.0),
     ], role: GlyphRole.line),
   ]);
 

@@ -142,7 +142,7 @@ class ProfilesCard extends ConsumerWidget {
         children: [
           DashboardCardHeader(
             glyph: AppGlyphs.rocket,
-            title: appLocalizations.profile,
+            title: appLocalizations.currentProfile,
             chevron: mobile,
             trailing: [
               if (mobile)

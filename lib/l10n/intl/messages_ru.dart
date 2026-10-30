@@ -1396,7 +1396,8 @@ class MessageLookup extends MessageLookupByLibrary {
       "Пароль закрытого ключа",
     ),
     "process": MessageLookupByLibrary.simpleMessage("Процесс"),
-    "profile": MessageLookupByLibrary.simpleMessage("Профиль"),
+    "currentProfile": MessageLookupByLibrary.simpleMessage("Текущий профиль"),
+        "profile": MessageLookupByLibrary.simpleMessage("Профиль"),
     "profileAutoUpdateIntervalInvalidValidationDesc":
         MessageLookupByLibrary.simpleMessage("Введите корректный интервал"),
     "profileAutoUpdateIntervalNullValidationDesc":
@@ -2005,6 +2006,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "yearsAgo": m84,
     "yearsAgoShort": m85,
     "yes": MessageLookupByLibrary.simpleMessage("Да"),
-    "zhCN": MessageLookupByLibrary.simpleMessage("Упрощённый китайский"),
+    "zhHant": MessageLookupByLibrary.simpleMessage("Традиционный китайский"),
+        "zhCN": MessageLookupByLibrary.simpleMessage("Упрощённый китайский"),
   };
 }

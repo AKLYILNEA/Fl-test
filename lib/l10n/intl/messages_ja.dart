@@ -1141,7 +1141,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "privateKey": MessageLookupByLibrary.simpleMessage("秘密鍵"),
     "privateKeyPassphrase": MessageLookupByLibrary.simpleMessage("秘密鍵のパスフレーズ"),
     "process": MessageLookupByLibrary.simpleMessage("プロセス"),
-    "profile": MessageLookupByLibrary.simpleMessage("プロファイル"),
+    "currentProfile": MessageLookupByLibrary.simpleMessage("現在のプロファイル"),
+        "profile": MessageLookupByLibrary.simpleMessage("プロファイル"),
     "profileAutoUpdateIntervalInvalidValidationDesc":
         MessageLookupByLibrary.simpleMessage("有効な間隔を入力してください"),
     "profileAutoUpdateIntervalNullValidationDesc":
@@ -1644,6 +1645,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "yearsAgo": m84,
     "yearsAgoShort": m85,
     "yes": MessageLookupByLibrary.simpleMessage("はい"),
-    "zhCN": MessageLookupByLibrary.simpleMessage("簡体字中国語"),
+    "zhHant": MessageLookupByLibrary.simpleMessage("繁体字中国語"),
+        "zhCN": MessageLookupByLibrary.simpleMessage("簡体字中国語"),
   };
 }

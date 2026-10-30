@@ -1332,7 +1332,8 @@ class MessageLookup extends MessageLookupByLibrary {
       "Private key passphrase",
     ),
     "process": MessageLookupByLibrary.simpleMessage("Process"),
-    "profile": MessageLookupByLibrary.simpleMessage("Profile"),
+    "currentProfile": MessageLookupByLibrary.simpleMessage("Current profile"),
+        "profile": MessageLookupByLibrary.simpleMessage("Profile"),
     "profileAutoUpdateIntervalInvalidValidationDesc":
         MessageLookupByLibrary.simpleMessage("Please enter a valid interval"),
     "profileAutoUpdateIntervalNullValidationDesc":
@@ -1905,6 +1906,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "yearsAgo": m84,
     "yearsAgoShort": m85,
     "yes": MessageLookupByLibrary.simpleMessage("Yes"),
-    "zhCN": MessageLookupByLibrary.simpleMessage("Simplified Chinese"),
+    "zhHant": MessageLookupByLibrary.simpleMessage("Traditional Chinese"),
+        "zhCN": MessageLookupByLibrary.simpleMessage("Simplified Chinese"),
   };
 }

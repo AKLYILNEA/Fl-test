@@ -1040,7 +1040,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "privateKey": MessageLookupByLibrary.simpleMessage("私钥"),
     "privateKeyPassphrase": MessageLookupByLibrary.simpleMessage("私钥密码"),
     "process": MessageLookupByLibrary.simpleMessage("进程"),
-    "profile": MessageLookupByLibrary.simpleMessage("配置"),
+    "currentProfile": MessageLookupByLibrary.simpleMessage("当前配置"),
+        "profile": MessageLookupByLibrary.simpleMessage("配置"),
     "profileAutoUpdateIntervalInvalidValidationDesc":
         MessageLookupByLibrary.simpleMessage("请输入有效间隔时间格式"),
     "profileAutoUpdateIntervalNullValidationDesc":
@@ -1495,6 +1496,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "yearsAgo": m84,
     "yearsAgoShort": m85,
     "yes": MessageLookupByLibrary.simpleMessage("是"),
-    "zhCN": MessageLookupByLibrary.simpleMessage("中文简体"),
+    "zhHant": MessageLookupByLibrary.simpleMessage("繁体中文"),
+        "zhCN": MessageLookupByLibrary.simpleMessage("中文简体"),
   };
 }

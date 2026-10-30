@@ -959,7 +959,7 @@
   "autoInclude": "Автоматическое включение",
   "allReferencedProxies": "Все используемые прокси",
   "allReferencedProxyProviders": "Все используемые провайдеры прокси",
-"clearDnsCache": "Очистить кэш DNS",
+  "clearDnsCache": "Очистить кэш DNS",
   "dnsCacheCleared": "Кэш DNS очищен",
   "clearDnsCacheFailed": "Не удалось очистить кэш DNS",
   "select": "Выбрать",
@@ -971,5 +971,7 @@
   "customFont": "Пользовательский шрифт",
   "nodeCount": "Узлы",
   "ruleCount": "Правила",
-  "providerCount": "Провайдеры"
+  "providerCount": "Провайдеры",
+  "zhHant": "Традиционный китайский",
+  "currentProfile": "Текущий профиль"
 }
