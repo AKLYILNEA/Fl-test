@@ -1800,12 +1800,11 @@ abstract final class AppGlyphs {
       math.pi * 0.394,
       role: GlyphRole.detail,
     ),
-    GlyphPath(
-      'M 13.8723 12.9511 L 16.0589 8.6466 A 0.8 0.8 0 0 1 14.9108 7.6128 '
-      'L 10.8584 10.2374 A 2.1 2.1 0 1 1 13.8723 12.9511 Z',
-      role: GlyphRole.detail,
-      solid: true,
-    ),
+    GlyphCircle(12, 12, 1.4, role: GlyphRole.detail, solid: true),
+    GlyphPolyline([
+      GlyphVertex(12, 12),
+      GlyphVertex(15.28, 8.09),
+    ], role: GlyphRole.detail),
   ]);
 
   static const dataUsage = Glyph([
