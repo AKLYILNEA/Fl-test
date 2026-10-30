@@ -24,18 +24,16 @@ abstract final class AppGlyphs {
 
   static const profiles = Glyph([
     GlyphPolyline([
-      GlyphVertex(2.75, 4.5, 2.0),
-      GlyphVertex(8.5, 4.5, 1.2),
-      GlyphVertex(10.5, 6.5, 1.2),
-      GlyphVertex(21.25, 6.5, 2.0),
-      GlyphVertex(21.25, 19.5, 2.0),
-      GlyphVertex(2.75, 19.5, 2.0),
+      GlyphVertex(3.5, 4.5, 2.0),
+      GlyphVertex(9.0, 4.5, 1.2),
+      GlyphVertex(11.0, 6.8, 1.2),
+      GlyphVertex(20.5, 6.8, 2.0),
+      GlyphVertex(20.5, 19.5, 2.0),
+      GlyphVertex(3.5, 19.5, 2.0),
     ], closed: true),
     GlyphPolyline([
-      GlyphVertex(2.75, 8.75),
-      GlyphVertex(8.0, 8.75, 1.2),
-      GlyphVertex(10.0, 6.75, 1.2),
-      GlyphVertex(21.25, 6.75),
+      GlyphVertex(3.5, 9.2),
+      GlyphVertex(20.5, 9.2),
     ], role: GlyphRole.detail),
   ]);
 
@@ -1501,24 +1499,35 @@ abstract final class AppGlyphs {
   ]);
 
   static const language = Glyph([
+    GlyphBox(2.5, 4.5, 13.5, 15.5, 2.5),
     GlyphPolyline([
-      GlyphVertex(3.2, 3.9, 3),
-      GlyphVertex(20.8, 3.9, 3),
-      GlyphVertex(20.8, 17.5, 3),
-      GlyphVertex(10, 17.5, 0.8),
-      GlyphVertex(6.2, 21, 0.6),
-      GlyphVertex(6.2, 17.5, 0.6),
-      GlyphVertex(3.2, 17.5, 3),
-    ], closed: true),
-    GlyphPolyline([
-      GlyphVertex(8.6, 14.1),
-      GlyphVertex(12, 7.3, 0.4),
-      GlyphVertex(15.4, 14.1),
+      GlyphVertex(5.0, 8.0),
+      GlyphVertex(11.0, 8.0),
     ], role: GlyphRole.detail),
     GlyphPolyline([
-      GlyphVertex(9.85, 11.6),
-      GlyphVertex(14.15, 11.6),
+      GlyphVertex(8.0, 8.0),
+      GlyphVertex(8.0, 12.5),
     ], role: GlyphRole.detail),
+    GlyphPolyline([
+      GlyphVertex(6.2, 10.0),
+      GlyphVertex(9.8, 12.5),
+    ], role: GlyphRole.detail),
+    GlyphPolyline([
+      GlyphVertex(13.5, 8.5),
+      GlyphVertex(19.5, 8.5, 2.2),
+      GlyphVertex(19.5, 19.5, 2.5),
+      GlyphVertex(8.5, 19.5, 2.2),
+      GlyphVertex(8.5, 15.5),
+    ], role: GlyphRole.line),
+    GlyphPolyline([
+      GlyphVertex(12.0, 17.0),
+      GlyphVertex(14.0, 11.5),
+      GlyphVertex(16.0, 17.0),
+    ], role: GlyphRole.line),
+    GlyphPolyline([
+      GlyphVertex(12.7, 15.2),
+      GlyphVertex(15.3, 15.2),
+    ], role: GlyphRole.line),
   ]);
 
   static const keyboard = Glyph([
@@ -1778,13 +1787,13 @@ abstract final class AppGlyphs {
 
   static const speed = Glyph([
     GlyphPath(
-      'M6.759 19.057 Q5.259 19.057 4.396 17.83 A8.8 8.8 0 1 1 19.604 17.83 '
-      'Q18.741 19.057 17.241 19.057 Z',
+      'M4.4 17.8A8.8 8.8 0 1 1 19.6 17.8'
+      'L16.2 16.1A6.6 6.6 0 1 0 7.8 16.1Z',
     ),
-    GlyphCircle(12, 13.4, 1.4, role: GlyphRole.detail, solid: true),
+    GlyphCircle(12, 12.8, 1.6, role: GlyphRole.detail, solid: true),
     GlyphPolyline([
-      GlyphVertex(12, 13.4),
-      GlyphVertex(15.47, 9.26),
+      GlyphVertex(12, 12.8),
+      GlyphVertex(15.8, 7.8),
     ], role: GlyphRole.detail),
   ]);
 
@@ -1950,6 +1959,86 @@ abstract final class AppGlyphs {
     ], role: GlyphRole.line),
   ]);
 
+  static const appsListDetail = Glyph([
+    GlyphBox(3.2, 4.0, 8.0, 8.8, 1.5),
+    GlyphPolyline([
+      GlyphVertex(10.5, 5.5),
+      GlyphVertex(20.8, 5.5),
+    ], role: GlyphRole.line),
+    GlyphPolyline([
+      GlyphVertex(10.5, 8.0),
+      GlyphVertex(17.5, 8.0),
+    ], role: GlyphRole.line),
+    GlyphBox(3.2, 13.2, 8.0, 18.0, 1.5),
+    GlyphPolyline([
+      GlyphVertex(10.5, 14.5),
+      GlyphVertex(20.8, 14.5),
+    ], role: GlyphRole.line),
+    GlyphPolyline([
+      GlyphVertex(10.5, 17.0),
+      GlyphVertex(17.5, 17.0),
+    ], role: GlyphRole.line),
+  ]);
+
+  static const appRecent = Glyph([
+    GlyphBox(7.2, 2.5, 16.8, 21.5, 2.2),
+    GlyphPolyline([
+      GlyphVertex(7.2, 5.5),
+      GlyphVertex(3.2, 5.5, 1.8),
+      GlyphVertex(3.2, 18.5, 1.8),
+      GlyphVertex(7.2, 18.5),
+    ], role: GlyphRole.line),
+    GlyphPolyline([
+      GlyphVertex(16.8, 5.5),
+      GlyphVertex(20.8, 5.5, 1.8),
+      GlyphVertex(20.8, 18.5, 1.8),
+      GlyphVertex(16.8, 18.5),
+    ], role: GlyphRole.line),
+  ]);
+
+  static const columnsThree = Glyph([
+    GlyphBox(3, 4.5, 21, 19.5, 3.5),
+    GlyphPolyline([
+      GlyphVertex(9, 4.5),
+      GlyphVertex(9, 19.5),
+    ], role: GlyphRole.detail),
+    GlyphPolyline([
+      GlyphVertex(15, 4.5),
+      GlyphVertex(15, 19.5),
+    ], role: GlyphRole.detail),
+  ]);
+
+  static const columnsTwo = Glyph([
+    GlyphBox(3, 4.5, 21, 19.5, 3.5),
+    GlyphPolyline([
+      GlyphVertex(12, 4.5),
+      GlyphVertex(12, 19.5),
+    ], role: GlyphRole.detail),
+  ]);
+
+  static const columnsOne = Glyph([GlyphBox(3, 4.5, 21, 19.5, 3.5)]);
+
+  static const cardLarge = Glyph([
+    GlyphBox(3.5, 3.6, 20.5, 20.4, 3.2),
+    GlyphPolyline([
+      GlyphVertex(7, 9),
+      GlyphVertex(17, 9),
+    ], role: GlyphRole.detail),
+    GlyphPolyline([
+      GlyphVertex(7, 15),
+      GlyphVertex(13.5, 15),
+    ], role: GlyphRole.detail),
+  ], matchTextDirection: true);
+
+  static const cardMedium = Glyph([
+    GlyphBox(3.5, 6.4, 20.5, 17.6, 2.8),
+    GlyphPolyline([
+      GlyphVertex(7, 12),
+      GlyphVertex(17, 12),
+    ], role: GlyphRole.detail),
+  ], matchTextDirection: true);
+
+  static const cardSmall = Glyph([GlyphBox(3.5, 9, 20.5, 15, 2.2)]);
   static const appsList = Glyph([
     GlyphBox(3.5, 3.3, 6.9, 6.7, 1),
     GlyphBox(3.5, 10.3, 6.9, 13.7, 1),

@@ -42,7 +42,10 @@ class _ProxiesViewState extends ConsumerState<ProxiesView> {
     final appLocalizations = context.appLocalizations;
     return [
       _optionsMenuItem(
-        glyph: AppGlyphs.appsList,
+        glyph: switch (style.type) {
+          ProxiesType.list => AppGlyphs.appsListDetail,
+          ProxiesType.tab => AppGlyphs.appRecent,
+        },
         label: appLocalizations.style,
         section: const CommonPopupMenuSection(),
         options: ProxiesType.values,
@@ -65,7 +68,11 @@ class _ProxiesViewState extends ConsumerState<ProxiesView> {
             _updateStyle((state) => state.copyWith(sortType: type)),
       ),
       _optionsMenuItem(
-        glyph: AppGlyphs.dashboard,
+        glyph: switch (style.layout) {
+          ProxiesLayout.tight => AppGlyphs.columnsThree,
+          ProxiesLayout.standard => AppGlyphs.columnsTwo,
+          ProxiesLayout.loose => AppGlyphs.columnsOne,
+        },
         label: appLocalizations.layout,
         options: ProxiesLayout.values,
         value: style.layout,
@@ -78,7 +85,11 @@ class _ProxiesViewState extends ConsumerState<ProxiesView> {
             _updateStyle((state) => state.copyWith(layout: layout)),
       ),
       _optionsMenuItem(
-        glyph: AppGlyphs.textSize,
+        glyph: switch (style.cardType) {
+          ProxyCardType.expand => AppGlyphs.cardLarge,
+          ProxyCardType.shrink => AppGlyphs.cardMedium,
+          ProxyCardType.min => AppGlyphs.cardSmall,
+        },
         label: appLocalizations.size,
         options: ProxyCardType.values,
         value: style.cardType,
