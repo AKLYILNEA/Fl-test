@@ -3,7 +3,9 @@ import 'package:flutter/widgets.dart';
 /// The fonts FlClash bundles, declared in its `pubspec.yaml`.
 enum FontFamily {
   twEmoji('Twemoji'),
-  jetBrainsMono('JetBrainsMono');
+  openMoji('OpenMoji'),
+  mapleMono('MapleMono'),
+  jetBrainsMono('MapleMono');
 
   final String value;
 
@@ -11,6 +13,7 @@ enum FontFamily {
 }
 
 extension FontFamilyTextStyle on TextStyle {
-  TextStyle get toJetBrainsMono =>
-      copyWith(fontFamily: FontFamily.jetBrainsMono.value);
+  TextStyle get toMapleMono => copyWith(fontFamily: FontFamily.mapleMono.value);
+
+  TextStyle get toJetBrainsMono => toMapleMono;
 }

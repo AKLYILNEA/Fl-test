@@ -201,7 +201,7 @@ class _AdvancedConfigItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListItem.open(
       leading: const GlyphIcon(AppGlyphs.wrench),
-      title: Text(context.appLocalizations.advancedConfig),
+      title: Text(context.appLocalizations.config),
       widget: const AdvancedConfigView(),
     );
   }

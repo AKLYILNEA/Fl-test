@@ -1095,7 +1095,6 @@ class _TextScaleFactorItemState extends ConsumerState<_TextScaleFactorItem> {
                             child: Slider(
                               min: minTextScale,
                               max: maxTextScale,
-                              divisions: divisions,
                               value: scale,
                               label: percent,
                               onChanged: textScale.enable

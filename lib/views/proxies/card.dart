@@ -251,38 +251,28 @@ class ProxyCard extends ConsumerWidget {
             enterActionsOnRight: true,
             key: key,
             onPressed: () => _handleSelect(ref),
-            isSelected: inUse,
+            isSelected: showTint,
             // The chip tint the profile cards use in list mode, not a filled primary:
             // the card keeps its own text colours. Tab mode uses checkmark badge.
-            child: DecoratedBox(
-              decoration: ShapeDecoration(
-                color: showTint
-                    ? colorScheme.primary.opacity15
-                    : Colors.transparent,
-                shape: AppShape.all(AppCorner.lg),
-              ),
-              child: Container(
-                alignment: Alignment.centerLeft,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
+            selectionTint: showTint ? colorScheme.primary.opacity15 : null,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  spacing: 4,
                   children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      spacing: 4,
-                      children: [
-                        Expanded(child: _buildNameRow(context, ref)),
-                        if (showCheckmark) const SelectionBadge(size: 20),
-                        if (pinned && !showCheckmark)
-                          SelectionBadge.preferred(inUse: inUse),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    details,
+                    Expanded(child: _buildNameRow(context, ref)),
+                    if (showCheckmark) const SelectionBadge(size: 20),
+                    if (pinned && !showCheckmark)
+                      SelectionBadge.preferred(inUse: inUse),
                   ],
                 ),
-              ),
+                const SizedBox(height: 8),
+                details,
+              ],
             ),
           ),
         );

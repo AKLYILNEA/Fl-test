@@ -393,6 +393,8 @@
   "redo": "重做",
   "lineWrap": "自动换行",
   "none": "无",
+  "config": "配置",
+  "advanced": "进阶",
   "advancedConfig": "进阶配置",
   "addRule": "添加规则",
   "content": "内容",

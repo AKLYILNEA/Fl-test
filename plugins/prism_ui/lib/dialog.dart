@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
+import 'package:prism_ui/barrier.dart';
 import 'package:prism_ui/l10n.dart';
 import 'package:prism_ui/card_surface.dart';
 import 'package:prism_ui/color.dart';
@@ -115,21 +116,38 @@ mixin AlertMotionRouteMixin<T> on PopupRoute<T> {
 
   @override
   Widget buildModalBarrier() {
-    final barrier = ModalBarrier(
+    final barrierColor = this.barrierColor;
+    if (offstage || barrierColor == null) {
+      return ModalBarrier(
+        dismissible: barrierDismissible,
+        semanticsLabel: barrierLabel,
+        barrierSemanticsDismissible: semanticsDismissible,
+        onDismiss: onBarrierDismiss,
+      );
+    }
+    final barrier = AnimatedModalBarrier(
+      color: _spring.drive(
+        ColorTween(begin: barrierColor.withValues(alpha: 0), end: barrierColor),
+      ),
       dismissible: barrierDismissible,
       semanticsLabel: barrierLabel,
       barrierSemanticsDismissible: semanticsDismissible,
       onDismiss: onBarrierDismiss,
     );
-    final barrierColor = this.barrierColor;
-    if (offstage || barrierColor == null) {
+    // Liquid glass already refracts what is behind it, and a blurred barrier on
+    // top of it is what made dialogs heavy on phones.
+    final navigatorContext = navigator?.context;
+    if (navigatorContext != null && LiquidGlassScope.of(navigatorContext)) {
       return barrier;
     }
-    return LiquidGlassVeil(
-      color: _spring.drive(
-        ColorTween(begin: barrierColor.withValues(alpha: 0), end: barrierColor),
+    return RepaintBoundary(
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          FadeTransition(opacity: _spring, child: const BarrierBlur()),
+          barrier,
+        ],
       ),
-      child: barrier,
     );
   }
 

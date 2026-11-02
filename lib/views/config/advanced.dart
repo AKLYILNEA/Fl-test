@@ -73,16 +73,19 @@ class AdvancedConfigView extends StatelessWidget {
       ),
     ];
     return BaseScaffold(
-      title: appLocalizations.advancedConfig,
+      title: appLocalizations.config,
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16).copyWith(
           top: context.sectionsTopPadding,
           bottom: 16 + context.bottomInset,
         ),
         children: [
-          generateSection(items: items),
           generateSection(
-            title: appLocalizations.customResources,
+            title: appLocalizations.advanced,
+            items: items,
+          ),
+          generateSection(
+            title: appLocalizations.custom,
             items: customItems,
           ),
         ],

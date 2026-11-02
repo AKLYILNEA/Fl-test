@@ -110,6 +110,7 @@ class Card extends StatelessWidget {
     super.key,
     bool? isSelected,
     this.onPressed,
+    this.onLongPress,
     this.radius,
     this.padding,
     this.enterAnimated = false,
@@ -119,6 +120,7 @@ class Card extends StatelessWidget {
     this.statesController,
     this.inert = false,
     this.fillsSelection = false,
+    this.selectionTint,
     required this.child,
   }) : isSelected = isSelected ?? false;
 
@@ -130,8 +132,13 @@ class Card extends StatelessWidget {
   /// A selected card keeps its fill unless [fillsSelection]; callers mark it.
   final bool isSelected;
   final bool fillsSelection;
+
+  /// A tint that covers the whole selected card while keeping its own text
+  /// colours, for list mode where a filled primary would be too strong.
+  final Color? selectionTint;
   final bool isError;
   final void Function()? onPressed;
+  final void Function()? onLongPress;
   final Widget child;
   final EdgeInsets? padding;
   final double? radius;
@@ -176,6 +183,20 @@ class Card extends StatelessWidget {
 
   bool get _filled => isSelected && fillsSelection;
 
+  // A long press inside the button's child wins the arena over its tap, so a
+  // row can offer a second action without a second ink target.
+  Widget _withLongPress(Widget child) {
+    final onLongPress = this.onLongPress;
+    if (onLongPress == null) {
+      return child;
+    }
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onLongPress: onLongPress,
+      child: child,
+    );
+  }
+
   ({Color text, Color icon}) _contentColorsOf(ColorScheme colorScheme) {
     if (onPressed == null && !inert) {
       final disabled = colorScheme.onSurface.opacity38;
@@ -203,7 +224,7 @@ class Card extends StatelessWidget {
       fill: switch ((isError, _filled)) {
         (true, _) => colorScheme.errorContainer,
         (_, true) => colorScheme.primary,
-        _ => level.colorOf(colorScheme),
+        _ => selectionTint ?? level.colorOf(colorScheme),
       },
       shape: shape ?? AppShape.all(radius ?? AppCorner.md),
       inkColor: _filled ? content.text : null,
@@ -216,15 +237,17 @@ class Card extends StatelessWidget {
       selected: isSelected,
       statesController: statesController,
       onKeyEvent: enterActionsOnRight ? _enterActionOnRight : null,
-      child: DefaultTextStyle(
-        style: AppTextStyle.subheadline
-            .of(context, emphasized: true)
-            .copyWith(color: content.text),
-        child: IconTheme(
-          data: IconTheme.of(
-            context,
-          ).merge(IconThemeData(color: content.icon, size: commonCardIconSize)),
-          child: SurfaceScope(level: level, child: child),
+      child: _withLongPress(
+        DefaultTextStyle(
+          style: AppTextStyle.subheadline
+              .of(context, emphasized: true)
+              .copyWith(color: content.text),
+          child: IconTheme(
+            data: IconTheme.of(
+              context,
+            ).merge(IconThemeData(color: content.icon, size: commonCardIconSize)),
+            child: SurfaceScope(level: level, child: child),
+          ),
         ),
       ),
     );

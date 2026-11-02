@@ -169,12 +169,17 @@ class EmojiText extends StatelessWidget {
     this.style,
   });
 
-  static TextSpan _spanOf(String text, TextStyle? style, EmojiFont? emojiFont) {
-    if (emojiFont == null) {
+  static TextSpan spanOf(
+    String text,
+    TextStyle? style, {
+    String? emojiFamily,
+    Pattern? pattern,
+  }) {
+    if (emojiFamily == null || pattern == null) {
       return TextSpan(text: text, style: style);
     }
     final List<TextSpan> spans = [];
-    final matches = emojiFont.pattern.allMatches(text);
+    final matches = pattern.allMatches(text);
 
     int lastMatchEnd = 0;
     for (final match in matches) {
@@ -190,7 +195,7 @@ class EmojiText extends StatelessWidget {
         TextSpan(
           text: match.group(0),
           style: (style ?? const TextStyle()).copyWith(
-            fontFamily: emojiFont.family,
+            fontFamily: emojiFamily,
           ),
         ),
       );
@@ -210,7 +215,14 @@ class EmojiText extends StatelessWidget {
         style: MediaQuery.boldTextOf(context)
             ? style.merge(const TextStyle(fontWeight: FontWeight.bold))
             : style,
-        children: [_spanOf(text, null, EmojiFont.of(context))],
+        children: [
+          spanOf(
+            text,
+            null,
+            emojiFamily: EmojiFont.of(context)?.family,
+            pattern: EmojiFont.of(context)?.pattern,
+          ),
+        ],
       ),
       textDirection: Directionality.of(context),
       textScaler: MediaQuery.textScalerOf(context),
@@ -227,7 +239,12 @@ class EmojiText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text.rich(
-      _spanOf(text, style, EmojiFont.of(context)),
+      spanOf(
+        text,
+        style,
+        emojiFamily: EmojiFont.of(context)?.family,
+        pattern: EmojiFont.of(context)?.pattern,
+      ),
       style: style,
       maxLines: maxLines,
       overflow: overflow ?? TextOverflow.clip,

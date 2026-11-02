@@ -408,6 +408,8 @@
   "redo": "重做",
   "lineWrap": "自動換行",
   "none": "無",
+  "config": "配置",
+  "advanced": "進階",
   "advancedConfig": "進階配置",
   "advancedConfigDesc": "進階配置包含網絡、DNS、附加規則與腳本。",
   "addRule": "添加規則",

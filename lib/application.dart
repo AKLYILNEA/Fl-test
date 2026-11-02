@@ -207,7 +207,6 @@ class ApplicationState extends ConsumerState<Application> {
             );
           },
         );
-        );
       },
       child: const HomePage(),
     );

@@ -393,6 +393,8 @@
   "redo": "Redo",
   "lineWrap": "Word wrap",
   "none": "None",
+  "config": "Configuration",
+  "advanced": "Advanced",
   "advancedConfig": "Advanced configuration",
   "addRule": "Add rule",
   "content": "Content",

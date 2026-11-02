@@ -55,6 +55,7 @@ class IpQualityText extends ConsumerWidget {
                       '$leading ',
                       null,
                       emojiFamily: emojiStyle.family,
+                      pattern: emojiPattern,
                     ).children,
                     TextSpan(text: shownIp, style: style),
                   ],

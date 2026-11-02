@@ -393,6 +393,8 @@
   "redo": "다시 실행",
   "lineWrap": "자동 줄 바꿈",
   "none": "없음",
+  "config": "구성",
+  "advanced": "고급",
   "advancedConfig": "고급 구성",
   "addRule": "규칙 추가",
   "content": "내용",
