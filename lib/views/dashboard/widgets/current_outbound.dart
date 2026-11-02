@@ -15,6 +15,7 @@ import 'package:fl_clash/views/dashboard/layout.dart';
 import 'package:fl_clash/views/dashboard/probe_start_hold.dart';
 import 'package:fl_clash/views/dashboard/style.dart';
 import 'package:fl_clash/widgets/widgets.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:prism_ui/shapes/shapes.dart';
@@ -28,7 +29,7 @@ bool isBuiltinOutbound(String name) => _builtinOutbounds.contains(name);
 
 const _ipMask = '*****';
 
-const _decorationGrowth = 0.12;
+const _decorationGrowth = 0.06;
 
 const _decorationTurn = 2 * math.pi / 12;
 
@@ -174,17 +175,18 @@ class _CurrentOutboundCardState extends ConsumerState<CurrentOutboundCard>
                           ),
                         ],
                       ),
-                      SizedBox(height: metrics.ipTop),
+                      if (density.isDesktop)
+                        const Spacer()
+                      else
+                        SizedBox(height: metrics.ipTop),
                       _ExitRow(
                         info: ipInfo,
                         failed: failed,
                         loading: loading,
                         checking: phase == ProbePhase.probing || qualityLoading,
                         onRefresh: () => _refresh(ipInfo?.ip),
-                        quality: quality,
-                        active: isStart,
+                        active: isStart && !suspended,
                         metrics: metrics,
-                        large: !density.isDesktop,
                       ),
                       if (density.isDesktop)
                         const Spacer()
@@ -244,9 +246,9 @@ class _OutboundMetrics {
       ip: AppTextStyle.title1,
       buttonSize: 104,
       buttonSlot: 120,
-      decorationSize: 290,
-      decorationEnd: -64,
-      decorationTop: -87,
+      decorationSize: 268,
+      decorationEnd: -52,
+      decorationTop: -76,
     ),
     DashboardDensity.compact => _OutboundMetrics(
       padding: dashboardCardPadding(density),
@@ -257,9 +259,9 @@ class _OutboundMetrics {
       ip: AppTextStyle.title2,
       buttonSize: 84,
       buttonSlot: 100,
-      decorationSize: 250,
-      decorationEnd: -64,
-      decorationTop: -75,
+      decorationSize: 232,
+      decorationEnd: -46,
+      decorationTop: -66,
     ),
     DashboardDensity.mobile => const _OutboundMetrics(
       padding: EdgeInsetsDirectional.fromSTEB(20, 18, 16, 18),
@@ -270,9 +272,9 @@ class _OutboundMetrics {
       ip: AppTextStyle.title2,
       buttonSize: 88,
       buttonSlot: 88,
-      decorationSize: 240,
-      decorationEnd: -60,
-      decorationTop: -66,
+      decorationSize: 216,
+      decorationEnd: -48,
+      decorationTop: -54,
     ),
   };
 
@@ -296,10 +298,8 @@ class _ExitRow extends StatelessWidget {
     required this.loading,
     required this.checking,
     required this.onRefresh,
-    required this.quality,
     required this.active,
     required this.metrics,
-    required this.large,
   });
 
   final IpInfo? info;
@@ -307,10 +307,8 @@ class _ExitRow extends StatelessWidget {
   final bool loading;
   final bool checking;
   final VoidCallback onRefresh;
-  final IpQuality? quality;
   final bool active;
   final _OutboundMetrics metrics;
-  final bool large;
 
   @override
   Widget build(BuildContext context) {
@@ -319,7 +317,7 @@ class _ExitRow extends StatelessWidget {
       context,
       metrics.ip,
       color: active ? colorScheme.onSurface : colorScheme.onSurfaceVariant,
-    ).copyWith(letterSpacing: 0);
+    ).copyWith(letterSpacing: 0, height: 1.15);
     final info = this.info;
     final appLocalizations = context.appLocalizations;
     final Widget ip = info != null
@@ -346,6 +344,7 @@ class _ExitRow extends StatelessWidget {
         : SkeletonText(width: 140, style: style);
     return Row(
       spacing: 12,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         _CountryBadge(
           countryCode: info?.countryCode,
@@ -356,32 +355,15 @@ class _ExitRow extends StatelessWidget {
         ),
         Expanded(
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(
-                height:
-                    metrics.ip.leading * DashboardDensityScope.scaleOf(context),
-                child: Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: ip,
-                ),
+              Transform.translate(
+                offset: const Offset(0, -2.5),
+                child: ip,
               ),
-              const SizedBox(height: 4),
-              if (failed)
-                SizedBox(
-                  height: _chipHeight(large),
-                  child: Align(
-                    alignment: AlignmentDirectional.centerStart,
-                    child: Text(
-                      appLocalizations.tapIconToRetry,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: DashboardText.label(context),
-                    ),
-                  ),
-                )
-              else
-                _IpChips(quality: quality, loading: loading, large: large),
+              const SizedBox(height: 2),
+              _ProxyNodeSubText(active: active),
             ],
           ),
         ),
@@ -401,63 +383,99 @@ class _IpText extends ConsumerWidget {
     final hideIp = ref.watch(
       appSettingProvider.select((state) => state.hideIp),
     );
-    return DashboardFitText(hideIp ? _ipMask : ip, style: style);
+    if (!hideIp) {
+      return DashboardFitText(ip, style: style);
+    }
+    return DashboardFitText(
+      _ipMask,
+      style: style.copyWith(
+        fontFamily: FontFamily.mapleMono.value,
+        color: context.colorScheme.success,
+      ),
+    );
   }
 }
 
-double _chipHeight(bool large) => large ? 28 : 24;
+String? _parseNodeFromExit(String? exit) {
+  if (exit == null || exit.isEmpty) return null;
+  if (exit.startsWith('"')) {
+    final buffer = StringBuffer();
+    var escaped = false;
+    for (var i = 1; i < exit.length; i++) {
+      final char = exit[i];
+      if (escaped) {
+        buffer.write(char);
+        escaped = false;
+      } else if (char == r'\') {
+        escaped = true;
+      } else if (char == '"') {
+        return buffer.toString();
+      } else {
+        buffer.write(char);
+      }
+    }
+    return buffer.toString();
+  }
+  return exit;
+}
 
-const _chipSkeletonWidths = [48.0, 72.0];
+class _ProxyNodeSubText extends ConsumerWidget {
+  const _ProxyNodeSubText({required this.active});
 
-class _IpChips extends StatelessWidget {
-  const _IpChips({
-    required this.quality,
-    required this.loading,
-    required this.large,
-  });
-
-  final IpQuality? quality;
-  final bool loading;
-  final bool large;
+  final bool active;
 
   @override
-  Widget build(BuildContext context) {
-    final quality = this.quality;
-    final height = _chipHeight(large);
-    // Chips that do not fit wrap onto a clipped second line; the details
-    // sheet still lists them all.
-    return SizedBox(
-      height: height,
-      child: ClipRect(
-        child: Wrap(
-          spacing: 6,
-          runSpacing: height,
-          children: switch (quality) {
-            final quality? => [
-              DashboardChip(label: quality.type.label(context), large: large),
-              DashboardChip(
-                label:
-                    '${context.appLocalizations.ipQualityShort} ${quality.level.label(context)}',
-                tone: switch (quality.level) {
-                  IpQualityLevel.good => DashboardChipTone.ok,
-                  IpQualityLevel.normal => DashboardChipTone.idle,
-                  IpQualityLevel.risky => DashboardChipTone.warn,
-                },
-                large: large,
-              ),
-            ],
-            null when loading => [
-              for (final width in _chipSkeletonWidths)
-                SkeletonPill(width: width, height: height),
-            ],
-            null => [
-              DashboardChip(
-                label: context.appLocalizations.ipTypeUnknown,
-                large: large,
-              ),
-            ],
-          },
-        ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final style = _cellStyle(context).copyWith(
+      fontSize: 14,
+      height: 1.1,
+      color: active
+          ? context.colorScheme.onSurfaceVariant
+          : context.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+    );
+    if (!active) {
+      return Text('—', maxLines: 1, style: style);
+    }
+    final entry = ref.watch(
+      outboundIpProbeProvider.select((state) => state.entryOf(routedOutbound)),
+    );
+    if (entry.isLoading) {
+      return SkeletonText(width: 80, style: style);
+    }
+    final hit = entry.stamp?.hits.firstOrNull;
+    final nodeName = _parseNodeFromExit(hit?.exit) ??
+        (hit?.proxy.isNotEmpty ?? false ? hit?.proxy : null);
+    if (nodeName != null && nodeName.isNotEmpty) {
+      return _buildNode(context, nodeName, style);
+    }
+    final groups = ref.watch(currentGroupsStateProvider).value;
+    final currentGroupName = ref.watch(
+      currentProfileProvider.select((state) => state?.currentGroupName),
+    );
+    final group = groups.where((g) => g.name == currentGroupName).firstOrNull ??
+        groups.firstOrNull;
+    if (group != null) {
+      final selected = ref.watch(
+        realSelectedProxyStateProvider(group.name).select((state) => state.proxyName),
+      );
+      if (selected.isNotEmpty) {
+        return _buildNode(context, selected, style);
+      }
+    }
+    return Text('—', maxLines: 1, style: style);
+  }
+
+  Widget _buildNode(BuildContext context, String name, TextStyle style) {
+    final nodeStyle = isBuiltinOutbound(name)
+        ? style.copyWith(color: context.colorScheme.onSurfaceVariant)
+        : style.copyWith(color: context.colorScheme.onSurface);
+    return Tooltip(
+      message: name,
+      child: EmojiText(
+        name,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: nodeStyle,
       ),
     );
   }
@@ -603,26 +621,21 @@ class _Cells extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appLocalizations = context.appLocalizations;
-    final organization = switch (quality) {
-      IpQuality(organization: final name?) when name.isNotEmpty => name,
-      IpQuality(asn: final asn?) => 'AS$asn',
-      _ => null,
-    };
+    final typeLabel = quality?.type.label(context);
+    final Widget typeValue = typeLabel != null
+        ? _CellText(typeLabel)
+        : loading
+        ? SkeletonText(width: 48, style: _cellStyle(context))
+        : const _Placeholder();
+
     return Row(
-      spacing: gap,
       children: [
-        _Cell(
-          label: appLocalizations.runTime,
-          value: active ? const _RunTimeValue() : const _Placeholder(),
-        ),
-        Flexible(
+        _RunTimeCell(active: active),
+        SizedBox(width: gap),
+        Expanded(
           child: _Cell(
-            label: appLocalizations.ipOrganization,
-            value: organization != null
-                ? _CellText(organization)
-                : loading
-                ? SkeletonText(width: 96, style: _cellStyle(context))
-                : const _Placeholder(),
+            label: appLocalizations.ipType,
+            value: typeValue,
           ),
         ),
       ],
@@ -638,6 +651,7 @@ class _Cell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cellHeight = MediaQuery.textScalerOf(context).scale(20.0);
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -649,7 +663,13 @@ class _Cell extends StatelessWidget {
           style: DashboardText.label(context),
         ),
         const SizedBox(height: 2),
-        value,
+        SizedBox(
+          height: cellHeight,
+          child: Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: value,
+          ),
+        ),
       ],
     );
   }
@@ -683,12 +703,64 @@ class _Placeholder extends StatelessWidget {
   }
 }
 
-class _RunTimeValue extends ConsumerWidget {
-  const _RunTimeValue();
+double _measureTextWidth(BuildContext context, String text, TextStyle style) {
+  final painter = TextPainter(
+    text: TextSpan(text: text, style: style),
+    textDirection: Directionality.of(context),
+    textScaler: MediaQuery.textScalerOf(context),
+    maxLines: 1,
+  )..layout();
+  return painter.width;
+}
+
+double _runTimeSlotWidth(BuildContext context, int hourDigits) {
+  final style = _cellStyle(context);
+  final labelStyle = DashboardText.label(context);
+  final count = math.max(2, hourDigits);
+  final template8 = '${'8' * count}:88:88';
+  final template0 = '${'0' * count}:00:00';
+  final template4 = '${'4' * count}:44:44';
+  final template9 = '${'9' * count}:99:99';
+  final w8 = _measureTextWidth(context, template8, style);
+  final w0 = _measureTextWidth(context, template0, style);
+  final w4 = _measureTextWidth(context, template4, style);
+  final w9 = _measureTextWidth(context, template9, style);
+  final valueWidth = math.max(math.max(w8, w0), math.max(w4, w9));
+  final labelWidth = _measureTextWidth(
+    context,
+    context.appLocalizations.runTime,
+    labelStyle,
+  );
+  return math.max(valueWidth, labelWidth) + 1.0;
+}
+
+class _RunTimeCell extends ConsumerWidget {
+  const _RunTimeCell({required this.active});
+
+  final bool active;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return _CellText(getTimeText(ref.watch(runTimeProvider)));
+    final appLocalizations = context.appLocalizations;
+    final String timeText;
+    final int hourDigits;
+    if (active) {
+      timeText = getTimeText(ref.watch(runTimeProvider));
+      final colon = timeText.indexOf(':');
+      hourDigits = colon == -1 ? 2 : math.max(2, colon);
+    } else {
+      timeText = '00:00:00';
+      hourDigits = 2;
+    }
+    final slotWidth = _runTimeSlotWidth(context, hourDigits);
+
+    return SizedBox(
+      width: slotWidth,
+      child: _Cell(
+        label: appLocalizations.runTime,
+        value: _CellText(timeText),
+      ),
+    );
   }
 }
 

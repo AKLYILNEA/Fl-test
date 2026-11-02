@@ -174,7 +174,7 @@ class _ServiceStatusCardState extends ConsumerState<ServiceStatusCard>
     final mobile = !density.isDesktop;
     final appLocalizations = context.appLocalizations;
     // At most four: what the Core checks at once (serviceCheckConcurrency).
-    final shownCount = (mobile ? 1 : 2) * widget.columns;
+    final shownCount = 2 * widget.columns;
     final stacked = widget.columns == 1;
     final shown = ref
         .watch(enabledServiceTargetsProvider)
@@ -228,19 +228,17 @@ class _ServiceStatusCardState extends ConsumerState<ServiceStatusCard>
             glyph: AppGlyphs.verified,
             title: appLocalizations.serviceStatus,
             chevron: mobile,
+            share: 0.65,
             trailing: [
-              if (!stacked) ?verdict,
-              if (!mobile)
+              if (mobile) ...[
+                if (!stacked) ?verdict,
+              ] else
                 Transform.translate(
                   offset: const Offset(8, 0),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (!stacked)
-                        _CheckAllButton(
-                          loading: shown.any(state.isLoading),
-                          onPressed: () => _services.refresh(shown),
-                        ),
+                      if (!stacked) ?verdict,
                       DashboardIconButton(
                         glyph: AppGlyphs.chevronForward,
                         tooltip: appLocalizations.serviceStatus,
@@ -309,6 +307,10 @@ class _ServiceGrid extends StatelessWidget {
                 Expanded(
                   child: _ServiceCell(service: service, height: cellHeight),
                 ),
+              for (var i = 0;
+                  i < columns - services.skip(start).take(columns).length;
+                  i++)
+                const Expanded(child: SizedBox.shrink()),
             ],
           ),
       ],
@@ -385,11 +387,11 @@ class _ServiceCell extends StatelessWidget {
                   padding: const EdgeInsetsDirectional.fromSTEB(
                     _inset,
                     0,
-                    12,
+                    8,
                     0,
                   ),
                   child: Row(
-                    spacing: 8,
+                    spacing: 6,
                     children: [
                       badge,
                       Expanded(child: text),
@@ -398,28 +400,6 @@ class _ServiceCell extends StatelessWidget {
                 ),
               ),
       ),
-    );
-  }
-}
-
-class _CheckAllButton extends StatelessWidget {
-  const _CheckAllButton({required this.loading, required this.onPressed});
-
-  final bool loading;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    if (loading) {
-      return const SizedBox.square(
-        dimension: 32,
-        child: Center(child: ActivityIndicator(size: 18)),
-      );
-    }
-    return DashboardIconButton(
-      glyph: AppGlyphs.bolt,
-      tooltip: context.appLocalizations.serviceCheckAll,
-      onPressed: onPressed,
     );
   }
 }
@@ -475,24 +455,28 @@ class _OutboundIpLine extends StatelessWidget {
     if (flag == null && ip == null && !pending && fallback == null) {
       return _NoValue(style: style);
     }
+    final flagEmoji = flag?.countryFlagEmoji ?? '';
+    // One paragraph per line: the flag rides in the address text as a leading
+    // span, so it sits on that line's baseline like every other emoji beside
+    // text in the app, instead of carrying a line box of its own.
     final line = Row(
       spacing: 4,
       children: [
-        if (flag != null)
-          Text(
-            flag.countryFlagEmoji,
-            style: style?.copyWith(fontFamily: FontFamily.twEmoji.value),
-          ),
         if (ip != null)
           Flexible(
-            child: IpQualityText(ip: ip.ip, style: style),
+            child: IpQualityText(
+              ip: ip.ip,
+              style: style,
+              leading: flagEmoji.isEmpty ? null : flagEmoji,
+            ),
           )
-        else if (pending)
-          Flexible(child: SkeletonText(width: 88, style: style))
-        else if (fallback != null)
+        else if (pending) ...[
+          if (flagEmoji.isNotEmpty) EmojiText(flagEmoji, style: style),
+          Flexible(child: SkeletonText(width: 88, style: style)),
+        ] else if (fallback != null)
           Flexible(
-            child: Text(
-              fallback,
+            child: EmojiText(
+              flagEmoji.isEmpty ? fallback : '$flagEmoji $fallback',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: style,
@@ -610,7 +594,11 @@ class _BadgePainter extends CustomPainter {
     );
     final dot = this.dot;
     if (dot == null) {
-      canvas.drawRSuperellipse(tile, Paint()..color = color);
+      if (system.isDesktop) {
+        canvas.drawPath(Path()..addRSuperellipse(tile), Paint()..color = color);
+      } else {
+        canvas.drawRSuperellipse(tile, Paint()..color = color);
+      }
       return;
     }
     final center = size.bottomRight(Offset(-dotRadius, -dotRadius));

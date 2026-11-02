@@ -9084,17 +9084,379 @@ class AppLocalizations {
   }
 }
 
+  String get currentProfile {
+    return Intl.message(
+      'Current profile',
+      name: 'currentProfile',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get zhHant {
+    return Intl.message(
+      'Traditional Chinese',
+      name: 'zhHant',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get silentLaunchDesc {
+    return Intl.message(
+      'Silent launch starts without showing the window.',
+      name: 'silentLaunchDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get accessControlDesc {
+    return Intl.message(
+      'Access control picks which apps use the proxy.',
+      name: 'accessControlDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get addressHelp {
+    return Intl.message(
+      'WebDAV server address',
+      name: 'addressHelp',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get authenticationDesc {
+    return Intl.message(
+      'Authentication asks for a username and password on the local proxy port.',
+      name: 'authenticationDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get autoCloseConnectionsDesc {
+    return Intl.message(
+      'Auto close connections drops open connections when you switch proxies.',
+      name: 'autoCloseConnectionsDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get sidebarBlurDesc {
+    return Intl.message(
+      'Background blur lets the desktop behind the window show through the sidebar.',
+      name: 'sidebarBlurDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get vpnEnableDesc {
+    return Intl.message(
+      'VPN routes all system traffic through VpnService automatically.',
+      name: 'vpnEnableDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get wakelock {
+    return Intl.message('Keep screen on', name: 'wakelock', desc: '', args: []);
+  }
+
+  String get secondaryDevelopmentBuild {
+    return Intl.message(
+      'Secondary development build',
+      name: 'secondaryDevelopmentBuild',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get ntpStatusDesc {
+    return Intl.message(
+      'NTP takes the time from an NTP server instead of the system clock.',
+      name: 'ntpStatusDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get dialerProxyDesc {
+    return Intl.message(
+      'Dialer proxy is the outbound used to reach the NTP server.',
+      name: 'dialerProxyDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get snifferStatusDesc {
+    return Intl.message(
+      'The sniffer reads the domain from TLS, HTTP and QUIC traffic so rules can match it.',
+      name: 'snifferStatusDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get overrideDestinationDesc {
+    return Intl.message(
+      'Override destination connects to the sniffed domain instead of the original address.',
+      name: 'overrideDestinationDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get parsePureIpDesc {
+    return Intl.message(
+      'Parse pure IP sniffs connections that carry only an IP address.',
+      name: 'parsePureIpDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get skipDomainDesc {
+    return Intl.message(
+      'A sniffed domain on the Skip domains list is not used.',
+      name: 'skipDomainDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get fakeipFilterModeDesc {
+    return Intl.message(
+      'In Fake-IP filter mode, blacklist excludes matches, whitelist fakes only matches, and rule matches as rules.',
+      name: 'fakeipFilterModeDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get ipv6InboundDesc {
+    return Intl.message(
+      'With IPv6 on, the VPN allows IPv6 inbound.',
+      name: 'ipv6InboundDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get interfaceNameDesc {
+    return Intl.message(
+      'Interface name is the network interface outbound connections use.',
+      name: 'interfaceNameDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get advancedConfigDesc {
+    return Intl.message(
+      'Advanced configuration holds network, DNS, added rules, and scripts.',
+      name: 'advancedConfigDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get singleAdd {
+    return Intl.message('Single add', name: 'singleAdd', desc: '', args: []);
+  }
+
+  String get batchAdd {
+    return Intl.message('Batch add', name: 'batchAdd', desc: '', args: []);
+  }
+
+  String get batchListInputTip {
+    return Intl.message(
+      'One item per line, or separated by commas',
+      name: 'batchListInputTip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get batchMapInputTip {
+    return Intl.message(
+      'One entry per line: key, a space, then value',
+      name: 'batchMapInputTip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get customProfileResources {
+    return Intl.message(
+      'Custom profile resources',
+      name: 'customProfileResources',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get customProfileResourcesDesc {
+    return Intl.message(
+      'Custom profile resources are the proxies, rule providers, filters, and icon sets you add yourself for custom profiles to use.',
+      name: 'customProfileResourcesDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get batteryOptimizationDesc {
+    return Intl.message(
+      'Ignore battery optimization keeps the app running in the background.',
+      name: 'batteryOptimizationDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get onDemandDesc {
+    return Intl.message(
+      'On demand pauses the proxy on excluded Wi-Fi.',
+      name: 'onDemandDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get blockConnection {
+    return Intl.message(
+      'Block connection',
+      name: 'blockConnection',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get proxyNode {
+    return Intl.message(
+      'Proxy Node',
+      name: 'proxyNode',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get bypassPrivateRouteDesc {
+    return Intl.message(
+      'With Bypass private addresses on, LAN, loopback and multicast addresses skip TUN.',
+      name: 'bypassPrivateRouteDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get excludeInterfaceDesc {
+    return Intl.message(
+      'Traffic arriving on excluded interfaces, such as docker0, skips TUN.',
+      name: 'excludeInterfaceDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get includeUidDesc {
+    return Intl.message(
+      'Only traffic from processes of included user IDs goes through TUN.',
+      name: 'includeUidDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get excludeUidDesc {
+    return Intl.message(
+      'Traffic from processes of excluded user IDs skips TUN.',
+      name: 'excludeUidDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get excludeSrcPortDesc {
+    return Intl.message(
+      'Traffic from excluded source ports skips TUN.',
+      name: 'excludeSrcPortDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get excludeDstPortDesc {
+    return Intl.message(
+      'Traffic to excluded destination ports skips TUN.',
+      name: 'excludeDstPortDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get emojiStyle {
+    return Intl.message(
+      'Emoji font',
+      name: 'emojiStyle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get customFont {
+    return Intl.message(
+      'Custom font',
+      name: 'customFont',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get nodeCount {
+    return Intl.message(
+      'Proxies',
+      name: 'nodeCount',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get ruleCount {
+    return Intl.message(
+      'Rules',
+      name: 'ruleCount',
+      desc: '',
+      args: [],
+    );
+  }
+
+  String get providerCount {
+    return Intl.message(
+      'Providers',
+      name: 'providerCount',
+      desc: '',
+      args: [],
+    );
+  }
+
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {
   const AppLocalizationDelegate();
 
   List<Locale> get supportedLocales {
     return const <Locale>[
       Locale.fromSubtags(languageCode: 'en'),
-      Locale.fromSubtags(languageCode: 'es'),
-      Locale.fromSubtags(languageCode: 'fr'),
       Locale.fromSubtags(languageCode: 'ja'),
       Locale.fromSubtags(languageCode: 'ko'),
       Locale.fromSubtags(languageCode: 'ru'),
+      Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant'),
       Locale.fromSubtags(languageCode: 'zh', countryCode: 'CN'),
     ];
   }

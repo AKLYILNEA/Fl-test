@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:fl_clash/common/common.dart';
@@ -19,7 +20,7 @@ import 'widgets/widgets.dart';
 
 // Narrower columns leave a pair of service cells too tight for a status, so
 // the grid stacks them in one.
-const _servicePairColumnMin = 290.0;
+const _servicePairColumnMin = 180.0;
 
 const _maxColumnWidth = 440.0;
 
@@ -36,6 +37,14 @@ class DashboardView extends ConsumerStatefulWidget {
 class _DashboardViewState extends ConsumerState<DashboardView> {
   var _editing = false;
   final _cardKeys = <DashboardWidget, GlobalKey>{};
+
+  @override
+  void initState() {
+    super.initState();
+    if (system.isDesktop) {
+      unawaited(ref.read(wakelockProvider.notifier).restore());
+    }
+  }
 
   void _setEditing(bool editing) {
     setState(() => _editing = editing);
@@ -80,6 +89,13 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
             glyph: AppGlyphs.edit,
             tooltip: appLocalizations.editDashboard,
             onPressed: () => _setEditing(true),
+          ),
+        if (desktopPlatforms.contains(platform) && !editing)
+          IconButtonData(
+            glyph: AppGlyphs.sun,
+            tooltip: appLocalizations.wakelock,
+            isSelected: ref.watch(wakelockProvider),
+            onPressed: () => ref.read(wakelockProvider.notifier).toggle(),
           ),
       ],
       // The providers learn a resize a frame late, too late for the cards.
@@ -205,7 +221,16 @@ class _DesktopDashboard extends StatelessWidget {
                 ),
                 sized(
                   middleHeight,
-                  row(const [(1, ServiceStatusCard()), (1, MemoryInfo())]),
+                  row([
+                    (
+                      1,
+                      ServiceStatusCard(
+                        columns:
+                            column >= _servicePairColumnMin * scale ? 2 : 1,
+                      ),
+                    ),
+                    (1, const MemoryInfo()),
+                  ]),
                 ),
                 sized(summaryHeight, summaries),
               ],

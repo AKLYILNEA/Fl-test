@@ -131,8 +131,11 @@ void main() {
     );
   }
 
-  /// A phone card shows the first two enabled services.
+  /// A phone card shows the first four enabled services.
   final shownIds = [
+    for (final target in ServiceTarget.values.take(4)) target.id,
+  ];
+  final stackedShownIds = [
     for (final target in ServiceTarget.values.take(2)) target.id,
   ];
 
@@ -174,7 +177,7 @@ void main() {
     expect(find.text('All available'), findsOneWidget);
   });
 
-  testWidgets('a phone card checks the first two services, and only those', (
+  testWidgets('a phone card checks the first four services, and only those', (
     tester,
   ) async {
     final asked = <String>[];
@@ -189,11 +192,11 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(asked, unorderedEquals(shownIds));
-    for (final target in ServiceTarget.values.take(2)) {
+    for (final target in ServiceTarget.values.take(4)) {
       expect(tile(target), findsOneWidget);
     }
-    expect(tile(ServiceTarget.values[2]), findsNothing);
-    expect(find.text('45 ms'), findsNWidgets(2));
+    expect(tile(ServiceTarget.values[4]), findsNothing);
+    expect(find.text('45 ms'), findsNWidgets(4));
     expect(find.text(ServiceTarget.google.label), findsNothing);
   });
 
@@ -263,7 +266,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(asked, unorderedEquals(shownIds));
+    expect(asked, unorderedEquals(stackedShownIds));
     expect(cellOf(tester, first).left, cellOf(tester, second).left);
     expect(cellOf(tester, second).top, greaterThan(cellOf(tester, first).top));
     expect(cellOf(tester, first).width, rowWidth(tester));
@@ -712,13 +715,13 @@ void main() {
     await tester.tap(
       find.descendant(
         of: find.byType(ServiceStatusSheet),
-        matching: find.text(ServiceTarget.chatgpt.label),
+        matching: find.text(ServiceTarget.claude.label),
       ),
     );
     await tester.pumpAndSettle();
 
     expect(find.byType(ServiceStatusSheet), findsOneWidget);
-    expect(asked.skip(shownIds.length), [ServiceTarget.chatgpt.id]);
+    expect(asked.skip(shownIds.length), [ServiceTarget.claude.id]);
   });
   testWidgets('a route change checks the shown service again once', (
     tester,
@@ -938,7 +941,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('Service status'));
+    await tester.tap(find.byTooltip('Service'));
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Manage services'));
     await tester.pumpAndSettle();
@@ -1031,7 +1034,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(tile(ServiceTarget.google), findsNothing);
-    expect(asked.skip(2), [ServiceTarget.values[2].id]);
+    expect(asked.skip(4), [ServiceTarget.values[4].id]);
   });
 
   testWidgets('an unexpected error shows the check as failed', (tester) async {

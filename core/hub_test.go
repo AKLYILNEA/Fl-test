@@ -85,6 +85,40 @@ func groupNow(t *testing.T, proxy constant.Proxy) string {
 	return group.Now()
 }
 
+// A group asked for its pick before its provider loaded caches the empty
+// fallback for ten seconds; the members arriving later have to replace it.
+func TestReconcileDynamicGroupsDropsAPickItsProviderReplaced(t *testing.T) {
+	pd := newCachingProvider("auto-provider")
+	group, err := outboundgroup.NewURLTest(
+		outboundgroup.GroupCommonOption{Name: "auto"},
+		outboundgroup.URLTestOption{},
+		adapter.NewProxy(outbound.NewCompatible()),
+		[]cp.ProxyProvider{pd},
+	)
+	if err != nil {
+		t.Fatalf("NewURLTest: %v", err)
+	}
+	tunnel.UpdateProxies(map[string]constant.Proxy{"auto": adapter.NewProxy(group)}, nil)
+	t.Cleanup(func() { tunnel.UpdateProxies(nil, nil) })
+
+	if got := group.Now(); got != "COMPATIBLE" {
+		t.Fatalf("empty group resolved to %q, want the empty fallback", got)
+	}
+
+	pd.setProxies("node-1", "node-2")
+	if got := group.Now(); got != "COMPATIBLE" {
+		t.Fatalf("group resolved to %q, want the pick it cached while empty", got)
+	}
+
+	selectMu.Lock()
+	reconcileDynamicGroupsLocked()
+	selectMu.Unlock()
+
+	if got := group.Now(); got != "node-1" {
+		t.Errorf("group resolved to %q after reconciling, want its first member", got)
+	}
+}
+
 // patchSelectGroup restores selections before the providers behind the groups
 // have loaded - executor.loadProvider never waits for them - so it has to write
 // names through unvalidated and let Selector resolve them at dial time. A name

@@ -346,6 +346,11 @@ class MessageLookup extends MessageLookupByLibrary {
     "allReferencedProxyProviders": MessageLookupByLibrary.simpleMessage(
       "All referenced proxy providers",
     ),
+    "customFont": MessageLookupByLibrary.simpleMessage("Custom font"),
+    "nodeCount": MessageLookupByLibrary.simpleMessage("Proxies"),
+    "ruleCount": MessageLookupByLibrary.simpleMessage("Rules"),
+    "providerCount": MessageLookupByLibrary.simpleMessage("Providers"),
+    "emojiStyle": MessageLookupByLibrary.simpleMessage("Emoji font"),
     "allowBypass": MessageLookupByLibrary.simpleMessage(
       "Allow apps to bypass VPN",
     ),
@@ -1120,6 +1125,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "ipFlagVpn": MessageLookupByLibrary.simpleMessage("VPN"),
     "ipFlags": MessageLookupByLibrary.simpleMessage("Flags"),
     "ipOrganization": MessageLookupByLibrary.simpleMessage("Organization"),
+    "proxyNode": MessageLookupByLibrary.simpleMessage("Proxy Node"),
     "ipQualityFailed": MessageLookupByLibrary.simpleMessage(
       "Couldn\'t determine the IP type",
     ),
@@ -1495,7 +1501,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "outbound": MessageLookupByLibrary.simpleMessage("Outbound"),
     "outboundExit": MessageLookupByLibrary.simpleMessage("Exit"),
     "outboundIp": MessageLookupByLibrary.simpleMessage("Outbound IP"),
-    "outboundMode": MessageLookupByLibrary.simpleMessage("Outbound mode"),
+    "outboundMode": MessageLookupByLibrary.simpleMessage("Outbound"),
     "overrideDestination": MessageLookupByLibrary.simpleMessage(
       "Override destination",
     ),
@@ -1544,7 +1550,8 @@ class MessageLookup extends MessageLookupByLibrary {
       "Private key passphrase",
     ),
     "process": MessageLookupByLibrary.simpleMessage("Process"),
-    "profile": MessageLookupByLibrary.simpleMessage("Profile"),
+    "currentProfile": MessageLookupByLibrary.simpleMessage("Current profile"),
+        "profile": MessageLookupByLibrary.simpleMessage("Profile"),
     "profileAutoUpdateIntervalInvalidValidationDesc":
         MessageLookupByLibrary.simpleMessage("Please enter a valid interval"),
     "profileAutoUpdateIntervalNullValidationDesc":
@@ -1923,7 +1930,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "serviceShownOnDashboard": MessageLookupByLibrary.simpleMessage(
       "Shown on the dashboard",
     ),
-    "serviceStatus": MessageLookupByLibrary.simpleMessage("Service status"),
+    "serviceStatus": MessageLookupByLibrary.simpleMessage("Service"),
     "serviceUnavailable": MessageLookupByLibrary.simpleMessage("Unavailable"),
     "serviceUnsupportedRegion": MessageLookupByLibrary.simpleMessage(
       "Region not supported",
@@ -2148,12 +2155,17 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "whitelistMode": MessageLookupByLibrary.simpleMessage("Whitelist mode"),
     "writeToSystem": MessageLookupByLibrary.simpleMessage("Write to system"),
+    "secondaryDevelopmentBuild": MessageLookupByLibrary.simpleMessage(
+      "Secondary development build",
+    ),
+    "wakelock": MessageLookupByLibrary.simpleMessage("Keep screen on"),
     "writeToSystemDesc": MessageLookupByLibrary.simpleMessage(
       "Write to system also sets the system clock; Android ignores it.",
     ),
     "yearsAgo": m100,
     "yearsAgoShort": m101,
     "yes": MessageLookupByLibrary.simpleMessage("Yes"),
-    "zhCN": MessageLookupByLibrary.simpleMessage("Simplified Chinese"),
+    "zhHant": MessageLookupByLibrary.simpleMessage("Traditional Chinese"),
+        "zhCN": MessageLookupByLibrary.simpleMessage("Simplified Chinese"),
   };
 }

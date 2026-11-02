@@ -150,52 +150,63 @@ class ApplicationState extends ConsumerState<Application> {
   @override
   Widget build(context) {
     return Consumer(
-      builder: (_, ref, child) {
+      builder: (_, ref, homePage) {
         final locale = ref.watch(
           appSettingProvider.select((state) => state.locale),
         );
         final themeProps = ref.watch(themeSettingProvider);
         final textScale = themeProps.textScale;
-        return PrismApp(
-          debugShowCheckedModeBanner: false,
-          navigatorKey: globalState.navigatorKey,
-          onNavigationNotification: (_) => true,
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            AppUiLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-          ],
-          builder: (context, child) {
-            return buildManagerStack(
-              isDesktop: system.isDesktop,
-              onConnectivityChanged: _handleConnectivityChanged,
-              terminateSignals: _terminateSignals,
-              child: child!,
+        return ValueListenableBuilder<String?>(
+          valueListenable: FontManager.fontFamilyNotifier,
+          builder: (context, _, _) {
+            return ValueListenableBuilder<EmojiStyle>(
+              valueListenable: EmojiManager.emojiStyleNotifier,
+              builder: (context, emojiStyle, _) {
+                return PrismApp(
+                  debugShowCheckedModeBanner: false,
+                  navigatorKey: globalState.navigatorKey,
+                  onNavigationNotification: (_) => true,
+                  localizationsDelegates: const [
+                    AppLocalizations.delegate,
+                    AppUiLocalizations.delegate,
+                    GlobalWidgetsLocalizations.delegate,
+                  ],
+                  builder: (context, child) {
+                    return buildManagerStack(
+                      isDesktop: system.isDesktop,
+                      onConnectivityChanged: _handleConnectivityChanged,
+                      terminateSignals: _terminateSignals,
+                      child: child!,
+                    );
+                  },
+                  title: appName,
+                  locale: getLocaleForString(locale),
+                  supportedLocales: AppLocalizations.delegate.supportedLocales,
+                  themeMode: themeProps.themeMode,
+                  theme: watchAppTheme(ref, Brightness.light),
+                  darkTheme: watchAppTheme(ref, Brightness.dark),
+                  textScale: textScale.enable ? textScale.scale : null,
+                  minTextScale: minTextScale,
+                  maxTextScale: maxTextScale,
+                  liquidGlass: switch (themeProps.liquidGlass) {
+                    LiquidGlassMode.none => null,
+                    LiquidGlassMode.ultra => LiquidGlassQuality.ultra,
+                    LiquidGlassMode.standard => LiquidGlassQuality.standard,
+                  },
+                  emojiFont: (family: emojiStyle.family, pattern: emojiPattern),
+                  stackedBanners: !ref.watch(isMobileViewProvider),
+                  bannerTopInset: ref.watch(overlayTopOffsetProvider),
+                  remoteFocus: system.isTV,
+                  floatingKeyboard: app?.floatingKeyboard,
+                  onGenerateRoute: (settings) => HomeRoute(
+                    settings: settings,
+                    builder: (_) => KeyboardInsetHold(child: homePage!),
+                  ),
+                );
+              },
             );
           },
-          title: appName,
-          locale: getLocaleForString(locale),
-          supportedLocales: AppLocalizations.delegate.supportedLocales,
-          themeMode: themeProps.themeMode,
-          theme: watchAppTheme(ref, Brightness.light),
-          darkTheme: watchAppTheme(ref, Brightness.dark),
-          textScale: textScale.enable ? textScale.scale : null,
-          minTextScale: minTextScale,
-          maxTextScale: maxTextScale,
-          liquidGlass: switch (themeProps.liquidGlass) {
-            LiquidGlassMode.none => null,
-            LiquidGlassMode.ultra => LiquidGlassQuality.ultra,
-            LiquidGlassMode.standard => LiquidGlassQuality.standard,
-          },
-          emojiFont: (family: FontFamily.twEmoji.value, pattern: emojiPattern),
-          stackedBanners: !ref.watch(isMobileViewProvider),
-          bannerTopInset: ref.watch(overlayTopOffsetProvider),
-          remoteFocus: system.isTV,
-          floatingKeyboard: app?.floatingKeyboard,
-          onGenerateRoute: (settings) => HomeRoute(
-            settings: settings,
-            builder: (_) => KeyboardInsetHold(child: child!),
-          ),
+        );
         );
       },
       child: const HomePage(),

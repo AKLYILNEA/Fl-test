@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"maps"
 	"os"
+	"slices"
 	"strings"
 	"sync"
 
@@ -49,6 +50,34 @@ func adapterAs[T any](proxy constant.Proxy) (group T, ok bool) {
 	return group, ok
 }
 
+// A provider that loads after its group leaves the group holding the empty
+// fallback: URLTest caches that pick for ten seconds and Fallback keeps it in
+// selected, and mihomo exposes no reset for either. ForceSet is the only lever.
+func reconcileDynamicGroupsLocked() {
+	for _, proxy := range tunnel.AllProxies() {
+		if proxy == nil {
+			continue
+		}
+		switch proxy.Type() {
+		case constant.URLTest, constant.Fallback:
+		default:
+			continue
+		}
+		group, ok := adapterAs[pickableGroup](proxy)
+		if !ok {
+			continue
+		}
+
+		now := group.Now()
+		if slices.ContainsFunc(group.Proxies(), func(member constant.Proxy) bool {
+			return member != nil && member.Name() == now
+		}) {
+			continue
+		}
+		group.ForceSet("")
+	}
+}
+
 func isProxyGroupType(adapterType constant.AdapterType) bool {
 	switch adapterType {
 	case constant.Selector, constant.URLTest, constant.Fallback, constant.Relay, constant.LoadBalance:
@@ -84,6 +113,10 @@ func proxyGroupNames(
 }
 
 func handleGetProxies() ProxiesData {
+	selectMu.Lock()
+	reconcileDynamicGroupsLocked()
+	selectMu.Unlock()
+
 	proxies := tunnel.AllProxies()
 
 	names := proxyGroupNames(config.GetProxyNameList(), func(name string) (constant.AdapterType, bool) {
@@ -211,6 +244,7 @@ func patchSelectGroup(mapping map[string]string) {
 			selector.ForceSet(selected)
 		}
 	}
+	reconcileDynamicGroupsLocked()
 }
 
 // Tailscale and EasyTier register a DNS client under the proxy name when built

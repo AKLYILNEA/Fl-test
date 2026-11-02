@@ -305,6 +305,11 @@ class MessageLookup extends MessageLookupByLibrary {
     "allReferencedProxyProviders": MessageLookupByLibrary.simpleMessage(
       "参照されているすべてのプロキシプロバイダー",
     ),
+    "customFont": MessageLookupByLibrary.simpleMessage("カスタムフォント"),
+    "nodeCount": MessageLookupByLibrary.simpleMessage("ノード数"),
+    "ruleCount": MessageLookupByLibrary.simpleMessage("ルール項目"),
+    "providerCount": MessageLookupByLibrary.simpleMessage("プロバイダー"),
+    "emojiStyle": MessageLookupByLibrary.simpleMessage("絵文字フォント"),
     "allowBypass": MessageLookupByLibrary.simpleMessage("アプリによるVPNバイパスを許可"),
     "allowLan": MessageLookupByLibrary.simpleMessage("LANプロキシ"),
     "allowedIps": MessageLookupByLibrary.simpleMessage("許可する IP"),
@@ -958,6 +963,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "ipFlagVpn": MessageLookupByLibrary.simpleMessage("VPN"),
     "ipFlags": MessageLookupByLibrary.simpleMessage("検出"),
     "ipOrganization": MessageLookupByLibrary.simpleMessage("組織"),
+    "proxyNode": MessageLookupByLibrary.simpleMessage("プロキシノード"),
     "ipQualityFailed": MessageLookupByLibrary.simpleMessage(
       "IP タイプを判定できませんでした",
     ),
@@ -1318,7 +1324,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "privateKey": MessageLookupByLibrary.simpleMessage("秘密鍵"),
     "privateKeyPassphrase": MessageLookupByLibrary.simpleMessage("秘密鍵のパスフレーズ"),
     "process": MessageLookupByLibrary.simpleMessage("プロセス"),
-    "profile": MessageLookupByLibrary.simpleMessage("プロファイル"),
+    "currentProfile": MessageLookupByLibrary.simpleMessage("現在のプロファイル"),
+        "profile": MessageLookupByLibrary.simpleMessage("プロファイル"),
     "profileAutoUpdateIntervalInvalidValidationDesc":
         MessageLookupByLibrary.simpleMessage("有効な間隔を入力してください"),
     "profileAutoUpdateIntervalNullValidationDesc":
@@ -1846,12 +1853,17 @@ class MessageLookup extends MessageLookupByLibrary {
     "webDAVConfiguration": MessageLookupByLibrary.simpleMessage("WebDAV設定"),
     "whitelistMode": MessageLookupByLibrary.simpleMessage("ホワイトリストモード"),
     "writeToSystem": MessageLookupByLibrary.simpleMessage("システムに書き込む"),
+    "secondaryDevelopmentBuild": MessageLookupByLibrary.simpleMessage(
+      "二次開発ビルド",
+    ),
+    "wakelock": MessageLookupByLibrary.simpleMessage("画面常時点灯"),
     "writeToSystemDesc": MessageLookupByLibrary.simpleMessage(
       "システムに書き込むを有効にするとシステムクロックも設定します。Android では無視されます。",
     ),
     "yearsAgo": m100,
     "yearsAgoShort": m101,
     "yes": MessageLookupByLibrary.simpleMessage("はい"),
-    "zhCN": MessageLookupByLibrary.simpleMessage("簡体字中国語"),
+    "zhHant": MessageLookupByLibrary.simpleMessage("繁体字中国語"),
+        "zhCN": MessageLookupByLibrary.simpleMessage("簡体字中国語"),
   };
 }

@@ -354,6 +354,11 @@ class MessageLookup extends MessageLookupByLibrary {
     "allReferencedProxyProviders": MessageLookupByLibrary.simpleMessage(
       "Все используемые провайдеры прокси",
     ),
+    "customFont": MessageLookupByLibrary.simpleMessage("Пользовательский шрифт"),
+    "nodeCount": MessageLookupByLibrary.simpleMessage("Узлы"),
+    "ruleCount": MessageLookupByLibrary.simpleMessage("Правила"),
+    "providerCount": MessageLookupByLibrary.simpleMessage("Провайдеры"),
+    "emojiStyle": MessageLookupByLibrary.simpleMessage("Шрифт эмодзи"),
     "allowBypass": MessageLookupByLibrary.simpleMessage(
       "Разрешить приложениям обходить VPN",
     ),
@@ -1168,6 +1173,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "ipFlagVpn": MessageLookupByLibrary.simpleMessage("VPN"),
     "ipFlags": MessageLookupByLibrary.simpleMessage("Метки"),
     "ipOrganization": MessageLookupByLibrary.simpleMessage("Организация"),
+    "proxyNode": MessageLookupByLibrary.simpleMessage("Прокси-узел"),
     "ipQualityFailed": MessageLookupByLibrary.simpleMessage(
       "Не удалось определить тип IP",
     ),
@@ -1626,7 +1632,8 @@ class MessageLookup extends MessageLookupByLibrary {
       "Пароль закрытого ключа",
     ),
     "process": MessageLookupByLibrary.simpleMessage("Процесс"),
-    "profile": MessageLookupByLibrary.simpleMessage("Профиль"),
+    "currentProfile": MessageLookupByLibrary.simpleMessage("Текущий профиль"),
+        "profile": MessageLookupByLibrary.simpleMessage("Профиль"),
     "profileAutoUpdateIntervalInvalidValidationDesc":
         MessageLookupByLibrary.simpleMessage("Введите корректный интервал"),
     "profileAutoUpdateIntervalNullValidationDesc":
@@ -2266,12 +2273,17 @@ class MessageLookup extends MessageLookupByLibrary {
     "writeToSystem": MessageLookupByLibrary.simpleMessage(
       "Записывать в систему",
     ),
+    "secondaryDevelopmentBuild": MessageLookupByLibrary.simpleMessage(
+      "Вторичная сборка разработки",
+    ),
+    "wakelock": MessageLookupByLibrary.simpleMessage("Не выключать экран"),
     "writeToSystemDesc": MessageLookupByLibrary.simpleMessage(
       "«Записывать в систему» также устанавливает системные часы; Android это игнорирует.",
     ),
     "yearsAgo": m100,
     "yearsAgoShort": m101,
     "yes": MessageLookupByLibrary.simpleMessage("Да"),
-    "zhCN": MessageLookupByLibrary.simpleMessage("Упрощённый китайский"),
+    "zhHant": MessageLookupByLibrary.simpleMessage("Традиционный китайский"),
+        "zhCN": MessageLookupByLibrary.simpleMessage("Упрощённый китайский"),
   };
 }

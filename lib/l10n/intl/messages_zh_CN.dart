@@ -297,6 +297,11 @@ class MessageLookup extends MessageLookupByLibrary {
     "allReferencedProxyProviders": MessageLookupByLibrary.simpleMessage(
       "全部被引用的代理集",
     ),
+    "customFont": MessageLookupByLibrary.simpleMessage("自定义字体"),
+    "nodeCount": MessageLookupByLibrary.simpleMessage("代理节点"),
+    "ruleCount": MessageLookupByLibrary.simpleMessage("路由规则"),
+    "providerCount": MessageLookupByLibrary.simpleMessage("外部资源"),
+    "emojiStyle": MessageLookupByLibrary.simpleMessage("Emoji字体"),
     "allowBypass": MessageLookupByLibrary.simpleMessage("允许应用绕过VPN"),
     "allowLan": MessageLookupByLibrary.simpleMessage("局域网代理"),
     "allowedIps": MessageLookupByLibrary.simpleMessage("允许的 IP"),
@@ -872,6 +877,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "ipFlagVpn": MessageLookupByLibrary.simpleMessage("VPN"),
     "ipFlags": MessageLookupByLibrary.simpleMessage("命中标记"),
     "ipOrganization": MessageLookupByLibrary.simpleMessage("组织"),
+    "proxyNode": MessageLookupByLibrary.simpleMessage("代理节点"),
     "ipQualityFailed": MessageLookupByLibrary.simpleMessage("类型查询失败"),
     "ipQualityGood": MessageLookupByLibrary.simpleMessage("优"),
     "ipQualityLevel": MessageLookupByLibrary.simpleMessage("等级"),
@@ -1194,7 +1200,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "privateKey": MessageLookupByLibrary.simpleMessage("私钥"),
     "privateKeyPassphrase": MessageLookupByLibrary.simpleMessage("私钥密码"),
     "process": MessageLookupByLibrary.simpleMessage("进程"),
-    "profile": MessageLookupByLibrary.simpleMessage("配置"),
+    "currentProfile": MessageLookupByLibrary.simpleMessage("当前配置"),
+        "profile": MessageLookupByLibrary.simpleMessage("配置"),
     "profileAutoUpdateIntervalInvalidValidationDesc":
         MessageLookupByLibrary.simpleMessage("请输入有效间隔时间格式"),
     "profileAutoUpdateIntervalNullValidationDesc":
@@ -1665,6 +1672,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "vpnConfigChangeDetected": MessageLookupByLibrary.simpleMessage(
       "VPN 相关配置已改动，点击重启",
     ),
+    "secondaryDevelopmentBuild": MessageLookupByLibrary.simpleMessage("二次开发构建"),
+    "wakelock": MessageLookupByLibrary.simpleMessage("亮屏锁"),
     "webDAVConfiguration": MessageLookupByLibrary.simpleMessage("WebDAV配置"),
     "whitelistMode": MessageLookupByLibrary.simpleMessage("白名单模式"),
     "writeToSystem": MessageLookupByLibrary.simpleMessage("写入系统"),
@@ -1674,6 +1683,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "yearsAgo": m100,
     "yearsAgoShort": m101,
     "yes": MessageLookupByLibrary.simpleMessage("是"),
-    "zhCN": MessageLookupByLibrary.simpleMessage("中文简体"),
+    "zhHant": MessageLookupByLibrary.simpleMessage("繁体中文"),
+        "zhCN": MessageLookupByLibrary.simpleMessage("中文简体"),
   };
 }

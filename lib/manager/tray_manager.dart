@@ -40,6 +40,11 @@ class _TrayManagerState extends ConsumerState<TrayManager> {
         _requestUpdate();
       }
     });
+    ref.listenManual(systemBrightnessProvider, (prev, next) {
+      if (prev != next) {
+        _requestUpdate();
+      }
+    });
     if (system.isMacOS) {
       ref.listenManual(trayDelaysProvider, (prev, next) {
         if (!const DeepCollectionEquality().equals(prev, next)) {
@@ -99,6 +104,8 @@ class _TrayManagerState extends ConsumerState<TrayManager> {
 
   void _handleTrayEvent(TrayEvent event) {
     switch (event) {
+      case TrayThemeChanged():
+        _requestUpdate();
       case TrayIconActivated():
         window?.show();
       case TrayMenuRequested():

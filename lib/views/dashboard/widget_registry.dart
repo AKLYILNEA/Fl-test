@@ -26,7 +26,7 @@ extension DashboardWidgetView on DashboardWidget {
     DashboardWidget.vpnButton => AppGlyphs.vpn,
     DashboardWidget.networkTakeover => AppGlyphs.shuffle,
     DashboardWidget.serviceStatus => AppGlyphs.verified,
-    DashboardWidget.profiles => AppGlyphs.profiles,
+    DashboardWidget.profiles => AppGlyphs.rocket,
     DashboardWidget.proxyGroups => AppGlyphs.layers,
     DashboardWidget.connectionStats => AppGlyphs.connections,
     DashboardWidget.intranetIp => AppGlyphs.devices,

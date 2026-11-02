@@ -1,12 +1,12 @@
-import 'dart:async';
-import 'dart:collection';
+import 'dart:io';
 
 import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/features/form/form.dart';
-import 'package:fl_clash/providers/config.dart';
+import 'package:fl_clash/manager/font_manager.dart';
+import 'package:fl_clash/state.dart';
+import 'package:fl_clash/ui/icons/icons.dart';
 import 'package:fl_clash/widgets/widgets.dart';
-import 'package:flutter/scheduler.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/widgets.dart';
 
 sealed class _FontChoice {
@@ -15,190 +15,153 @@ sealed class _FontChoice {
 
 final class _DefaultFont extends _FontChoice {
   const _DefaultFont();
+
+  @override
+  bool operator ==(Object other) => other is _DefaultFont;
+
+  @override
+  int get hashCode => 0;
 }
 
-final class _InstalledFont extends _FontChoice {
-  const _InstalledFont(this.family);
+final class _CustomFontChoice extends _FontChoice {
+  const _CustomFontChoice(this.font);
 
-  final String family;
+  final CustomFont font;
 
   @override
   bool operator ==(Object other) =>
-      other is _InstalledFont && other.family == family;
+      other is _CustomFontChoice && other.font.path == font.path;
 
   @override
-  int get hashCode => family.hashCode;
+  int get hashCode => font.path.hashCode;
 }
 
-class FontFamilyView extends ConsumerStatefulWidget {
+class FontFamilyView extends StatefulWidget {
   const FontFamilyView({super.key});
 
   @override
-  ConsumerState<FontFamilyView> createState() => _FontFamilyViewState();
+  State<FontFamilyView> createState() => _FontFamilyViewState();
 }
 
-class _FontFamilyViewState extends ConsumerState<FontFamilyView> {
-  List<_InstalledFont>? _installed;
-
-  @override
-  void initState() {
-    super.initState();
-    unawaited(_load());
+class _FontFamilyViewState extends State<FontFamilyView> {
+  Future<void> _handlePickFont() async {
+    final imported = await FontManager.importAndSelect(context);
+    if (!mounted || !imported) {
+      return;
+    }
+    setState(() {});
   }
 
-  Future<void> _load() async {
-    final families = await loadSystemFontFamilies();
-    if (mounted) {
-      setState(() => _installed = families.map(_InstalledFont.new).toList());
+  Future<void> _handleExportFont(CustomFont font) async {
+    final appLocalizations = context.appLocalizations;
+    final res = await globalState.safeRun<bool>(() async {
+      final file = File(font.path);
+      if (!await file.exists()) {
+        return false;
+      }
+      final value = await picker.saveFile(
+        font.name,
+        await file.readAsBytes(),
+      );
+      if (value == null) return false;
+      return true;
+    }, title: appLocalizations.tip);
+    if (res == true && mounted) {
+      dialogs.showBanner(
+        appLocalizations.exportSuccess,
+        level: BannerLevel.success,
+      );
     }
+  }
+
+  Future<void> _handleDeleteFont(CustomFont font) async {
+    final appLocalizations = context.appLocalizations;
+    final result = await dialogs.showMessage(
+      title: appLocalizations.tip,
+      message: TextSpan(text: appLocalizations.deleteTip(font.name)),
+      destructive: true,
+      confirmText: appLocalizations.delete,
+    );
+    if (result != true || !mounted) {
+      return;
+    }
+    await FontManager.delete(font);
+    if (!mounted) {
+      return;
+    }
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     final appLocalizations = context.appLocalizations;
-    final installed = _installed ?? const <_InstalledFont>[];
+    final fonts = FontManager.fonts;
     return SelectionSheet<_FontChoice>(
       title: appLocalizations.fontFamily,
-      loadingStatus: _installed == null
-          ? const NullStatus(illustration: NullStatusIllustration.fonts)
-          : null,
+      iconActions: [
+        IconButtonData(
+          glyph: AppGlyphs.addCircle,
+          tooltip: appLocalizations.add,
+          onPressed: _handlePickFont,
+        ),
+      ],
       sections: [
         const SelectionSection(items: [_DefaultFont()]),
-        if (installed.isNotEmpty)
+        if (fonts.isNotEmpty)
           SelectionSection(
-            label: appLocalizations.installedFonts,
-            items: installed,
+            label: appLocalizations.customFont,
+            items: fonts.map(_CustomFontChoice.new).toList(),
           ),
       ],
       labelBuilder: (choice) => switch (choice) {
         _DefaultFont() => appLocalizations.defaultText,
-        _InstalledFont(:final family) => family,
+        _CustomFontChoice(:final font) => font.name,
       },
       titleBuilder: (choice, title) => switch (choice) {
         _DefaultFont() => title,
-        _InstalledFont(:final family) => _FontLabel(
-          family: family,
-          child: title,
-        ),
+        _CustomFontChoice(:final font) => switch (FontManager.familyOf(font)) {
+          final family? => Text(
+            font.name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(fontFamily: family),
+          ),
+          null => title,
+        },
       },
-      selectedOf: (ref) => switch (ref.watch(
-        themeSettingProvider.select((state) => state.fontFamily),
-      )) {
-        final family? => _InstalledFont(family),
-        null => const _DefaultFont(),
+      selectedOf: (_) {
+        final selected = FontManager.selectedFont;
+        return selected == null
+            ? const _DefaultFont()
+            : _CustomFontChoice(selected);
       },
-      onSelected: (choice) {
-        final String? family;
+      menuBuilder: (choice) => switch (choice) {
+        _CustomFontChoice(:final font) => [
+          PopupMenuItem(
+            glyph: AppGlyphs.export,
+            label: appLocalizations.exportFile,
+            onPressed: () => _handleExportFont(font),
+          ),
+          PopupMenuItem(
+            danger: true,
+            glyph: AppGlyphs.delete,
+            label: appLocalizations.delete,
+            onPressed: () => _handleDeleteFont(font),
+          ),
+        ],
+        _ => null,
+      },
+      onSelected: (choice) async {
         switch (choice) {
           case _DefaultFont():
-            family = null;
-          case _InstalledFont():
-            family = choice.family;
+            await FontManager.selectDefault();
+          case _CustomFontChoice(:final font):
+            await FontManager.select(font);
         }
-        ref
-            .read(themeSettingProvider.notifier)
-            .update((state) => state.copyWith(fontFamily: family));
+        if (mounted) {
+          setState(() {});
+        }
       },
-    );
-  }
-}
-
-/// Laying out a family for the first time loads it on the UI thread, longer
-/// for a large CJK one, so each name switches to its family on a frame of its
-/// own and none while the list or the route moves.
-class _FontLabel extends StatefulWidget {
-  const _FontLabel({required this.family, required this.child});
-
-  final String family;
-  final Widget child;
-
-  @override
-  State<_FontLabel> createState() => _FontLabelState();
-}
-
-class _FontLabelState extends State<_FontLabel> {
-  static final _shown = <String>{};
-  static final _waiting = Queue<_FontLabelState>();
-  static var _scheduled = false;
-
-  bool get _isShown => _shown.contains(widget.family);
-
-  @override
-  void initState() {
-    super.initState();
-    _request();
-  }
-
-  @override
-  void didUpdateWidget(_FontLabel oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.family != widget.family) {
-      _request();
-    }
-  }
-
-  @override
-  void dispose() {
-    _waiting.remove(this);
-    super.dispose();
-  }
-
-  void _request() {
-    if (_isShown || _waiting.contains(this)) {
-      return;
-    }
-    _waiting.add(this);
-    _schedule();
-  }
-
-  static void _schedule() {
-    if (_scheduled || _waiting.isEmpty) {
-      return;
-    }
-    _scheduled = true;
-    SchedulerBinding.instance
-      ..addPostFrameCallback(_showNext)
-      ..ensureVisualUpdate();
-  }
-
-  static void _showNext(Duration _) {
-    final next = _waiting.firstOrNull;
-    if (next != null && next.mounted) {
-      if (isRouteMoving(next.context)) {
-        // The frames of the motion carry the queue until it stops.
-        SchedulerBinding.instance.addPostFrameCallback(_showNext);
-        return;
-      }
-      final scrollPosition = Scrollable.maybeOf(next.context)?.position;
-      // A scroll can end without another frame to carry the queue.
-      if (scrollPosition?.isScrollingNotifier.value ?? false) {
-        SchedulerBinding.instance
-          ..addPostFrameCallback(_showNext)
-          ..ensureVisualUpdate();
-        return;
-      }
-    }
-    _scheduled = false;
-    while (_waiting.isNotEmpty) {
-      final label = _waiting.removeFirst();
-      if (!label.mounted || label._isShown) {
-        continue;
-      }
-      _shown.add(label.widget.family);
-      label.setState(() {});
-      break;
-    }
-    _schedule();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (!_isShown) {
-      return widget.child;
-    }
-    return DefaultTextStyle.merge(
-      style: TextStyle(fontFamily: widget.family),
-      child: widget.child,
     );
   }
 }
