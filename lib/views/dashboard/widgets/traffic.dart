@@ -58,18 +58,27 @@ class _Figure extends StatelessWidget {
     required this.unit,
     required this.style,
     required this.unitStyle,
+    this.leading,
   });
 
   final TrafficShow show;
   final String unit;
   final AppTextStyle style;
   final AppTextStyle unitStyle;
+  final Widget? leading;
 
   @override
   Widget build(BuildContext context) {
+    final leading = this.leading;
     return Text.rich(
       TextSpan(
         children: [
+          if (leading != null)
+            WidgetSpan(
+              alignment: PlaceholderAlignment.baseline,
+              baseline: TextBaseline.alphabetic,
+              child: leading,
+            ),
           TextSpan(
             text: show.value,
             style: DashboardText.figure(context, style),
@@ -292,24 +301,19 @@ class _SpeedFigure extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final show = speed.traffic;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      spacing: 6,
-      children: [
-        GlyphIcon(
+    return _Figure(
+      show: show,
+      unit: _speedUnit(show),
+      style: AppTextStyle.title1,
+      unitStyle: AppTextStyle.footnote,
+      leading: Padding(
+        padding: const EdgeInsets.only(right: 6),
+        child: GlyphIcon(
           direction.glyph,
           size: 26,
           color: direction.accentOf(context),
         ),
-        Expanded(
-          child: _Figure(
-            show: show,
-            unit: _speedUnit(show),
-            style: AppTextStyle.title1,
-            unitStyle: AppTextStyle.footnote,
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
