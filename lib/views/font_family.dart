@@ -106,9 +106,9 @@ class _FontFamilyViewState extends State<FontFamilyView> {
         ),
       ],
       sections: [
-        const SelectionSection(items: [_DefaultFont()]),
+        const SelectionSection<_FontChoice>(items: [_DefaultFont()]),
         if (fonts.isNotEmpty)
-          SelectionSection(
+          SelectionSection<_FontChoice>(
             label: appLocalizations.customFont,
             items: fonts.map(_CustomFontChoice.new).toList(),
           ),

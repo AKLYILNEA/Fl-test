@@ -294,6 +294,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "additionalSuffix": MessageLookupByLibrary.simpleMessage("이름 접미사"),
     "address": MessageLookupByLibrary.simpleMessage("주소"),
     "addressTip": MessageLookupByLibrary.simpleMessage("올바른 WebDAV 주소를 입력하세요"),
+    "advanced": MessageLookupByLibrary.simpleMessage("고급"),
+    "config": MessageLookupByLibrary.simpleMessage("구성"),
     "advancedConfig": MessageLookupByLibrary.simpleMessage("고급 구성"),
     "ageEncryptedProfile": MessageLookupByLibrary.simpleMessage("암호화된 프로필"),
     "ageSecretKey": MessageLookupByLibrary.simpleMessage("age 비밀 키"),

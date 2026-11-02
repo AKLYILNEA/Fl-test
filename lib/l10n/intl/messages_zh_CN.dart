@@ -286,6 +286,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "additionalSuffix": MessageLookupByLibrary.simpleMessage("名称后缀"),
     "address": MessageLookupByLibrary.simpleMessage("地址"),
     "addressTip": MessageLookupByLibrary.simpleMessage("请输入有效的WebDAV地址"),
+    "advanced": MessageLookupByLibrary.simpleMessage("进阶"),
+    "config": MessageLookupByLibrary.simpleMessage("配置"),
     "advancedConfig": MessageLookupByLibrary.simpleMessage("进阶配置"),
     "ageEncryptedProfile": MessageLookupByLibrary.simpleMessage("配置已加密"),
     "ageSecretKey": MessageLookupByLibrary.simpleMessage("age 私钥"),

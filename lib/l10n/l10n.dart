@@ -9447,6 +9447,27 @@ class AppLocalizations {
     );
   }
 
+
+  /// `Configuration`
+  String get config {
+    return Intl.message(
+      'Configuration',
+      name: 'config',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Advanced`
+  String get advanced {
+    return Intl.message(
+      'Advanced',
+      name: 'advanced',
+      desc: '',
+      args: [],
+    );
+  }
+
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {
   const AppLocalizationDelegate();
 

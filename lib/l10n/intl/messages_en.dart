@@ -329,6 +329,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "addressTip": MessageLookupByLibrary.simpleMessage(
       "Please enter a valid WebDAV address",
     ),
+    "advanced": MessageLookupByLibrary.simpleMessage("Advanced"),
+    "config": MessageLookupByLibrary.simpleMessage("Configuration"),
     "advancedConfig": MessageLookupByLibrary.simpleMessage(
       "Advanced configuration",
     ),

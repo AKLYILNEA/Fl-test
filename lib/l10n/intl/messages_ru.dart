@@ -337,6 +337,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "addressTip": MessageLookupByLibrary.simpleMessage(
       "Введите корректный адрес WebDAV",
     ),
+    "advanced": MessageLookupByLibrary.simpleMessage("Дополнительно"),
+    "config": MessageLookupByLibrary.simpleMessage("Конфигурация"),
     "advancedConfig": MessageLookupByLibrary.simpleMessage(
       "Расширенная конфигурация",
     ),
