@@ -292,34 +292,22 @@ class _SpeedFigure extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final show = speed.traffic;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      spacing: 6,
       children: [
-        Row(
-          spacing: 4,
-          children: [
-            GlyphIcon(
-              direction.glyph,
-              size: 16,
-              color: direction.accentOf(context),
-            ),
-            Flexible(
-              child: Text(
-                direction.labelOf(context),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppTextStyle.footnote
-                    .of(context, emphasized: true)
-                    .copyWith(color: context.colorScheme.onSurfaceVariant),
-              ),
-            ),
-          ],
+        GlyphIcon(
+          direction.glyph,
+          size: 26,
+          color: direction.accentOf(context),
         ),
-        _Figure(
-          show: show,
-          unit: _speedUnit(show),
-          style: AppTextStyle.title1,
-          unitStyle: AppTextStyle.footnote,
+        Expanded(
+          child: _Figure(
+            show: show,
+            unit: _speedUnit(show),
+            style: AppTextStyle.title1,
+            unitStyle: AppTextStyle.footnote,
+          ),
         ),
       ],
     );
