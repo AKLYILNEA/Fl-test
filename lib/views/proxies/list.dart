@@ -213,7 +213,6 @@ class _ProxiesListViewState extends ConsumerState<ProxiesListView> {
               );
               return Scrollbar(
                 controller: _controller,
-                thumbVisibility: true,
                 child: CustomScrollView(
                   key: proxiesListStoreKey,
                   controller: _controller,
