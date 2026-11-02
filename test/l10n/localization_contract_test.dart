@@ -6,7 +6,6 @@ import 'package:fl_clash/l10n/intl/messages_ja.dart' as messages_ja;
 import 'package:fl_clash/l10n/intl/messages_ko.dart' as messages_ko;
 import 'package:fl_clash/l10n/intl/messages_ru.dart' as messages_ru;
 import 'package:fl_clash/l10n/intl/messages_zh_CN.dart' as messages_zh_cn;
-import 'package:fl_clash/l10n/intl/messages_zh_Hant.dart' as messages_zh_hant;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/message_lookup_by_library.dart';
 
@@ -17,7 +16,6 @@ void main() {
     'ko': messages_ko.messages,
     'ru': messages_ru.messages,
     'zh_CN': messages_zh_cn.messages,
-    'zh_Hant': messages_zh_hant.messages,
   };
 
   test('every generated locale exposes and evaluates every source message', () {

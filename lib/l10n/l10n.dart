@@ -9091,14 +9091,6 @@ class AppLocalizations {
     );
   }
 
-  String get zhHant {
-    return Intl.message(
-      'Traditional Chinese',
-      name: 'zhHant',
-      desc: '',
-      args: [],
-    );
-  }
 
   String get silentLaunchDesc {
     return Intl.message(
@@ -9477,7 +9469,6 @@ class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {
       Locale.fromSubtags(languageCode: 'ja'),
       Locale.fromSubtags(languageCode: 'ko'),
       Locale.fromSubtags(languageCode: 'ru'),
-      Locale.fromSubtags(languageCode: 'zh', scriptCode: 'Hant'),
       Locale.fromSubtags(languageCode: 'zh', countryCode: 'CN'),
     ];
   }

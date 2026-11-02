@@ -1837,7 +1837,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "yearsAgo": m100,
     "yearsAgoShort": m101,
     "yes": MessageLookupByLibrary.simpleMessage("예"),
-    "zhHant": MessageLookupByLibrary.simpleMessage("중국어 번체"),
         "zhCN": MessageLookupByLibrary.simpleMessage("중국어 간체"),
   };
 }
