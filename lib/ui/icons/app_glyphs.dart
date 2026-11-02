@@ -1819,27 +1819,14 @@ abstract final class AppGlyphs {
   ]);
 
   static const speed = Glyph([
-    GlyphCircle(12, 12, 9.25),
-    GlyphArc(
-      12,
-      12,
-      5.6,
-      math.pi * 0.75,
-      math.pi * 0.824,
-      role: GlyphRole.detail,
+    GlyphPath(
+      'M6.759 19.057 Q5.259 19.057 4.396 17.83 A8.8 8.8 0 1 1 19.604 17.83 '
+      'Q18.741 19.057 17.241 19.057 Z',
     ),
-    GlyphArc(
-      12,
-      12,
-      5.6,
-      math.pi * -0.144,
-      math.pi * 0.394,
-      role: GlyphRole.detail,
-    ),
-    GlyphCircle(12, 12, 1.4, role: GlyphRole.detail, solid: true),
+    GlyphCircle(12, 13.4, 1.4, role: GlyphRole.detail, solid: true),
     GlyphPolyline([
-      GlyphVertex(12, 12),
-      GlyphVertex(15.28, 8.09),
+      GlyphVertex(12, 13.4),
+      GlyphVertex(15.47, 9.26),
     ], role: GlyphRole.detail),
   ]);
 
