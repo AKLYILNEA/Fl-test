@@ -155,6 +155,10 @@ class _ProxiesListViewState extends ConsumerState<ProxiesListView> {
     animateScrollTo(_controller, _getGroupOffset(groupName) + rowOffset);
   }
 
+  Widget _scrollbar(Widget child) => system.isDesktop
+      ? Scrollbar(controller: _controller, child: child)
+      : child;
+
   @override
   Widget build(BuildContext context) {
     final appLocalizations = context.appLocalizations;
@@ -211,9 +215,8 @@ class _ProxiesListViewState extends ConsumerState<ProxiesListView> {
                 onChange: _handleChange,
                 onScrollToSelected: _scrollToGroupSelected,
               );
-              return Scrollbar(
-                controller: _controller,
-                child: CustomScrollView(
+              return _scrollbar(
+                CustomScrollView(
                   key: proxiesListStoreKey,
                   controller: _controller,
                   slivers: [
