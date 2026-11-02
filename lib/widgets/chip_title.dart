@@ -77,6 +77,11 @@ class ChipTitle extends StatelessWidget {
   final String? expireText;
   final TextStyle? style;
 
+  /// Whether [chip] uses the neutral tonal surface (an official count badge)
+  /// instead of the primary-tinted status pill.
+  final bool chipTonal;
+  final String? chipTooltip;
+
   const ChipTitle({
     super.key,
     required this.title,
@@ -84,9 +89,15 @@ class ChipTitle extends StatelessWidget {
     this.expire,
     this.expireText,
     this.style,
+    this.chipTonal = false,
+    this.chipTooltip,
   });
 
   static const _gap = 8.0;
+
+  double _chipWidthOf(BuildContext context, String label) => chipTonal
+      ? TonalChip.widthOf(context, label)
+      : TitleChip.widthOf(context, label);
 
   bool _fitsExpire(BuildContext context, double maxWidth, String label) {
     final chip = this.chip;
@@ -96,7 +107,7 @@ class ChipTitle extends StatelessWidget {
         )
         .width;
     final chipsWidth =
-        (chip == null ? 0 : TonalChip.widthOf(context, chip) + _gap) +
+        (chip == null ? 0 : _chipWidthOf(context, chip) + _gap) +
         TitleChip.widthOf(context, label) +
         _gap;
     return maxWidth - chipsWidth >= min(titleWidth, maxWidth / 2);
@@ -124,6 +135,20 @@ class ChipTitle extends StatelessWidget {
       return text;
     }
     final colorScheme = context.colorScheme;
+    Widget? chipBadge;
+    if (chip != null) {
+      final pill = chipTonal
+          ? TonalChip(
+              label: chip,
+              color: context.raisedSurfaceLevel.colorOf(colorScheme),
+              foregroundColor: colorScheme.onSurfaceVariant,
+            )
+          : TitleChip(label: chip, color: colorScheme.primary);
+      final tooltip = chipTooltip;
+      chipBadge = tooltip == null
+          ? pill
+          : Tooltip(message: tooltip, child: pill);
+    }
     final expireBadge = switch ((expire, expireText)) {
       (final expire?, _) => ExpireChip(expire: expire),
       (null, final text?) => TitleChip(
@@ -136,12 +161,7 @@ class ChipTitle extends StatelessWidget {
       spacing: _gap,
       children: [
         Flexible(child: text),
-        if (chip != null)
-          TonalChip(
-            label: chip,
-            color: context.raisedSurfaceLevel.colorOf(colorScheme),
-            foregroundColor: colorScheme.onSurfaceVariant,
-          ),
+        ?chipBadge,
         if (showExpire && expireBadge != null) expireBadge,
       ],
     );

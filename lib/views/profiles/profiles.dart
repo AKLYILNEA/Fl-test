@@ -493,6 +493,9 @@ class ProfileItem extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isUpdating = ref.watch(isUpdatingProvider(profile.updatingKey));
+    final customCount = profile.type == ProfileType.custom
+        ? ref.watch(profileGroupsCountProvider(profile.id)).value
+        : null;
     final subscriptionInfo = _subscriptionInfo;
     final isSelected = profile.id == groupValue;
     return ContextMenuRegion(
@@ -512,10 +515,7 @@ class ProfileItem extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             spacing: 8,
             children: [
-              if (profile.type == ProfileType.custom)
-                _GroupsCountChip(profileId: profile.id)
-              else
-                ?_buildTrailing(context, isUpdating: isUpdating),
+              ?_buildTrailing(context, isUpdating: isUpdating),
               if (isSelected) const SelectionBadge(size: 24),
             ],
           ),
@@ -529,8 +529,14 @@ class ProfileItem extends ConsumerWidget {
                 : switch (profile.type) {
                     ProfileType.url => context.appLocalizations.infiniteTime,
                     ProfileType.file => context.appLocalizations.local,
-                    ProfileType.custom => null,
+                    ProfileType.custom => customCount?.compact,
                   },
+            chipTooltip: profile.type == ProfileType.custom && customCount != null
+                ? context.appLocalizations.proxyGroupsCount(
+                    customCount,
+                    customCount.compact,
+                  )
+                : null,
             subtitle: _subtitle(context),
           ),
         ),
@@ -544,12 +550,14 @@ class _ProfileCardTitle extends StatelessWidget {
     required this.profile,
     required this.expire,
     required this.chip,
+    required this.chipTooltip,
     required this.subtitle,
   });
 
   final Profile profile;
   final DateTime? expire;
   final String? chip;
+  final String? chipTooltip;
   final String subtitle;
 
   @override
@@ -561,6 +569,7 @@ class _ProfileCardTitle extends StatelessWidget {
         ChipTitle(
           title: profile.realLabel,
           chip: chip,
+          chipTooltip: chipTooltip,
           expire: expire,
           style: AppTextStyle.headline.of(context),
         ),
@@ -572,30 +581,6 @@ class _ProfileCardTitle extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
         ),
       ],
-    );
-  }
-}
-
-/// Square-cornered so a lone digit never reads as a second [SelectionBadge].
-class _GroupsCountChip extends ConsumerWidget {
-  const _GroupsCountChip({required this.profileId});
-
-  final int profileId;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final count = ref.watch(profileGroupsCountProvider(profileId)).value;
-    if (count == null) {
-      return const SizedBox.shrink();
-    }
-    final colorScheme = context.colorScheme;
-    return Tooltip(
-      message: context.appLocalizations.proxyGroupsCount(count, count.compact),
-      child: TonalChip(
-        label: count.compact,
-        color: colorScheme.primary.opacity15,
-        foregroundColor: colorScheme.primary,
-      ),
     );
   }
 }

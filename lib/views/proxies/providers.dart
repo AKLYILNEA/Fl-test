@@ -311,6 +311,7 @@ class _ExternalProviderItem extends StatelessWidget {
       title: ChipTitle(
         title: provider.name,
         chip: usage == null ? null : count.compact,
+        chipTonal: true,
         expire: subscriptionInfo?.expireDate,
         expireText: provider.isProxy && subscriptionInfo?.expireDate == null
             ? appLocalizations.infiniteTime
