@@ -9082,8 +9082,6 @@ class AppLocalizations {
       args: [],
     );
   }
-}
-
   String get currentProfile {
     return Intl.message(
       'Current profile',
@@ -9466,8 +9464,10 @@ class AppLocalizations {
       desc: '',
       args: [],
     );
+
   }
 
+}
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {
   const AppLocalizationDelegate();
 

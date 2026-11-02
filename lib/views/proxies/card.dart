@@ -267,7 +267,7 @@ class ProxyCard extends ConsumerWidget {
                     Expanded(child: _buildNameRow(context, ref)),
                     if (showCheckmark) const SelectionBadge(size: 20),
                     if (pinned && !showCheckmark)
-                      SelectionBadge.preferred(inUse: inUse),
+                      SelectionBadge(glyph: Glyphs.pin, tonal: !inUse),
                   ],
                 ),
                 const SizedBox(height: 8),

@@ -62,8 +62,6 @@ ValueNotifier<ConfigCounts?> get configCountsNotifier =>
 // package:yaml holds a document in many times its size.
 const _maxCountedConfigBytes = 8 << 20;
 
-ConfigCounts? _cachedCounts() => cachedConfigCounts();
-
 ConfigCounts? cachedConfigCounts() {
   if (globalState.lastConfigCounts case final counts?) {
     return counts;
