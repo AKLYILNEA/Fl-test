@@ -308,10 +308,15 @@ class _SpeedFigure extends StatelessWidget {
       unitStyle: AppTextStyle.footnote,
       leading: Padding(
         padding: const EdgeInsets.only(right: 6),
-        child: GlyphIcon(
-          direction.glyph,
-          size: 26,
-          color: direction.accentOf(context),
+        child: Transform.translate(
+          // The glyph's path stops short of its 24-unit box, so the box bottom
+          // sitting on the baseline still leaves the ink above the digits.
+          offset: const Offset(0, 4.5),
+          child: GlyphIcon(
+            direction.glyph,
+            size: 26,
+            color: direction.accentOf(context),
+          ),
         ),
       ),
     );
