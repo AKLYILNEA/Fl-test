@@ -203,8 +203,9 @@ jobs:
       - name: Patch release.md
         run: |
           version=$(echo "${{ github.ref_name }}" | sed 's/^v//')
+          build_version=$(sed -n 's/^version: *\([^+ ]*\).*/\1/p' pubspec.yaml | head -n 1)
           if [ -f ./.github/release_template.md ]; then
-            sed "s|VERSION|$version|g" ./.github/release_template.md >> release.md
+            sed "s|BUILD_VERSION|$build_version|g; s|VERSION|$version|g" ./.github/release_template.md >> release.md
           fi
 
       - name: Generate sha256

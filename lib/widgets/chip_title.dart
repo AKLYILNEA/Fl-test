@@ -96,7 +96,7 @@ class ChipTitle extends StatelessWidget {
         )
         .width;
     final chipsWidth =
-        (chip == null ? 0 : TitleChip.widthOf(context, chip) + _gap) +
+        (chip == null ? 0 : TonalChip.widthOf(context, chip) + _gap) +
         TitleChip.widthOf(context, label) +
         _gap;
     return maxWidth - chipsWidth >= min(titleWidth, maxWidth / 2);
@@ -137,7 +137,11 @@ class ChipTitle extends StatelessWidget {
       children: [
         Flexible(child: text),
         if (chip != null)
-          TitleChip(label: chip, color: colorScheme.primary),
+          TonalChip(
+            label: chip,
+            color: context.raisedSurfaceLevel.colorOf(colorScheme),
+            foregroundColor: colorScheme.onSurfaceVariant,
+          ),
         if (showExpire && expireBadge != null) expireBadge,
       ],
     );
