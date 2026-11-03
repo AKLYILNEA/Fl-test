@@ -66,7 +66,10 @@ class _Figure extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final leading = this.leading;
-    final figureStyle = DashboardText.figure(context, style);
+    final figureStyle = DashboardText.figure(
+      context,
+      style,
+    ).copyWith(fontWeight: FontWeight.w700);
     return Text.rich(
       TextSpan(
         style: figureStyle,
@@ -214,7 +217,7 @@ class SpeedCard extends ConsumerWidget {
 class NetworkSpeedCard extends ConsumerWidget {
   const NetworkSpeedCard({super.key});
 
-  static const _chartHeight = 64.0;
+  static const _chartHeight = 48.0;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -235,56 +238,81 @@ class NetworkSpeedCard extends ConsumerWidget {
           DashboardCardHeader(
             glyph: AppGlyphs.speed,
             title: appLocalizations.networkSpeed,
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              for (final direction in _phoneDirections)
-                Expanded(
-                  child: _SpeedFigure(
-                    direction: direction,
-                    speed: direction.of(latest),
-                  ),
-                ),
+            share: 0.65,
+            trailing: [
+              Text(
+                appLocalizations.trafficTotal(totals),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: label,
+              ),
             ],
           ),
-          const SizedBox(height: 10),
-          RepaintBoundary(
-            child: SizedBox(
-              width: double.infinity,
-              height: _chartHeight,
-              child: CustomPaint(
-                painter: _TrafficBarsPainter(
-                  samples: traffics.list,
-                  capacity: traffics.maxLength,
-                  downColor: TrafficDirection.download.accentOf(context),
-                  upColor: TrafficDirection.upload.accentOf(context),
-                  baselineColor: Divider.colorOf(context),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           Row(
-            spacing: 8,
+            spacing: 12,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(appLocalizations.trafficChartStart, style: label),
-              Expanded(
-                child: Text(
-                  appLocalizations.trafficTotal(totals),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: label,
+              SizedBox(
+                width: _speedSlotWidth(context),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  spacing: 2,
+                  children: [
+                    for (final direction in _phoneDirections)
+                      _SpeedFigure(
+                        direction: direction,
+                        speed: direction.of(latest),
+                      ),
+                  ],
                 ),
               ),
-              Text(appLocalizations.trafficChartNow, style: label),
+              Expanded(
+                child: RepaintBoundary(
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: _chartHeight,
+                    child: CustomPaint(
+                      painter: _TrafficBarsPainter(
+                        samples: traffics.list,
+                        capacity: traffics.maxLength,
+                        downColor: TrafficDirection.download.accentOf(context),
+                        upColor: TrafficDirection.upload.accentOf(context),
+                        baselineColor: Divider.colorOf(context),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ],
       ),
     );
   }
+}
+
+double _speedSlotWidth(BuildContext context) {
+  final figureStyle = DashboardText.figure(
+    context,
+    AppTextStyle.title3,
+  ).copyWith(fontWeight: FontWeight.w700);
+  final unitStyle = DashboardText.unit(context, AppTextStyle.caption1);
+  final painter = TextPainter(
+    text: TextSpan(
+      style: figureStyle,
+      children: [
+        const TextSpan(text: '888.8'),
+        TextSpan(text: ' MB/s', style: unitStyle),
+      ],
+    ),
+    textDirection: Directionality.of(context),
+    textScaler: MediaQuery.textScalerOf(context),
+    maxLines: 1,
+  )..layout();
+  final arrowWidth = 13.5 * _SpeedArrow._aspectRatio + 5;
+  return arrowWidth + painter.width + 2;
 }
 
 class _SpeedFigure extends StatelessWidget {
@@ -296,16 +324,22 @@ class _SpeedFigure extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final show = speed.traffic;
-    return _Figure(
-      show: show,
-      unit: _speedUnit(show),
-      style: AppTextStyle.title1,
-      unitStyle: AppTextStyle.footnote,
-      leading: Padding(
-        padding: const EdgeInsets.only(right: 6),
-        child: _SpeedArrow(
-          glyph: direction.glyph,
-          color: direction.accentOf(context),
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: AlignmentDirectional.centerStart,
+      child: _Figure(
+        show: show,
+        unit: _speedUnit(show),
+        style: AppTextStyle.title3,
+        unitStyle: AppTextStyle.caption1,
+        leading: Padding(
+          padding: const EdgeInsets.only(right: 5),
+          child: _SpeedArrow(
+            glyph: direction.glyph,
+            color: direction.accentOf(context),
+            height: 13.5,
+            opticalOffset: 0.25,
+          ),
         ),
       ),
     );

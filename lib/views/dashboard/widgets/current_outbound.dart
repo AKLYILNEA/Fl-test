@@ -341,6 +341,9 @@ class _ExitRow extends StatelessWidget {
             style: style.copyWith(color: colorScheme.error),
           )
         : SkeletonText(width: 140, style: style);
+    final ipHeight = MediaQuery.textScalerOf(
+      context,
+    ).scale((style.fontSize ?? metrics.ip.size) * (style.height ?? 1.15));
     return Row(
       spacing: 12,
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -359,7 +362,13 @@ class _ExitRow extends StatelessWidget {
             children: [
               Transform.translate(
                 offset: const Offset(0, -2.5),
-                child: ip,
+                child: SizedBox(
+                  height: ipHeight,
+                  child: Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: ip,
+                  ),
+                ),
               ),
               const SizedBox(height: 2),
               _ProxyNodeSubText(active: active),
@@ -432,6 +441,17 @@ class _ProxyNodeSubText extends ConsumerWidget {
           ? context.colorScheme.onSurfaceVariant
           : context.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
     );
+    final subHeight = MediaQuery.textScalerOf(context).scale(18.0);
+    return SizedBox(
+      height: subHeight,
+      child: Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: _buildContent(context, ref, style),
+      ),
+    );
+  }
+
+  Widget _buildContent(BuildContext context, WidgetRef ref, TextStyle style) {
     if (!active) {
       return Text('—', maxLines: 1, style: style);
     }
