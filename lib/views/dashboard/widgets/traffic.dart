@@ -14,8 +14,6 @@ import 'card.dart';
 
 const _minSpeedScale = 8 * 1024.0;
 
-const _chartBleed = 3.0;
-
 const _desktopChartLength = 30;
 
 const _phoneDirections = [TrafficDirection.download, TrafficDirection.upload];
@@ -93,8 +91,6 @@ class _Figure extends StatelessWidget {
   }
 }
 
-/// The zero line is the chart's bottom: a card lets the chart bleed past its
-/// edge so idle traffic, or none sampled yet, leaves no line.
 class _SpeedChart extends StatelessWidget {
   const _SpeedChart({required this.direction, required this.traffics});
 
@@ -103,15 +99,14 @@ class _SpeedChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LineChart(
-      values: [
-        for (final traffic in traffics.list) direction.of(traffic).toDouble(),
-      ],
-      revision: traffics.revision,
-      capacity: _desktopChartLength,
-      minScale: _minSpeedScale,
-      baselineRatio: 1,
-      color: direction.colorOf(context),
+    return CustomPaint(
+      painter: _SingleTrafficBarsPainter(
+        samples: traffics.list,
+        capacity: _desktopChartLength,
+        direction: direction,
+        color: direction.colorOf(context),
+        baselineColor: Divider.colorOf(context),
+      ),
     );
   }
 }
@@ -140,74 +135,69 @@ class SpeedCard extends ConsumerWidget {
       direction,
     );
     final speed = current.traffic;
+    final chart = RepaintBoundary(
+      child: SizedBox(
+        width: double.infinity,
+        height: compact ? 46 : 58,
+        child: _SpeedChart(direction: direction, traffics: traffics),
+      ),
+    );
     return DashboardCard(
-      padding: EdgeInsets.zero,
+      padding: padding,
       semanticLabel: direction.labelOf(context),
-      clipBehavior: Clip.antiAlias,
-      child: Stack(
-        children: [
-          Positioned(
-            left: -_chartBleed,
-            right: -_chartBleed,
-            bottom: -_chartBleed,
-            height: compact ? 62 : 88,
-            child: RepaintBoundary(
-              child: _SpeedChart(direction: direction, traffics: traffics),
-            ),
-          ),
-          Padding(
-            padding: padding,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(
-                  height: 24 * scale,
-                  child: Row(
-                    spacing: 8,
-                    children: [
-                      GlyphIcon(
-                        direction.glyph,
-                        size: 18,
-                        color: direction.glyphColorOf(context),
-                      ),
-                      Text(
-                        direction.labelOf(context),
-                        maxLines: 1,
-                        style: DashboardText.cardTitle(context),
-                      ),
-                      Expanded(
-                        child: Text(
-                          appLocalizations.trafficPeak(
-                            '${dashboardTraffic(peak)}/s',
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.end,
-                          style: DashboardText.label(context),
-                        ),
-                      ),
-                    ],
+      child: LayoutBuilder(
+        builder: (context, constraints) => Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              height: 24 * scale,
+              child: Row(
+                spacing: 8,
+                children: [
+                  GlyphIcon(
+                    direction.glyph,
+                    size: 18,
+                    color: direction.glyphColorOf(context),
                   ),
-                ),
-                SizedBox(height: compact ? 6 : 10),
-                _Figure(
-                  show: speed,
-                  unit: _speedUnit(speed),
-                  style: compact
-                      ? AppTextStyle.largeTitle
-                      : AppTextStyle.display,
-                  unitStyle: AppTextStyle.subheadline,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  appLocalizations.trafficTotal(dashboardTraffic(total)),
-                  maxLines: 1,
-                  style: DashboardText.label(context),
-                ),
-              ],
+                  Text(
+                    direction.labelOf(context),
+                    maxLines: 1,
+                    style: DashboardText.cardTitle(context),
+                  ),
+                  Expanded(
+                    child: Text(
+                      appLocalizations.trafficPeak(
+                        '${dashboardTraffic(peak)}/s',
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.end,
+                      style: DashboardText.label(context),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+            SizedBox(height: compact ? 6 : 10),
+            _Figure(
+              show: speed,
+              unit: _speedUnit(speed),
+              style: compact ? AppTextStyle.largeTitle : AppTextStyle.display,
+              unitStyle: AppTextStyle.subheadline,
+            ),
+            const SizedBox(height: 2),
+            Text(
+              appLocalizations.trafficTotal(dashboardTraffic(total)),
+              maxLines: 1,
+              style: DashboardText.label(context),
+            ),
+            SizedBox(height: compact ? 8 : 10),
+            if (constraints.hasBoundedHeight)
+              Expanded(child: chart)
+            else
+              chart,
+          ],
+        ),
       ),
     );
   }
@@ -508,6 +498,77 @@ class _TrafficBarsPainter extends CustomPainter {
         oldDelegate.capacity != capacity ||
         oldDelegate.downColor != downColor ||
         oldDelegate.upColor != upColor ||
+        oldDelegate.baselineColor != baselineColor;
+  }
+}
+
+class _SingleTrafficBarsPainter extends CustomPainter {
+  const _SingleTrafficBarsPainter({
+    required this.samples,
+    required this.capacity,
+    required this.direction,
+    required this.color,
+    required this.baselineColor,
+  });
+
+  static const _barShare = 0.60;
+  static const _baselineGap = 2.0;
+  static const _oldestOpacity = 0.4;
+  static const _minBarLength = 0.01;
+
+  final List<Traffic> samples;
+  final int capacity;
+  final TrafficDirection direction;
+  final Color color;
+  final Color baselineColor;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final baseline = size.height - 0.5;
+    canvas.drawLine(
+      Offset(0, baseline),
+      Offset(size.width, baseline),
+      Paint()..color = baselineColor,
+    );
+    final step = size.width / capacity;
+    final barWidth = step * _barShare;
+    final inset = _baselineGap + barWidth / 2;
+    final scale = math.max(
+      _minSpeedScale,
+      _peakOf(
+        samples.skip(math.max(0, samples.length - capacity)),
+        direction,
+      ).toDouble(),
+    );
+    final room = math.max(0.0, baseline - inset - barWidth / 2);
+    final bar = Paint()
+      ..strokeWidth = barWidth
+      ..strokeCap = StrokeCap.round;
+    final bottom = baseline - inset;
+    for (var age = 0; age < capacity; age++) {
+      final sample = age < samples.length
+          ? samples[samples.length - 1 - age]
+          : const Traffic();
+      final x = size.width - step * (age + 0.5);
+      final opacity = 1 - (1 - _oldestOpacity) * age / (capacity - 1);
+      final length = math.max(
+        direction.of(sample) / scale * room,
+        _minBarLength,
+      );
+      canvas.drawLine(
+        Offset(x, bottom),
+        Offset(x, bottom - length),
+        bar..color = color.withValues(alpha: opacity),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_SingleTrafficBarsPainter oldDelegate) {
+    return !identical(oldDelegate.samples, samples) ||
+        oldDelegate.capacity != capacity ||
+        oldDelegate.direction != direction ||
+        oldDelegate.color != color ||
         oldDelegate.baselineColor != baselineColor;
   }
 }
