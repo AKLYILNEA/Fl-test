@@ -295,7 +295,7 @@ double _speedSlotWidth(BuildContext context) {
     textScaler: textScaler,
     maxLines: 1,
   )..layout();
-  final arrowHeight = textScaler.scale(12.8);
+  final arrowHeight = textScaler.scale(14.5);
   final arrowWidth = arrowHeight * _SpeedArrow._aspectRatio + 5;
   return arrowWidth + painter.width + 2;
 }
@@ -323,9 +323,9 @@ class _SpeedFigure extends StatelessWidget {
     final baseline = painter.computeDistanceToActualBaseline(
       TextBaseline.alphabetic,
     );
-    final arrowHeight = textScaler.scale(12.8);
-    final digitCenterY = baseline - textScaler.scale(0.1) - arrowHeight / 2;
+    final arrowHeight = textScaler.scale(14.5);
     final boxCenterY = painter.height / 2;
+    final dy = baseline - boxCenterY - arrowHeight / 2;
     return FittedBox(
       fit: BoxFit.scaleDown,
       alignment: AlignmentDirectional.centerStart,
@@ -334,7 +334,7 @@ class _SpeedFigure extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Transform.translate(
-            offset: Offset(0, digitCenterY - boxCenterY),
+            offset: Offset(0, dy),
             child: Padding(
               padding: const EdgeInsets.only(right: 5),
               child: _SpeedArrow(
