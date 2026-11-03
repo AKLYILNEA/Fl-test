@@ -16,7 +16,7 @@ const _minSpeedScale = 8 * 1024.0;
 
 const _desktopChartLength = 30;
 
-const _phoneChartLength = 46;
+const _phoneChartLength = 40;
 
 const _phoneDirections = [TrafficDirection.download, TrafficDirection.upload];
 
@@ -295,7 +295,7 @@ double _speedSlotWidth(BuildContext context) {
     textScaler: textScaler,
     maxLines: 1,
   )..layout();
-  final arrowHeight = textScaler.scale(11.0);
+  final arrowHeight = textScaler.scale(12.8);
   final arrowWidth = arrowHeight * _SpeedArrow._aspectRatio + 5;
   return arrowWidth + painter.width + 2;
 }
@@ -323,8 +323,8 @@ class _SpeedFigure extends StatelessWidget {
     final baseline = painter.computeDistanceToActualBaseline(
       TextBaseline.alphabetic,
     );
-    final arrowHeight = textScaler.scale(11.0);
-    final digitCenterY = baseline - textScaler.scale(5.7);
+    final arrowHeight = textScaler.scale(12.8);
+    final digitCenterY = baseline - textScaler.scale(0.1) - arrowHeight / 2;
     final boxCenterY = painter.height / 2;
     return FittedBox(
       fit: BoxFit.scaleDown,
