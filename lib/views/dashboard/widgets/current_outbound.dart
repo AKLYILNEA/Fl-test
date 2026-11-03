@@ -30,6 +30,8 @@ const _decorationGrowth = 0.06;
 
 const _decorationTurn = 2 * math.pi / 12;
 
+const _decorationBottomGap = 10.0;
+
 /// The address the proxied traffic leaves by, next to the start button.
 class CurrentOutboundCard extends ConsumerStatefulWidget {
   const CurrentOutboundCard({super.key});
@@ -123,7 +125,7 @@ class _CurrentOutboundCardState extends ConsumerState<CurrentOutboundCard>
                 children: [
                   PositionedDirectional(
                     end: metrics.decorationEnd,
-                    top: metrics.decorationTop,
+                    bottom: metrics.decorationBottom,
                     child: TweenAnimationBuilder<double>(
                       tween: Tween(end: isStart ? 1 : 0),
                       duration: context.motionDuration(_morphDuration),
@@ -230,7 +232,6 @@ class _OutboundMetrics {
     required this.buttonSlot,
     required this.decorationSize,
     required this.decorationEnd,
-    required this.decorationTop,
   });
 
   factory _OutboundMetrics.of(DashboardDensity density) => switch (density) {
@@ -245,7 +246,6 @@ class _OutboundMetrics {
       buttonSlot: 120,
       decorationSize: 268,
       decorationEnd: -52,
-      decorationTop: -76,
     ),
     DashboardDensity.compact => _OutboundMetrics(
       padding: dashboardCardPadding(density),
@@ -258,7 +258,6 @@ class _OutboundMetrics {
       buttonSlot: 100,
       decorationSize: 232,
       decorationEnd: -46,
-      decorationTop: -66,
     ),
     DashboardDensity.mobile => const _OutboundMetrics(
       padding: EdgeInsetsDirectional.fromSTEB(20, 18, 16, 18),
@@ -271,7 +270,6 @@ class _OutboundMetrics {
       buttonSlot: 88,
       decorationSize: 216,
       decorationEnd: -48,
-      decorationTop: -54,
     ),
   };
 
@@ -285,7 +283,11 @@ class _OutboundMetrics {
   final double buttonSlot;
   final double decorationSize;
   final double decorationEnd;
-  final double decorationTop;
+
+  /// Places the unscaled flower box so that when expanded by [_decorationGrowth],
+  /// its lowest lobe rests [_decorationBottomGap] above the card's bottom edge.
+  double get decorationBottom =>
+      _decorationBottomGap + decorationSize * _decorationGrowth / 2;
 }
 
 class _ExitRow extends StatelessWidget {
