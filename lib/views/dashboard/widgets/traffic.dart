@@ -320,7 +320,7 @@ class _SpeedArrow extends StatelessWidget {
     required this.glyph,
     required this.color,
     this.height = 17,
-    this.opticalOffset = 0.6,
+    this.opticalOffset = 0.3,
   });
 
   final Glyph glyph;
@@ -356,7 +356,7 @@ class _SpeedArrowPainter extends CustomPainter {
   const _SpeedArrowPainter({
     required this.glyph,
     required this.color,
-    this.opticalOffset = 0.6,
+    this.opticalOffset = 0.3,
   });
 
   final Glyph glyph;
