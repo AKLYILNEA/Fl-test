@@ -16,7 +16,7 @@ const _minSpeedScale = 8 * 1024.0;
 
 const _desktopChartLength = 30;
 
-const _phoneChartLength = 36;
+const _phoneChartLength = 46;
 
 const _phoneDirections = [TrafficDirection.download, TrafficDirection.upload];
 

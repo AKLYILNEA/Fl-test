@@ -97,7 +97,7 @@ void main() {
           widget.painter.runtimeType.toString() == '_TrafficBarsPainter',
     );
     const baseline = 1;
-    const phoneChartLength = 36;
+    const phoneChartLength = 46;
     expect(
       tester.renderObject(chart),
       paintsExactlyCountTimes(#drawLine, phoneChartLength * 2 + baseline),
