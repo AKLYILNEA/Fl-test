@@ -320,11 +320,13 @@ class _SpeedArrow extends StatelessWidget {
     required this.glyph,
     required this.color,
     this.height = 17,
+    this.opticalOffset = 1.5,
   });
 
   final Glyph glyph;
   final Color color;
   final double height;
+  final double opticalOffset;
 
   static const _aspectRatio =
       _SpeedArrowPainter._inkWidth / _SpeedArrowPainter._inkHeight;
@@ -338,6 +340,7 @@ class _SpeedArrow extends StatelessWidget {
         painter: _SpeedArrowPainter(
           glyph: glyph,
           color: color,
+          opticalOffset: opticalOffset,
         ),
       ),
     );
@@ -353,10 +356,12 @@ class _SpeedArrowPainter extends CustomPainter {
   const _SpeedArrowPainter({
     required this.glyph,
     required this.color,
+    this.opticalOffset = 1.5,
   });
 
   final Glyph glyph;
   final Color color;
+  final double opticalOffset;
 
   static const _inkTop = 4.1;
   static const _inkBottom = 19.9;
@@ -370,7 +375,7 @@ class _SpeedArrowPainter extends CustomPainter {
     final scale = size.height / _inkHeight;
     canvas.save();
     final dx = (size.width - _inkWidth * scale) / 2 - _inkLeft * scale;
-    final dy = -_inkTop * scale;
+    final dy = -_inkTop * scale + opticalOffset;
     canvas.translate(dx, dy);
     canvas.scale(scale);
 
@@ -389,7 +394,9 @@ class _SpeedArrowPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_SpeedArrowPainter oldDelegate) =>
-      glyph != oldDelegate.glyph || color != oldDelegate.color;
+      glyph != oldDelegate.glyph ||
+      color != oldDelegate.color ||
+      opticalOffset != oldDelegate.opticalOffset;
 }
 
 /// Download grows up from the baseline and upload down from it, each on its own
