@@ -16,6 +16,8 @@ const _minSpeedScale = 8 * 1024.0;
 
 const _desktopChartLength = 30;
 
+const _phoneChartLength = 36;
+
 const _phoneDirections = [TrafficDirection.download, TrafficDirection.upload];
 
 num _peakOf(Iterable<Traffic> samples, TrafficDirection direction) => samples
@@ -257,7 +259,7 @@ class NetworkSpeedCard extends ConsumerWidget {
                     child: CustomPaint(
                       painter: _TrafficBarsPainter(
                         samples: traffics.list,
-                        capacity: traffics.maxLength,
+                        capacity: _phoneChartLength,
                         downColor: TrafficDirection.download.accentOf(context),
                         upColor: TrafficDirection.upload.accentOf(context),
                         baselineColor: Divider.colorOf(context),
@@ -293,8 +295,8 @@ double _speedSlotWidth(BuildContext context) {
     textScaler: textScaler,
     maxLines: 1,
   )..layout();
-  final capHeight = textScaler.scale(AppTextStyle.title3.size * 0.71);
-  final arrowWidth = capHeight * _SpeedArrow._aspectRatio + 5;
+  final arrowHeight = textScaler.scale(11.0);
+  final arrowWidth = arrowHeight * _SpeedArrow._aspectRatio + 5;
   return arrowWidth + painter.width + 2;
 }
 
@@ -321,8 +323,8 @@ class _SpeedFigure extends StatelessWidget {
     final baseline = painter.computeDistanceToActualBaseline(
       TextBaseline.alphabetic,
     );
-    final capHeight = textScaler.scale(AppTextStyle.title3.size * 0.71);
-    final digitCenterY = baseline - capHeight / 2;
+    final arrowHeight = textScaler.scale(11.0);
+    final digitCenterY = baseline - textScaler.scale(5.7);
     final boxCenterY = painter.height / 2;
     return FittedBox(
       fit: BoxFit.scaleDown,
@@ -338,7 +340,7 @@ class _SpeedFigure extends StatelessWidget {
               child: _SpeedArrow(
                 glyph: direction.glyph,
                 color: direction.accentOf(context),
-                height: capHeight,
+                height: arrowHeight,
                 opticalOffset: 0,
               ),
             ),
@@ -508,8 +510,13 @@ class _TrafficBarsPainter extends CustomPainter {
   /// still has to show its dot.
   double _barLength(double length) => math.max(length, _minBarLength);
 
-  double _scaleOf(TrafficDirection direction) =>
-      math.max(_minSpeedScale, _peakOf(samples, direction).toDouble());
+  double _scaleOf(TrafficDirection direction) => math.max(
+    _minSpeedScale,
+    _peakOf(
+      samples.skip(math.max(0, samples.length - capacity)),
+      direction,
+    ).toDouble(),
+  );
 
   @override
   bool shouldRepaint(_TrafficBarsPainter oldDelegate) {

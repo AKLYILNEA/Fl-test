@@ -97,9 +97,10 @@ void main() {
           widget.painter.runtimeType.toString() == '_TrafficBarsPainter',
     );
     const baseline = 1;
+    const phoneChartLength = 36;
     expect(
       tester.renderObject(chart),
-      paintsExactlyCountTimes(#drawLine, trafficSampleLength * 2 + baseline),
+      paintsExactlyCountTimes(#drawLine, phoneChartLength * 2 + baseline),
     );
 
     await teardownCard(tester);
