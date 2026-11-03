@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/models/models.dart';
@@ -8,6 +9,7 @@ import 'package:fl_clash/views/dashboard/layout.dart';
 import 'package:fl_clash/views/dashboard/style.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
 import 'card.dart';
@@ -295,9 +297,161 @@ double _speedSlotWidth(BuildContext context) {
     textScaler: textScaler,
     maxLines: 1,
   )..layout();
-  final arrowHeight = textScaler.scale(14.5);
-  final arrowWidth = arrowHeight * _SpeedArrow._aspectRatio + 5;
+  final ink = _digitInkOf(_speedFigureStyle(context), textScaler);
+  final arrowWidth = ink.height * _SpeedArrow._aspectRatio + 5;
   return arrowWidth + painter.width + 2;
+}
+
+TextStyle _speedFigureStyle(BuildContext context) => DashboardText.figure(
+  context,
+  AppTextStyle.title3,
+).copyWith(fontWeight: FontWeight.w700);
+
+/// How far the digits of a figure ink above and below the alphabetic
+/// baseline, measured from the font actually in use rather than assumed.
+class _DigitInk {
+  const _DigitInk(this.ascent, this.descent);
+
+  final double ascent;
+  final double descent;
+
+  double get height => ascent + descent;
+}
+
+typedef _DigitInkKey = (TextStyle, double);
+
+final _digitInks = <_DigitInkKey, _DigitInk>{};
+final _measuringDigitInks = <_DigitInkKey>{};
+
+/// Bumped whenever a measurement lands, so figures drawn on the estimate
+/// redraw on the real ink.
+final _digitInkRevision = ValueNotifier<int>(0);
+
+const _inkSampling = 4.0;
+const _inkThreshold = 128;
+
+/// Digits only: a figure's height is its digits', whatever unit follows.
+const _inkSample = '0123456789';
+
+_DigitInkKey _digitInkKeyOf(TextStyle style, TextScaler scaler) {
+  final plain = style.copyWith(color: const Color(0xFF000000));
+  return (plain, scaler.scale(plain.fontSize ?? 14));
+}
+
+/// The measured ink if it is known, otherwise a rough estimate while the
+/// glyphs are rasterized once in the background.
+_DigitInk _digitInkOf(TextStyle style, TextScaler scaler) {
+  final key = _digitInkKeyOf(style, scaler);
+  final ink = _digitInks[key];
+  if (ink != null) {
+    return ink;
+  }
+  if (_measuringDigitInks.add(key)) {
+    _measureDigitInk(key.$1, scaler).then(
+      (ink) {
+        _measuringDigitInks.remove(key);
+        if (ink != null) {
+          _digitInks[key] = ink;
+          _digitInkRevision.value++;
+        }
+      },
+      onError: (_) {
+        _measuringDigitInks.remove(key);
+      },
+    );
+  }
+  return _DigitInk(key.$2 * 0.72, 0);
+}
+
+/// Paints the digits off screen at [_inkSampling]x and reads back which rows
+/// hold ink; the result is in logical pixels relative to the baseline.
+Future<_DigitInk?> _measureDigitInk(TextStyle style, TextScaler scaler) async {
+  final painter = TextPainter(
+    text: TextSpan(text: _inkSample, style: style),
+    textDirection: TextDirection.ltr,
+    textScaler: scaler,
+    maxLines: 1,
+  )..layout();
+  final baseline = painter.computeDistanceToActualBaseline(
+    TextBaseline.alphabetic,
+  );
+  final pad = scaler.scale(style.fontSize ?? 14) * 0.5;
+  final width = ((painter.width + pad * 2) * _inkSampling).ceil();
+  final height = ((painter.height + pad * 2) * _inkSampling).ceil();
+  if (width <= 0 || height <= 0) {
+    painter.dispose();
+    return null;
+  }
+  final recorder = ui.PictureRecorder();
+  final canvas = Canvas(recorder)..scale(_inkSampling);
+  painter.paint(canvas, Offset(pad, pad));
+  painter.dispose();
+  final picture = recorder.endRecording();
+  final image = await picture.toImage(width, height);
+  picture.dispose();
+  final data = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+  image.dispose();
+  if (data == null) {
+    return null;
+  }
+  int? top;
+  int? bottom;
+  for (var y = 0; y < height; y++) {
+    final row = y * width * 4;
+    for (var x = 0; x < width; x++) {
+      if (data.getUint8(row + x * 4 + 3) >= _inkThreshold) {
+        top ??= y;
+        bottom = y;
+        break;
+      }
+    }
+  }
+  if (top == null || bottom == null) {
+    return null;
+  }
+  final inkTop = top / _inkSampling - pad;
+  final inkBottom = (bottom + 1) / _inkSampling - pad;
+  return _DigitInk(baseline - inkTop, inkBottom - baseline);
+}
+
+/// Reports [baseline] as its child's alphabetic baseline, so a box with no
+/// text of its own can sit on a [Row]'s shared baseline.
+class _BaselineAt extends SingleChildRenderObjectWidget {
+  const _BaselineAt({required this.baseline, super.child});
+
+  final double baseline;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderBaselineAt(baseline);
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderBaselineAt renderObject) {
+    renderObject.baseline = baseline;
+  }
+}
+
+class _RenderBaselineAt extends RenderProxyBox {
+  _RenderBaselineAt(this._baseline);
+
+  double _baseline;
+
+  set baseline(double value) {
+    if (value == _baseline) {
+      return;
+    }
+    _baseline = value;
+    markNeedsLayout();
+  }
+
+  @override
+  double? computeDistanceToActualBaseline(TextBaseline baseline) => _baseline;
+
+  @override
+  double? computeDryBaseline(
+    BoxConstraints constraints,
+    TextBaseline baseline,
+  ) => _baseline;
 }
 
 class _SpeedFigure extends StatelessWidget {
@@ -309,50 +463,42 @@ class _SpeedFigure extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final show = speed.traffic;
-    final figureStyle = DashboardText.figure(
-      context,
-      AppTextStyle.title3,
-    ).copyWith(fontWeight: FontWeight.w700);
+    final figureStyle = _speedFigureStyle(context);
     final textScaler = MediaQuery.textScalerOf(context);
-    final painter = TextPainter(
-      text: TextSpan(text: '0', style: figureStyle),
-      textDirection: Directionality.of(context),
-      textScaler: textScaler,
-      maxLines: 1,
-    )..layout();
-    final baseline = painter.computeDistanceToActualBaseline(
-      TextBaseline.alphabetic,
-    );
-    final arrowHeight = textScaler.scale(14.5);
-    final boxCenterY = painter.height / 2;
-    final dy = baseline - boxCenterY - arrowHeight / 2;
-    return FittedBox(
-      fit: BoxFit.scaleDown,
-      alignment: AlignmentDirectional.centerStart,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Transform.translate(
-            offset: Offset(0, dy),
-            child: Padding(
-              padding: const EdgeInsets.only(right: 5),
-              child: _SpeedArrow(
-                glyph: direction.glyph,
-                color: direction.accentOf(context),
-                height: arrowHeight,
-                opticalOffset: 0,
+    return ValueListenableBuilder<int>(
+      valueListenable: _digitInkRevision,
+      builder: (context, _, _) {
+        final ink = _digitInkOf(figureStyle, textScaler);
+        // The arrow spans exactly the digits' ink: its top on their top, its
+        // bottom on their bottom, both found from the same baseline.
+        return FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: AlignmentDirectional.centerStart,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              _BaselineAt(
+                baseline: ink.ascent,
+                child: _SpeedArrow(
+                  glyph: direction.glyph,
+                  color: direction.accentOf(context),
+                  height: ink.height,
+                  opticalOffset: 0,
+                ),
               ),
-            ),
+              const SizedBox(width: 5),
+              _Figure(
+                show: show,
+                unit: _speedUnit(show),
+                style: AppTextStyle.title3,
+                unitStyle: AppTextStyle.caption1,
+              ),
+            ],
           ),
-          _Figure(
-            show: show,
-            unit: _speedUnit(show),
-            style: AppTextStyle.title3,
-            unitStyle: AppTextStyle.caption1,
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
