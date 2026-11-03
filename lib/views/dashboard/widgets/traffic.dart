@@ -33,13 +33,9 @@ enum TrafficDirection {
 
   String get arrow => this == upload ? '↑' : '↓';
 
-  Color colorOf(BuildContext context) => this == upload
-      ? DashboardColors.of(context).series2
-      : context.colorScheme.primary;
+  Color colorOf(BuildContext context) => accentOf(context);
 
-  Color glyphColorOf(BuildContext context) => this == upload
-      ? context.colorScheme.onSurfaceVariant
-      : context.colorScheme.primary;
+  Color glyphColorOf(BuildContext context) => accentOf(context);
 
   Color accentOf(BuildContext context) => this == upload
       ? DashboardColors.of(context).complement
@@ -70,8 +66,10 @@ class _Figure extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final leading = this.leading;
+    final figureStyle = DashboardText.figure(context, style);
     return Text.rich(
       TextSpan(
+        style: figureStyle,
         children: [
           if (leading != null)
             WidgetSpan(
@@ -79,10 +77,7 @@ class _Figure extends StatelessWidget {
               baseline: TextBaseline.alphabetic,
               child: leading,
             ),
-          TextSpan(
-            text: show.value,
-            style: DashboardText.figure(context, style),
-          ),
+          TextSpan(text: show.value),
           TextSpan(
             text: ' $unit',
             style: DashboardText.unit(context, unitStyle),
@@ -308,19 +303,93 @@ class _SpeedFigure extends StatelessWidget {
       unitStyle: AppTextStyle.footnote,
       leading: Padding(
         padding: const EdgeInsets.only(right: 6),
-        child: Transform.translate(
-          // The glyph's path stops short of its 24-unit box, so the box bottom
-          // sitting on the baseline still leaves the ink above the digits.
-          offset: const Offset(0, 4.5),
-          child: GlyphIcon(
-            direction.glyph,
-            size: 26,
-            color: direction.accentOf(context),
-          ),
+        child: _SpeedArrow(
+          glyph: direction.glyph,
+          color: direction.accentOf(context),
         ),
       ),
     );
   }
+}
+
+/// A compact arrow whose bottom ink aligns flush with the widget's bottom,
+/// so [PlaceholderAlignment.baseline] rests the arrow directly on the alphabetic
+/// baseline of the adjacent figures without arbitrary pixel translation.
+class _SpeedArrow extends StatelessWidget {
+  const _SpeedArrow({
+    required this.glyph,
+    required this.color,
+    this.height = 17,
+  });
+
+  final Glyph glyph;
+  final Color color;
+  final double height;
+
+  static const _aspectRatio =
+      _SpeedArrowPainter._inkWidth / _SpeedArrowPainter._inkHeight;
+
+  @override
+  Widget build(BuildContext context) {
+    final icon = SizedBox(
+      width: height * _aspectRatio,
+      height: height,
+      child: CustomPaint(
+        painter: _SpeedArrowPainter(
+          glyph: glyph,
+          color: color,
+        ),
+      ),
+    );
+    if (glyph.matchTextDirection &&
+        Directionality.of(context) == TextDirection.rtl) {
+      return Transform.flip(flipX: true, child: icon);
+    }
+    return icon;
+  }
+}
+
+class _SpeedArrowPainter extends CustomPainter {
+  const _SpeedArrowPainter({
+    required this.glyph,
+    required this.color,
+  });
+
+  final Glyph glyph;
+  final Color color;
+
+  static const _inkTop = 4.1;
+  static const _inkBottom = 19.9;
+  static const _inkHeight = _inkBottom - _inkTop;
+  static const _inkLeft = 4.6;
+  static const _inkRight = 19.4;
+  static const _inkWidth = _inkRight - _inkLeft;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final scale = size.height / _inkHeight;
+    canvas.save();
+    final dx = (size.width - _inkWidth * scale) / 2 - _inkLeft * scale;
+    final dy = -_inkTop * scale;
+    canvas.translate(dx, dy);
+    canvas.scale(scale);
+
+    final line = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = Glyph.strokeWidth
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    for (final shape in glyph.shapes) {
+      canvas.drawPath(shape.path, line);
+    }
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(_SpeedArrowPainter oldDelegate) =>
+      glyph != oldDelegate.glyph || color != oldDelegate.color;
 }
 
 /// Download grows up from the baseline and upload down from it, each on its own
