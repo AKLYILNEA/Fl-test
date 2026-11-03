@@ -52,18 +52,15 @@ class _Figure extends StatelessWidget {
     required this.unit,
     required this.style,
     required this.unitStyle,
-    this.leading,
   });
 
   final TrafficShow show;
   final String unit;
   final AppTextStyle style;
   final AppTextStyle unitStyle;
-  final Widget? leading;
 
   @override
   Widget build(BuildContext context) {
-    final leading = this.leading;
     final figureStyle = DashboardText.figure(
       context,
       style,
@@ -72,12 +69,6 @@ class _Figure extends StatelessWidget {
       TextSpan(
         style: figureStyle,
         children: [
-          if (leading != null)
-            WidgetSpan(
-              alignment: PlaceholderAlignment.baseline,
-              baseline: TextBaseline.alphabetic,
-              child: leading,
-            ),
           TextSpan(text: show.value),
           TextSpan(
             text: ' $unit',
@@ -289,6 +280,7 @@ double _speedSlotWidth(BuildContext context) {
     AppTextStyle.title3,
   ).copyWith(fontWeight: FontWeight.w700);
   final unitStyle = DashboardText.unit(context, AppTextStyle.caption1);
+  final textScaler = MediaQuery.textScalerOf(context);
   final painter = TextPainter(
     text: TextSpan(
       style: figureStyle,
@@ -298,10 +290,11 @@ double _speedSlotWidth(BuildContext context) {
       ],
     ),
     textDirection: Directionality.of(context),
-    textScaler: MediaQuery.textScalerOf(context),
+    textScaler: textScaler,
     maxLines: 1,
   )..layout();
-  final arrowWidth = 13.5 * _SpeedArrow._aspectRatio + 5;
+  final capHeight = textScaler.scale(AppTextStyle.title3.size * 0.71);
+  final arrowWidth = capHeight * _SpeedArrow._aspectRatio + 5;
   return arrowWidth + painter.width + 2;
 }
 
@@ -314,23 +307,49 @@ class _SpeedFigure extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final show = speed.traffic;
+    final figureStyle = DashboardText.figure(
+      context,
+      AppTextStyle.title3,
+    ).copyWith(fontWeight: FontWeight.w700);
+    final textScaler = MediaQuery.textScalerOf(context);
+    final painter = TextPainter(
+      text: TextSpan(text: '0', style: figureStyle),
+      textDirection: Directionality.of(context),
+      textScaler: textScaler,
+      maxLines: 1,
+    )..layout();
+    final baseline = painter.computeDistanceToActualBaseline(
+      TextBaseline.alphabetic,
+    );
+    final capHeight = textScaler.scale(AppTextStyle.title3.size * 0.71);
+    final digitCenterY = baseline - capHeight / 2;
+    final boxCenterY = painter.height / 2;
     return FittedBox(
       fit: BoxFit.scaleDown,
       alignment: AlignmentDirectional.centerStart,
-      child: _Figure(
-        show: show,
-        unit: _speedUnit(show),
-        style: AppTextStyle.title3,
-        unitStyle: AppTextStyle.caption1,
-        leading: Padding(
-          padding: const EdgeInsets.only(right: 5),
-          child: _SpeedArrow(
-            glyph: direction.glyph,
-            color: direction.accentOf(context),
-            height: 13.5,
-            opticalOffset: 0.25,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Transform.translate(
+            offset: Offset(0, digitCenterY - boxCenterY),
+            child: Padding(
+              padding: const EdgeInsets.only(right: 5),
+              child: _SpeedArrow(
+                glyph: direction.glyph,
+                color: direction.accentOf(context),
+                height: capHeight,
+                opticalOffset: 0,
+              ),
+            ),
           ),
-        ),
+          _Figure(
+            show: show,
+            unit: _speedUnit(show),
+            style: AppTextStyle.title3,
+            unitStyle: AppTextStyle.caption1,
+          ),
+        ],
       ),
     );
   }
