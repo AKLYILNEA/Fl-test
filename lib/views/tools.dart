@@ -84,16 +84,20 @@ class _ToolViewState extends ConsumerState<ToolsView> {
     return Scaffold(
       title: context.appLocalizations.tools,
       body: Builder(
-        builder: (context) => PrismListView(
+        builder: (context) => CustomScrollView(
           key: toolsStoreKey,
-          itemCount: items.length,
-          itemBuilder: (_, index) => items[index],
-          padding: EdgeInsets.only(
-            left: 16,
-            right: 16,
-            top: context.sectionsTopPadding,
-            bottom: 20 + context.bottomInset,
-          ),
+          slivers: [
+            SliverPadding(
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: context.sectionsTopPadding,
+                bottom: 20 + context.bottomInset,
+              ),
+              // These few sections need real extents before restoring an offset.
+              sliver: SliverToBoxAdapter(child: Column(children: items)),
+            ),
+          ],
         ),
       ),
     );
