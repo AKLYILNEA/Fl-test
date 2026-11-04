@@ -112,6 +112,7 @@ class _RecordingCoreHandler extends CoreHandlerInterface {
       CoreMethod.ruleSetDump => '/home/responses/2.yaml',
       CoreMethod.configDecrypt => 'mode: rule',
       CoreMethod.connectionCount => 3,
+      CoreMethod.ipCountry => 'US',
       CoreMethod.proxyValidate || CoreMethod.filterValidate => [
         {'index': 1, 'message': 'missing closing )'},
       ],
@@ -232,6 +233,8 @@ void main() {
     final handler = _RecordingCoreHandler();
 
     await handler.init(const InitParams(homeDir: '/tmp/flclash', version: 35));
+    expect(await handler.ipCountry('8.8.8.8'), 'US');
+    expect(handler.calls[CoreMethod.ipCountry], {'ip': '8.8.8.8'});
     await handler.setupConfig(
       const SetupParams(
         selectedMap: {'GLOBAL': 'DIRECT'},

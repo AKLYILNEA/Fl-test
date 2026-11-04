@@ -9,10 +9,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'labels.dart';
 
 class IpQualityText extends ConsumerWidget {
-  const IpQualityText({super.key, required this.ip, this.style, this.leading});
+  const IpQualityText({
+    super.key,
+    required this.ip,
+    this.style,
+    this.leading,
+    this.respectHideIp = true,
+  });
 
   final String ip;
   final TextStyle? style;
+  final bool respectHideIp;
 
   /// An emoji that leads the address in the same paragraph, so the two share one
   /// baseline instead of the emoji carrying a line box of its own.
@@ -23,9 +30,9 @@ class IpQualityText extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final quality = ref.watch(ipQualityProvider(ip)).value;
-    final hideIp = ref.watch(
-      appSettingProvider.select((state) => state.hideIp),
-    );
+    final hideIp =
+        respectHideIp &&
+        ref.watch(appSettingProvider.select((state) => state.hideIp));
     final shownIp = hideIp ? _mask : ip;
     final color = quality?.level.color(context);
     var style = this.style;

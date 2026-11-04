@@ -3146,6 +3146,16 @@ class AppLocalizations {
     return Intl.message('None', name: 'none', desc: '', args: []);
   }
 
+  /// `Configuration`
+  String get config {
+    return Intl.message('Configuration', name: 'config', desc: '', args: []);
+  }
+
+  /// `Advanced`
+  String get advanced {
+    return Intl.message('Advanced', name: 'advanced', desc: '', args: []);
+  }
+
   /// `Advanced configuration`
   String get advancedConfig {
     return Intl.message(
@@ -5879,6 +5889,11 @@ class AppLocalizations {
     return Intl.message('Outbound IP', name: 'outboundIp', desc: '', args: []);
   }
 
+  /// `IP Details`
+  String get ipDetails {
+    return Intl.message('IP Details', name: 'ipDetails', desc: '', args: []);
+  }
+
   /// `IP address`
   String get ipAddress {
     return Intl.message('IP address', name: 'ipAddress', desc: '', args: []);
@@ -7673,8 +7688,7 @@ class AppLocalizations {
   String customImportDroppedSubRules(num count, Object label) {
     return Intl.plural(
       count,
-      one:
-          '1 SUB-RULE rule was dropped, since custom profiles do not support sub-rules',
+      one: '1 SUB-RULE rule was dropped, since custom profiles do not support sub-rules',
       other:
           '$label SUB-RULE rules were dropped, since custom profiles do not support sub-rules',
       name: 'customImportDroppedSubRules',
@@ -9082,16 +9096,8 @@ class AppLocalizations {
       args: [],
     );
   }
-  String get currentProfile {
-    return Intl.message(
-      'Current profile',
-      name: 'currentProfile',
-      desc: '',
-      args: [],
-    );
-  }
 
-
+  /// `Silent launch starts without showing the window.`
   String get silentLaunchDesc {
     return Intl.message(
       'Silent launch starts without showing the window.',
@@ -9101,6 +9107,7 @@ class AppLocalizations {
     );
   }
 
+  /// `Access control picks which apps use the proxy.`
   String get accessControlDesc {
     return Intl.message(
       'Access control picks which apps use the proxy.',
@@ -9110,55 +9117,12 @@ class AppLocalizations {
     );
   }
 
-  String get addressHelp {
-    return Intl.message(
-      'WebDAV server address',
-      name: 'addressHelp',
-      desc: '',
-      args: [],
-    );
-  }
-
-  String get authenticationDesc {
-    return Intl.message(
-      'Authentication asks for a username and password on the local proxy port.',
-      name: 'authenticationDesc',
-      desc: '',
-      args: [],
-    );
-  }
-
-  String get autoCloseConnectionsDesc {
-    return Intl.message(
-      'Auto close connections drops open connections when you switch proxies.',
-      name: 'autoCloseConnectionsDesc',
-      desc: '',
-      args: [],
-    );
-  }
-
-  String get sidebarBlurDesc {
-    return Intl.message(
-      'Background blur lets the desktop behind the window show through the sidebar.',
-      name: 'sidebarBlurDesc',
-      desc: '',
-      args: [],
-    );
-  }
-
-  String get vpnEnableDesc {
-    return Intl.message(
-      'VPN routes all system traffic through VpnService automatically.',
-      name: 'vpnEnableDesc',
-      desc: '',
-      args: [],
-    );
-  }
-
+  /// `Keep screen on`
   String get wakelock {
     return Intl.message('Keep screen on', name: 'wakelock', desc: '', args: []);
   }
 
+  /// `Secondary development build`
   String get secondaryDevelopmentBuild {
     return Intl.message(
       'Secondary development build',
@@ -9168,6 +9132,57 @@ class AppLocalizations {
     );
   }
 
+  /// `WebDAV server address`
+  String get addressHelp {
+    return Intl.message(
+      'WebDAV server address',
+      name: 'addressHelp',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Authentication asks for a username and password on the local proxy port.`
+  String get authenticationDesc {
+    return Intl.message(
+      'Authentication asks for a username and password on the local proxy port.',
+      name: 'authenticationDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Auto close connections drops open connections when you switch proxies.`
+  String get autoCloseConnectionsDesc {
+    return Intl.message(
+      'Auto close connections drops open connections when you switch proxies.',
+      name: 'autoCloseConnectionsDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Background blur lets the desktop behind the window show through the sidebar.`
+  String get sidebarBlurDesc {
+    return Intl.message(
+      'Background blur lets the desktop behind the window show through the sidebar.',
+      name: 'sidebarBlurDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `VPN routes all system traffic through VpnService automatically.`
+  String get vpnEnableDesc {
+    return Intl.message(
+      'VPN routes all system traffic through VpnService automatically.',
+      name: 'vpnEnableDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `NTP takes the time from an NTP server instead of the system clock.`
   String get ntpStatusDesc {
     return Intl.message(
       'NTP takes the time from an NTP server instead of the system clock.',
@@ -9177,6 +9192,7 @@ class AppLocalizations {
     );
   }
 
+  /// `Dialer proxy is the outbound used to reach the NTP server.`
   String get dialerProxyDesc {
     return Intl.message(
       'Dialer proxy is the outbound used to reach the NTP server.',
@@ -9186,6 +9202,7 @@ class AppLocalizations {
     );
   }
 
+  /// `The sniffer reads the domain from TLS, HTTP and QUIC traffic so rules can match it.`
   String get snifferStatusDesc {
     return Intl.message(
       'The sniffer reads the domain from TLS, HTTP and QUIC traffic so rules can match it.',
@@ -9195,6 +9212,7 @@ class AppLocalizations {
     );
   }
 
+  /// `Override destination connects to the sniffed domain instead of the original address.`
   String get overrideDestinationDesc {
     return Intl.message(
       'Override destination connects to the sniffed domain instead of the original address.',
@@ -9204,6 +9222,7 @@ class AppLocalizations {
     );
   }
 
+  /// `Parse pure IP sniffs connections that carry only an IP address.`
   String get parsePureIpDesc {
     return Intl.message(
       'Parse pure IP sniffs connections that carry only an IP address.',
@@ -9213,6 +9232,7 @@ class AppLocalizations {
     );
   }
 
+  /// `A sniffed domain on the Skip domains list is not used.`
   String get skipDomainDesc {
     return Intl.message(
       'A sniffed domain on the Skip domains list is not used.',
@@ -9222,6 +9242,7 @@ class AppLocalizations {
     );
   }
 
+  /// `In Fake-IP filter mode, blacklist excludes matches, whitelist fakes only matches, and rule matches as rules.`
   String get fakeipFilterModeDesc {
     return Intl.message(
       'In Fake-IP filter mode, blacklist excludes matches, whitelist fakes only matches, and rule matches as rules.',
@@ -9231,6 +9252,7 @@ class AppLocalizations {
     );
   }
 
+  /// `With IPv6 on, the VPN allows IPv6 inbound.`
   String get ipv6InboundDesc {
     return Intl.message(
       'With IPv6 on, the VPN allows IPv6 inbound.',
@@ -9240,6 +9262,7 @@ class AppLocalizations {
     );
   }
 
+  /// `Interface name is the network interface outbound connections use.`
   String get interfaceNameDesc {
     return Intl.message(
       'Interface name is the network interface outbound connections use.',
@@ -9249,6 +9272,7 @@ class AppLocalizations {
     );
   }
 
+  /// `Advanced configuration holds network, DNS, added rules, and scripts.`
   String get advancedConfigDesc {
     return Intl.message(
       'Advanced configuration holds network, DNS, added rules, and scripts.',
@@ -9258,14 +9282,17 @@ class AppLocalizations {
     );
   }
 
+  /// `Single add`
   String get singleAdd {
     return Intl.message('Single add', name: 'singleAdd', desc: '', args: []);
   }
 
+  /// `Batch add`
   String get batchAdd {
     return Intl.message('Batch add', name: 'batchAdd', desc: '', args: []);
   }
 
+  /// `One item per line, or separated by commas`
   String get batchListInputTip {
     return Intl.message(
       'One item per line, or separated by commas',
@@ -9275,6 +9302,7 @@ class AppLocalizations {
     );
   }
 
+  /// `One entry per line: key, a space, then value`
   String get batchMapInputTip {
     return Intl.message(
       'One entry per line: key, a space, then value',
@@ -9284,6 +9312,7 @@ class AppLocalizations {
     );
   }
 
+  /// `Custom profile resources`
   String get customProfileResources {
     return Intl.message(
       'Custom profile resources',
@@ -9293,6 +9322,7 @@ class AppLocalizations {
     );
   }
 
+  /// `Custom profile resources are the proxies, rule providers, filters, and icon sets you add yourself for custom profiles to use.`
   String get customProfileResourcesDesc {
     return Intl.message(
       'Custom profile resources are the proxies, rule providers, filters, and icon sets you add yourself for custom profiles to use.',
@@ -9302,6 +9332,7 @@ class AppLocalizations {
     );
   }
 
+  /// `Ignore battery optimization keeps the app running in the background.`
   String get batteryOptimizationDesc {
     return Intl.message(
       'Ignore battery optimization keeps the app running in the background.',
@@ -9311,6 +9342,7 @@ class AppLocalizations {
     );
   }
 
+  /// `On demand pauses the proxy on excluded Wi-Fi.`
   String get onDemandDesc {
     return Intl.message(
       'On demand pauses the proxy on excluded Wi-Fi.',
@@ -9320,6 +9352,7 @@ class AppLocalizations {
     );
   }
 
+  /// `Block connection`
   String get blockConnection {
     return Intl.message(
       'Block connection',
@@ -9329,15 +9362,12 @@ class AppLocalizations {
     );
   }
 
+  /// `Proxy Node`
   String get proxyNode {
-    return Intl.message(
-      'Proxy Node',
-      name: 'proxyNode',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Proxy Node', name: 'proxyNode', desc: '', args: []);
   }
 
+  /// `With Bypass private addresses on, LAN, loopback and multicast addresses skip TUN.`
   String get bypassPrivateRouteDesc {
     return Intl.message(
       'With Bypass private addresses on, LAN, loopback and multicast addresses skip TUN.',
@@ -9347,6 +9377,7 @@ class AppLocalizations {
     );
   }
 
+  /// `Traffic arriving on excluded interfaces, such as docker0, skips TUN.`
   String get excludeInterfaceDesc {
     return Intl.message(
       'Traffic arriving on excluded interfaces, such as docker0, skips TUN.',
@@ -9356,6 +9387,7 @@ class AppLocalizations {
     );
   }
 
+  /// `Only traffic from processes of included user IDs goes through TUN.`
   String get includeUidDesc {
     return Intl.message(
       'Only traffic from processes of included user IDs goes through TUN.',
@@ -9365,6 +9397,7 @@ class AppLocalizations {
     );
   }
 
+  /// `Traffic from processes of excluded user IDs skips TUN.`
   String get excludeUidDesc {
     return Intl.message(
       'Traffic from processes of excluded user IDs skips TUN.',
@@ -9374,6 +9407,7 @@ class AppLocalizations {
     );
   }
 
+  /// `Traffic from excluded source ports skips TUN.`
   String get excludeSrcPortDesc {
     return Intl.message(
       'Traffic from excluded source ports skips TUN.',
@@ -9383,6 +9417,7 @@ class AppLocalizations {
     );
   }
 
+  /// `Traffic to excluded destination ports skips TUN.`
   String get excludeDstPortDesc {
     return Intl.message(
       'Traffic to excluded destination ports skips TUN.',
@@ -9392,74 +9427,42 @@ class AppLocalizations {
     );
   }
 
+  /// `Emoji font`
   String get emojiStyle {
-    return Intl.message(
-      'Emoji font',
-      name: 'emojiStyle',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Emoji font', name: 'emojiStyle', desc: '', args: []);
   }
 
+  /// `Custom font`
   String get customFont {
-    return Intl.message(
-      'Custom font',
-      name: 'customFont',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Custom font', name: 'customFont', desc: '', args: []);
   }
 
+  /// `Proxies`
   String get nodeCount {
-    return Intl.message(
-      'Proxies',
-      name: 'nodeCount',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Proxies', name: 'nodeCount', desc: '', args: []);
   }
 
+  /// `Rules`
   String get ruleCount {
-    return Intl.message(
-      'Rules',
-      name: 'ruleCount',
-      desc: '',
-      args: [],
-    );
+    return Intl.message('Rules', name: 'ruleCount', desc: '', args: []);
   }
 
+  /// `Providers`
   String get providerCount {
+    return Intl.message('Providers', name: 'providerCount', desc: '', args: []);
+  }
+
+  /// `Current profile`
+  String get currentProfile {
     return Intl.message(
-      'Providers',
-      name: 'providerCount',
+      'Current profile',
+      name: 'currentProfile',
       desc: '',
       args: [],
     );
   }
-
-
-  /// `Configuration`
-  String get config {
-    return Intl.message(
-      'Configuration',
-      name: 'config',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Advanced`
-  String get advanced {
-    return Intl.message(
-      'Advanced',
-      name: 'advanced',
-      desc: '',
-      args: [],
-    );
-
-  }
-
 }
+
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {
   const AppLocalizationDelegate();
 

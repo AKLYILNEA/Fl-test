@@ -357,6 +357,14 @@ abstract class CoreHandlerInterface {
     );
   }
 
+  Future<String> ipCountry(String ip) {
+    return _query(
+      CoreMethod.ipCountry,
+      (data) => data as String,
+      arguments: {'ip': ip},
+    );
+  }
+
   Future<List<ServiceCheckItem>> serviceCheck(ServiceCheckParams params) {
     return _query(
       CoreMethod.probeServices,

@@ -1,0 +1,172 @@
+import 'package:fl_clash/enum/enum.dart';
+import 'package:fl_clash/features/connection/tracker_info_item.dart';
+import 'package:fl_clash/features/ip_quality/ip_address_row.dart';
+import 'package:fl_clash/features/ip_quality/ip_quality_sheet.dart';
+import 'package:fl_clash/models/models.dart';
+import 'package:fl_clash/providers/config.dart';
+import 'package:fl_clash/providers/ip_country.dart';
+import 'package:fl_clash/providers/ip_quality.dart';
+import 'package:fl_clash/ui/ui.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+import '../helpers/test_app.dart';
+
+class _HiddenSettings extends AppSetting {
+  @override
+  AppSettingProps build() => const AppSettingProps(hideIp: true);
+}
+
+void main() {
+  testWidgets('a public endpoint keeps its flag and port, opens details in '
+      'the same sheet and ignores outbound masking', (tester) async {
+    final queried = <String>[];
+    await tester.pumpWidget(
+      TestApp(
+        wrapInProviderScope: true,
+        overrides: [
+          appSettingProvider.overrideWith(_HiddenSettings.new),
+          ipCountryProvider.overrideWith((ref, ip) async => 'US'),
+          ipQualityProvider.overrideWith((ref, ip) async {
+            queried.add(ip);
+            return IpQuality(
+              ip: ip,
+              source: IpQualitySource.ipQuery,
+              type: IpType.hosting,
+            );
+          }),
+        ],
+        child: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showTrackerInfoDetail(
+              context,
+              TrackerInfo(
+                id: 'test',
+                start: DateTime.utc(2026),
+                chains: const [],
+                rule: '',
+                rulePayload: '',
+                metadata: const Metadata(
+                  destinationIP: '74.125.204.188',
+                  destinationPort: '5228',
+                ),
+              ),
+              'Connection details',
+            ),
+            child: const Text('Open'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+    expect(find.text('🇺🇸 74.125.204.188:5228'), findsOneWidget);
+    expect(queried, isEmpty);
+    await tester.ensureVisible(find.text('🇺🇸 74.125.204.188:5228'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('🇺🇸 74.125.204.188:5228'));
+    await tester.pumpAndSettle();
+    expect(find.text('IP Details'), findsOneWidget);
+    expect(find.text('Hide IP'), findsNothing);
+    expect(find.text('Other'), findsNothing);
+    expect(find.text('74.125.204.188'), findsOneWidget);
+    expect(queried, ['74.125.204.188']);
+    final context = tester.element(find.text('IP Details'));
+    expect(ModalRoute.of(context), isA<PagedSheetRoute>());
+    Navigator.of(context).pop();
+    await tester.pumpAndSettle();
+    expect(find.text('Connection details'), findsOneWidget);
+    expect(find.text('🇺🇸 74.125.204.188:5228'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('an unlabeled DNS answer opens IPv6 details, while a fake '
+      'address retains copying', (tester) async {
+    String? copied;
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'Clipboard.setData') {
+          copied = (call.arguments as Map)['text'] as String;
+        }
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
+    await tester.pumpWidget(
+      TestApp(
+        wrapInProviderScope: true,
+        overrides: [
+          ipCountryProvider.overrideWith((ref, ip) async => 'AU'),
+          ipQualityProvider.overrideWith(
+            (ref, ip) async => IpQuality(
+              ip: ip,
+              source: IpQualitySource.ipQuery,
+              type: IpType.hosting,
+            ),
+          ),
+        ],
+        child: const Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IpAddressRow(address: '2606:4700:4700::1111'),
+            IpAddressRow(address: '198.18.0.1'),
+          ],
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('198.18.0.1'));
+    await tester.pumpAndSettle();
+    expect(copied, '198.18.0.1');
+    await tester.tap(find.text('🇦🇺 2606:4700:4700::1111'));
+    await tester.pumpAndSettle();
+    expect(find.text('IP Details'), findsOneWidget);
+    expect(find.text('Hide IP'), findsNothing);
+    expect(find.text('2606:4700:4700::1111'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('the outbound entry keeps its title and global hide setting', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      TestApp(
+        wrapInProviderScope: true,
+        overrides: [
+          appSettingProvider.overrideWith(_HiddenSettings.new),
+          ipQualityProvider.overrideWith(
+            (ref, ip) async => IpQuality(
+              ip: ip,
+              source: IpQualitySource.ipQuery,
+              type: IpType.hosting,
+            ),
+          ),
+        ],
+        child: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => showIpQualitySheet(context, ip: '1.1.1.1'),
+            child: const Text('Open'),
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+    expect(find.text('Outbound IP'), findsOneWidget);
+    expect(find.text('*****'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Hide IP'),
+      150,
+      scrollable: find.byType(Scrollable).last,
+    );
+    expect(find.text('Hide IP'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+}

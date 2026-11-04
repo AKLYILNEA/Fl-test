@@ -71,6 +71,7 @@ const (
 
 	probeOutboundIPMethod CoreMethod = "probe.outboundIp"
 	probeServicesMethod   CoreMethod = "probe.services"
+	ipCountryMethod       CoreMethod = "ip.country"
 
 	mitmCertificateMethod         CoreMethod = "mitm.certificate"
 	mitmGenerateCertificateMethod CoreMethod = "mitm.generateCertificate"

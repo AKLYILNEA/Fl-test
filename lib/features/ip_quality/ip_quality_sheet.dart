@@ -11,22 +11,24 @@ import 'package:flutter/widgets.dart';
 import 'ip_quality_text.dart';
 import 'labels.dart';
 
-Future<void> showIpQualitySheet(BuildContext context, {required String ip}) {
+Future<void> showIpQualitySheet(
+  BuildContext context, {
+  required String ip,
+  bool outbound = true,
+}) {
+  Widget page(BuildContext context) =>
+      _IpQualitySheet(ip: ip, outbound: outbound);
   if (isSheetPage(context)) {
-    return Navigator.of(
-      context,
-    ).push(PagedSheetRoute(builder: (_) => _IpQualitySheet(ip: ip)));
+    return Navigator.of(context).push(PagedSheetRoute(builder: page));
   }
-  return showSheet<void>(
-    context: context,
-    builder: (_) => _IpQualitySheet(ip: ip),
-  );
+  return showSheet<void>(context: context, builder: page);
 }
 
 class _IpQualitySheet extends ConsumerWidget {
-  const _IpQualitySheet({required this.ip});
+  const _IpQualitySheet({required this.ip, required this.outbound});
 
   final String ip;
+  final bool outbound;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -35,7 +37,7 @@ class _IpQualitySheet extends ConsumerWidget {
       ipQualityProvider(ip).select((result) => result.isLoading),
     );
     return Scaffold(
-      title: localizations.outboundIp,
+      title: outbound ? localizations.outboundIp : localizations.ipDetails,
       actions: [
         AppBarActionButton(
           data: IconButtonData(
@@ -46,7 +48,7 @@ class _IpQualitySheet extends ConsumerWidget {
           ),
         ),
       ],
-      body: _IpQualityDetail(ip: ip),
+      body: _IpQualityDetail(ip: ip, outbound: outbound),
     );
   }
 }
@@ -71,12 +73,13 @@ class _HideIpItem extends ConsumerWidget {
 }
 
 class _IpQualityDetail extends ConsumerWidget {
-  const _IpQualityDetail({required this.ip});
+  const _IpQualityDetail({required this.ip, required this.outbound});
 
   /// The optical edge of the xl-radius cards, as in the memory sheet.
   static const _tipInset = 5.0;
 
   final String ip;
+  final bool outbound;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -107,7 +110,7 @@ class _IpQualityDetail extends ConsumerWidget {
             DetailRow(
               title: localizations.ipAddress,
               copyText: ip,
-              value: IpQualityText(ip: ip),
+              value: IpQualityText(ip: ip, respectHideIp: outbound),
             ),
             if (failed)
               DetailRow(
@@ -137,10 +140,11 @@ class _IpQualityDetail extends ConsumerWidget {
                 ),
             ],
           ),
-        generateSection(
-          title: localizations.other,
-          items: const [_HideIpItem()],
-        ),
+        if (outbound)
+          generateSection(
+            title: localizations.other,
+            items: const [_HideIpItem()],
+          ),
       ],
     );
   }

@@ -374,6 +374,7 @@ class _HomePageViewState extends ConsumerState<_HomePageView> {
           key: page.key,
           controller: _pageController,
           position: index,
+          label: widget.navigationItems[_order?[index] ?? index].label,
           enabled: fade,
           child: page,
         );
@@ -386,26 +387,27 @@ const _restingDelta = 0.001;
 
 /// Cancels the page view's slide so a tab switch cross-fades in place, and
 /// wraps every page even when off so switching the setting keeps their state.
-/// A page off its resting place is drawn from a snapshot, as a moving route is.
-class _FadeTabPage extends StatefulWidget {
+class _FadeTabPage extends ConsumerStatefulWidget {
   const _FadeTabPage({
     super.key,
     required this.controller,
     required this.position,
+    required this.label,
     required this.enabled,
     required this.child,
   });
 
   final PageController controller;
   final int position;
+  final PageLabel label;
   final bool enabled;
   final Widget child;
 
   @override
-  State<_FadeTabPage> createState() => _FadeTabPageState();
+  ConsumerState<_FadeTabPage> createState() => _FadeTabPageState();
 }
 
-class _FadeTabPageState extends State<_FadeTabPage> {
+class _FadeTabPageState extends ConsumerState<_FadeTabPage> {
   final _snapshot = SnapshotController();
 
   @override
@@ -431,11 +433,14 @@ class _FadeTabPageState extends State<_FadeTabPage> {
 
   @override
   Widget build(BuildContext context) {
+    final arriving = ref.watch(
+      shownPageLabelProvider.select((label) => label == widget.label),
+    );
     return AnimatedBuilder(
       animation: widget.controller,
       builder: (_, child) {
         final offset = _delta;
-        _snapshot.allowSnapshotting = offset.abs() > _restingDelta;
+        _snapshot.allowSnapshotting = !arriving && offset.abs() > _restingDelta;
         final delta = widget.enabled ? offset : 0.0;
         return FractionalTranslation(
           translation: Offset(-delta, 0),

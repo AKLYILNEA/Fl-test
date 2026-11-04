@@ -52,6 +52,7 @@ enum CoreMethod {
   routeCheck('route.check'),
   probeOutboundIp('probe.outboundIp'),
   probeServices('probe.services'),
+  ipCountry('ip.country'),
   mitmCertificate('mitm.certificate'),
   mitmGenerateCertificate('mitm.generateCertificate'),
   mitmValidate('mitm.validate'),

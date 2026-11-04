@@ -1086,13 +1086,16 @@ void main() {
   });
 
   for (final animation in TabAnimation.values) {
-    testWidgets('a ${animation.name} tab switch draws moving pages from '
-        'snapshots and resting ones live', (tester) async {
+    testWidgets('a ${animation.name} tab switch freezes only the outgoing page '
+        'and paints arriving icons before settling', (tester) async {
       tester.view.physicalSize = const Size(500, 800);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
+      final iconReady = ValueNotifier(false);
+      addTearDown(iconReady.dispose);
+      final paints = <bool>[];
       final container = ProviderContainer(
         overrides: [
           navigationItemsStateProvider.overrideWithValue(
@@ -1106,7 +1109,15 @@ void main() {
                 NavigationItem(
                   glyph: AppGlyphs.tools,
                   label: PageLabel.tools,
-                  builder: (_) => const Text('page:tools'),
+                  builder: (_) => Column(
+                    children: [
+                      const Text('page:tools'),
+                      CustomPaint(
+                        size: const Size(24, 24),
+                        painter: _IconPaintProbe(iconReady, paints),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -1146,7 +1157,11 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 60));
       expect(snapshots('page:dashboard'), isTrue);
-      expect(snapshots('page:tools'), isTrue);
+      paints.clear();
+      iconReady.value = true;
+      await tester.pump(const Duration(milliseconds: 16));
+      expect(paints, contains(true));
+      expect(snapshots('page:tools'), isFalse);
 
       await tester.pumpAndSettle();
       expect(snapshots('page:tools'), isFalse);
@@ -1561,6 +1576,27 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+}
+
+class _IconPaintProbe extends CustomPainter {
+  _IconPaintProbe(this.ready, this.paints) : super(repaint: ready);
+
+  final ValueNotifier<bool> ready;
+  final List<bool> paints;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    paints.add(ready.value);
+    if (ready.value) {
+      canvas.drawRect(
+        Offset.zero & size,
+        Paint()..color = const Color(0xFF2196F3),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_IconPaintProbe oldDelegate) => false;
 }
 
 class _ThemeManagedTestApp extends StatelessWidget {

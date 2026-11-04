@@ -714,6 +714,7 @@
   "installedAppsPermissionDesc": "当前系统在授权前不会提供已安装的应用列表，授权后即可配置分应用代理。",
   "installedAppsPermissionDeniedMessage": "读取应用列表权限已被拒绝，无法获取已安装的应用。请前往系统设置手动开启。",
   "outboundIp": "出站 IP",
+  "ipDetails": "IP 详情",
   "ipAddress": "IP 地址",
   "ipQualityLevel": "等级",
   "ipQualityGood": "优",

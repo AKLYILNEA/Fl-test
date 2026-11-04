@@ -282,6 +282,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "accessControlAllowDesc": MessageLookupByLibrary.simpleMessage(
       "Only selected apps go through the VPN",
     ),
+    "accessControlDesc": MessageLookupByLibrary.simpleMessage(
+      "Access control picks which apps use the proxy.",
+    ),
     "accessControlDisabledDesc": MessageLookupByLibrary.simpleMessage(
       "App access control is disabled",
     ),
@@ -326,13 +329,18 @@ class MessageLookup extends MessageLookupByLibrary {
     "additionalPrefix": MessageLookupByLibrary.simpleMessage("Name prefix"),
     "additionalSuffix": MessageLookupByLibrary.simpleMessage("Name suffix"),
     "address": MessageLookupByLibrary.simpleMessage("Address"),
+    "addressHelp": MessageLookupByLibrary.simpleMessage(
+      "WebDAV server address",
+    ),
     "addressTip": MessageLookupByLibrary.simpleMessage(
       "Please enter a valid WebDAV address",
     ),
     "advanced": MessageLookupByLibrary.simpleMessage("Advanced"),
-    "config": MessageLookupByLibrary.simpleMessage("Configuration"),
     "advancedConfig": MessageLookupByLibrary.simpleMessage(
       "Advanced configuration",
+    ),
+    "advancedConfigDesc": MessageLookupByLibrary.simpleMessage(
+      "Advanced configuration holds network, DNS, added rules, and scripts.",
     ),
     "ageEncryptedProfile": MessageLookupByLibrary.simpleMessage(
       "Encrypted profile",
@@ -348,11 +356,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "allReferencedProxyProviders": MessageLookupByLibrary.simpleMessage(
       "All referenced proxy providers",
     ),
-    "customFont": MessageLookupByLibrary.simpleMessage("Custom font"),
-    "nodeCount": MessageLookupByLibrary.simpleMessage("Proxies"),
-    "ruleCount": MessageLookupByLibrary.simpleMessage("Rules"),
-    "providerCount": MessageLookupByLibrary.simpleMessage("Providers"),
-    "emojiStyle": MessageLookupByLibrary.simpleMessage("Emoji font"),
     "allowBypass": MessageLookupByLibrary.simpleMessage(
       "Allow apps to bypass VPN",
     ),
@@ -373,6 +376,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "applyNow": MessageLookupByLibrary.simpleMessage("Apply now"),
     "arguments": MessageLookupByLibrary.simpleMessage("Arguments"),
     "authentication": MessageLookupByLibrary.simpleMessage("Authentication"),
+    "authenticationDesc": MessageLookupByLibrary.simpleMessage(
+      "Authentication asks for a username and password on the local proxy port.",
+    ),
     "authenticationSystemProxyDesc": MessageLookupByLibrary.simpleMessage(
       "The system proxy is not applied while authentication is on.",
     ),
@@ -384,6 +390,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "autoCloseConnections": MessageLookupByLibrary.simpleMessage(
       "Auto close connections",
+    ),
+    "autoCloseConnectionsDesc": MessageLookupByLibrary.simpleMessage(
+      "Auto close connections drops open connections when you switch proxies.",
     ),
     "autoInclude": MessageLookupByLibrary.simpleMessage("Auto-include"),
     "autoLaunch": MessageLookupByLibrary.simpleMessage("Auto launch"),
@@ -410,6 +419,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "backupSuccess": MessageLookupByLibrary.simpleMessage("Backup successful"),
     "basicInfo": MessageLookupByLibrary.simpleMessage("Basic info"),
     "basicStrategy": MessageLookupByLibrary.simpleMessage("Basic strategies"),
+    "batchAdd": MessageLookupByLibrary.simpleMessage("Batch add"),
     "batchImport": MessageLookupByLibrary.simpleMessage("Batch import"),
     "batchLineInputTip": MessageLookupByLibrary.simpleMessage(
       "One item per line",
@@ -417,13 +427,23 @@ class MessageLookup extends MessageLookupByLibrary {
     "batchLinkInputTip": MessageLookupByLibrary.simpleMessage(
       "One link per line",
     ),
+    "batchListInputTip": MessageLookupByLibrary.simpleMessage(
+      "One item per line, or separated by commas",
+    ),
+    "batchMapInputTip": MessageLookupByLibrary.simpleMessage(
+      "One entry per line: key, a space, then value",
+    ),
     "batchPreviewTip": m3,
     "batchUrlInputTip": MessageLookupByLibrary.simpleMessage(
       "One URL per line",
     ),
+    "batteryOptimizationDesc": MessageLookupByLibrary.simpleMessage(
+      "Ignore battery optimization keeps the app running in the background.",
+    ),
     "binaryData": MessageLookupByLibrary.simpleMessage("Binary data"),
     "bind": MessageLookupByLibrary.simpleMessage("Bind"),
     "blacklistMode": MessageLookupByLibrary.simpleMessage("Blacklist mode"),
+    "blockConnection": MessageLookupByLibrary.simpleMessage("Block connection"),
     "blockQuic": MessageLookupByLibrary.simpleMessage("Block QUIC"),
     "bodyRewrite": MessageLookupByLibrary.simpleMessage("Body rewrite"),
     "brightness": MessageLookupByLibrary.simpleMessage("Brightness"),
@@ -433,6 +453,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "bypassPrivateRoute": MessageLookupByLibrary.simpleMessage(
       "Bypass private addresses",
+    ),
+    "bypassPrivateRouteDesc": MessageLookupByLibrary.simpleMessage(
+      "With Bypass private addresses on, LAN, loopback and multicast addresses skip TUN.",
     ),
     "cache": MessageLookupByLibrary.simpleMessage("Cache"),
     "cacheAlgorithm": MessageLookupByLibrary.simpleMessage("Cache algorithm"),
@@ -509,6 +532,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "columns": MessageLookupByLibrary.simpleMessage("Columns"),
     "compact": MessageLookupByLibrary.simpleMessage("Compact"),
     "compatible": MessageLookupByLibrary.simpleMessage("Compatibility mode"),
+    "config": MessageLookupByLibrary.simpleMessage("Configuration"),
     "confirm": MessageLookupByLibrary.simpleMessage("Confirm"),
     "confirmClearAllData": MessageLookupByLibrary.simpleMessage(
       "Are you sure you want to clear all data?",
@@ -578,8 +602,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "currentOutboundDesc": MessageLookupByLibrary.simpleMessage(
       "Holds the start button and can\'t be removed",
     ),
+    "currentProfile": MessageLookupByLibrary.simpleMessage("Current profile"),
     "custom": MessageLookupByLibrary.simpleMessage("Custom"),
     "customColor": MessageLookupByLibrary.simpleMessage("Custom color"),
+    "customFont": MessageLookupByLibrary.simpleMessage("Custom font"),
     "customImportDroppedSubRules": m8,
     "customIssueCoreRejected": m9,
     "customIssueDialerLoop": m10,
@@ -599,6 +625,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "customIssueReservedName": m18,
     "customIssuesSummary": m19,
     "customProfile": MessageLookupByLibrary.simpleMessage("Custom"),
+    "customProfileResources": MessageLookupByLibrary.simpleMessage(
+      "Custom profile resources",
+    ),
+    "customProfileResourcesDesc": MessageLookupByLibrary.simpleMessage(
+      "Custom profile resources are the proxies, rule providers, filters, and icon sets you add yourself for custom profiles to use.",
+    ),
     "customResources": MessageLookupByLibrary.simpleMessage("Custom"),
     "cut": MessageLookupByLibrary.simpleMessage("Cut"),
     "dark": MessageLookupByLibrary.simpleMessage("Dark"),
@@ -652,6 +684,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "Developer mode is enabled.",
     ),
     "dialerProxy": MessageLookupByLibrary.simpleMessage("Dialer proxy"),
+    "dialerProxyDesc": MessageLookupByLibrary.simpleMessage(
+      "Dialer proxy is the outbound used to reach the NTP server.",
+    ),
     "dialerProxyLoopStopped": m25,
     "dialog": MessageLookupByLibrary.simpleMessage("Dialog"),
     "direct": MessageLookupByLibrary.simpleMessage("Direct"),
@@ -798,6 +833,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Editor unavailable",
     ),
     "elapsed": MessageLookupByLibrary.simpleMessage("Took"),
+    "emojiStyle": MessageLookupByLibrary.simpleMessage("Emoji font"),
     "emptyFallback": MessageLookupByLibrary.simpleMessage("Empty fallback"),
     "emptyTip": m26,
     "en": MessageLookupByLibrary.simpleMessage("English"),
@@ -810,18 +846,30 @@ class MessageLookup extends MessageLookupByLibrary {
     "excludeDstPort": MessageLookupByLibrary.simpleMessage(
       "Excluded destination ports",
     ),
+    "excludeDstPortDesc": MessageLookupByLibrary.simpleMessage(
+      "Traffic to excluded destination ports skips TUN.",
+    ),
     "excludeFilter": MessageLookupByLibrary.simpleMessage("Exclude filter"),
     "excludeInterface": MessageLookupByLibrary.simpleMessage(
       "Excluded interfaces",
     ),
+    "excludeInterfaceDesc": MessageLookupByLibrary.simpleMessage(
+      "Traffic arriving on excluded interfaces, such as docker0, skips TUN.",
+    ),
     "excludeSrcPort": MessageLookupByLibrary.simpleMessage(
       "Excluded source ports",
+    ),
+    "excludeSrcPortDesc": MessageLookupByLibrary.simpleMessage(
+      "Traffic from excluded source ports skips TUN.",
     ),
     "excludeSsids": MessageLookupByLibrary.simpleMessage("Exclude SSIDs"),
     "excludeSsidsDesc": MessageLookupByLibrary.simpleMessage(
       "When connected to Wi-Fi with an excluded SSID, the app\'s running state switches automatically.",
     ),
     "excludeUid": MessageLookupByLibrary.simpleMessage("Excluded user IDs"),
+    "excludeUidDesc": MessageLookupByLibrary.simpleMessage(
+      "Traffic from processes of excluded user IDs skips TUN.",
+    ),
     "existsTip": m27,
     "exit": MessageLookupByLibrary.simpleMessage("Exit"),
     "exitFullScreen": MessageLookupByLibrary.simpleMessage("Exit full screen"),
@@ -858,6 +906,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "fakeipFilterMode": MessageLookupByLibrary.simpleMessage(
       "Fake-IP filter mode",
+    ),
+    "fakeipFilterModeDesc": MessageLookupByLibrary.simpleMessage(
+      "In Fake-IP filter mode, blacklist excludes matches, whitelist fakes only matches, and rule matches as rules.",
     ),
     "fakeipRange": MessageLookupByLibrary.simpleMessage("Fake-IP range"),
     "fakeipRange6": MessageLookupByLibrary.simpleMessage(
@@ -1035,6 +1086,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "Only traffic arriving on included interfaces goes through TUN, and excluded interfaces no longer apply.",
     ),
     "includeUid": MessageLookupByLibrary.simpleMessage("Included user IDs"),
+    "includeUidDesc": MessageLookupByLibrary.simpleMessage(
+      "Only traffic from processes of included user IDs goes through TUN.",
+    ),
     "infiniteTime": MessageLookupByLibrary.simpleMessage("Never expires"),
     "init": MessageLookupByLibrary.simpleMessage("Init"),
     "initFailed": MessageLookupByLibrary.simpleMessage("Startup failed"),
@@ -1055,9 +1109,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "installCertificateSuccess": MessageLookupByLibrary.simpleMessage(
       "Certificate installed",
     ),
-    "installedAppsPermissionDeniedMessage": MessageLookupByLibrary.simpleMessage(
-      "The app list permission was denied, so installed apps cannot be listed. Please grant it manually in system settings.",
-    ),
+    "installedAppsPermissionDeniedMessage":
+        MessageLookupByLibrary.simpleMessage(
+          "The app list permission was denied, so installed apps cannot be listed. Please grant it manually in system settings.",
+        ),
     "installedAppsPermissionDesc": MessageLookupByLibrary.simpleMessage(
       "This system hides the installed app list until the permission is granted. Authorize it to configure the per-app proxy.",
     ),
@@ -1069,6 +1124,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "Smart selection",
     ),
     "interfaceName": MessageLookupByLibrary.simpleMessage("Interface name"),
+    "interfaceNameDesc": MessageLookupByLibrary.simpleMessage(
+      "Interface name is the network interface outbound connections use.",
+    ),
     "interfaceNameMode": MessageLookupByLibrary.simpleMessage(
       "Outbound interface",
     ),
@@ -1121,13 +1179,13 @@ class MessageLookup extends MessageLookupByLibrary {
     "invalidSubRule": m45,
     "ipAddress": MessageLookupByLibrary.simpleMessage("IP address"),
     "ipAsn": MessageLookupByLibrary.simpleMessage("ASN"),
+    "ipDetails": MessageLookupByLibrary.simpleMessage("IP Details"),
     "ipFlagAbuser": MessageLookupByLibrary.simpleMessage("Abuse history"),
     "ipFlagProxy": MessageLookupByLibrary.simpleMessage("Proxy"),
     "ipFlagTor": MessageLookupByLibrary.simpleMessage("Tor"),
     "ipFlagVpn": MessageLookupByLibrary.simpleMessage("VPN"),
     "ipFlags": MessageLookupByLibrary.simpleMessage("Flags"),
     "ipOrganization": MessageLookupByLibrary.simpleMessage("Organization"),
-    "proxyNode": MessageLookupByLibrary.simpleMessage("Proxy Node"),
     "ipQualityFailed": MessageLookupByLibrary.simpleMessage(
       "Couldn\'t determine the IP type",
     ),
@@ -1153,6 +1211,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "ipVersion": MessageLookupByLibrary.simpleMessage("IP version"),
     "ipv6Desc": MessageLookupByLibrary.simpleMessage(
       "IPv6 traffic is received only while IPv6 is on.",
+    ),
+    "ipv6InboundDesc": MessageLookupByLibrary.simpleMessage(
+      "With IPv6 on, the VPN allows IPv6 inbound.",
     ),
     "ipv6Timeout": MessageLookupByLibrary.simpleMessage("IPv6 timeout (ms)"),
     "itemsCount": m46,
@@ -1463,6 +1524,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "noSearchResults": MessageLookupByLibrary.simpleMessage(
       "No matching results",
     ),
+    "nodeCount": MessageLookupByLibrary.simpleMessage("Proxies"),
     "nodes": MessageLookupByLibrary.simpleMessage("Nodes"),
     "nonTextProviderFile": MessageLookupByLibrary.simpleMessage(
       "This external resource is not a text file",
@@ -1474,6 +1536,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "ntpInterval": MessageLookupByLibrary.simpleMessage(
       "Sync interval (minutes)",
+    ),
+    "ntpStatusDesc": MessageLookupByLibrary.simpleMessage(
+      "NTP takes the time from an NTP server instead of the system clock.",
     ),
     "nullProfileDesc": MessageLookupByLibrary.simpleMessage(
       "Add a profile to get started",
@@ -1489,6 +1554,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "Obfuscation password",
     ),
     "onDemand": MessageLookupByLibrary.simpleMessage("On demand"),
+    "onDemandDesc": MessageLookupByLibrary.simpleMessage(
+      "On demand pauses the proxy on excluded Wi-Fi.",
+    ),
     "onlyStatisticsProxy": MessageLookupByLibrary.simpleMessage(
       "Only count proxy traffic",
     ),
@@ -1503,13 +1571,19 @@ class MessageLookup extends MessageLookupByLibrary {
     "outbound": MessageLookupByLibrary.simpleMessage("Outbound"),
     "outboundExit": MessageLookupByLibrary.simpleMessage("Exit"),
     "outboundIp": MessageLookupByLibrary.simpleMessage("Outbound IP"),
-    "outboundMode": MessageLookupByLibrary.simpleMessage("Outbound"),
+    "outboundMode": MessageLookupByLibrary.simpleMessage("Outbound mode"),
     "overrideDestination": MessageLookupByLibrary.simpleMessage(
       "Override destination",
+    ),
+    "overrideDestinationDesc": MessageLookupByLibrary.simpleMessage(
+      "Override destination connects to the sniffed domain instead of the original address.",
     ),
     "overrideEntries": MessageLookupByLibrary.simpleMessage("Override entries"),
     "overview": MessageLookupByLibrary.simpleMessage("Overview"),
     "parsePureIp": MessageLookupByLibrary.simpleMessage("Parse pure IP"),
+    "parsePureIpDesc": MessageLookupByLibrary.simpleMessage(
+      "Parse pure IP sniffs connections that carry only an IP address.",
+    ),
     "password": MessageLookupByLibrary.simpleMessage("Password"),
     "paste": MessageLookupByLibrary.simpleMessage("Paste"),
     "peers": MessageLookupByLibrary.simpleMessage("Peers"),
@@ -1552,8 +1626,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Private key passphrase",
     ),
     "process": MessageLookupByLibrary.simpleMessage("Process"),
-    "currentProfile": MessageLookupByLibrary.simpleMessage("Current profile"),
-        "profile": MessageLookupByLibrary.simpleMessage("Profile"),
+    "profile": MessageLookupByLibrary.simpleMessage("Profile"),
     "profileAutoUpdateIntervalInvalidValidationDesc":
         MessageLookupByLibrary.simpleMessage("Please enter a valid interval"),
     "profileAutoUpdateIntervalNullValidationDesc":
@@ -1587,6 +1660,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "protocol": MessageLookupByLibrary.simpleMessage("Protocol"),
     "protocolParam": MessageLookupByLibrary.simpleMessage("Protocol parameter"),
     "protocolVersion": MessageLookupByLibrary.simpleMessage("Protocol version"),
+    "providerCount": MessageLookupByLibrary.simpleMessage("Providers"),
     "providerInUse": m80,
     "providerUrlTip": MessageLookupByLibrary.simpleMessage(
       "Only remote providers are supported",
@@ -1607,6 +1681,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Groups show up here once the core starts",
     ),
     "proxyGroupsCount": m86,
+    "proxyNode": MessageLookupByLibrary.simpleMessage("Proxy Node"),
     "proxyProviders": MessageLookupByLibrary.simpleMessage("Proxy providers"),
     "proxyServerNameserverDesc": MessageLookupByLibrary.simpleMessage(
       "Resolves proxy server hostnames only.",
@@ -1821,6 +1896,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "ruleActionUidDesc": MessageLookupByLibrary.simpleMessage(
       "Match the Linux user ID",
     ),
+    "ruleCount": MessageLookupByLibrary.simpleMessage("Rules"),
     "ruleEmpty": MessageLookupByLibrary.simpleMessage("Rule is empty"),
     "ruleListInvalid": MessageLookupByLibrary.simpleMessage(
       "The rules must be a YAML list with one rule per item, such as - DOMAIN,example.com,DIRECT",
@@ -1873,6 +1949,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "Scroll to selected",
     ),
     "search": MessageLookupByLibrary.simpleMessage("Search"),
+    "secondaryDevelopmentBuild": MessageLookupByLibrary.simpleMessage(
+      "Secondary development build",
+    ),
     "seconds": MessageLookupByLibrary.simpleMessage("seconds"),
     "secondsCount": m89,
     "secretKey": MessageLookupByLibrary.simpleMessage("Key"),
@@ -1932,7 +2011,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "serviceShownOnDashboard": MessageLookupByLibrary.simpleMessage(
       "Shown on the dashboard",
     ),
-    "serviceStatus": MessageLookupByLibrary.simpleMessage("Service"),
+    "serviceStatus": MessageLookupByLibrary.simpleMessage("Service status"),
     "serviceUnavailable": MessageLookupByLibrary.simpleMessage("Unavailable"),
     "serviceUnsupportedRegion": MessageLookupByLibrary.simpleMessage(
       "Region not supported",
@@ -1955,7 +2034,14 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "showPassword": MessageLookupByLibrary.simpleMessage("Show password"),
     "sidebar": MessageLookupByLibrary.simpleMessage("Sidebar"),
+    "sidebarBlurDesc": MessageLookupByLibrary.simpleMessage(
+      "Background blur lets the desktop behind the window show through the sidebar.",
+    ),
     "silentLaunch": MessageLookupByLibrary.simpleMessage("Silent launch"),
+    "silentLaunchDesc": MessageLookupByLibrary.simpleMessage(
+      "Silent launch starts without showing the window.",
+    ),
+    "singleAdd": MessageLookupByLibrary.simpleMessage("Single add"),
     "singleImport": MessageLookupByLibrary.simpleMessage("Single import"),
     "singleShareLinkOnly": MessageLookupByLibrary.simpleMessage(
       "Enter one link here; edit several from the quick edit of the list",
@@ -1966,6 +2052,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "Skip certificate verification",
     ),
     "skipDomain": MessageLookupByLibrary.simpleMessage("Skip domains"),
+    "skipDomainDesc": MessageLookupByLibrary.simpleMessage(
+      "A sniffed domain on the Skip domains list is not used.",
+    ),
     "skipDstAddress": MessageLookupByLibrary.simpleMessage(
       "Skip destination addresses",
     ),
@@ -1979,6 +2068,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "sliders": MessageLookupByLibrary.simpleMessage("Sliders"),
     "sniffProtocols": MessageLookupByLibrary.simpleMessage("Protocols"),
     "sniffer": MessageLookupByLibrary.simpleMessage("Sniffer"),
+    "snifferStatusDesc": MessageLookupByLibrary.simpleMessage(
+      "The sniffer reads the domain from TLS, HTTP and QUIC traffic so rules can match it.",
+    ),
     "socksPort": MessageLookupByLibrary.simpleMessage("SOCKS port"),
     "softStyle": MessageLookupByLibrary.simpleMessage("Soft"),
     "sort": MessageLookupByLibrary.simpleMessage("Sort"),
@@ -2152,21 +2244,21 @@ class MessageLookup extends MessageLookupByLibrary {
     "vpnConfigChangeDetected": MessageLookupByLibrary.simpleMessage(
       "VPN settings changed. Tap to restart",
     ),
+    "vpnEnableDesc": MessageLookupByLibrary.simpleMessage(
+      "VPN routes all system traffic through VpnService automatically.",
+    ),
+    "wakelock": MessageLookupByLibrary.simpleMessage("Keep screen on"),
     "webDAVConfiguration": MessageLookupByLibrary.simpleMessage(
       "WebDAV configuration",
     ),
     "whitelistMode": MessageLookupByLibrary.simpleMessage("Whitelist mode"),
     "writeToSystem": MessageLookupByLibrary.simpleMessage("Write to system"),
-    "secondaryDevelopmentBuild": MessageLookupByLibrary.simpleMessage(
-      "Secondary development build",
-    ),
-    "wakelock": MessageLookupByLibrary.simpleMessage("Keep screen on"),
     "writeToSystemDesc": MessageLookupByLibrary.simpleMessage(
       "Write to system also sets the system clock; Android ignores it.",
     ),
     "yearsAgo": m100,
     "yearsAgoShort": m101,
     "yes": MessageLookupByLibrary.simpleMessage("Yes"),
-        "zhCN": MessageLookupByLibrary.simpleMessage("Simplified Chinese"),
+    "zhCN": MessageLookupByLibrary.simpleMessage("Simplified Chinese"),
   };
 }
