@@ -158,13 +158,13 @@ const _$EditorFontSizeEnumMap = {
 
 const _$DashboardWidgetEnumMap = {
   DashboardWidget.currentOutbound: 'currentOutbound',
+  DashboardWidget.proxyGroups: 'proxyGroups',
   DashboardWidget.networkSpeed: 'networkSpeed',
   DashboardWidget.outboundMode: 'outboundMode',
   DashboardWidget.vpnButton: 'vpnButton',
   DashboardWidget.networkTakeover: 'networkTakeover',
   DashboardWidget.serviceStatus: 'serviceStatus',
   DashboardWidget.profiles: 'profiles',
-  DashboardWidget.proxyGroups: 'proxyGroups',
   DashboardWidget.connectionStats: 'connectionStats',
   DashboardWidget.intranetIp: 'intranetIp',
   DashboardWidget.memoryInfo: 'memoryInfo',

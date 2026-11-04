@@ -734,4 +734,92 @@ void main() {
       await teardownView(tester);
     }
   });
+
+  group('a refresh builds only what changed', () {
+    final full = [
+      for (var index = 0; index < 499; index++) _tracker(id: 'r$index'),
+      _tracker(id: 'r499', host: 'latest.test'),
+    ];
+
+    Future<int> rowsBuiltBy(WidgetTester tester, void Function() change) async {
+      var built = 0;
+      debugOnRebuildDirtyWidget = (element, _) {
+        final widget = element.widget;
+        if (widget is TrackerInfoItem || widget is TrackerInfoTableRow) {
+          built++;
+        }
+      };
+      addTearDown(() => debugOnRebuildDirtyWidget = null);
+      change();
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump();
+      debugOnRebuildDirtyWidget = null;
+      return built;
+    }
+
+    for (final (name, size) in const [
+      ('list', _listSize),
+      ('table', _tableSize),
+    ]) {
+      testWidgets('a full $name builds only the request added', (tester) async {
+        seedRequests(full);
+        await pumpRequests(tester, size: size);
+        await tester.pump(const Duration(seconds: 1));
+
+        final built = await rowsBuiltBy(
+          tester,
+          () => addRequest(_tracker(id: 'new')),
+        );
+
+        expect(built, 1);
+        await teardownView(tester);
+      });
+    }
+
+    testWidgets('a list row ignores traffic it does not show, and its detail '
+        'opens on the latest', (tester) async {
+      seedRequests(full);
+      await pumpRequests(tester, size: _listSize);
+      await tester.pump(const Duration(seconds: 1));
+
+      final built = await rowsBuiltBy(
+        tester,
+        () => container.read(requestsProvider.notifier).updateTraffic({
+          'r499': (upload: 0, download: 2048),
+        }),
+      );
+      expect(built, 0);
+
+      await tester.tap(find.textContaining('latest.test:443'));
+      await tester.pumpAndSettle();
+      expect(find.text(2048.traffic.show), findsOneWidget);
+
+      await teardownView(tester);
+    });
+
+    testWidgets('a grouped row ignores traffic it does not show, and its '
+        'detail opens on the latest', (tester) async {
+      seedRequests(full);
+      await pumpRequests(tester, size: _listSize);
+      await openSubMenu(tester, 'Group by');
+      await tester.tap(inMenu(find.text('App')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(CollapsibleHeader));
+      await tester.pumpAndSettle();
+
+      final built = await rowsBuiltBy(
+        tester,
+        () => container.read(requestsProvider.notifier).updateTraffic({
+          'r499': (upload: 0, download: 2048),
+        }),
+      );
+      expect(built, 0);
+
+      await tester.tap(find.textContaining('latest.test:443'));
+      await tester.pumpAndSettle();
+      expect(find.text(2048.traffic.show), findsOneWidget);
+
+      await teardownView(tester);
+    });
+  });
 }

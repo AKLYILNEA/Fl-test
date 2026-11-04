@@ -7418,16 +7418,6 @@ class AppLocalizations {
     );
   }
 
-  /// `−60 s`
-  String get trafficChartStart {
-    return Intl.message('−60 s', name: 'trafficChartStart', desc: '', args: []);
-  }
-
-  /// `Now`
-  String get trafficChartNow {
-    return Intl.message('Now', name: 'trafficChartNow', desc: '', args: []);
-  }
-
   /// `Quality`
   String get ipQualityShort {
     return Intl.message('Quality', name: 'ipQualityShort', desc: '', args: []);
@@ -7688,7 +7678,8 @@ class AppLocalizations {
   String customImportDroppedSubRules(num count, Object label) {
     return Intl.plural(
       count,
-      one: '1 SUB-RULE rule was dropped, since custom profiles do not support sub-rules',
+      one:
+          '1 SUB-RULE rule was dropped, since custom profiles do not support sub-rules',
       other:
           '$label SUB-RULE rules were dropped, since custom profiles do not support sub-rules',
       name: 'customImportDroppedSubRules',

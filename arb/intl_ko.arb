@@ -897,8 +897,6 @@
   "notRunning": "실행 중 아님",
   "trafficPeak": "최고 {value}",
   "trafficTotal": "합계 {value}",
-  "trafficChartStart": "−60초",
-  "trafficChartNow": "현재",
   "ipQualityShort": "품질",
   "ipTypeUnknown": "알 수 없는 유형",
   "tapIconToRetry": "아이콘을 눌러 다시 시도",

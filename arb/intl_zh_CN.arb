@@ -897,8 +897,6 @@
   "notRunning": "未运行",
   "trafficPeak": "峰值 {value}",
   "trafficTotal": "累计 {value}",
-  "trafficChartStart": "−60 秒",
-  "trafficChartNow": "现在",
   "ipQualityShort": "质量",
   "ipTypeUnknown": "类型未知",
   "tapIconToRetry": "点击图标重试",

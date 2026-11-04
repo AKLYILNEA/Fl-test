@@ -4723,7 +4723,7 @@ as String?,
 /// @nodoc
 mixin _$SharedState {
 
- SetupParams? get setupParams; VpnOptions? get vpnOptions; String get stopTip; String get startTip; String get localNetworkTip; String get currentProfileName; String get stopText; bool get onlyStatisticsProxy; bool get showStopAction;
+@JsonKey(includeIfNull: false) SetupParams? get setupParams; VpnOptions? get vpnOptions; String get stopTip; String get startTip; String get localNetworkTip; String get currentProfileName; String get stopText; bool get onlyStatisticsProxy; bool get showStopAction;
 /// Create a copy of SharedState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -4761,7 +4761,7 @@ abstract mixin class $SharedStateCopyWith<$Res>  {
   factory $SharedStateCopyWith(SharedState value, $Res Function(SharedState) _then) = _$SharedStateCopyWithImpl;
 @useResult
 $Res call({
- SetupParams? setupParams, VpnOptions? vpnOptions, String stopTip, String startTip, String localNetworkTip, String currentProfileName, String stopText, bool onlyStatisticsProxy, bool showStopAction
+@JsonKey(includeIfNull: false) SetupParams? setupParams, VpnOptions? vpnOptions, String stopTip, String startTip, String localNetworkTip, String currentProfileName, String stopText, bool onlyStatisticsProxy, bool showStopAction
 });
 
 
@@ -4898,7 +4898,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( SetupParams? setupParams,  VpnOptions? vpnOptions,  String stopTip,  String startTip,  String localNetworkTip,  String currentProfileName,  String stopText,  bool onlyStatisticsProxy,  bool showStopAction)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(includeIfNull: false)  SetupParams? setupParams,  VpnOptions? vpnOptions,  String stopTip,  String startTip,  String localNetworkTip,  String currentProfileName,  String stopText,  bool onlyStatisticsProxy,  bool showStopAction)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SharedState() when $default != null:
 return $default(_that.setupParams,_that.vpnOptions,_that.stopTip,_that.startTip,_that.localNetworkTip,_that.currentProfileName,_that.stopText,_that.onlyStatisticsProxy,_that.showStopAction);case _:
@@ -4919,7 +4919,7 @@ return $default(_that.setupParams,_that.vpnOptions,_that.stopTip,_that.startTip,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( SetupParams? setupParams,  VpnOptions? vpnOptions,  String stopTip,  String startTip,  String localNetworkTip,  String currentProfileName,  String stopText,  bool onlyStatisticsProxy,  bool showStopAction)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(includeIfNull: false)  SetupParams? setupParams,  VpnOptions? vpnOptions,  String stopTip,  String startTip,  String localNetworkTip,  String currentProfileName,  String stopText,  bool onlyStatisticsProxy,  bool showStopAction)  $default,) {final _that = this;
 switch (_that) {
 case _SharedState():
 return $default(_that.setupParams,_that.vpnOptions,_that.stopTip,_that.startTip,_that.localNetworkTip,_that.currentProfileName,_that.stopText,_that.onlyStatisticsProxy,_that.showStopAction);case _:
@@ -4939,7 +4939,7 @@ return $default(_that.setupParams,_that.vpnOptions,_that.stopTip,_that.startTip,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( SetupParams? setupParams,  VpnOptions? vpnOptions,  String stopTip,  String startTip,  String localNetworkTip,  String currentProfileName,  String stopText,  bool onlyStatisticsProxy,  bool showStopAction)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(includeIfNull: false)  SetupParams? setupParams,  VpnOptions? vpnOptions,  String stopTip,  String startTip,  String localNetworkTip,  String currentProfileName,  String stopText,  bool onlyStatisticsProxy,  bool showStopAction)?  $default,) {final _that = this;
 switch (_that) {
 case _SharedState() when $default != null:
 return $default(_that.setupParams,_that.vpnOptions,_that.stopTip,_that.startTip,_that.localNetworkTip,_that.currentProfileName,_that.stopText,_that.onlyStatisticsProxy,_that.showStopAction);case _:
@@ -4954,10 +4954,10 @@ return $default(_that.setupParams,_that.vpnOptions,_that.stopTip,_that.startTip,
 @JsonSerializable()
 
 class _SharedState implements SharedState {
-  const _SharedState({this.setupParams, this.vpnOptions, required this.stopTip, required this.startTip, required this.localNetworkTip, required this.currentProfileName, required this.stopText, required this.onlyStatisticsProxy, this.showStopAction = true});
+  const _SharedState({@JsonKey(includeIfNull: false) this.setupParams, this.vpnOptions, required this.stopTip, required this.startTip, required this.localNetworkTip, required this.currentProfileName, required this.stopText, required this.onlyStatisticsProxy, this.showStopAction = true});
   factory _SharedState.fromJson(Map<String, dynamic> json) => _$SharedStateFromJson(json);
 
-@override final  SetupParams? setupParams;
+@override@JsonKey(includeIfNull: false) final  SetupParams? setupParams;
 @override final  VpnOptions? vpnOptions;
 @override final  String stopTip;
 @override final  String startTip;
@@ -5002,7 +5002,7 @@ abstract mixin class _$SharedStateCopyWith<$Res> implements $SharedStateCopyWith
   factory _$SharedStateCopyWith(_SharedState value, $Res Function(_SharedState) _then) = __$SharedStateCopyWithImpl;
 @override @useResult
 $Res call({
- SetupParams? setupParams, VpnOptions? vpnOptions, String stopTip, String startTip, String localNetworkTip, String currentProfileName, String stopText, bool onlyStatisticsProxy, bool showStopAction
+@JsonKey(includeIfNull: false) SetupParams? setupParams, VpnOptions? vpnOptions, String stopTip, String startTip, String localNetworkTip, String currentProfileName, String stopText, bool onlyStatisticsProxy, bool showStopAction
 });
 
 

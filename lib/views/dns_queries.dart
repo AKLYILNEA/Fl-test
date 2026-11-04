@@ -126,9 +126,14 @@ class _DnsQueriesViewState extends ConsumerState<DnsQueriesView>
   @override
   Widget build(BuildContext context) {
     final appLocalizations = context.appLocalizations;
+    final body = RecordFilterScope(
+      onFilter: _filters.add,
+      child: _buildBody(context),
+    );
     return ListenableBuilder(
       listenable: Listenable.merge([_filters, _filters.options]),
-      builder: (context, _) {
+      child: body,
+      builder: (context, body) {
         final pinned = !ViewScope.isMobileOf(context);
         return Scaffold(
           title: PageLabel.dns.label,
@@ -142,10 +147,7 @@ class _DnsQueriesViewState extends ConsumerState<DnsQueriesView>
               onPressed: _clearDnsCache,
             ),
           ],
-          body: RecordFilterScope(
-            onFilter: _filters.add,
-            child: _buildBody(context),
-          ),
+          body: body!,
         );
       },
     );
@@ -191,7 +193,7 @@ class _DnsQueriesViewState extends ConsumerState<DnsQueriesView>
                     );
                     _filters.offer(_listController.value.dnsQueries);
                   },
-                  child: PrismListView(
+                  child: RecordFeedList<DnsQuery>(
                     reverse: true,
                     shrinkWrap: true,
                     physics: _physics,
@@ -200,27 +202,24 @@ class _DnsQueriesViewState extends ConsumerState<DnsQueriesView>
                       top: context.contentTopPadding,
                       bottom: 16 + context.bottomInset,
                     ),
-                    itemCount: dnsQueries.length,
+                    items: dnsQueries,
+                    keyOf: ObjectKey.new,
                     gap: table == null ? recordListGap : 0,
                     estimatedItemExtent:
                         table?.rowHeight ?? recordListEstimatedExtent,
-                    itemBuilder: (_, index) {
-                      final dnsQuery = dnsQueries[index];
-                      final striped = index.isOdd;
-                      return MemoBuilder(
-                        inputs: [
-                          dnsQuery,
-                          if (table != null) ...[table, striped],
-                        ],
-                        builder: (_) => table == null
-                            ? DnsQueryItem(dnsQuery: dnsQuery)
-                            : _DnsQueryTableRow(
-                                dnsQuery: dnsQuery,
-                                table: table,
-                                striped: striped,
-                              ),
-                      );
-                    },
+                    itemBuilder: (dnsQuery, striped, _) => MemoBuilder(
+                      inputs: [
+                        dnsQuery,
+                        if (table != null) ...[table, striped],
+                      ],
+                      builder: (_) => table == null
+                          ? DnsQueryItem(dnsQuery: dnsQuery)
+                          : _DnsQueryTableRow(
+                              dnsQuery: dnsQuery,
+                              table: table,
+                              striped: striped,
+                            ),
+                    ),
                   ),
                 ),
               ),

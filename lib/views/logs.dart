@@ -114,9 +114,14 @@ class _LogsViewState extends ConsumerState<LogsView>
 
   @override
   Widget build(BuildContext context) {
+    final body = RecordFilterScope(
+      onFilter: _filters.add,
+      child: _buildBody(context),
+    );
     return ListenableBuilder(
       listenable: Listenable.merge([_filters, _filters.options]),
-      builder: (context, _) {
+      child: body,
+      builder: (context, body) {
         final pinned = !ViewScope.isMobileOf(context);
         return Scaffold(
           iconActions: _buildActions(),
@@ -124,10 +129,7 @@ class _LogsViewState extends ConsumerState<LogsView>
           menuItems: _filters.menuItems(context, pinned: pinned),
           searchState: AppBarSearchState(onSearch: _listController.search),
           title: context.appLocalizations.logs,
-          body: RecordFilterScope(
-            onFilter: _filters.add,
-            child: _buildBody(context),
-          ),
+          body: body!,
         );
       },
     );
@@ -135,9 +137,10 @@ class _LogsViewState extends ConsumerState<LogsView>
 
   Widget _buildBody(BuildContext context) {
     final appLocalizations = context.appLocalizations;
-    return ValueListenableBuilder<LogsState>(
-      valueListenable: _listController,
-      builder: (context, state, _) {
+    return ListenableBuilder(
+      listenable: Listenable.merge([_listController, _filters]),
+      builder: (context, _) {
+        final state = _listController.value;
         final logs = _filters.apply(state.list);
         return NullStatusSwitcher(
           isEmpty: logs.isEmpty,
@@ -175,22 +178,20 @@ class _LogsViewState extends ConsumerState<LogsView>
           },
           controller: _scrollController,
           enable: state.autoScrollToEnd,
-          child: PrismListView(
+          child: RecordFeedList<Log>(
             physics: _physics,
             reverse: true,
             shrinkWrap: true,
             controller: _scrollController,
             padding: padding,
-            itemCount: logs.length,
+            items: logs,
+            keyOf: ObjectKey.new,
             gap: recordListGap,
             estimatedItemExtent: recordListEstimatedExtent,
-            itemBuilder: (_, index) {
-              final log = logs[index];
-              return MemoBuilder(
-                inputs: [log],
-                builder: (_) => LogItem(log: log),
-              );
-            },
+            itemBuilder: (log, _, _) => MemoBuilder(
+              inputs: [log],
+              builder: (_) => LogItem(log: log),
+            ),
           ),
         ),
       ),

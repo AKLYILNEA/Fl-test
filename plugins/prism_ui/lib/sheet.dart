@@ -56,14 +56,19 @@ const _sheetCorner = 38.0;
 
 const sheetFloatInset = 8.0;
 
-/// A foot rounder than a square display's corners would show beside it.
+/// A foot rounder than a square display's corners would show beside it;
+/// where the platform reports no corners, a floating foot matches the top.
 BorderRadius floatingSheetRadius(BorderRadius? display, double float) {
   final corners = display ?? BorderRadius.zero;
   Radius top(Radius corner) => Radius.circular(
     corner.x > 0 ? math.min(corner.x, _sheetCorner) : AppCorner.xxl,
   );
   Radius foot(Radius corner) => Radius.circular(
-    lerpDouble(math.min(corner.x, _sheetCorner), _sheetCorner, float)!,
+    lerpDouble(
+      math.min(corner.x, _sheetCorner),
+      corner.x > 0 ? _sheetCorner : AppCorner.xxl,
+      float,
+    )!,
   );
   return BorderRadius.only(
     topLeft: top(corners.topLeft),

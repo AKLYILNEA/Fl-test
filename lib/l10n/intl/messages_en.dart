@@ -1109,10 +1109,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "installCertificateSuccess": MessageLookupByLibrary.simpleMessage(
       "Certificate installed",
     ),
-    "installedAppsPermissionDeniedMessage":
-        MessageLookupByLibrary.simpleMessage(
-          "The app list permission was denied, so installed apps cannot be listed. Please grant it manually in system settings.",
-        ),
+    "installedAppsPermissionDeniedMessage": MessageLookupByLibrary.simpleMessage(
+      "The app list permission was denied, so installed apps cannot be listed. Please grant it manually in system settings.",
+    ),
     "installedAppsPermissionDesc": MessageLookupByLibrary.simpleMessage(
       "This system hides the installed app list until the permission is granted. Authorize it to configure the per-app proxy.",
     ),
@@ -2163,8 +2162,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "totalUpload": MessageLookupByLibrary.simpleMessage("Uploaded"),
     "tproxyPort": MessageLookupByLibrary.simpleMessage("TProxy port"),
     "traffic": MessageLookupByLibrary.simpleMessage("Traffic"),
-    "trafficChartNow": MessageLookupByLibrary.simpleMessage("Now"),
-    "trafficChartStart": MessageLookupByLibrary.simpleMessage("−60 s"),
     "trafficPeak": m95,
     "trafficTotal": m96,
     "trafficUsage": MessageLookupByLibrary.simpleMessage("Traffic usage"),

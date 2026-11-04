@@ -231,6 +231,37 @@ void main() {
     expect(find.text('g0-100'), findsNothing);
     expect(find.text('g1 (1000)'), findsNothing);
   });
+
+  testWidgets('a group that did not change keeps its header', (tester) async {
+    Widget build(int count) => TestApp(
+      child: Surface(
+        child: CustomScrollView(
+          slivers: [
+            SliverCollapsibleGroups(
+              groups: [
+                CollapsibleGroup(key: 'a', label: 'a', itemCount: count),
+                const CollapsibleGroup(key: 'b', label: 'b', itemCount: 1),
+              ],
+              itemBuilder: (_, _, _) => const SizedBox(height: 40),
+            ),
+          ],
+        ),
+      ),
+    );
+    await tester.pumpWidget(build(1));
+    var built = 0;
+    debugOnRebuildDirtyWidget = (element, _) {
+      if (element.widget is CollapsibleHeader) {
+        built++;
+      }
+    };
+    addTearDown(() => debugOnRebuildDirtyWidget = null);
+
+    await tester.pumpWidget(build(2));
+    debugOnRebuildDirtyWidget = null;
+
+    expect(built, 1);
+  });
 }
 
 Widget _firstEntry(BuildContext context, int index) => const Text('n0');

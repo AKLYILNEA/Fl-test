@@ -20,6 +20,7 @@ class KeyedAnimatedList<T> extends StatefulWidget {
   final EdgeInsetsGeometry? padding;
   final double estimatedItemExtent;
   final Duration duration;
+  final ScrollCacheExtent? scrollCacheExtent;
 
   const KeyedAnimatedList({
     super.key,
@@ -31,6 +32,7 @@ class KeyedAnimatedList<T> extends StatefulWidget {
     this.padding,
     this.estimatedItemExtent = SliverPrismList.defaultEstimatedItemExtent,
     this.duration = _defaultDuration,
+    this.scrollCacheExtent,
   });
 
   @override
@@ -173,18 +175,11 @@ class _KeyedAnimatedListState<T> extends State<KeyedAnimatedList<T>>
       _Phase.entering => _entering,
       _Phase.leaving => _leaving,
     };
-    if (animation != null) {
-      row = SizeTransition(
-        sizeFactor: animation,
-        alignment: Alignment.topCenter,
-        child: FadeTransition(opacity: animation, child: row),
-      );
-    }
     return _SlideOnMove(
       key: ValueKey(entry.key),
       generation: _generation,
       duration: widget.duration,
-      child: row,
+      child: _RowPresence(animation: animation, child: row),
     );
   }
 
@@ -196,12 +191,39 @@ class _KeyedAnimatedListState<T> extends State<KeyedAnimatedList<T>>
     return PrismListView(
       controller: widget.controller,
       padding: widget.padding,
+      scrollCacheExtent: widget.scrollCacheExtent,
       itemCount: _entries.length,
       estimatedItemExtent: widget.estimatedItemExtent,
       addRepaintBoundaries: false,
       findChildIndexCallback: (key) =>
           key is ValueKey<Object> ? indexByKey[key.value] : null,
       itemBuilder: _buildRow,
+    );
+  }
+}
+
+class _RowPresence extends StatelessWidget {
+  final Animation<double>? animation;
+  final Widget child;
+
+  const _RowPresence({required this.animation, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final animation = this.animation;
+    final shown = animation ?? kAlwaysCompleteAnimation;
+    return AnimatedBuilder(
+      animation: shown,
+      builder: (_, child) => ClipRect(
+        // A settled row's focus ring reaches past its bounds.
+        clipBehavior: animation == null ? Clip.none : Clip.hardEdge,
+        child: Align(
+          alignment: Alignment.topCenter,
+          heightFactor: shown.value.clamp(0.0, 1.0),
+          child: child,
+        ),
+      ),
+      child: FadeTransition(opacity: shown, child: child),
     );
   }
 }

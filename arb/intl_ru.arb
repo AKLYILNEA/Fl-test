@@ -897,8 +897,6 @@
   "notRunning": "Не запущено",
   "trafficPeak": "Пик {value}",
   "trafficTotal": "Всего {value}",
-  "trafficChartStart": "−60 с",
-  "trafficChartNow": "Сейчас",
   "ipQualityShort": "Качество",
   "ipTypeUnknown": "Тип неизвестен",
   "tapIconToRetry": "Нажмите на значок, чтобы повторить",

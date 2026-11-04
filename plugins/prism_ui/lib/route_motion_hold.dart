@@ -28,6 +28,12 @@ class _RouteMotion {
       _animations.any((animation) => animation.isAnimating) ||
       _gestures.any((gesture) => gesture.value);
 
+  bool get isUnderway =>
+      _animations.any(
+        (animation) => animation.isAnimating && animation.value > 0,
+      ) ||
+      _gestures.any((gesture) => gesture.value);
+
   void addListener(AnimationStatusListener onStatus, VoidCallback onGesture) {
     for (final animation in _animations) {
       animation.addStatusListener(onStatus);
@@ -59,9 +65,21 @@ mixin RouteMotionHoldMixin<T extends StatefulWidget> on State<T> {
   ModalRoute<Object?>? _route;
   _RouteMotion? _motion;
   VoidCallback? _heldUpdate;
+  var _settleRun = 0;
+  var _settling = false;
 
   void updateWhenRouteSettled(VoidCallback update) {
-    if (_motion?.isMoving ?? false) {
+    if (_settling || (_motion?.isMoving ?? false)) {
+      _heldUpdate = update;
+      return;
+    }
+    _heldUpdate = null;
+    update();
+  }
+
+  /// Applies at once while [ArrivalHold] keeps the push at value zero.
+  void showFirstContent(VoidCallback update) {
+    if (_settling || (_motion?.isUnderway ?? false)) {
       _heldUpdate = update;
       return;
     }
@@ -96,8 +114,38 @@ mixin RouteMotionHoldMixin<T extends StatefulWidget> on State<T> {
   void _handleStatus(AnimationStatus _) => _releaseHeld();
 
   void _releaseHeld() {
+    if (!mounted || (_motion?.isMoving ?? false)) {
+      return;
+    }
+    final scheduler = SchedulerBinding.instance;
+    if (scheduler.schedulerPhase == SchedulerPhase.idle &&
+        scheduler.transientCallbackCount == 0) {
+      _applyHeld();
+      return;
+    }
+    unawaited(_settle());
+  }
+
+  Future<void> _settle() async {
+    final run = ++_settleRun;
+    _settling = true;
+    // What the route's stop starts ticks only from the next frame on.
+    await SchedulerBinding.instance.endOfFrame;
+    await whenNothingAnimates();
+    if (run != _settleRun || !mounted) {
+      return;
+    }
+    _settling = false;
+    if (!(_motion?.isMoving ?? false)) {
+      _applyHeld();
+    }
+  }
+
+  void _applyHeld() {
+    _settleRun++;
+    _settling = false;
     final update = _heldUpdate;
-    if (update == null || !mounted || (_motion?.isMoving ?? false)) {
+    if (update == null) {
       return;
     }
     _heldUpdate = null;

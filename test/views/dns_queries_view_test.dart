@@ -445,4 +445,34 @@ void main() {
 
     await teardownView(tester);
   });
+
+  for (final (name, size, rowType) in const [
+    ('list', _listSize, DnsQueryItem),
+    ('table', _tableSize, RecordTableRow),
+  ]) {
+    testWidgets('a full $name builds only the query added', (tester) async {
+      seedDnsQueries([
+        for (var index = 0; index < 500; index++) _dnsQuery('d$index.test'),
+      ]);
+      await pumpDnsQueries(tester, size: size);
+      await tester.pump(const Duration(seconds: 1));
+
+      var built = 0;
+      debugOnRebuildDirtyWidget = (element, _) {
+        if (element.widget.runtimeType == rowType) {
+          built++;
+        }
+      };
+      addTearDown(() => debugOnRebuildDirtyWidget = null);
+      container
+          .read(dnsQueriesProvider.notifier)
+          .addQuery(_dnsQuery('new.test'));
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump();
+      debugOnRebuildDirtyWidget = null;
+
+      expect(built, 1);
+      await teardownView(tester);
+    });
+  }
 }

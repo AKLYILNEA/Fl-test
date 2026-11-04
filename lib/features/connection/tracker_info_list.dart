@@ -80,37 +80,44 @@ class TrackerInfoList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PrismListView(
+    final table = this.table;
+    return RecordFeedList<TrackerInfo>(
       reverse: reverse,
       shrinkWrap: shrinkWrap,
       physics: physics,
       controller: controller,
       padding: padding,
-      itemCount: trackerInfos.length,
+      items: trackerInfos,
+      keyOf: (trackerInfo) => ValueKey(trackerInfo.id),
       gap: table == null ? recordListGap : 0,
       estimatedItemExtent: table?.rowHeight ?? recordListEstimatedExtent,
-      itemBuilder: (_, index) {
-        final trackerInfo = trackerInfos[index];
-        final striped = index.isOdd;
-        return MemoBuilder(
-          key: Key(trackerInfo.id),
-          inputs: [
-            trackerInfo,
-            ...table == null ? [detailTitle] : [table, striped],
-          ],
-          builder: (_) => _buildTrackerInfoItem(
-            trackerInfo,
-            isLive: false,
-            detailTitle: detailTitle,
-            table: table,
-            striped: striped,
-            onClose: onClose,
-          ),
-        );
-      },
+      itemBuilder: (trackerInfo, striped, latest) => MemoBuilder(
+        inputs: table == null
+            ? [..._shownInList(trackerInfo), detailTitle]
+            : [trackerInfo, table, striped],
+        builder: (_) => _buildTrackerInfoItem(
+          trackerInfo,
+          isLive: false,
+          detailTitle: detailTitle,
+          table: table,
+          striped: striped,
+          onClose: onClose,
+          latest: latest,
+        ),
+      ),
     );
   }
 }
+
+/// What a finished row shows: it leaves out the traffic a request still
+/// reports, which would rebuild the rows on screen at every refresh.
+List<Object?> _shownInList(TrackerInfo trackerInfo) => [
+  trackerInfo.start,
+  trackerInfo.metadata,
+  trackerInfo.chains,
+  trackerInfo.rule,
+  trackerInfo.rulePayload,
+];
 
 /// Same rows as [TrackerInfoList], but diffed by connection id so closed
 /// connections collapse out and surviving rows slide to their new slot.
@@ -141,45 +148,48 @@ class TrackerInfoAnimatedList extends StatelessWidget {
             for (final (index, trackerInfo) in trackerInfos.indexed)
               trackerInfo.id: index,
           };
-    return KeyedAnimatedList<TrackerInfo>(
-      controller: controller,
-      padding: padding,
-      items: trackerInfos,
-      keyOf: (trackerInfo) => trackerInfo.id,
-      estimatedItemExtent: table?.rowHeight ?? recordListEstimatedExtent,
-      separator: table == null ? const SizedBox(height: recordListGap) : null,
-      itemBuilder: (itemContext, trackerInfo) {
-        final striped = positions[trackerInfo.id]?.isOdd ?? false;
-        return MemoBuilder(
-          key: Key(trackerInfo.id),
-          // A live row reads its age off the clock, which moves on its own.
-          inputs: [
-            trackerInfo,
-            ...table == null
-                ? [
-                    detailTitle,
-                    trackerInfo.start.getLastUpdateTimeDesc(
-                      itemContext,
-                      compact: true,
-                    ),
-                  ]
-                : [table, striped],
-          ],
-          builder: (_) => _buildTrackerInfoItem(
-            trackerInfo,
-            isLive: true,
-            detailTitle: detailTitle,
-            table: table,
-            striped: striped,
-            onClose: onClose,
-          ),
-        );
-      },
+    return ArrivalCacheExtentBuilder(
+      builder: (cacheExtent) => KeyedAnimatedList<TrackerInfo>(
+        controller: controller,
+        padding: padding,
+        scrollCacheExtent: cacheExtent,
+        items: trackerInfos,
+        keyOf: (trackerInfo) => trackerInfo.id,
+        estimatedItemExtent: table?.rowHeight ?? recordListEstimatedExtent,
+        separator: table == null ? const SizedBox(height: recordListGap) : null,
+        itemBuilder: (itemContext, trackerInfo) {
+          final striped = positions[trackerInfo.id]?.isOdd ?? false;
+          return MemoBuilder(
+            key: Key(trackerInfo.id),
+            // A live row reads its age off the clock, which moves on its own.
+            inputs: [
+              trackerInfo,
+              ...table == null
+                  ? [
+                      detailTitle,
+                      trackerInfo.start.getLastUpdateTimeDesc(
+                        itemContext,
+                        compact: true,
+                      ),
+                    ]
+                  : [table, striped],
+            ],
+            builder: (_) => _buildTrackerInfoItem(
+              trackerInfo,
+              isLive: true,
+              detailTitle: detailTitle,
+              table: table,
+              striped: striped,
+              onClose: onClose,
+            ),
+          );
+        },
+      ),
     );
   }
 }
 
-class TrackerInfoGroupedList extends ConsumerWidget {
+class TrackerInfoGroupedList extends ConsumerStatefulWidget {
   final List<RecordGroup<TrackerInfo>> groups;
   final RecordGrouping grouping;
   final bool isLive;
@@ -202,7 +212,38 @@ class TrackerInfoGroupedList extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TrackerInfoGroupedList> createState() =>
+      _TrackerInfoGroupedListState();
+}
+
+class _TrackerInfoGroupedListState
+    extends ConsumerState<TrackerInfoGroupedList> {
+  Map<String, TrackerInfo>? _byId;
+
+  @override
+  void didUpdateWidget(TrackerInfoGroupedList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.groups, widget.groups)) {
+      _byId = null;
+    }
+  }
+
+  TrackerInfo _latest(TrackerInfo trackerInfo) =>
+      (_byId ??= {
+        for (final group in widget.groups)
+          for (final item in group.items) item.id: item,
+      })[trackerInfo.id] ??
+      trackerInfo;
+
+  @override
+  Widget build(BuildContext context) {
+    final TrackerInfoGroupedList(
+      :grouping,
+      :isLive,
+      :detailTitle,
+      :table,
+      :onClose,
+    ) = widget;
     final showIcon =
         grouping == RecordGrouping.app &&
         ref.watch(
@@ -212,32 +253,47 @@ class TrackerInfoGroupedList extends ConsumerWidget {
                 system.isAndroid,
           ),
         );
-    final table = this.table;
+    final showsTraffic = isLive || table != null;
     return RecordGroupedList<TrackerInfo>(
-      groups: groups,
+      groups: widget.groups,
       grouping: grouping,
-      controller: controller,
-      padding: padding,
+      controller: widget.controller,
+      padding: widget.padding,
       estimatedItemExtent: table?.rowHeight ?? recordListEstimatedExtent,
       leadingOf: (group) => showIcon && group.key.isNotEmpty
           ? PackageIcon(packageName: group.key, size: 24)
           : null,
       trailingOf: isLive ? (group) => _buildSpeed(context, group.items) : null,
       itemBuilder: (_, trackerInfo, index) {
-        final row = _buildTrackerInfoItem(
-          trackerInfo,
-          isLive: isLive,
-          detailTitle: detailTitle,
-          table: table,
-          striped: index.isOdd,
-          onClose: onClose,
+        final striped = index.isOdd;
+        return MemoBuilder(
+          key: Key(trackerInfo.id),
+          inputs: [
+            ...showsTraffic ? [trackerInfo] : _shownInList(trackerInfo),
+            detailTitle,
+            table,
+            striped,
+            if (isLive && table == null)
+              trackerInfo.start.getLastUpdateTimeDesc(context, compact: true),
+          ],
+          builder: (_) {
+            final row = _buildTrackerInfoItem(
+              trackerInfo,
+              isLive: isLive,
+              detailTitle: detailTitle,
+              table: table,
+              striped: striped,
+              onClose: onClose,
+              latest: () => _latest(trackerInfo),
+            );
+            return table == null
+                ? Padding(
+                    padding: const EdgeInsets.only(top: recordListGap),
+                    child: row,
+                  )
+                : row;
+          },
         );
-        return table == null
-            ? Padding(
-                padding: const EdgeInsets.only(top: recordListGap),
-                child: row,
-              )
-            : row;
       },
     );
   }
@@ -274,6 +330,7 @@ Widget _buildTrackerInfoItem(
   required RecordTable<TrackerInfo>? table,
   required bool striped,
   ValueChanged<TrackerInfo>? onClose,
+  ValueGetter<TrackerInfo>? latest,
 }) {
   if (table != null) {
     return TrackerInfoTableRow(
@@ -291,5 +348,6 @@ Widget _buildTrackerInfoItem(
     isLive: isLive,
     onClose: onClose,
     detailTitle: detailTitle,
+    latest: latest,
   );
 }

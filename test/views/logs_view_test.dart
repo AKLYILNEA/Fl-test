@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
@@ -198,5 +199,29 @@ void main() {
       controller.setLogs(logs.sublist(30, 130));
       expect(controller.value.logs, logs.sublist(30, 130));
     });
+  });
+
+  testWidgets('a full list builds only the log added', (tester) async {
+    await pumpLogsView(tester);
+    final notifier = container.read(logsProvider.notifier);
+    for (var i = logCount; i < maxLogsLength; i++) {
+      notifier.add(Log(payload: 'log $i', dateTime: '2024-01-01 12:00:00'));
+    }
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump();
+
+    var built = 0;
+    debugOnRebuildDirtyWidget = (element, _) {
+      if (element.widget is LogItem) {
+        built++;
+      }
+    };
+    addTearDown(() => debugOnRebuildDirtyWidget = null);
+    notifier.add(const Log(payload: 'new', dateTime: '2024-01-01 12:00:00'));
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump();
+    debugOnRebuildDirtyWidget = null;
+
+    expect(built, 1);
   });
 }

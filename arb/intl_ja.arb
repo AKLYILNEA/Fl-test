@@ -897,8 +897,6 @@
   "notRunning": "停止中",
   "trafficPeak": "ピーク {value}",
   "trafficTotal": "累計 {value}",
-  "trafficChartStart": "−60 秒",
-  "trafficChartNow": "現在",
   "ipQualityShort": "品質",
   "ipTypeUnknown": "タイプ不明",
   "tapIconToRetry": "アイコンをタップして再試行",

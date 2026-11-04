@@ -161,7 +161,8 @@ abstract class SelectedProxyState with _$SelectedProxyState {
 @freezed
 abstract class SharedState with _$SharedState {
   const factory SharedState({
-    SetupParams? setupParams,
+    // Gson's JsonObject adapter rejects a JSON null, which would drop the sync.
+    @JsonKey(includeIfNull: false) SetupParams? setupParams,
     VpnOptions? vpnOptions,
     required String stopTip,
     required String startTip,

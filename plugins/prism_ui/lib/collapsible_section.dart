@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
+import 'package:prism_ui/builder.dart';
 import 'package:prism_ui/context.dart';
 import 'package:prism_ui/icons/icons.dart';
 import 'package:prism_ui/item_position.dart';
@@ -193,6 +194,34 @@ class _SliverCollapsibleGroupsState extends State<SliverCollapsibleGroups>
     );
   }
 
+  Widget _buildHeader(CollapsibleGroup group) {
+    final collapsible = widget.collapsible;
+    final unfold =
+        _motions[group.key] ??
+        (_isOpen(group.key, collapsible: collapsible)
+            ? kAlwaysCompleteAnimation
+            : kAlwaysDismissedAnimation);
+    // Unkeyed, so headers update in place as a group jumps to the top.
+    return MemoBuilder(
+      inputs: [
+        group.label,
+        group.itemCount,
+        group.leading,
+        group.trailing,
+        unfold,
+        collapsible,
+      ],
+      builder: (_) => CollapsibleHeader(
+        label: group.label,
+        count: group.itemCount,
+        leading: group.leading,
+        trailing: group.trailing,
+        unfold: unfold,
+        onToggle: collapsible ? () => _toggle(group.key) : null,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final collapsible = widget.collapsible;
@@ -214,19 +243,7 @@ class _SliverCollapsibleGroupsState extends State<SliverCollapsibleGroups>
         final (index, item) = rows[row];
         final group = widget.groups[index];
         return switch (item) {
-          _header => CollapsibleHeader(
-            key: ValueKey(group.key),
-            label: group.label,
-            count: group.itemCount,
-            leading: group.leading,
-            trailing: group.trailing,
-            unfold:
-                _motions[group.key] ??
-                AlwaysStoppedAnimation(
-                  _isOpen(group.key, collapsible: collapsible) ? 1 : 0,
-                ),
-            onToggle: collapsible ? () => _toggle(group.key) : null,
-          ),
+          _header => _buildHeader(group),
           _unfolding => _buildUnfolding(context, index),
           _ => _buildEntry(context, index, item),
         };

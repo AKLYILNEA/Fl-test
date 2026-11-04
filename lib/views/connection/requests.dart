@@ -117,9 +117,17 @@ class _RequestsViewState extends ConsumerState<RequestsView>
 
   @override
   Widget build(BuildContext context) {
+    final body = RecordFilterScope(
+      onFilter: _filters.add,
+      child: ListenableBuilder(
+        listenable: _filters,
+        builder: (_, _) => _buildBody(),
+      ),
+    );
     return ListenableBuilder(
       listenable: Listenable.merge([_filters, _filters.options]),
-      builder: (context, _) {
+      child: body,
+      builder: (context, body) {
         final pinned = !ViewScope.isMobileOf(context);
         return Scaffold(
           title: _labelOf(_feed),
@@ -128,7 +136,7 @@ class _RequestsViewState extends ConsumerState<RequestsView>
           keywords: _filters.keywordsOf(pinned: pinned),
           iconActions: _buildActions(),
           menuItems: _filters.menuItems(context, pinned: pinned),
-          body: RecordFilterScope(onFilter: _filters.add, child: _buildBody()),
+          body: body!,
         );
       },
     );
@@ -382,9 +390,11 @@ class _LiveFeedState extends ConsumerState<_LiveFeed>
   void _showConnections(List<TrackerInfo>? trackerInfos) {
     final readAt = DateTime.now();
     if (!_loaded) {
-      setState(() => _loaded = true);
-      // A failed read must not leave the controller's list from the last visit.
-      _applyConnections(trackerInfos ?? const [], readAt);
+      showFirstContent(() {
+        setState(() => _loaded = true);
+        // A failed read must not leave the controller's list from the last visit.
+        _applyConnections(trackerInfos ?? const [], readAt);
+      });
       return;
     }
     updateWhenRouteSettled(() => _applyConnections(trackerInfos, readAt));
@@ -435,6 +445,7 @@ class _LiveFeedState extends ConsumerState<_LiveFeed>
         final connections = widget.filters.apply(state.list);
         return NullStatusSwitcher(
           isLoading: !_loaded,
+          loadingStatus: const Center(child: ActivityIndicator.page()),
           isEmpty: connections.isEmpty,
           isSearching: state.isSearching || widget.filters.isFiltering,
           nullStatus: NullStatus(

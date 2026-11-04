@@ -1866,8 +1866,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "totalUpload": MessageLookupByLibrary.simpleMessage("アップロード量"),
     "tproxyPort": MessageLookupByLibrary.simpleMessage("TProxyポート"),
     "traffic": MessageLookupByLibrary.simpleMessage("通信量"),
-    "trafficChartNow": MessageLookupByLibrary.simpleMessage("現在"),
-    "trafficChartStart": MessageLookupByLibrary.simpleMessage("−60 秒"),
     "trafficPeak": m95,
     "trafficTotal": m96,
     "trafficUsage": MessageLookupByLibrary.simpleMessage("トラフィック統計"),

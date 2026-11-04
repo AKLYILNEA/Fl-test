@@ -285,29 +285,32 @@ class RecordGroupedList<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final other = context.appLocalizations.other;
-    return CustomScrollView(
-      controller: controller,
-      slivers: [
-        SliverPadding(
-          padding: padding ?? EdgeInsets.zero,
-          sliver: SliverCollapsibleGroups(
-            key: ValueKey(grouping),
-            estimatedItemExtent: estimatedItemExtent,
-            groups: [
-              for (final group in groups)
-                CollapsibleGroup(
-                  key: group.key,
-                  label: group.key.isEmpty ? other : group.key,
-                  itemCount: group.items.length,
-                  leading: leadingOf?.call(group),
-                  trailing: trailingOf?.call(group),
-                ),
-            ],
-            itemBuilder: (context, group, index) =>
-                itemBuilder(context, groups[group].items[index], index),
+    return ArrivalCacheExtentBuilder(
+      builder: (cacheExtent) => CustomScrollView(
+        controller: controller,
+        scrollCacheExtent: cacheExtent,
+        slivers: [
+          SliverPadding(
+            padding: padding ?? EdgeInsets.zero,
+            sliver: SliverCollapsibleGroups(
+              key: ValueKey(grouping),
+              estimatedItemExtent: estimatedItemExtent,
+              groups: [
+                for (final group in groups)
+                  CollapsibleGroup(
+                    key: group.key,
+                    label: group.key.isEmpty ? other : group.key,
+                    itemCount: group.items.length,
+                    leading: leadingOf?.call(group),
+                    trailing: trailingOf?.call(group),
+                  ),
+              ],
+              itemBuilder: (context, group, index) =>
+                  itemBuilder(context, groups[group].items[index], index),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
