@@ -2,6 +2,8 @@ import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
+import 'package:fl_clash/ui/ui.dart';
+import 'package:fl_clash/ui/icons/icons.dart';
 import 'package:fl_clash/views/proxies/card.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/services.dart';
@@ -133,6 +135,153 @@ void main() {
       const ValueKey('proxy 1'),
     );
   });
+
+  for (final brightness in Brightness.values) {
+    for (final tab in [false, true]) {
+      for (final fallback in [false, true]) {
+        for (final type in ProxyCardType.values) {
+          testWidgets('selected colors stay coherent in ${brightness.name} '
+              '${tab ? 'tabs' : 'list'} ${type.name}, fallback=$fallback', (
+            tester,
+          ) async {
+            final scoped = ProviderContainer(
+              overrides: [
+                profilesProvider.overrideWith(TestProfiles.new),
+                proxyNameProvider('group').overrideWithValue('proxy 0'),
+                selectedProxyNameProvider(
+                  'group',
+                ).overrideWithValue(fallback ? 'proxy 1' : 'proxy 0'),
+                delayDataSourceProvider.overrideWithBuild(
+                  (_, _) => {
+                    _testUrl: {'proxy 0': 123, 'proxy 1': 456},
+                  },
+                ),
+              ],
+            );
+            addTearDown(scoped.dispose);
+            globalState.container = scoped;
+            scoped.read(viewSizeProvider.notifier).value = const Size(900, 600);
+            await tester.pumpWidget(
+              UncontrolledProviderScope(
+                container: scoped,
+                child: TestApp(
+                  theme: ThemeData(brightness: brightness),
+                  themeMode: ThemeMode.light,
+                  homeBuilder: (child) => HostScaffold(body: child),
+                  child: Column(
+                    children: [
+                      for (var index = 0; index < 2; index++)
+                        SizedBox(
+                          height: 120,
+                          child: ProxyCard(
+                            key: ValueKey('color $index'),
+                            groupName: 'group',
+                            testUrl: _testUrl,
+                            proxy: Proxy(
+                              name: 'proxy $index',
+                              type: 'Shadowsocks',
+                            ),
+                            groupType: GroupType.URLTest,
+                            type: type,
+                            isTabMode: tab,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+            await tester.pumpAndSettle();
+            for (var index = 0; index < 2; index++) {
+              final root = find.byKey(ValueKey('color $index')).first;
+              final scheme = tester.element(root).colorScheme;
+              final selected = index == (fallback ? 1 : 0);
+              final card = tester.widget<Card>(
+                find.descendant(of: root, matching: find.byType(Card)),
+              );
+              expect(card.isSelected, selected);
+              expect(card.fillsSelection, isTrue);
+              final surface = tester.widget<PressSurface>(
+                find
+                    .descendant(of: root, matching: find.byType(PressSurface))
+                    .first,
+              );
+              if (selected) expect(surface.fill, scheme.primary);
+              final name = tester.widget<Text>(
+                find.descendant(of: root, matching: find.text('proxy $index')),
+              );
+              expect(
+                name.style!.color,
+                selected ? scheme.onPrimary : scheme.onSurface,
+              );
+              final desc = tester.widget<Text>(
+                find.descendant(of: root, matching: find.text('Shadowsocks')),
+              );
+              expect(
+                desc.style!.color,
+                (selected ? scheme.onPrimary : scheme.onSurface).opacity80,
+              );
+              final latency = tester.widget<Text>(
+                find.descendant(
+                  of: root,
+                  matching: find.text(index == 0 ? '123 ms' : '456 ms'),
+                ),
+              );
+              expect(
+                latency.style!.color,
+                selected
+                    ? scheme.onPrimary
+                    : scheme.delayColor(index == 0 ? 123 : 456),
+              );
+              final badgeFinder = find.descendant(
+                of: root,
+                matching: find.byType(SelectionBadge),
+              );
+              if (index == 0 || tab && selected) {
+                final badge = tester.widget<SelectionBadge>(badgeFinder);
+                expect(badge.inverted, selected);
+                expect(
+                  badge.glyph,
+                  tab && selected ? Glyphs.check : Glyphs.pin,
+                );
+                expect(
+                  tester.getSize(badgeFinder),
+                  Size.square(tab && selected ? 20 : 22),
+                );
+                final decoration =
+                    tester
+                            .widget<DecoratedBox>(
+                              find.descendant(
+                                of: badgeFinder,
+                                matching: find.byType(DecoratedBox),
+                              ),
+                            )
+                            .decoration
+                        as ShapeDecoration;
+                expect(decoration.shape, AppShape.circle);
+                expect(
+                  decoration.color,
+                  selected
+                      ? scheme.onPrimary
+                      : scheme.primary.withValues(alpha: 0.14),
+                );
+                final glyph = tester.widget<GlyphIcon>(
+                  find.descendant(
+                    of: badgeFinder,
+                    matching: find.byType(GlyphIcon),
+                  ),
+                );
+                expect(glyph.color, scheme.primary);
+              } else {
+                expect(badgeFinder, findsNothing);
+              }
+            }
+            await tester.pumpWidget(const SizedBox.shrink());
+          });
+        }
+      }
+    }
+  }
 
   testWidgets('enter on the delay control runs the delay test', (tester) async {
     await pumpCards(tester, ProxyCardType.standard);
