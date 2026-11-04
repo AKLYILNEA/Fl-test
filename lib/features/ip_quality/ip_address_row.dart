@@ -28,21 +28,8 @@ class IpAddressRow extends ConsumerWidget {
     final hidden =
         publicIp != null &&
         ref.watch(appSettingProvider.select((state) => state.hideIp));
-    final port = hidden ? ipEndpointOf(address)?.port : null;
-    final shown = hidden ? '*****${port == null ? '' : ':$port'}' : address;
-    final maskedEndpoint = TextSpan(
-      children: [
-        TextSpan(text: '*****', style: const TextStyle().toJetBrainsMono),
-        if (port != null) ...[
-          // Masking removes the digit context that selects a raised numeric colon.
-          const TextSpan(
-            text: ':',
-            style: TextStyle(fontFeatures: [FontFeature.caseSensitiveForms()]),
-          ),
-          TextSpan(text: port),
-        ],
-      ],
-    );
+    final shown = hidden ? '*****' : address;
+    final style = hidden ? const TextStyle().toJetBrainsMono : null;
     final ip = allowDetails ? publicIp : null;
     final title = this.title;
     if (ip == null) {
@@ -51,7 +38,7 @@ class IpAddressRow extends ConsumerWidget {
           : DetailRow(
               title: title,
               copyText: address,
-              value: hidden ? Text.rich(maskedEndpoint) : Text(shown),
+              value: Text(shown, style: style),
             );
     }
     final country =
@@ -67,29 +54,12 @@ class IpAddressRow extends ConsumerWidget {
         ref.watch(ipCountryProvider(ip)).value ??
         '';
     final prefix = country.isEmpty ? '' : '${country.countryFlagEmoji} ';
-    final emojiFont = EmojiFont.of(context);
-    final text = hidden
-        ? Text.rich(
-            TextSpan(
-              children: [
-                if (prefix.isNotEmpty)
-                  EmojiText.spanOf(
-                    prefix,
-                    null,
-                    emojiFamily: emojiFont?.family,
-                    pattern: emojiFont?.pattern,
-                  ),
-                maskedEndpoint,
-              ],
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          )
-        : EmojiText(
-            '$prefix$shown',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          );
+    final text = EmojiText(
+      '$prefix$shown',
+      style: style,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    );
     void openDetails() => showIpQualitySheet(context, ip: ip, outbound: false);
     if (title == null) {
       return DecorationListItem(title: text, onPressed: openDetails);
