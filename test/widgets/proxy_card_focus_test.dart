@@ -1,3 +1,4 @@
+import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
@@ -144,6 +145,11 @@ void main() {
               '${tab ? 'tabs' : 'list'} ${type.name}, fallback=$fallback', (
             tester,
           ) async {
+            final result = switch (type) {
+              ProxyCardType.loose => 123,
+              ProxyCardType.standard => 900,
+              ProxyCardType.compact => -1,
+            };
             final scoped = ProviderContainer(
               overrides: [
                 profilesProvider.overrideWith(TestProfiles.new),
@@ -153,7 +159,7 @@ void main() {
                 ).overrideWithValue(fallback ? 'proxy 1' : 'proxy 0'),
                 delayDataSourceProvider.overrideWithBuild(
                   (_, _) => {
-                    _testUrl: {'proxy 0': 123, 'proxy 1': 456},
+                    _testUrl: {'proxy 0': result, 'proxy 1': result},
                   },
                 ),
               ],
@@ -200,46 +206,49 @@ void main() {
                 find.descendant(of: root, matching: find.byType(Card)),
               );
               expect(card.isSelected, selected);
-              expect(card.fillsSelection, isTrue);
+              expect(card.fillsSelection, isFalse);
+              expect(
+                card.side,
+                selected
+                    ? BorderSide(color: scheme.primary, width: 1.5)
+                    : BorderSide.none,
+              );
               final surface = tester.widget<PressSurface>(
                 find
                     .descendant(of: root, matching: find.byType(PressSurface))
                     .first,
               );
-              if (selected) expect(surface.fill, scheme.primary);
+              expect(surface.side, card.side);
+              expect(card.radius, AppCorner.lg);
+              if (selected) expect(surface.fill, scheme.primary.opacity15);
               final name = tester.widget<Text>(
                 find.descendant(of: root, matching: find.text('proxy $index')),
               );
-              expect(
-                name.style!.color,
-                selected ? scheme.onPrimary : scheme.onSurface,
-              );
+              expect(name.style!.color, scheme.onSurface);
               final desc = tester.widget<Text>(
                 find.descendant(of: root, matching: find.text('Shadowsocks')),
               );
-              expect(
-                desc.style!.color,
-                (selected ? scheme.onPrimary : scheme.onSurface).opacity80,
-              );
+              expect(desc.style!.color, scheme.onSurface.opacity80);
               final latency = tester.widget<Text>(
                 find.descendant(
                   of: root,
-                  matching: find.text(index == 0 ? '123 ms' : '456 ms'),
+                  matching: find.text(
+                    result > 0
+                        ? '$result ms'
+                        : delayFailureText(
+                            result,
+                            tester.element(root).appLocalizations,
+                          ),
+                  ),
                 ),
               );
-              expect(
-                latency.style!.color,
-                selected
-                    ? scheme.onPrimary
-                    : scheme.delayColor(index == 0 ? 123 : 456),
-              );
+              expect(latency.style!.color, scheme.delayColor(result));
               final badgeFinder = find.descendant(
                 of: root,
                 matching: find.byType(SelectionBadge),
               );
               if (index == 0 || tab && selected) {
                 final badge = tester.widget<SelectionBadge>(badgeFinder);
-                expect(badge.inverted, selected);
                 expect(
                   badge.glyph,
                   tab && selected ? Glyphs.check : Glyphs.pin,
@@ -262,7 +271,7 @@ void main() {
                 expect(
                   decoration.color,
                   selected
-                      ? scheme.onPrimary
+                      ? scheme.primary
                       : scheme.primary.withValues(alpha: 0.14),
                 );
                 final glyph = tester.widget<GlyphIcon>(
@@ -271,7 +280,10 @@ void main() {
                     matching: find.byType(GlyphIcon),
                   ),
                 );
-                expect(glyph.color, scheme.primary);
+                expect(
+                  glyph.color,
+                  selected ? scheme.onPrimary : scheme.primary,
+                );
               } else {
                 expect(badgeFinder, findsNothing);
               }

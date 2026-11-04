@@ -60,7 +60,7 @@ class ProxyCard extends ConsumerWidget {
 
   Measure get measure => globalState.measure;
 
-  Widget _buildProxyNameText(BuildContext context, Color? foreground) {
+  Widget _buildProxyNameText(BuildContext context) {
     if (type == ProxyCardType.compact) {
       return SizedBox(
         height: measure.textHeight(AppTextStyle.subheadline) * 1,
@@ -68,9 +68,7 @@ class ProxyCard extends ConsumerWidget {
           proxy.name,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: AppTextStyle.subheadline
-              .of(context)
-              .copyWith(color: foreground),
+          style: AppTextStyle.subheadline.of(context),
         ),
       );
     } else {
@@ -80,9 +78,7 @@ class ProxyCard extends ConsumerWidget {
           proxy.name,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
-          style: AppTextStyle.subheadline
-              .of(context)
-              .copyWith(color: foreground),
+          style: AppTextStyle.subheadline.of(context),
         ),
       );
     }
@@ -144,8 +140,8 @@ class ProxyCard extends ConsumerWidget {
     return icon;
   }
 
-  Widget _buildNameRow(BuildContext context, WidgetRef ref, Color? foreground) {
-    final name = _buildProxyNameText(context, foreground);
+  Widget _buildNameRow(BuildContext context, WidgetRef ref) {
+    final name = _buildProxyNameText(context);
     final iconStyle = ref.watch(
       proxiesStyleSettingProvider.select((state) => state.iconStyle),
     );
@@ -165,7 +161,7 @@ class ProxyCard extends ConsumerWidget {
           child: FittedBox(
             fit: BoxFit.contain,
             child: IconTheme.merge(
-              data: IconThemeData(size: size, color: foreground),
+              data: IconThemeData(size: size),
               child: CommonTargetIcon(
                 src: icon,
                 fallback: GroupMonogram(proxy.name),
@@ -201,18 +197,16 @@ class ProxyCard extends ConsumerWidget {
           ),
         );
         final colorScheme = context.colorScheme;
-        final foreground = inUse ? colorScheme.onPrimary : null;
         final delayText = _DelayText(
           proxy: proxy,
           testUrl: testUrl,
-          foreground: foreground,
           alignment: isLoose ? Alignment.centerLeft : Alignment.centerRight,
         );
         final typeStyle = AppTextStyle.footnote
             .of(context)
             .copyWith(
               overflow: TextOverflow.ellipsis,
-              color: (foreground ?? colorScheme.onSurface).opacity80,
+              color: colorScheme.onSurface.opacity80,
             );
         final details = isLoose
             ? Column(
@@ -242,6 +236,7 @@ class ProxyCard extends ConsumerWidget {
                   ],
                 ),
               );
+        final showTint = inUse;
         final showCheckmark = isTabMode && inUse;
         return ContextMenuRegion(
           menuItems: _menuItems(
@@ -253,11 +248,14 @@ class ProxyCard extends ConsumerWidget {
           ),
           child: Card(
             radius: AppCorner.lg,
+            side: inUse
+                ? BorderSide(color: colorScheme.primary, width: 1.5)
+                : BorderSide.none,
             enterActionsOnRight: true,
             key: key,
             onPressed: () => _handleSelect(ref),
-            isSelected: inUse,
-            fillsSelection: true,
+            isSelected: showTint,
+            selectionTint: showTint ? colorScheme.primary.opacity15 : null,
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -267,15 +265,10 @@ class ProxyCard extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   spacing: 4,
                   children: [
-                    Expanded(child: _buildNameRow(context, ref, foreground)),
-                    if (showCheckmark)
-                      const SelectionBadge(size: 20, inverted: true),
+                    Expanded(child: _buildNameRow(context, ref)),
+                    if (showCheckmark) const SelectionBadge(size: 20),
                     if (pinned && !showCheckmark)
-                      SelectionBadge(
-                        glyph: Glyphs.pin,
-                        tonal: !inUse,
-                        inverted: inUse,
-                      ),
+                      SelectionBadge(glyph: Glyphs.pin, tonal: !inUse),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -319,13 +312,11 @@ class _DelayText extends ConsumerStatefulWidget {
     required this.proxy,
     required this.testUrl,
     required this.alignment,
-    this.foreground,
   });
 
   final Proxy proxy;
   final String? testUrl;
   final Alignment alignment;
-  final Color? foreground;
 
   @override
   ConsumerState<_DelayText> createState() => _DelayTextState();
@@ -381,9 +372,7 @@ class _DelayTextState extends ConsumerState<_DelayText> {
             child: DecoratedBox(
               decoration: ShapeDecoration(
                 shape: AppShape.xs.copyWith(
-                  side: focusRingSide(
-                    context.colorScheme,
-                  ).copyWith(color: widget.foreground),
+                  side: focusRingSide(context.colorScheme),
                 ),
               ),
             ),
@@ -426,15 +415,12 @@ class _DelayTextState extends ConsumerState<_DelayText> {
                     width: measure.textHeight(AppTextStyle.caption2),
                     child: _withFocusRing(context, switch (phase) {
                       DelayTestPhase.running => ActivityIndicator(
-                        color: widget.foreground,
                         size: measure.textHeight(AppTextStyle.caption2),
                       ),
                       DelayTestPhase.queued => GlyphIcon(
                         AppGlyphs.clock,
                         size: measure.textHeight(AppTextStyle.caption2),
-                        color:
-                            widget.foreground?.opacity80 ??
-                            context.colorScheme.onSurfaceVariant.opacity38,
+                        color: context.colorScheme.onSurfaceVariant.opacity38,
                       ),
                       null => HoverTooltip(
                         message: context.appLocalizations.delayTest,
@@ -443,7 +429,6 @@ class _DelayTextState extends ConsumerState<_DelayText> {
                           onTap: _handleTestCurrentDelay,
                           child: GlyphIcon(
                             AppGlyphs.bolt,
-                            color: widget.foreground,
                             size: measure.textHeight(AppTextStyle.caption2),
                           ),
                         ),
@@ -463,9 +448,7 @@ class _DelayTextState extends ConsumerState<_DelayText> {
                             .of(context, emphasized: true)
                             .copyWith(
                               overflow: TextOverflow.ellipsis,
-                              color:
-                                  widget.foreground ??
-                                  context.colorScheme.delayColor(delay),
+                              color: context.colorScheme.delayColor(delay),
                             ),
                       ),
                     ),

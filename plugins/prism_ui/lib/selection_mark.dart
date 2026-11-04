@@ -25,13 +25,11 @@ class SelectionBadge extends StatelessWidget {
     this.size = 22,
     this.glyph = Glyphs.check,
     this.tonal = false,
-    this.inverted = false,
   });
 
   final double size;
   final Glyph glyph;
   final bool tonal;
-  final bool inverted;
 
   @override
   Widget build(BuildContext context) {
@@ -41,9 +39,7 @@ class SelectionBadge extends StatelessWidget {
       child: DecoratedBox(
         decoration: ShapeDecoration(
           shape: AppShape.circle,
-          color: inverted
-              ? colorScheme.onPrimary
-              : tonal
+          color: tonal
               ? colorScheme.primary.withValues(alpha: 0.14)
               : colorScheme.primary,
         ),
@@ -52,9 +48,7 @@ class SelectionBadge extends StatelessWidget {
             glyph,
             size: size - 6,
             fill: 1,
-            color: inverted || tonal
-                ? colorScheme.primary
-                : colorScheme.onPrimary,
+            color: tonal ? colorScheme.primary : colorScheme.onPrimary,
           ),
         ),
       ),

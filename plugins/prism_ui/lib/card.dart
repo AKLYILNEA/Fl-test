@@ -115,6 +115,7 @@ class Card extends StatelessWidget {
     this.padding,
     this.enterAnimated = false,
     this.shape,
+    this.side = BorderSide.none,
     this.isError = false,
     this.enterActionsOnRight = false,
     this.statesController,
@@ -143,6 +144,7 @@ class Card extends StatelessWidget {
   final EdgeInsets? padding;
   final double? radius;
   final OutlinedBorder? shape;
+  final BorderSide side;
   final WidgetStatesController? statesController;
 
   static const _minimumSize = Size(64, 40);
@@ -227,6 +229,7 @@ class Card extends StatelessWidget {
         _ => selectionTint ?? level.colorOf(colorScheme),
       },
       shape: shape ?? AppShape.all(radius ?? AppCorner.md),
+      side: side,
       inkColor: _filled ? content.text : null,
       ringColor: isError ? colorScheme.error : null,
       padding: paddingOf(context, padding ?? EdgeInsets.zero),
@@ -243,9 +246,9 @@ class Card extends StatelessWidget {
               .of(context, emphasized: true)
               .copyWith(color: content.text),
           child: IconTheme(
-            data: IconTheme.of(
-              context,
-            ).merge(IconThemeData(color: content.icon, size: commonCardIconSize)),
+            data: IconTheme.of(context).merge(
+              IconThemeData(color: content.icon, size: commonCardIconSize),
+            ),
             child: SurfaceScope(level: level, child: child),
           ),
         ),
