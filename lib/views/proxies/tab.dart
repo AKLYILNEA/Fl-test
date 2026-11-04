@@ -282,7 +282,6 @@ class ProxyGroupView extends ConsumerWidget {
             type: cardType,
             proxy: proxy,
             groupName: group.name,
-            isTabMode: true,
           );
         },
       ),

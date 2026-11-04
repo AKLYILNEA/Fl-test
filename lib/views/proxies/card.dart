@@ -46,7 +46,6 @@ class ProxyCard extends ConsumerWidget {
   final GroupType groupType;
   final ProxyCardType type;
   final String? testUrl;
-  final bool isTabMode;
 
   const ProxyCard({
     super.key,
@@ -55,7 +54,6 @@ class ProxyCard extends ConsumerWidget {
     required this.proxy,
     required this.groupType,
     required this.type,
-    this.isTabMode = false,
   });
 
   Measure get measure => globalState.measure;
@@ -237,7 +235,6 @@ class ProxyCard extends ConsumerWidget {
                 ),
               );
         final showTint = inUse;
-        final showCheckmark = isTabMode && inUse;
         return ContextMenuRegion(
           menuItems: _menuItems(
             context,
@@ -266,8 +263,7 @@ class ProxyCard extends ConsumerWidget {
                   spacing: 4,
                   children: [
                     Expanded(child: _buildNameRow(context, ref)),
-                    if (showCheckmark) const SelectionBadge(size: 20),
-                    if (pinned && !showCheckmark)
+                    if (pinned)
                       SelectionBadge(glyph: Glyphs.pin, tonal: !inUse),
                   ],
                 ),
