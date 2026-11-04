@@ -24,14 +24,14 @@ class IpAddressRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final endpoint = ipEndpointOf(address);
+    final publicIp = publicIpOf(address);
     final hidden =
-        endpoint != null &&
+        publicIp != null &&
         ref.watch(appSettingProvider.select((state) => state.hideIp));
-    final port = endpoint?.port;
+    final port = hidden ? ipEndpointOf(address)?.port : null;
     final shown = hidden ? '*****${port == null ? '' : ':$port'}' : address;
     final style = hidden ? const TextStyle().toJetBrainsMono : null;
-    final ip = allowDetails ? publicIpOf(address) : null;
+    final ip = allowDetails ? publicIp : null;
     final title = this.title;
     if (ip == null) {
       return title == null

@@ -22,7 +22,7 @@ class _HiddenSettings extends AppSetting {
 
 void main() {
   testWidgets(
-    'DNS public and fake addresses follow masking while domain names stay visible',
+    'DNS masks public addresses while local and synthetic addresses stay visible',
     (tester) async {
       await tester.pumpWidget(
         TestApp(
@@ -35,6 +35,10 @@ void main() {
             children: [
               IpAddressRow(address: '2606:4700:4700::1111'),
               IpAddressRow(address: '198.18.0.1'),
+              IpAddressRow(address: '192.168.1.1:53'),
+              IpAddressRow(address: '[fd00::1]:53'),
+              IpAddressRow(address: '127.0.0.1'),
+              IpAddressRow(address: '10.0.0.1'),
               IpAddressRow(address: 'edge.example.com'),
             ],
           ),
@@ -42,10 +46,38 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('🇺🇸 *****'), findsOneWidget);
-      expect(find.text('*****'), findsOneWidget);
-      expect(find.text('edge.example.com'), findsOneWidget);
+      expect(find.text('*****'), findsNothing);
+      for (final address in [
+        '198.18.0.1',
+        '192.168.1.1:53',
+        '[fd00::1]:53',
+        '127.0.0.1',
+        '10.0.0.1',
+        'edge.example.com',
+      ]) {
+        expect(find.text(address), findsOneWidget);
+      }
       expect(find.textContaining('2606:'), findsNothing);
-      expect(find.text('198.18.0.1'), findsNothing);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+  testWidgets(
+    'a public source address follows hiding without opening details',
+    (tester) async {
+      await tester.pumpWidget(
+        TestApp(
+          wrapInProviderScope: true,
+          overrides: [appSettingProvider.overrideWith(_HiddenSettings.new)],
+          child: const IpAddressRow(
+            title: 'Source',
+            address: '8.8.8.8:443',
+            allowDetails: false,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('*****:443'), findsOneWidget);
+      expect(find.text('8.8.8.8:443'), findsNothing);
       await tester.pumpWidget(const SizedBox.shrink());
     },
   );
@@ -110,8 +142,8 @@ void main() {
     );
     await tester.pumpAndSettle();
     expect(find.text('🇺🇸 *****:5228'), findsOneWidget);
-    expect(find.text('*****:38120'), findsOneWidget);
-    expect(find.text('198.18.0.1:38120'), findsNothing);
+    expect(find.text('*****:38120'), findsNothing);
+    expect(find.text('198.18.0.1:38120'), findsOneWidget);
     expect(queried, isEmpty);
     await tester.ensureVisible(find.text('🇺🇸 *****:5228'));
     await tester.pumpAndSettle();
