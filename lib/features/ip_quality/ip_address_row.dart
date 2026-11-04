@@ -33,7 +33,14 @@ class IpAddressRow extends ConsumerWidget {
     final maskedEndpoint = TextSpan(
       children: [
         TextSpan(text: '*****', style: const TextStyle().toJetBrainsMono),
-        if (port != null) TextSpan(text: ':$port'),
+        if (port != null) ...[
+          // Masking removes the digit context that selects a raised numeric colon.
+          const TextSpan(
+            text: ':',
+            style: TextStyle(fontFeatures: [FontFeature.caseSensitiveForms()]),
+          ),
+          TextSpan(text: port),
+        ],
       ],
     );
     final ip = allowDetails ? publicIp : null;

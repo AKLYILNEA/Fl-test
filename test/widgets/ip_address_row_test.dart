@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/features/connection/tracker_info_item.dart';
 import 'package:fl_clash/features/ip_quality/ip_address_row.dart';
@@ -8,6 +10,7 @@ import 'package:fl_clash/providers/config.dart';
 import 'package:fl_clash/providers/ip_country.dart';
 import 'package:fl_clash/providers/ip_quality.dart';
 import 'package:fl_clash/ui/ui.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,6 +24,101 @@ class _HiddenSettings extends AppSetting {
 }
 
 void main() {
+  testWidgets('masking keeps the numeric colon at the same painted height', (
+    tester,
+  ) async {
+    final loader = FontLoader('MapleMono')
+      ..addFont(rootBundle.load('assets/fonts/MapleMono-Regular.ttf'));
+    await tester.runAsync(loader.load);
+    const boundaryKey = ValueKey('ip-colon-paint');
+    await tester.pumpWidget(
+      TestApp(
+        wrapInProviderScope: true,
+        theme: ThemeData(fontFamily: 'MapleMono', brightness: Brightness.light),
+        themeMode: ThemeMode.light,
+        overrides: [ipCountryProvider.overrideWith((ref, ip) async => 'US')],
+        child: const RepaintBoundary(
+          key: boundaryKey,
+          child: Column(
+            children: [
+              IpAddressRow(title: 'Target', address: '74.125.204.188:5228'),
+              IpAddressRow(
+                title: 'Source',
+                address: '8.8.8.8:443',
+                allowDetails: false,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final boundary = tester.renderObject<RenderRepaintBoundary>(
+      find.byKey(boundaryKey),
+    );
+    Future<(int, int)> colonInk(String text) async {
+      final paragraph = tester.renderObject<RenderParagraph>(
+        find.byWidgetPredicate(
+          (widget) => widget is RichText && widget.text.toPlainText() == text,
+        ),
+      );
+      final index = text.lastIndexOf(':');
+      final box = paragraph
+          .getBoxesForSelection(
+            TextSelection(baseOffset: index, extentOffset: index + 1),
+          )
+          .single;
+      final rect = MatrixUtils.transformRect(
+        paragraph.getTransformTo(boundary),
+        box.toRect(),
+      );
+      final result = await tester.runAsync(() async {
+        final image = await boundary.toImage(pixelRatio: 4);
+        try {
+          final data = (await image.toByteData(
+            format: ui.ImageByteFormat.rawRgba,
+          ))!;
+          var top = image.height;
+          var bottom = -1;
+          for (
+            var y = (rect.top * 4).floor();
+            y < (rect.bottom * 4).ceil();
+            y++
+          ) {
+            for (
+              var x = (rect.left * 4).ceil();
+              x < (rect.right * 4).floor();
+              x++
+            ) {
+              final offset = (y * image.width + x) * 4;
+              if (data.getUint8(offset + 3) > 128 &&
+                  data.getUint8(offset) < 180 &&
+                  data.getUint8(offset + 1) < 180 &&
+                  data.getUint8(offset + 2) < 180) {
+                if (y < top) top = y;
+                if (y > bottom) bottom = y;
+              }
+            }
+          }
+          expect(bottom, greaterThanOrEqualTo(top));
+          return (top, bottom);
+        } finally {
+          image.dispose();
+        }
+      });
+      return result!;
+    }
+
+    final target = await colonInk('🇺🇸 74.125.204.188:5228');
+    final source = await colonInk('8.8.8.8:443');
+    ProviderScope.containerOf(tester.element(find.byKey(boundaryKey)))
+        .read(appSettingProvider.notifier)
+        .update((state) => state.copyWith(hideIp: true));
+    await tester.pumpAndSettle();
+    expect(await colonInk('🇺🇸 *****:5228'), target);
+    expect(await colonInk('*****:443'), source);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
   testWidgets(
     'DNS masks public addresses while local and synthetic addresses stay visible',
     (tester) async {
