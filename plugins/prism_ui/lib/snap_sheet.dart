@@ -67,6 +67,7 @@ class SnapSheetRoute<T> extends PopupRoute<T>
     required this.barrierLabel,
     this.detents = snapSheetDetents,
     this.fitsContent = false,
+    this.retainExpandedHeight = false,
     this.initialScrollOffset = 0,
   });
 
@@ -75,6 +76,7 @@ class SnapSheetRoute<T> extends PopupRoute<T>
   final List<double> detents;
 
   final bool fitsContent;
+  final bool retainExpandedHeight;
 
   final double initialScrollOffset;
 
@@ -403,7 +405,9 @@ class _SheetModel extends ChangeNotifier {
   }
 
   double _stopFor(double detent, double shortest, double top) {
-    final rest = clampDouble(_fitHeight, shortest, detent);
+    final rest = route.retainExpandedHeight && detent > shortest
+        ? detent
+        : clampDouble(_fitHeight, shortest, detent);
     final blank = rest - math.min(_fitHeight, rest);
     return math.min(top, rest + _rounded(_keyboard - blank, blank / 2));
   }

@@ -3,12 +3,14 @@ import 'package:fl_clash/features/connection/tracker_info_item.dart';
 import 'package:fl_clash/features/ip_quality/ip_address_row.dart';
 import 'package:fl_clash/features/ip_quality/ip_quality_sheet.dart';
 import 'package:fl_clash/models/models.dart';
+import 'package:fl_clash/providers/app.dart';
 import 'package:fl_clash/providers/config.dart';
 import 'package:fl_clash/providers/ip_country.dart';
 import 'package:fl_clash/providers/ip_quality.dart';
 import 'package:fl_clash/ui/ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../helpers/test_app.dart';
@@ -19,8 +21,40 @@ class _HiddenSettings extends AppSetting {
 }
 
 void main() {
+  testWidgets(
+    'DNS public and fake addresses follow masking while domain names stay visible',
+    (tester) async {
+      await tester.pumpWidget(
+        TestApp(
+          wrapInProviderScope: true,
+          overrides: [
+            appSettingProvider.overrideWith(_HiddenSettings.new),
+            ipCountryProvider.overrideWith((ref, ip) async => 'US'),
+          ],
+          child: const Column(
+            children: [
+              IpAddressRow(address: '2606:4700:4700::1111'),
+              IpAddressRow(address: '198.18.0.1'),
+              IpAddressRow(address: 'edge.example.com'),
+            ],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('🇺🇸 *****'), findsOneWidget);
+      expect(find.text('*****'), findsOneWidget);
+      expect(find.text('edge.example.com'), findsOneWidget);
+      expect(find.textContaining('2606:'), findsNothing);
+      expect(find.text('198.18.0.1'), findsNothing);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
   testWidgets('a public endpoint keeps its flag and port, opens details in '
-      'the same sheet and ignores outbound masking', (tester) async {
+      'the same sheet and shares the global hide setting', (tester) async {
+    tester.view.physicalSize = const Size(400, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     final queried = <String>[];
     await tester.pumpWidget(
       TestApp(
@@ -48,6 +82,8 @@ void main() {
                 rule: '',
                 rulePayload: '',
                 metadata: const Metadata(
+                  sourceIP: '198.18.0.1',
+                  sourcePort: '38120',
                   destinationIP: '74.125.204.188',
                   destinationPort: '5228',
                 ),
@@ -59,25 +95,55 @@ void main() {
         ),
       ),
     );
+    ProviderScope.containerOf(
+      tester.element(find.text('Open')),
+    ).read(viewSizeProvider.notifier).value = const Size(
+      400,
+      1200,
+    );
+    await tester.pump();
     await tester.tap(find.text('Open'));
     await tester.pumpAndSettle();
-    expect(find.text('🇺🇸 74.125.204.188:5228'), findsOneWidget);
-    expect(queried, isEmpty);
-    await tester.ensureVisible(find.text('🇺🇸 74.125.204.188:5228'));
+    await tester.dragFrom(
+      tester.getCenter(find.byType(SheetDragHandle)),
+      const Offset(0, -500),
+    );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('🇺🇸 74.125.204.188:5228'));
+    expect(find.text('🇺🇸 *****:5228'), findsOneWidget);
+    expect(find.text('*****:38120'), findsOneWidget);
+    expect(find.text('198.18.0.1:38120'), findsNothing);
+    expect(queried, isEmpty);
+    await tester.ensureVisible(find.text('🇺🇸 *****:5228'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('🇺🇸 *****:5228'));
     await tester.pumpAndSettle();
     expect(find.text('IP Details'), findsOneWidget);
-    expect(find.text('Hide IP'), findsNothing);
-    expect(find.text('Other'), findsNothing);
-    expect(find.text('74.125.204.188'), findsOneWidget);
+    expect(find.text('*****'), findsOneWidget);
+    expect(find.text('74.125.204.188'), findsNothing);
     expect(queried, ['74.125.204.188']);
+    await tester.scrollUntilVisible(
+      find.text('Hide IP'),
+      150,
+      scrollable: find.byType(Scrollable).last,
+    );
+    await tester.ensureVisible(find.byType(Switch));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(Switch));
+    await tester.pumpAndSettle();
+    expect(
+      ProviderScope.containerOf(
+        tester.element(find.byType(Switch)),
+      ).read(appSettingProvider).hideIp,
+      isFalse,
+    );
+    expect(find.text('74.125.204.188'), findsOneWidget);
     final context = tester.element(find.text('IP Details'));
     expect(ModalRoute.of(context), isA<PagedSheetRoute>());
     Navigator.of(context).pop();
     await tester.pumpAndSettle();
     expect(find.text('Connection details'), findsOneWidget);
     expect(find.text('🇺🇸 74.125.204.188:5228'), findsOneWidget);
+    expect(find.text('198.18.0.1:38120'), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
@@ -128,8 +194,13 @@ void main() {
     await tester.tap(find.text('🇦🇺 2606:4700:4700::1111'));
     await tester.pumpAndSettle();
     expect(find.text('IP Details'), findsOneWidget);
-    expect(find.text('Hide IP'), findsNothing);
     expect(find.text('2606:4700:4700::1111'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Hide IP'),
+      150,
+      scrollable: find.byType(Scrollable).last,
+    );
+    expect(find.text('Hide IP'), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
   });
 

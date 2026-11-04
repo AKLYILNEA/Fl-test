@@ -48,7 +48,7 @@ class _IpQualitySheet extends ConsumerWidget {
           ),
         ),
       ],
-      body: _IpQualityDetail(ip: ip, outbound: outbound),
+      body: _IpQualityDetail(ip: ip),
     );
   }
 }
@@ -73,13 +73,12 @@ class _HideIpItem extends ConsumerWidget {
 }
 
 class _IpQualityDetail extends ConsumerWidget {
-  const _IpQualityDetail({required this.ip, required this.outbound});
+  const _IpQualityDetail({required this.ip});
 
   /// The optical edge of the xl-radius cards, as in the memory sheet.
   static const _tipInset = 5.0;
 
   final String ip;
-  final bool outbound;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -110,7 +109,7 @@ class _IpQualityDetail extends ConsumerWidget {
             DetailRow(
               title: localizations.ipAddress,
               copyText: ip,
-              value: IpQualityText(ip: ip, respectHideIp: outbound),
+              value: IpQualityText(ip: ip),
             ),
             if (failed)
               DetailRow(
@@ -140,11 +139,10 @@ class _IpQualityDetail extends ConsumerWidget {
                 ),
             ],
           ),
-        if (outbound)
-          generateSection(
-            title: localizations.other,
-            items: const [_HideIpItem()],
-          ),
+        generateSection(
+          title: localizations.other,
+          items: const [_HideIpItem()],
+        ),
       ],
     );
   }

@@ -22,8 +22,13 @@ class SheetProps {
   final Color? backgroundColor;
 
   final List<double> detents;
+  final bool retainExpandedHeight;
 
-  const SheetProps({this.backgroundColor, this.detents = snapSheetDetents});
+  const SheetProps({
+    this.backgroundColor,
+    this.detents = snapSheetDetents,
+    this.retainExpandedHeight = false,
+  });
 }
 
 @immutable
@@ -132,6 +137,7 @@ Future<T?> _showBottomSheet<T>(
       builder: (sheetContext, _) => builder(sheetContext),
       detents: props.detents,
       fitsContent: true,
+      retainExpandedHeight: props.retainExpandedHeight,
       sheetBarrierColor: context.colorScheme.modalScrim,
       barrierLabel: UiLocalizations.of(context).close,
     ),

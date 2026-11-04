@@ -235,7 +235,10 @@ class _DnsQueriesViewState extends ConsumerState<DnsQueriesView>
 void _showDnsQueryDetail(BuildContext context, DnsQuery dnsQuery) {
   showSheet<void>(
     context: context,
-    props: nestedPagedSheetProps,
+    props: const SheetProps(
+      backgroundColor: Colors.transparent,
+      retainExpandedHeight: true,
+    ),
     builder: (_) => NestedPagedSheet(
       builder: (_) => Scaffold(
         body: DnsQueryDetailView(dnsQuery: dnsQuery),

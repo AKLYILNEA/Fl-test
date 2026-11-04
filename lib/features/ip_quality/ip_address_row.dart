@@ -1,6 +1,7 @@
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/common/ip.dart';
 import 'package:fl_clash/features/ip_quality/ip_quality_sheet.dart';
+import 'package:fl_clash/providers/config.dart';
 import 'package:fl_clash/providers/ip_country.dart';
 import 'package:fl_clash/ui/ui.dart';
 import 'package:fl_clash/widgets/record.dart';
@@ -13,20 +14,33 @@ class IpAddressRow extends ConsumerWidget {
     this.title,
     required this.address,
     this.countries = const [],
+    this.allowDetails = true,
   });
 
   final String? title;
   final String address;
   final List<String> countries;
+  final bool allowDetails;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final ip = publicIpOf(address);
+    final endpoint = ipEndpointOf(address);
+    final hidden =
+        endpoint != null &&
+        ref.watch(appSettingProvider.select((state) => state.hideIp));
+    final port = endpoint?.port;
+    final shown = hidden ? '*****${port == null ? '' : ':$port'}' : address;
+    final style = hidden ? const TextStyle().toJetBrainsMono : null;
+    final ip = allowDetails ? publicIpOf(address) : null;
     final title = this.title;
     if (ip == null) {
       return title == null
-          ? DetailRow(title: address, copyText: address)
-          : DetailRow.text(title: title, value: address);
+          ? DetailRow(title: shown, copyText: address)
+          : DetailRow(
+              title: title,
+              copyText: address,
+              value: Text(shown, style: style),
+            );
     }
     final country =
         countries
@@ -41,7 +55,8 @@ class IpAddressRow extends ConsumerWidget {
         ref.watch(ipCountryProvider(ip)).value ??
         '';
     final text = EmojiText(
-      country.isEmpty ? address : '${country.countryFlagEmoji} $address',
+      country.isEmpty ? shown : '${country.countryFlagEmoji} $shown',
+      style: style,
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
     );

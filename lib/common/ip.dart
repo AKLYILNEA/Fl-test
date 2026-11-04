@@ -1,17 +1,23 @@
 import 'dart:io';
 
-String? publicIpOf(String endpoint) {
+final _ipEndpointPattern = RegExp(r'^\[([^\]]+)\](?::(\d+))?$|^([^:]+):(\d+)$');
+
+({InternetAddress address, String? port})? ipEndpointOf(String endpoint) {
   var host = endpoint.trim();
+  String? port;
   if (InternetAddress.tryParse(host) == null) {
-    final match = RegExp(
-      r'^\[([^\]]+)\](?::(\d+))?$|^([^:]+):(\d+)$',
-    ).firstMatch(host);
+    final match = _ipEndpointPattern.firstMatch(host);
     if (match == null) return null;
-    final port = match.group(2) ?? match.group(4);
+    port = match.group(2) ?? match.group(4);
     if (port != null && (int.tryParse(port) ?? 65536) > 65535) return null;
     host = match.group(1) ?? match.group(3)!;
   }
   final address = InternetAddress.tryParse(host);
+  return address == null ? null : (address: address, port: port);
+}
+
+String? publicIpOf(String endpoint) {
+  final address = ipEndpointOf(endpoint)?.address;
   if (address == null) return null;
   var bytes = address.rawAddress;
   if (bytes.length == 16 &&

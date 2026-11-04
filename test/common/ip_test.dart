@@ -2,6 +2,16 @@ import 'package:fl_clash/common/ip.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test(
+    'keeps endpoint ports separate for masking public and private addresses',
+    () {
+      expect(ipEndpointOf('198.18.0.1:38120')?.port, '38120');
+      expect(ipEndpointOf('[2606:4700:4700::1111]:443')?.port, '443');
+      expect(ipEndpointOf('2606:4700:4700::1111')?.port, isNull);
+      expect(ipEndpointOf('example.com:443'), isNull);
+      expect(ipEndpointOf('1.1.1.1:65536'), isNull);
+    },
+  );
   test('extracts public addresses while preserving IPv6 identity', () {
     expect(publicIpOf('74.125.204.188:5228'), '74.125.204.188');
     expect(publicIpOf('108.177.97.188'), '108.177.97.188');

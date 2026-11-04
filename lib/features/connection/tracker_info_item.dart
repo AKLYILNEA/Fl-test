@@ -29,7 +29,10 @@ void showTrackerInfoDetail(
 ) {
   showSheet<void>(
     context: context,
-    props: nestedPagedSheetProps,
+    props: const SheetProps(
+      backgroundColor: Colors.transparent,
+      retainExpandedHeight: true,
+    ),
     builder: (_) => NestedPagedSheet(
       builder: (_) => Scaffold(
         body: TrackerInfoDetailView(trackerInfo: trackerInfo),
@@ -372,13 +375,13 @@ class TrackerInfoDetailView extends ConsumerWidget {
         generateSection(
           title: appLocalizations.address,
           items: [
-            ..._buildRows([
-              (appLocalizations.host, metadata.host),
-              (
-                appLocalizations.source,
-                _endpointText(metadata.sourceIP, metadata.sourcePort),
+            ..._buildRows([(appLocalizations.host, metadata.host)]),
+            if (metadata.sourceIP.isNotEmpty)
+              IpAddressRow(
+                title: appLocalizations.source,
+                address: _endpointText(metadata.sourceIP, metadata.sourcePort),
+                allowDetails: false,
               ),
-            ]),
             if (metadata.destinationIP.isNotEmpty)
               IpAddressRow(
                 title: appLocalizations.destination,
