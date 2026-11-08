@@ -336,7 +336,6 @@ class _IconRuleFormState extends ConsumerState<_IconRuleForm> {
         onPressed: _handleSubmit,
       ),
       body: ListView(
-        shrinkWrap: true,
         padding: const EdgeInsets.symmetric(horizontal: 16).copyWith(
           top: context.sectionsTopPadding,
           bottom: 20 + context.bottomInset,
