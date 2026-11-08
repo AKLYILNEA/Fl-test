@@ -1,31 +1,28 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:convert';
 
-import 'package:collection/collection.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app.dart';
-import 'database.dart';
 
-final _patternWords = RegExp('[A-Za-z0-9]{3,}');
-
-/// Gives the groups whose name matches [pattern] an icon out of the icon set
-/// [iconSetId], the way bettbox maps a regular expression to an icon.
+/// Gives the groups whose name matches [pattern] the icon [icon], the way
+/// bettbox maps a regular expression to an icon. [icon] is an image address as
+/// the icon picker returns it, from an icon set or a link.
 class IconRule {
-  IconRule({required this.pattern, required this.iconSetId})
+  IconRule({required this.pattern, required this.icon})
     : regExp = _compile(pattern);
 
   factory IconRule.fromJson(Map<String, Object?> json) {
     return IconRule(
       pattern: json['pattern'] as String? ?? '',
-      iconSetId: (json['iconSetId'] as num?)?.toInt() ?? -1,
+      icon: json['icon'] as String? ?? '',
     );
   }
 
   final String pattern;
-  final int iconSetId;
+  final String icon;
 
   /// Null when [pattern] is not a valid regular expression.
   final RegExp? regExp;
@@ -38,52 +35,18 @@ class IconRule {
     }
   }
 
-  Map<String, Object?> toJson() => {'pattern': pattern, 'iconSetId': iconSetId};
+  Map<String, Object?> toJson() => {'pattern': pattern, 'icon': icon};
 
-  /// The icon of [iconSet] that suits the group [name]: matched against the
-  /// name, then against the part the regex matched, then against the words of
-  /// the pattern itself, since a name in Chinese matches no icon by itself.
-  String? iconFor(String name, IconSet iconSet) {
-    final regExp = this.regExp;
-    if (regExp == null || pattern.isEmpty) {
-      return null;
-    }
-    final match = regExp.firstMatch(name);
-    if (match == null) {
-      return null;
-    }
-    final targets = <String>[
-      name,
-      ?match.group(0),
-      for (final word in _patternWords.allMatches(pattern)) word.group(0)!,
-    ];
-    for (final target in targets) {
-      if (target.isEmpty) {
-        continue;
-      }
-      final ranked = rankIconMatches(iconSet.icons.scoreFor(target), limit: 1);
-      if (ranked.isNotEmpty) {
-        return ranked.first.url;
-      }
-    }
-    return null;
-  }
-
-  IconRule copyWith({String? pattern, int? iconSetId}) => IconRule(
-    pattern: pattern ?? this.pattern,
-    iconSetId: iconSetId ?? this.iconSetId,
-  );
+  bool matches(String name) =>
+      icon.isNotEmpty && (regExp?.hasMatch(name) ?? false);
 
   @override
   bool operator ==(Object other) =>
-      other is IconRule &&
-      other.pattern == pattern &&
-      other.iconSetId == iconSetId;
+      other is IconRule && other.pattern == pattern && other.icon == icon;
 
   @override
-  int get hashCode => Object.hash(pattern, iconSetId);
+  int get hashCode => Object.hash(pattern, icon);
 }
-
 /// The regex icon rules of the proxies page, in the order they are tried. They
 /// outlive the process in the preferences.
 class IconRulesNotifier extends Notifier<List<IconRule>> {
@@ -136,17 +99,9 @@ final proxyGroupIconProvider = Provider.family<String, String>((ref, name) {
   if (rules.isEmpty || name.isEmpty) {
     return configured;
   }
-  final iconSets = ref.watch(iconSetsProvider).value ?? const <IconSet>[];
   for (final rule in rules) {
-    final iconSet = iconSets.firstWhereOrNull(
-      (item) => item.id == rule.iconSetId,
-    );
-    if (iconSet == null) {
-      continue;
-    }
-    final icon = rule.iconFor(name, iconSet);
-    if (icon != null) {
-      return icon;
+    if (rule.matches(name)) {
+      return rule.icon;
     }
   }
   return configured;

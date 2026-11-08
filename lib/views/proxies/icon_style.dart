@@ -1,10 +1,10 @@
-import 'package:collection/collection.dart';
-import 'package:fl_clash/common/common.dart';
+﻿import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/features/form/form.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/ui/icons/icons.dart';
+import 'package:fl_clash/views/profiles/custom/icon.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -103,11 +103,8 @@ class _ProxiesIconStyleViewState extends ConsumerState<ProxiesIconStyleView> {
     }
   }
 
-  Widget _buildRule(int index, IconRule rule, List<IconSet> iconSets) {
+  Widget _buildRule(int index, IconRule rule) {
     final appLocalizations = context.appLocalizations;
-    final iconSet = iconSets.firstWhereOrNull(
-      (item) => item.id == rule.iconSetId,
-    );
     return ContextMenuRegion(
       menuItems: [
         PopupMenuItem(
@@ -123,12 +120,12 @@ class _ProxiesIconStyleViewState extends ConsumerState<ProxiesIconStyleView> {
         ),
       ],
       child: DecorationListItem(
-        invalid: iconSet == null || rule.regExp == null,
+        invalid: rule.regExp == null,
         leading: SizedBox.square(
           dimension: 32,
           child: IconTheme.merge(
             data: const IconThemeData(size: 32),
-            child: CommonTargetIcon(src: iconSet?.cover ?? ''),
+            child: CommonTargetIcon(src: rule.icon),
           ),
         ),
         title: TooltipText(
@@ -138,14 +135,14 @@ class _ProxiesIconStyleViewState extends ConsumerState<ProxiesIconStyleView> {
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        subtitle: Text(
-          rule.regExp == null
-              ? appLocalizations.invalidRegex
-              : iconSet?.name ?? appLocalizations.iconSetRemoved,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: context.listCaptionStyle,
-        ),
+        subtitle: rule.regExp == null
+            ? Text(
+                appLocalizations.invalidRegex,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: context.listCaptionStyle,
+              )
+            : null,
         trailing: const DisclosureIndicator(),
         onPressed: () => _handleEdit(index),
       ),
@@ -159,7 +156,6 @@ class _ProxiesIconStyleViewState extends ConsumerState<ProxiesIconStyleView> {
       proxiesStyleSettingProvider.select((state) => state.iconStyle),
     );
     final rules = ref.watch(iconRulesProvider);
-    final iconSets = ref.watch(iconSetsProvider).value ?? const <IconSet>[];
     return Scaffold(
       title: appLocalizations.iconStyle,
       body: ListView(
@@ -202,7 +198,7 @@ class _ProxiesIconStyleViewState extends ConsumerState<ProxiesIconStyleView> {
               for (final (index, rule) in rules.indexed)
                 KeyedSubtree(
                   key: ValueKey('${rule.pattern}#${rule.iconSetId}#$index'),
-                  child: _buildRule(index, rule, iconSets),
+                  child: _buildRule(index, rule),
                 ),
             ]),
           ListFooter(text: appLocalizations.iconRulesTip),
@@ -221,18 +217,18 @@ class _IconRuleForm extends ConsumerStatefulWidget {
   ConsumerState<_IconRuleForm> createState() => _IconRuleFormState();
 }
 
-enum _RuleField { pattern, iconSet }
+enum _RuleField { pattern, icon }
 
 class _IconRuleFormState extends ConsumerState<_IconRuleForm> {
   late final TextEditingController _controller;
-  int? _iconSetId;
+  String _icon = '';
   bool _attempted = false;
 
   @override
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.rule?.pattern);
-    _iconSetId = widget.rule?.iconSetId;
+    _icon = widget.rule?.icon ?? '';
   }
 
   @override
@@ -240,12 +236,6 @@ class _IconRuleFormState extends ConsumerState<_IconRuleForm> {
     _controller.dispose();
     super.dispose();
   }
-
-  List<IconSet> get _iconSets =>
-      ref.read(iconSetsProvider).value ?? const <IconSet>[];
-
-  IconSet? get _iconSet =>
-      _iconSets.firstWhereOrNull((item) => item.id == _iconSetId);
 
   ({_RuleField field, String message})? _issue() {
     final appLocalizations = context.appLocalizations;
@@ -264,10 +254,10 @@ class _IconRuleFormState extends ConsumerState<_IconRuleForm> {
         message: appLocalizations.invalidRegex,
       );
     }
-    if (_iconSet == null) {
+    if (_icon.isEmpty) {
       return (
-        field: _RuleField.iconSet,
-        message: appLocalizations.emptyTip(appLocalizations.iconSets),
+        field: _RuleField.icon,
+        message: appLocalizations.emptyTip(appLocalizations.icon),
       );
     }
     return null;
@@ -279,38 +269,24 @@ class _IconRuleFormState extends ConsumerState<_IconRuleForm> {
     }
   }
 
-  Future<void> _handlePickIconSet() async {
-    final appLocalizations = context.appLocalizations;
-    final iconSets = _iconSets;
-    final names = {for (final item in iconSets) item.id: item};
-    await showSheet<void>(
-      context: context,
-      builder: (sheetContext) => SelectionSheet<int>(
-        title: appLocalizations.iconSets,
-        emptyLabel: appLocalizations.nullTip(appLocalizations.iconSets),
-        sections: [
-          SelectionSection<int>(
-            items: [for (final item in iconSets) item.id],
-            subtitleBuilder: (_, id) => '${names[id]?.icons.length ?? 0}',
-          ),
-        ],
-        labelBuilder: (id) => names[id]?.name ?? '',
-        selectedOf: (_) => _iconSetId,
-        onSelected: (id) {
-          if (mounted) {
-            setState(() {
-              _iconSetId = id;
-            });
-          }
-          Navigator.of(sheetContext).pop();
-        },
+  /// The same picker the custom groups use, with its link entry in the bar.
+  Future<void> _handlePickIcon() async {
+    final value = await Navigator.of(context).push<String>(
+      PagedSheetRoute(
+        builder: (_) =>
+            IconPickerView(value: _icon, groupName: _controller.text.trim()),
       ),
     );
+    if (value == null || !mounted) {
+      return;
+    }
+    setState(() {
+      _icon = value;
+    });
   }
 
   void _handleSubmit() {
-    final iconSetId = _iconSetId;
-    if (_issue() != null || iconSetId == null) {
+    if (_issue() != null) {
       setState(() {
         _attempted = true;
       });
@@ -318,14 +294,13 @@ class _IconRuleFormState extends ConsumerState<_IconRuleForm> {
     }
     Navigator.of(
       context,
-    ).pop(IconRule(pattern: _controller.text.trim(), iconSetId: iconSetId));
+    ).pop(IconRule(pattern: _controller.text.trim(), icon: _icon));
   }
 
   @override
   Widget build(BuildContext context) {
     final appLocalizations = context.appLocalizations;
     final issue = _attempted ? _issue() : null;
-    final iconSet = _iconSet;
     return FormPage(
       title: widget.rule == null
           ? appLocalizations.add
@@ -351,20 +326,29 @@ class _IconRuleFormState extends ConsumerState<_IconRuleForm> {
               ),
             ),
             FormRow(
-              title: appLocalizations.iconSets,
-              invalid: issue?.field == _RuleField.iconSet,
-              onPressed: _handlePickIconSet,
+              title: appLocalizations.icon,
+              invalid: issue?.field == _RuleField.icon,
+              onPressed: _handlePickIcon,
               trailing: Row(
                 spacing: 2,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Flexible(
-                    child: Text(
-                      iconSet?.name ?? appLocalizations.required,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                  if (_icon.isNotEmpty)
+                    SizedBox.square(
+                      dimension: 28,
+                      child: IconTheme.merge(
+                        data: const IconThemeData(size: 28),
+                        child: CommonTargetIcon(src: _icon),
+                      ),
+                    )
+                  else
+                    Flexible(
+                      child: Text(
+                        appLocalizations.required,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ),
                   const GlyphIcon(AppGlyphs.chevronForward),
                 ],
               ),
