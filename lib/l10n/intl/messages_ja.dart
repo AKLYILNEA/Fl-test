@@ -714,6 +714,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "iconRulesTip": MessageLookupByLibrary.simpleMessage("名前が正規表現に一致するグループは、選択したアイコンセットのアイコンを使用します。"),
     "invalidRegex": MessageLookupByLibrary.simpleMessage("正規表現が無効です"),
     "iconSetRemoved": MessageLookupByLibrary.simpleMessage("アイコンセットは削除されました"),
+    "iconRulesEmpty": MessageLookupByLibrary.simpleMessage("正規表現アイコンが空です"),
     "emojiStyle": MessageLookupByLibrary.simpleMessage("絵文字フォント"),
     "emptyFallback": MessageLookupByLibrary.simpleMessage("空グループのフォールバック"),
     "emptyTip": m26,

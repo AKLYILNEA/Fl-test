@@ -1124,5 +1124,6 @@
   "iconRules": "正規表現アイコン",
   "iconRulesTip": "名前が正規表現に一致するグループは、選択したアイコンセットのアイコンを使用します。",
   "invalidRegex": "正規表現が無効です",
-  "iconSetRemoved": "アイコンセットは削除されました"
+  "iconSetRemoved": "アイコンセットは削除されました",
+  "iconRulesEmpty": "正規表現アイコンが空です"
 }

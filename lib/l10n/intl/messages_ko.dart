@@ -704,6 +704,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "iconRulesTip": MessageLookupByLibrary.simpleMessage("이름이 정규식과 일치하는 그룹은 선택한 아이콘 세트의 아이콘을 사용합니다."),
     "invalidRegex": MessageLookupByLibrary.simpleMessage("잘못된 정규식"),
     "iconSetRemoved": MessageLookupByLibrary.simpleMessage("아이콘 세트가 삭제됨"),
+    "iconRulesEmpty": MessageLookupByLibrary.simpleMessage("정규식 아이콘이 비어 있습니다"),
     "emojiStyle": MessageLookupByLibrary.simpleMessage("이모지 글꼴"),
     "emptyFallback": MessageLookupByLibrary.simpleMessage("빈 폴백"),
     "emptyTip": m26,

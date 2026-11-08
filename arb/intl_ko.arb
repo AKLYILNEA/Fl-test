@@ -1124,5 +1124,6 @@
   "iconRules": "정규식 아이콘",
   "iconRulesTip": "이름이 정규식과 일치하는 그룹은 선택한 아이콘 세트의 아이콘을 사용합니다.",
   "invalidRegex": "잘못된 정규식",
-  "iconSetRemoved": "아이콘 세트가 삭제됨"
+  "iconSetRemoved": "아이콘 세트가 삭제됨",
+  "iconRulesEmpty": "정규식 아이콘이 비어 있습니다"
 }

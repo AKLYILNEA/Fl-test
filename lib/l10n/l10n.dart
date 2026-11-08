@@ -9148,6 +9148,16 @@ class AppLocalizations {
     );
   }
 
+  /// `Regex icons are empty`
+  String get iconRulesEmpty {
+    return Intl.message(
+      'Regex icons are empty',
+      name: 'iconRulesEmpty',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Keep screen on`
   String get wakelock {
     return Intl.message('Keep screen on', name: 'wakelock', desc: '', args: []);

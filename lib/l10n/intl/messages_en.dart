@@ -837,6 +837,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "iconRulesTip": MessageLookupByLibrary.simpleMessage("A group whose name matches the regex takes its icon from the chosen icon set."),
     "invalidRegex": MessageLookupByLibrary.simpleMessage("Invalid regular expression"),
     "iconSetRemoved": MessageLookupByLibrary.simpleMessage("Icon set removed"),
+    "iconRulesEmpty": MessageLookupByLibrary.simpleMessage(
+      "Regex icons are empty",
+    ),
     "emojiStyle": MessageLookupByLibrary.simpleMessage("Emoji font"),
     "emptyFallback": MessageLookupByLibrary.simpleMessage("Empty fallback"),
     "emptyTip": m26,

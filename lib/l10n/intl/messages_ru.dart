@@ -873,6 +873,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "iconRulesTip": MessageLookupByLibrary.simpleMessage("Группа, имя которой соответствует регулярному выражению, берёт значок из выбранного набора значков."),
     "invalidRegex": MessageLookupByLibrary.simpleMessage("Недопустимое регулярное выражение"),
     "iconSetRemoved": MessageLookupByLibrary.simpleMessage("Набор значков удалён"),
+    "iconRulesEmpty": MessageLookupByLibrary.simpleMessage("Правила значков пусты"),
     "emojiStyle": MessageLookupByLibrary.simpleMessage("Шрифт эмодзи"),
     "emptyFallback": MessageLookupByLibrary.simpleMessage(
       "Резерв для пустой группы",

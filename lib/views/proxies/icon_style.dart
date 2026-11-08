@@ -4,6 +4,7 @@ import 'package:fl_clash/features/form/form.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/ui/icons/icons.dart';
+import 'package:fl_clash/ui/null_status_illustration.dart';
 import 'package:fl_clash/views/profiles/custom/icon.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/services.dart';
@@ -30,7 +31,7 @@ class _ProxiesIconStyleViewState extends ConsumerState<ProxiesIconStyleView> {
   }
 
   Future<void> _handleAdd() async {
-    final rule = await showSheet<IconRule>(
+    final rule = await showFormSheet<IconRule>(
       context: context,
       props: nestedPagedSheetProps,
       builder: (_) => NestedPagedSheet(
@@ -48,7 +49,7 @@ class _ProxiesIconStyleViewState extends ConsumerState<ProxiesIconStyleView> {
     if (index >= rules.length) {
       return;
     }
-    final rule = await showSheet<IconRule>(
+    final rule = await showFormSheet<IconRule>(
       context: context,
       props: nestedPagedSheetProps,
       builder: (_) => NestedPagedSheet(
@@ -142,49 +143,77 @@ class _ProxiesIconStyleViewState extends ConsumerState<ProxiesIconStyleView> {
     final rules = ref.watch(iconRulesProvider);
     return Scaffold(
       title: appLocalizations.iconStyle,
-      body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16).copyWith(
-          top: context.sectionsTopPadding,
-          bottom: 20 + context.bottomInset,
-        ),
-        children: [
-          SegmentedControl<ProxiesIconStyle>(
-            segments: [
-              (ProxiesIconStyle.filled, appLocalizations.iconStyleFilled),
-              (ProxiesIconStyle.plain, appLocalizations.iconStylePlain),
-              (ProxiesIconStyle.hidden, appLocalizations.iconStyleHidden),
-            ],
-            value: iconStyle,
-            onChanged: _handleStyle,
-          ),
-          const ListSectionGap(),
-          ListHeader(
-            title: appLocalizations.iconRules,
-            actions: [
-              IconButtonData(
-                glyph: AppGlyphs.addCircle,
-                tooltip: appLocalizations.add,
-                onPressed: _handleAdd,
+      body: CustomScrollView(
+        slivers: [
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16,
+            ).copyWith(top: context.contentTopPadding + 8),
+            sliver: SliverToBoxAdapter(
+              child: SegmentedControl<ProxiesIconStyle>(
+                segments: [
+                  (ProxiesIconStyle.filled, appLocalizations.iconStyleFilled),
+                  (ProxiesIconStyle.plain, appLocalizations.iconStylePlain),
+                  (ProxiesIconStyle.hidden, appLocalizations.iconStyleHidden),
+                ],
+                value: iconStyle,
+                onChanged: _handleStyle,
               ),
-            ],
+            ),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            sliver: SliverToBoxAdapter(
+              child: ListHeader(
+                title: appLocalizations.iconRules,
+                actions: [
+                  IconButtonData(
+                    glyph: AppGlyphs.addCircle,
+                    tooltip: appLocalizations.add,
+                    onPressed: _handleAdd,
+                  ),
+                ],
+              ),
+            ),
           ),
           if (rules.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Text(
-                appLocalizations.nullTip(appLocalizations.iconRules),
-                style: context.listCaptionStyle,
+            SliverPadding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16).copyWith(top: 12),
+              sliver: SliverToBoxAdapter(
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 0, vertical: 48),
+                  child: NullStatus(
+                    label: appLocalizations.iconRulesEmpty,
+                    illustration: NullStatusIllustration.icons,
+                  ),
+                ),
               ),
             )
           else
-            generateGroup([
-              for (final (index, rule) in rules.indexed)
-                KeyedSubtree(
-                  key: ValueKey('${rule.pattern}#${rule.icon}#$index'),
-                  child: _buildRule(index, rule),
-                ),
-            ]),
-          ListFooter(text: appLocalizations.iconRulesTip),
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              sliver: SliverToBoxAdapter(
+                child: generateGroup([
+                  for (final (index, rule) in rules.indexed)
+                    KeyedSubtree(
+                      key: ValueKey('${rule.pattern}#${rule.icon}#$index'),
+                      child: _buildRule(index, rule),
+                    ),
+                ]),
+              ),
+            ),
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16,
+            ).copyWith(bottom: 16 + context.bottomInset),
+            sliver: SliverToBoxAdapter(
+              child: ListFooter(
+                text: appLocalizations.iconRulesTip,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -254,6 +283,7 @@ class _IconRuleFormState extends ConsumerState<_IconRuleForm> {
 
   /// The same picker the custom groups use, with its link entry in the bar.
   Future<void> _handlePickIcon() async {
+    FocusManager.instance.primaryFocus?.unfocus();
     final value = await Navigator.of(context).push<String>(
       PagedSheetRoute(
         builder: (_) =>
@@ -284,61 +314,68 @@ class _IconRuleFormState extends ConsumerState<_IconRuleForm> {
   Widget build(BuildContext context) {
     final appLocalizations = context.appLocalizations;
     final issue = _attempted ? _issue() : null;
-    return FormPage(
+    return Scaffold(
       title: widget.rule == null
           ? appLocalizations.add
           : appLocalizations.edit,
-      saveLabel: appLocalizations.confirm,
-      onSave: _handleSubmit,
-      error: issue?.message,
-      children: [
-        generateSection(
-          items: [
-            FormRow(
-              title: appLocalizations.regex,
-              invalid: issue?.field == _RuleField.pattern,
-              trailing: FormRowTextField(
-                controller: _controller,
-                autofocus: widget.rule == null,
-                hintText: appLocalizations.required,
-                textInputAction: TextInputAction.done,
-                autocorrect: false,
-                enableSuggestions: false,
-                onChanged: _handleChanged,
-                onFieldSubmitted: (_) => _handleSubmit(),
-              ),
-            ),
-            FormRow(
-              title: appLocalizations.icon,
-              invalid: issue?.field == _RuleField.icon,
-              onPressed: _handlePickIcon,
-              trailing: Row(
-                spacing: 2,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (_icon.isNotEmpty)
-                    SizedBox.square(
-                      dimension: 28,
-                      child: IconTheme.merge(
-                        data: const IconThemeData(size: 28),
-                        child: CommonTargetIcon(src: _icon),
-                      ),
-                    )
-                  else
-                    Flexible(
-                      child: Text(
-                        appLocalizations.required,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  const GlyphIcon(AppGlyphs.chevronForward),
-                ],
-              ),
-            ),
-          ],
+      confirmationAction: IconButtonData(
+        glyph: AppGlyphs.check,
+        tooltip: appLocalizations.confirm,
+        onPressed: _handleSubmit,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.symmetric(horizontal: 16).copyWith(
+          top: context.sectionsTopPadding,
+          bottom: 20 + context.bottomInset,
         ),
-      ],
+        children: [
+          ErrorBanner(message: issue?.message),
+          generateSection(
+            items: [
+              FormRow(
+                title: appLocalizations.regex,
+                invalid: issue?.field == _RuleField.pattern,
+                trailing: FormRowTextField(
+                  controller: _controller,
+                  hintText: appLocalizations.required,
+                  textInputAction: TextInputAction.done,
+                  autocorrect: false,
+                  enableSuggestions: false,
+                  onChanged: _handleChanged,
+                  onFieldSubmitted: (_) => _handleSubmit(),
+                ),
+              ),
+              FormRow(
+                title: appLocalizations.icon,
+                invalid: issue?.field == _RuleField.icon,
+                onPressed: _handlePickIcon,
+                trailing: Row(
+                  spacing: 2,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (_icon.isNotEmpty)
+                      SizedBox.square(
+                        dimension: 28,
+                        child: IconTheme.merge(
+                          data: const IconThemeData(size: 28),
+                          child: CommonTargetIcon(src: _icon),
+                        ),
+                      )
+                    else
+                      Text(
+                        appLocalizations.required,
+                        style: context.listTitleStyle.copyWith(
+                          color: context.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    const GlyphIcon(AppGlyphs.chevronForward),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

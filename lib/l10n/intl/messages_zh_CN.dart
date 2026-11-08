@@ -654,6 +654,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "iconRulesTip": MessageLookupByLibrary.simpleMessage("名称匹配该正则的策略组，会使用所选图标集中与其名称对应的图标。"),
     "invalidRegex": MessageLookupByLibrary.simpleMessage("正则表达式无效"),
     "iconSetRemoved": MessageLookupByLibrary.simpleMessage("图标集已被移除"),
+    "iconRulesEmpty": MessageLookupByLibrary.simpleMessage("正则图标为空"),
     "emojiStyle": MessageLookupByLibrary.simpleMessage("Emoji字体"),
     "emptyFallback": MessageLookupByLibrary.simpleMessage("空组兜底"),
     "emptyTip": m26,
