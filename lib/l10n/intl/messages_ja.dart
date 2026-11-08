@@ -713,6 +713,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "editorUnavailable": MessageLookupByLibrary.simpleMessage("エディターを利用できません"),
     "elapsed": MessageLookupByLibrary.simpleMessage("所要時間"),
     "iconRules": MessageLookupByLibrary.simpleMessage("正規表現アイコン"),
+    "iconRuleHelp": MessageLookupByLibrary.simpleMessage(
+      "1. 完全一致：例 ^YouTube\$ は YouTube という名前のグループにのみ一致します。\n2. キーワード一致：例 YouTube は名前に YouTube を含むすべてのグループに一致します。\n3. 複数一致：例 (YouTube|Netflix|Disney) は複数のストリーミンググループに同時に一致します。\n4. ワイルドカード：例 .* はすべてのグループに一致し、選択したアイコンを適用します。\n5. 前方・後方一致：例 ^PROXY は前方一致、 Auto\$ は後方一致；上から順に評価されます。",
+    ),
     "iconRulesTip": MessageLookupByLibrary.simpleMessage("名前が正規表現に一致するグループは、選択したアイコンセットのアイコンを使用します。"),
     "invalidRegex": MessageLookupByLibrary.simpleMessage("正規表現が無効です"),
     "iconSetRemoved": MessageLookupByLibrary.simpleMessage("アイコンセットは削除されました"),

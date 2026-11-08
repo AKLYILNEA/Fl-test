@@ -653,6 +653,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "editorUnavailable": MessageLookupByLibrary.simpleMessage("编辑器不可用"),
     "elapsed": MessageLookupByLibrary.simpleMessage("耗时"),
     "iconRules": MessageLookupByLibrary.simpleMessage("正则图标"),
+    "iconRuleHelp": MessageLookupByLibrary.simpleMessage(
+      "1. 完全匹配：如 ^YouTube\$ 仅匹配名称完全为 YouTube 的策略组。\n2. 关键词匹配：如 YouTube 可匹配所有名称包含 YouTube 的策略组。\n3. 多项匹配：如 (YouTube|Netflix|Disney) 可同时匹配多个流媒体策略组。\n4. 全局通配：如 .* 可匹配所有策略组，全部使用该 Icon 图标。\n5. 前缀与后缀：如 ^PROXY 匹配前缀， Auto\$ 匹配后缀；规则自上而下按序生效。",
+    ),
     "iconRulesTip": MessageLookupByLibrary.simpleMessage("名称匹配该正则的策略组，会使用所选图标集中与其名称对应的图标。"),
     "invalidRegex": MessageLookupByLibrary.simpleMessage("正则表达式无效"),
     "iconSetRemoved": MessageLookupByLibrary.simpleMessage("图标集已被移除"),

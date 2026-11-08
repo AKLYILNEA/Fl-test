@@ -703,6 +703,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "editorUnavailable": MessageLookupByLibrary.simpleMessage("편집기를 사용할 수 없음"),
     "elapsed": MessageLookupByLibrary.simpleMessage("소요"),
     "iconRules": MessageLookupByLibrary.simpleMessage("정규식 아이콘"),
+    "iconRuleHelp": MessageLookupByLibrary.simpleMessage(
+      "1. 완전 일치: 예: ^YouTube\$ 는 이름이 YouTube 인 그룹에만 일치합니다.\n2. 키워드 일치: 예: YouTube 는 이름에 YouTube 가 포함된 모든 그룹에 일치합니다.\n3. 다중 일치: 예: (YouTube|Netflix|Disney) 는 여러 미디어 그룹과 동시에 일치합니다.\n4. 전체 와일드카드: 예: .* 는 모든 그룹과 일치하며 해당 Icon 아이콘을 적용합니다.\n5. 접두사 및 접미사: 예: ^PROXY 는 접두사, Auto\$ 는 접미사에 일치하며 위에서 아래 순서로 적용됩니다.",
+    ),
     "iconRulesTip": MessageLookupByLibrary.simpleMessage("이름이 정규식과 일치하는 그룹은 선택한 아이콘 세트의 아이콘을 사용합니다."),
     "invalidRegex": MessageLookupByLibrary.simpleMessage("잘못된 정규식"),
     "iconSetRemoved": MessageLookupByLibrary.simpleMessage("아이콘 세트가 삭제됨"),

@@ -9178,6 +9178,16 @@ class AppLocalizations {
     );
   }
 
+  /// Regex icon help examples
+  String get iconRuleHelp {
+    return Intl.message(
+      '1. Exact match: e.g. ^YouTube\$ matches only the group named YouTube.\\n2. Keyword match: e.g. YouTube matches any group whose name contains YouTube.\\n3. Multiple match: e.g. (YouTube|Netflix|Disney) matches multiple media groups.\\n4. Wildcard: e.g. .* matches all groups to use the selected icon.\\n5. Prefix & suffix: e.g. ^PROXY matches prefix, Auto\$ matches suffix; evaluated from top to bottom.',
+      name: 'iconRuleHelp',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Keep screen on`
   String get wakelock {
     return Intl.message('Keep screen on', name: 'wakelock', desc: '', args: []);

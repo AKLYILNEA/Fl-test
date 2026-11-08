@@ -876,6 +876,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "elapsed": MessageLookupByLibrary.simpleMessage("Время"),
     "iconRules": MessageLookupByLibrary.simpleMessage("Значки по regex"),
+    "iconRuleHelp": MessageLookupByLibrary.simpleMessage(
+      "1. Точное совпадение: например, ^YouTube\$ соответствует только группе с именем YouTube.\n2. По ключевому слову: например, YouTube соответствует любой группе, содержащей YouTube.\n3. Несколько условий: например, (YouTube|Netflix|Disney) совпадает сразу с несколькими группами.\n4. Подстановочный знак: например, .* соответствует всем группам и применяет выбранный значок Icon.\n5. Префикс и суффикс: например, ^PROXY для префикса, Auto\$ для суффикса; правила применяются сверху вниз.",
+    ),
     "iconRulesTip": MessageLookupByLibrary.simpleMessage("Группа, имя которой соответствует регулярному выражению, берёт значок из выбранного набора значков."),
     "invalidRegex": MessageLookupByLibrary.simpleMessage("Недопустимое регулярное выражение"),
     "iconSetRemoved": MessageLookupByLibrary.simpleMessage("Набор значков удалён"),

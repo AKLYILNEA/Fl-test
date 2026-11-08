@@ -344,6 +344,7 @@ class _IconRuleFormState extends ConsumerState<_IconRuleForm> {
           ErrorBanner(message: issue?.message),
           generateSection(
             title: appLocalizations.general,
+            footer: appLocalizations.iconRuleHelp,
             items: [
               FormRow(
                 title: appLocalizations.regex,
