@@ -20,6 +20,9 @@ class ProxiesIconStyleView extends ConsumerStatefulWidget {
 }
 
 class _ProxiesIconStyleViewState extends ConsumerState<ProxiesIconStyleView> {
+  var _selected = <int>{};
+  var _sorting = false;
+
   void _handleStyle(ProxiesIconStyle iconStyle) {
     ref
         .read(proxiesStyleSettingProvider.notifier)
@@ -28,6 +31,45 @@ class _ProxiesIconStyleViewState extends ConsumerState<ProxiesIconStyleView> {
 
   void _putRules(List<IconRule> rules) {
     ref.read(iconRulesProvider.notifier).update(rules);
+  }
+
+  void _toggleSorting() {
+    setState(() {
+      _sorting = !_sorting;
+    });
+  }
+
+  void _handleToggleSelected(int id) {
+    setState(() {
+      _selected = {..._selected}..addOrRemove(id);
+    });
+  }
+
+  void _handleSelectAll(Set<int> ids) {
+    setState(() {
+      _selected = _selected.containsAll(ids) ? {} : ids;
+    });
+  }
+
+  Future<void> _handleDeleteSelected(Set<int> ids) async {
+    final appLocalizations = context.appLocalizations;
+    if (ids.isEmpty) {
+      return;
+    }
+    final res = await dialogs.showMessage(
+      message: TextSpan(
+        text: appLocalizations.deleteMultipTip(appLocalizations.iconRules),
+      ),
+      destructive: true,
+      confirmText: appLocalizations.delete,
+    );
+    if (res != true || !mounted) {
+      return;
+    }
+    ref.read(iconRulesProvider.notifier).delAll(ids);
+    setState(() {
+      _selected = {};
+    });
   }
 
   Future<void> _handleAdd() async {
@@ -49,93 +91,76 @@ class _ProxiesIconStyleViewState extends ConsumerState<ProxiesIconStyleView> {
     if (index >= rules.length) {
       return;
     }
-    final rule = await showFormSheet<IconRule>(
+    final currentRule = rules[index];
+    final updatedRule = await showFormSheet<IconRule>(
       context: context,
       props: nestedPagedSheetProps,
       builder: (_) => NestedPagedSheet(
         builder: (_) => _IconRuleForm(
-          rule: rules[index],
-          onDelete: () => _handleDelete(index),
+          rule: currentRule,
+          onDelete: () => _handleDelete(currentRule),
         ),
       ),
     );
-    if (rule == null || !mounted) {
+    if (updatedRule == null || !mounted) {
       return;
     }
-    final next = [...ref.read(iconRulesProvider)];
-    if (index < next.length) {
-      next[index] = rule;
+    final currentRules = ref.read(iconRulesProvider);
+    final idx = currentRules.indexWhere((r) => r.id == currentRule.id);
+    if (idx != -1) {
+      final next = [...currentRules];
+      next[idx] = updatedRule;
       _putRules(next);
     }
   }
 
-  Future<bool> _handleDelete(int index) async {
+  Future<bool> _handleDelete(IconRule rule) async {
     final appLocalizations = context.appLocalizations;
-    final rules = ref.read(iconRulesProvider);
-    if (index >= rules.length) {
-      return false;
-    }
     final res = await dialogs.showMessage(
       title: appLocalizations.tip,
-      message: TextSpan(text: appLocalizations.deleteTip(rules[index].pattern)),
+      message: TextSpan(text: appLocalizations.deleteTip(rule.pattern)),
       destructive: true,
       confirmText: appLocalizations.delete,
     );
     if (res != true || !mounted) {
       return false;
     }
-    final next = [...ref.read(iconRulesProvider)];
-    if (index < next.length) {
-      next.removeAt(index);
-      _putRules(next);
-    }
+    ref.read(iconRulesProvider.notifier).delAll({rule.id});
+    setState(() {
+      _selected = {..._selected}..remove(rule.id);
+    });
     return true;
   }
 
-  Widget _buildRule(int index, IconRule rule) {
+  void _handleReorder(int oldIndex, int newIndex) {
+    ref.read(iconRulesProvider.notifier).order(oldIndex, newIndex);
+  }
+
+  List<IconButtonData> _buildActions(Set<int> ids, Set<int> selected) {
     final appLocalizations = context.appLocalizations;
-    return ContextMenuRegion(
-      menuItems: [
-        PopupMenuItem(
-          glyph: AppGlyphs.edit,
-          label: appLocalizations.edit,
-          onPressed: () => _handleEdit(index),
-        ),
-        PopupMenuItem(
-          danger: true,
+    if (selected.isNotEmpty) {
+      return [
+        IconButtonData(
           glyph: AppGlyphs.delete,
-          label: appLocalizations.delete,
-          onPressed: () => _handleDelete(index),
+          tooltip: appLocalizations.delete,
+          onPressed: () => _handleDeleteSelected(selected),
         ),
-      ],
-      child: DecorationListItem(
-        invalid: rule.regExp == null,
-        leading: SizedBox.square(
-          dimension: 32,
-          child: IconTheme.merge(
-            data: const IconThemeData(size: 32),
-            child: CommonTargetIcon(src: rule.icon),
-          ),
+        IconButtonData(
+          glyph: AppGlyphs.selectAll,
+          tooltip: appLocalizations.selectAll,
+          onPressed: () => _handleSelectAll(ids),
         ),
-        title: TooltipText(
-          text: Text(
-            rule.pattern,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        subtitle: rule.regExp == null
-            ? Text(
-                appLocalizations.invalidRegex,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: context.listCaptionStyle,
-              )
-            : null,
-        trailing: const DisclosureIndicator(),
-        onPressed: () => _handleEdit(index),
+      ];
+    }
+    return [
+      if (_sorting || ids.length > 1)
+        sortModeAction(context, sorting: _sorting, onPressed: _toggleSorting),
+      IconButtonData(
+        glyph: AppGlyphs.addCircle,
+        tooltip: appLocalizations.addIconRule,
+        onPressed: _handleAdd,
       ),
-    );
+    ];
   }
 
   @override
@@ -145,80 +170,170 @@ class _ProxiesIconStyleViewState extends ConsumerState<ProxiesIconStyleView> {
       proxiesStyleSettingProvider.select((state) => state.iconStyle),
     );
     final rules = ref.watch(iconRulesProvider);
-    return Scaffold(
-      title: appLocalizations.iconStyle,
-      body: CustomScrollView(
-        slivers: [
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16,
-            ).copyWith(top: context.contentTopPadding + 8),
-            sliver: SliverToBoxAdapter(
-              child: SegmentedControl<ProxiesIconStyle>(
-                segments: [
-                  (ProxiesIconStyle.filled, appLocalizations.iconStyleFilled),
-                  (ProxiesIconStyle.plain, appLocalizations.iconStylePlain),
-                  (ProxiesIconStyle.hidden, appLocalizations.iconStyleHidden),
-                ],
-                value: iconStyle,
-                onChanged: _handleStyle,
-              ),
-            ),
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            sliver: SliverToBoxAdapter(
-              child: ListHeader(
-                title: appLocalizations.iconRules,
-                actions: [
-                  IconButtonData(
-                    glyph: AppGlyphs.addCircle,
-                    tooltip: appLocalizations.addIconRule,
-                    onPressed: _handleAdd,
+    final ids = {for (final rule in rules) rule.id};
+    final selected = _selected.intersection(ids);
+
+    Widget itemAt(int index) {
+      final rule = rules[index];
+      final position = ItemPosition.get(index, rules.length);
+      final isEditing = selected.isNotEmpty;
+      final isSelected = selected.contains(rule.id);
+      return MemoBuilder(
+        key: ValueKey(rule.id),
+        inputs: [
+          appLocalizations,
+          rule,
+          index,
+          position,
+          isEditing,
+          isSelected,
+        ],
+        builder: (_) => SortableItem(
+          index: index,
+          child: ContextMenuRegion(
+            menuItems: isEditing
+                ? null
+                : [
+                    PopupMenuItem(
+                      glyph: AppGlyphs.edit,
+                      label: appLocalizations.edit,
+                      onPressed: () => _handleEdit(index),
+                    ),
+                    PopupMenuItem(
+                      danger: true,
+                      glyph: AppGlyphs.delete,
+                      label: appLocalizations.delete,
+                      onPressed: () => _handleDelete(rule),
+                    ),
+                  ],
+            child: ItemPositionProvider(
+              position: position,
+              child: DecorationListItem(
+                invalid: rule.regExp == null,
+                isSelected: isSelected,
+                contentPadding: const EdgeInsets.only(left: 16),
+                onPressed: isEditing
+                    ? () => _handleToggleSelected(rule.id)
+                    : () => _handleEdit(index),
+                leading: SizedBox.square(
+                  dimension: 32,
+                  child: IconTheme.merge(
+                    data: const IconThemeData(size: 32),
+                    child: CommonTargetIcon(src: rule.icon),
                   ),
-                ],
+                ),
+                title: TooltipText(
+                  text: Text(
+                    rule.pattern,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                subtitle: rule.regExp == null
+                    ? Text(
+                        appLocalizations.invalidRegex,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.listCaptionStyle,
+                      )
+                    : null,
+                trailing: Checkbox(
+                  value: isSelected,
+                  isCircle: true,
+                  onChanged: (_) => _handleToggleSelected(rule.id),
+                ),
               ),
             ),
           ),
-          if (rules.isEmpty)
-            SliverPadding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16).copyWith(top: 12),
-              sliver: SliverToBoxAdapter(
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 0, vertical: 48),
-                  child: NullStatus(
-                    label: appLocalizations.iconRulesEmpty,
-                    illustration: NullStatusIllustration.icons,
+        ),
+      );
+    }
+
+    return PopGuard(
+      onPop: selected.isEmpty && !_sorting
+          ? null
+          : (_) {
+              setState(() {
+                _selected = {};
+                _sorting = false;
+              });
+              return false;
+            },
+      child: SortModeScope(
+        sorting: _sorting,
+        child: Scaffold(
+          title: appLocalizations.iconStyle,
+          body: CustomScrollView(
+            slivers: [
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                ).copyWith(top: context.contentTopPadding + 8),
+                sliver: SliverToBoxAdapter(
+                  child: SegmentedControl<ProxiesIconStyle>(
+                    segments: [
+                      (ProxiesIconStyle.filled, appLocalizations.iconStyleFilled),
+                      (ProxiesIconStyle.plain, appLocalizations.iconStylePlain),
+                      (ProxiesIconStyle.hidden, appLocalizations.iconStyleHidden),
+                    ],
+                    value: iconStyle,
+                    onChanged: _handleStyle,
                   ),
                 ),
               ),
-            )
-          else
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              sliver: SliverToBoxAdapter(
-                child: generateGroup([
-                  for (final (index, rule) in rules.indexed)
-                    KeyedSubtree(
-                      key: ValueKey('${rule.pattern}#${rule.icon}#$index'),
-                      child: _buildRule(index, rule),
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                sliver: SliverToBoxAdapter(
+                  child: TonalButtonTheme(
+                    child: ListHeader(
+                      title: appLocalizations.iconRules,
+                      actions: _buildActions(ids, selected),
                     ),
-                ]),
+                  ),
+                ),
               ),
-            ),
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16,
-            ).copyWith(bottom: 16 + context.bottomInset),
-            sliver: SliverToBoxAdapter(
-              child: ListFooter(
-                text: appLocalizations.iconRulesTip,
+              if (rules.isEmpty)
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                  ).copyWith(top: 12),
+                  sliver: SliverToBoxAdapter(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 0,
+                        vertical: 48,
+                      ),
+                      child: NullStatus(
+                        label: appLocalizations.iconRulesEmpty,
+                        illustration: NullStatusIllustration.icons,
+                      ),
+                    ),
+                  ),
+                )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  sliver: SliverPrismReorderableList(
+                    itemBuilder: (_, index) => itemAt(index),
+                    itemCount: rules.length,
+                    proxyDecorator: (child, index, animation) =>
+                        commonProxyDecorator(itemAt(index), index, animation),
+                    onReorderItem: _handleReorder,
+                  ),
+                ),
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                ).copyWith(bottom: 16 + context.bottomInset),
+                sliver: SliverToBoxAdapter(
+                  child: ListFooter(
+                    text: appLocalizations.iconRulesTip,
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -318,7 +433,15 @@ class _IconRuleFormState extends ConsumerState<_IconRuleForm> {
       return;
     }
     context.safeNestedPop(
-      IconRule(pattern: _controller.text.trim(), icon: _icon),
+      widget.rule != null
+          ? widget.rule!.copyWith(
+              pattern: _controller.text.trim(),
+              icon: _icon,
+            )
+          : IconRule(
+              pattern: _controller.text.trim(),
+              icon: _icon,
+            ),
     );
   }
 

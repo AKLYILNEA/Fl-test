@@ -11,16 +11,22 @@ import 'app.dart';
 /// bettbox maps a regular expression to an icon. [icon] is an image address as
 /// the icon picker returns it, from an icon set or a link.
 class IconRule {
-  IconRule({required this.pattern, required this.icon})
-    : regExp = _compile(pattern);
+  IconRule({
+    int? id,
+    required this.pattern,
+    required this.icon,
+  }) : id = id ?? snowflake.id,
+       regExp = _compile(pattern);
 
   factory IconRule.fromJson(Map<String, Object?> json) {
     return IconRule(
+      id: (json['id'] as num?)?.toInt() ?? snowflake.id,
       pattern: json['pattern'] as String? ?? '',
       icon: json['icon'] as String? ?? '',
     );
   }
 
+  final int id;
   final String pattern;
   final String icon;
 
@@ -35,17 +41,36 @@ class IconRule {
     }
   }
 
-  Map<String, Object?> toJson() => {'pattern': pattern, 'icon': icon};
+  IconRule copyWith({
+    int? id,
+    String? pattern,
+    String? icon,
+  }) {
+    return IconRule(
+      id: id ?? this.id,
+      pattern: pattern ?? this.pattern,
+      icon: icon ?? this.icon,
+    );
+  }
+
+  Map<String, Object?> toJson() => {
+    'id': id,
+    'pattern': pattern,
+    'icon': icon,
+  };
 
   bool matches(String name) =>
       icon.isNotEmpty && (regExp?.hasMatch(name) ?? false);
 
   @override
   bool operator ==(Object other) =>
-      other is IconRule && other.pattern == pattern && other.icon == icon;
+      other is IconRule &&
+      other.id == id &&
+      other.pattern == pattern &&
+      other.icon == icon;
 
   @override
-  int get hashCode => Object.hash(pattern, icon);
+  int get hashCode => Object.hash(id, pattern, icon);
 }
 /// The regex icon rules of the proxies page, in the order they are tried. They
 /// outlive the process in the preferences.
@@ -82,6 +107,18 @@ class IconRulesNotifier extends Notifier<List<IconRule>> {
         json.encode([for (final rule in rules) rule.toJson()]),
       ),
     );
+  }
+
+  void order(int oldIndex, int newIndex) {
+    update(state.copyAndReorder(oldIndex, newIndex));
+  }
+
+  void delAll(Set<int> ids) {
+    final rules = [
+      for (final rule in state)
+        if (!ids.contains(rule.id)) rule,
+    ];
+    update(rules);
   }
 }
 
