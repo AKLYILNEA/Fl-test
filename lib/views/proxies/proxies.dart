@@ -42,6 +42,14 @@ class _ProxiesViewState extends ConsumerState<ProxiesView> {
   ) {
     final appLocalizations = context.appLocalizations;
     return [
+      if (style.type == ProxiesType.list)
+        PopupMenuItem(
+          glyph: AppGlyphs.iconTile,
+          label: appLocalizations.iconStyle,
+          onPressed: () {
+            BaseNavigator.push(context, const ProxiesIconStyleView());
+          },
+        ),
       _optionsMenuItem(
         glyph: switch (style.type) {
           ProxiesType.list => AppGlyphs.appsListDetail,
@@ -167,14 +175,6 @@ class _ProxiesViewState extends ConsumerState<ProxiesView> {
               _proxiesTabKey.currentState?.scrollToGroupSelected();
             },
             tooltip: context.appLocalizations.scrollToSelected,
-          ),
-        if (!_isTab && !picker)
-          IconButtonData(
-            glyph: AppGlyphs.iconTile,
-            onPressed: () {
-              showProxiesIconStyleSheet(context);
-            },
-            tooltip: context.appLocalizations.iconStyle,
           ),
       ],
       menuItems: picker ? const [] : _buildMenuItems(context, style),

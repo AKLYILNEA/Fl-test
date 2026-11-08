@@ -10,15 +10,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Opens the icon style page of the proxies list: the style of the group icons
-/// and the regex rules that choose them from the icon sets.
-Future<void> showProxiesIconStyleSheet(BuildContext context) {
-  return showSheet<void>(
-    context: context,
-    builder: (_) => const ProxiesIconStyleView(),
-  );
-}
-
 class ProxiesIconStyleView extends ConsumerStatefulWidget {
   const ProxiesIconStyleView({super.key});
 
@@ -28,20 +19,6 @@ class ProxiesIconStyleView extends ConsumerStatefulWidget {
 }
 
 class _ProxiesIconStyleViewState extends ConsumerState<ProxiesIconStyleView> {
-  late final ScrollController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = sheetScrollController(context);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
   void _handleStyle(ProxiesIconStyle iconStyle) {
     ref
         .read(proxiesStyleSettingProvider.notifier)
@@ -53,9 +30,12 @@ class _ProxiesIconStyleViewState extends ConsumerState<ProxiesIconStyleView> {
   }
 
   Future<void> _handleAdd() async {
-    final rule = await showFormSheet<IconRule>(
+    final rule = await showSheet<IconRule>(
       context: context,
-      builder: (_) => const _IconRuleForm(),
+      props: nestedPagedSheetProps,
+      builder: (_) => NestedPagedSheet(
+        builder: (_) => const _IconRuleForm(),
+      ),
     );
     if (rule == null || !mounted) {
       return;
@@ -68,9 +48,12 @@ class _ProxiesIconStyleViewState extends ConsumerState<ProxiesIconStyleView> {
     if (index >= rules.length) {
       return;
     }
-    final rule = await showFormSheet<IconRule>(
+    final rule = await showSheet<IconRule>(
       context: context,
-      builder: (_) => _IconRuleForm(rule: rules[index]),
+      props: nestedPagedSheetProps,
+      builder: (_) => NestedPagedSheet(
+        builder: (_) => _IconRuleForm(rule: rules[index]),
+      ),
     );
     if (rule == null || !mounted) {
       return;
@@ -160,7 +143,6 @@ class _ProxiesIconStyleViewState extends ConsumerState<ProxiesIconStyleView> {
     return Scaffold(
       title: appLocalizations.iconStyle,
       body: ListView(
-        controller: _controller,
         padding: const EdgeInsets.symmetric(horizontal: 16).copyWith(
           top: context.sectionsTopPadding,
           bottom: 20 + context.bottomInset,
@@ -293,9 +275,9 @@ class _IconRuleFormState extends ConsumerState<_IconRuleForm> {
       });
       return;
     }
-    Navigator.of(
-      context,
-    ).pop(IconRule(pattern: _controller.text.trim(), icon: _icon));
+    context.safeNestedPop(
+      IconRule(pattern: _controller.text.trim(), icon: _icon),
+    );
   }
 
   @override
