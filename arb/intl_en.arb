@@ -1120,5 +1120,9 @@
   "nodeCount": "Proxies",
   "ruleCount": "Rules",
   "providerCount": "Providers",
-  "currentProfile": "Current profile"
+  "currentProfile": "Current profile",
+  "iconRules": "Regex icons",
+  "iconRulesTip": "A group whose name matches the regex takes its icon from the chosen icon set.",
+  "invalidRegex": "Invalid regular expression",
+  "iconSetRemoved": "Icon set removed"
 }

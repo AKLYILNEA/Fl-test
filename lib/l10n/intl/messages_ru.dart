@@ -869,6 +869,10 @@ class MessageLookup extends MessageLookupByLibrary {
       "Редактор недоступен",
     ),
     "elapsed": MessageLookupByLibrary.simpleMessage("Время"),
+    "iconRules": MessageLookupByLibrary.simpleMessage("Значки по regex"),
+    "iconRulesTip": MessageLookupByLibrary.simpleMessage("Группа, имя которой соответствует регулярному выражению, берёт значок из выбранного набора значков."),
+    "invalidRegex": MessageLookupByLibrary.simpleMessage("Недопустимое регулярное выражение"),
+    "iconSetRemoved": MessageLookupByLibrary.simpleMessage("Набор значков удалён"),
     "emojiStyle": MessageLookupByLibrary.simpleMessage("Шрифт эмодзи"),
     "emptyFallback": MessageLookupByLibrary.simpleMessage(
       "Резерв для пустой группы",

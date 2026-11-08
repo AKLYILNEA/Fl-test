@@ -3,6 +3,7 @@ import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/ui/icons/icons.dart';
+import 'package:fl_clash/views/proxies/icon_style.dart';
 import 'package:fl_clash/views/proxies/list.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/widgets.dart';
@@ -97,20 +98,6 @@ class _ProxiesViewState extends ConsumerState<ProxiesView> {
         onSelected: (type) =>
             _updateStyle((state) => state.copyWith(cardType: type)),
       ),
-      if (style.type == ProxiesType.list)
-        _optionsMenuItem(
-          glyph: AppGlyphs.iconTile,
-          label: appLocalizations.iconStyle,
-          options: ProxiesIconStyle.values,
-          value: style.iconStyle,
-          textOf: (iconStyle) => switch (iconStyle) {
-            ProxiesIconStyle.filled => appLocalizations.iconStyleFilled,
-            ProxiesIconStyle.plain => appLocalizations.iconStylePlain,
-            ProxiesIconStyle.hidden => appLocalizations.iconStyleHidden,
-          },
-          onSelected: (iconStyle) =>
-              _updateStyle((state) => state.copyWith(iconStyle: iconStyle)),
-        ),
       PopupMenuItem(
         glyph: AppGlyphs.eyeOff,
         label: appLocalizations.hideTimeoutProxies,
@@ -180,6 +167,14 @@ class _ProxiesViewState extends ConsumerState<ProxiesView> {
               _proxiesTabKey.currentState?.scrollToGroupSelected();
             },
             tooltip: context.appLocalizations.scrollToSelected,
+          ),
+        if (!_isTab && !picker)
+          IconButtonData(
+            glyph: AppGlyphs.iconTile,
+            onPressed: () {
+              showProxiesIconStyleSheet(context);
+            },
+            tooltip: context.appLocalizations.iconStyle,
           ),
       ],
       menuItems: picker ? const [] : _buildMenuItems(context, style),

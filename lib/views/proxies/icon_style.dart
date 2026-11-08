@@ -1,0 +1,377 @@
+import 'package:collection/collection.dart';
+import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/enum/enum.dart';
+import 'package:fl_clash/features/form/form.dart';
+import 'package:fl_clash/models/models.dart';
+import 'package:fl_clash/providers/providers.dart';
+import 'package:fl_clash/ui/icons/icons.dart';
+import 'package:fl_clash/widgets/widgets.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+/// Opens the icon style page of the proxies list: the style of the group icons
+/// and the regex rules that choose them from the icon sets.
+Future<void> showProxiesIconStyleSheet(BuildContext context) {
+  return showSheet<void>(
+    context: context,
+    builder: (_) => const ProxiesIconStyleView(),
+  );
+}
+
+class ProxiesIconStyleView extends ConsumerStatefulWidget {
+  const ProxiesIconStyleView({super.key});
+
+  @override
+  ConsumerState<ProxiesIconStyleView> createState() =>
+      _ProxiesIconStyleViewState();
+}
+
+class _ProxiesIconStyleViewState extends ConsumerState<ProxiesIconStyleView> {
+  late final ScrollController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = sheetScrollController(context);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _handleStyle(ProxiesIconStyle iconStyle) {
+    ref
+        .read(proxiesStyleSettingProvider.notifier)
+        .update((state) => state.copyWith(iconStyle: iconStyle));
+  }
+
+  void _putRules(List<IconRule> rules) {
+    ref.read(iconRulesProvider.notifier).update(rules);
+  }
+
+  Future<void> _handleAdd() async {
+    final rule = await showFormSheet<IconRule>(
+      context: context,
+      builder: (_) => const _IconRuleForm(),
+    );
+    if (rule == null || !mounted) {
+      return;
+    }
+    _putRules([...ref.read(iconRulesProvider), rule]);
+  }
+
+  Future<void> _handleEdit(int index) async {
+    final rules = ref.read(iconRulesProvider);
+    if (index >= rules.length) {
+      return;
+    }
+    final rule = await showFormSheet<IconRule>(
+      context: context,
+      builder: (_) => _IconRuleForm(rule: rules[index]),
+    );
+    if (rule == null || !mounted) {
+      return;
+    }
+    final next = [...ref.read(iconRulesProvider)];
+    if (index < next.length) {
+      next[index] = rule;
+      _putRules(next);
+    }
+  }
+
+  Future<void> _handleDelete(int index) async {
+    final appLocalizations = context.appLocalizations;
+    final rules = ref.read(iconRulesProvider);
+    if (index >= rules.length) {
+      return;
+    }
+    final res = await dialogs.showMessage(
+      title: appLocalizations.tip,
+      message: TextSpan(text: appLocalizations.deleteTip(rules[index].pattern)),
+      destructive: true,
+      confirmText: appLocalizations.delete,
+    );
+    if (res != true || !mounted) {
+      return;
+    }
+    final next = [...ref.read(iconRulesProvider)];
+    if (index < next.length) {
+      next.removeAt(index);
+      _putRules(next);
+    }
+  }
+
+  Widget _buildRule(int index, IconRule rule, List<IconSet> iconSets) {
+    final appLocalizations = context.appLocalizations;
+    final iconSet = iconSets.firstWhereOrNull(
+      (item) => item.id == rule.iconSetId,
+    );
+    return ContextMenuRegion(
+      menuItems: [
+        PopupMenuItem(
+          glyph: AppGlyphs.edit,
+          label: appLocalizations.edit,
+          onPressed: () => _handleEdit(index),
+        ),
+        PopupMenuItem(
+          danger: true,
+          glyph: AppGlyphs.delete,
+          label: appLocalizations.delete,
+          onPressed: () => _handleDelete(index),
+        ),
+      ],
+      child: DecorationListItem(
+        invalid: iconSet == null || rule.regExp == null,
+        leading: SizedBox.square(
+          dimension: 32,
+          child: IconTheme.merge(
+            data: const IconThemeData(size: 32),
+            child: CommonTargetIcon(src: iconSet?.cover ?? ''),
+          ),
+        ),
+        title: TooltipText(
+          text: Text(
+            rule.pattern,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        subtitle: Text(
+          rule.regExp == null
+              ? appLocalizations.invalidRegex
+              : iconSet?.name ?? appLocalizations.iconSetRemoved,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: context.listCaptionStyle,
+        ),
+        trailing: const DisclosureIndicator(),
+        onPressed: () => _handleEdit(index),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final appLocalizations = context.appLocalizations;
+    final iconStyle = ref.watch(
+      proxiesStyleSettingProvider.select((state) => state.iconStyle),
+    );
+    final rules = ref.watch(iconRulesProvider);
+    final iconSets = ref.watch(iconSetsProvider).value ?? const <IconSet>[];
+    return Scaffold(
+      title: appLocalizations.iconStyle,
+      body: ListView(
+        controller: _controller,
+        padding: const EdgeInsets.symmetric(horizontal: 16).copyWith(
+          top: context.sectionsTopPadding,
+          bottom: 20 + context.bottomInset,
+        ),
+        children: [
+          SegmentedControl<ProxiesIconStyle>(
+            segments: [
+              (ProxiesIconStyle.filled, appLocalizations.iconStyleFilled),
+              (ProxiesIconStyle.plain, appLocalizations.iconStylePlain),
+              (ProxiesIconStyle.hidden, appLocalizations.iconStyleHidden),
+            ],
+            value: iconStyle,
+            onChanged: _handleStyle,
+          ),
+          const ListSectionGap(),
+          ListHeader(
+            title: appLocalizations.iconRules,
+            actions: [
+              IconButtonData(
+                glyph: AppGlyphs.addCircle,
+                tooltip: appLocalizations.add,
+                onPressed: _handleAdd,
+              ),
+            ],
+          ),
+          if (rules.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(
+                appLocalizations.nullTip(appLocalizations.iconRules),
+                style: context.listCaptionStyle,
+              ),
+            )
+          else
+            generateGroup([
+              for (final (index, rule) in rules.indexed)
+                KeyedSubtree(
+                  key: ValueKey('${rule.pattern}#${rule.iconSetId}#$index'),
+                  child: _buildRule(index, rule, iconSets),
+                ),
+            ]),
+          ListFooter(text: appLocalizations.iconRulesTip),
+        ],
+      ),
+    );
+  }
+}
+
+class _IconRuleForm extends ConsumerStatefulWidget {
+  const _IconRuleForm({this.rule});
+
+  final IconRule? rule;
+
+  @override
+  ConsumerState<_IconRuleForm> createState() => _IconRuleFormState();
+}
+
+enum _RuleField { pattern, iconSet }
+
+class _IconRuleFormState extends ConsumerState<_IconRuleForm> {
+  late final TextEditingController _controller;
+  int? _iconSetId;
+  bool _attempted = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.rule?.pattern);
+    _iconSetId = widget.rule?.iconSetId;
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  List<IconSet> get _iconSets =>
+      ref.read(iconSetsProvider).value ?? const <IconSet>[];
+
+  IconSet? get _iconSet =>
+      _iconSets.firstWhereOrNull((item) => item.id == _iconSetId);
+
+  ({_RuleField field, String message})? _issue() {
+    final appLocalizations = context.appLocalizations;
+    final pattern = _controller.text.trim();
+    if (pattern.isEmpty) {
+      return (
+        field: _RuleField.pattern,
+        message: appLocalizations.emptyTip(appLocalizations.regex),
+      );
+    }
+    try {
+      RegExp(pattern);
+    } catch (_) {
+      return (
+        field: _RuleField.pattern,
+        message: appLocalizations.invalidRegex,
+      );
+    }
+    if (_iconSet == null) {
+      return (
+        field: _RuleField.iconSet,
+        message: appLocalizations.emptyTip(appLocalizations.iconSets),
+      );
+    }
+    return null;
+  }
+
+  void _handleChanged(String _) {
+    if (_attempted) {
+      setState(() {});
+    }
+  }
+
+  Future<void> _handlePickIconSet() async {
+    final appLocalizations = context.appLocalizations;
+    final iconSets = _iconSets;
+    final names = {for (final item in iconSets) item.id: item};
+    await showSheet<void>(
+      context: context,
+      builder: (sheetContext) => SelectionSheet<int>(
+        title: appLocalizations.iconSets,
+        emptyLabel: appLocalizations.nullTip(appLocalizations.iconSets),
+        sections: [
+          SelectionSection<int>(
+            items: [for (final item in iconSets) item.id],
+            subtitleBuilder: (_, id) => '${names[id]?.icons.length ?? 0}',
+          ),
+        ],
+        labelBuilder: (id) => names[id]?.name ?? '',
+        selectedOf: (_) => _iconSetId,
+        onSelected: (id) {
+          if (mounted) {
+            setState(() {
+              _iconSetId = id;
+            });
+          }
+          Navigator.of(sheetContext).pop();
+        },
+      ),
+    );
+  }
+
+  void _handleSubmit() {
+    final iconSetId = _iconSetId;
+    if (_issue() != null || iconSetId == null) {
+      setState(() {
+        _attempted = true;
+      });
+      return;
+    }
+    Navigator.of(
+      context,
+    ).pop(IconRule(pattern: _controller.text.trim(), iconSetId: iconSetId));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final appLocalizations = context.appLocalizations;
+    final issue = _attempted ? _issue() : null;
+    final iconSet = _iconSet;
+    return FormPage(
+      title: widget.rule == null
+          ? appLocalizations.add
+          : appLocalizations.edit,
+      saveLabel: appLocalizations.confirm,
+      onSave: _handleSubmit,
+      error: issue?.message,
+      children: [
+        generateSection(
+          items: [
+            FormRow(
+              title: appLocalizations.regex,
+              invalid: issue?.field == _RuleField.pattern,
+              trailing: FormRowTextField(
+                controller: _controller,
+                autofocus: widget.rule == null,
+                hintText: appLocalizations.required,
+                textInputAction: TextInputAction.done,
+                autocorrect: false,
+                enableSuggestions: false,
+                onChanged: _handleChanged,
+                onFieldSubmitted: (_) => _handleSubmit(),
+              ),
+            ),
+            FormRow(
+              title: appLocalizations.iconSets,
+              invalid: issue?.field == _RuleField.iconSet,
+              onPressed: _handlePickIconSet,
+              trailing: Row(
+                spacing: 2,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Text(
+                      iconSet?.name ?? appLocalizations.required,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const GlyphIcon(AppGlyphs.chevronForward),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}

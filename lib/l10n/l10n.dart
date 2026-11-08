@@ -9108,6 +9108,46 @@ class AppLocalizations {
     );
   }
 
+  /// `Regex icons`
+  String get iconRules {
+    return Intl.message(
+      'Regex icons',
+      name: 'iconRules',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `A group whose name matches the regex takes its icon from the chosen icon set.`
+  String get iconRulesTip {
+    return Intl.message(
+      'A group whose name matches the regex takes its icon from the chosen icon set.',
+      name: 'iconRulesTip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Invalid regular expression`
+  String get invalidRegex {
+    return Intl.message(
+      'Invalid regular expression',
+      name: 'invalidRegex',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Icon set removed`
+  String get iconSetRemoved {
+    return Intl.message(
+      'Icon set removed',
+      name: 'iconSetRemoved',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Keep screen on`
   String get wakelock {
     return Intl.message('Keep screen on', name: 'wakelock', desc: '', args: []);
