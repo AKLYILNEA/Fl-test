@@ -178,70 +178,60 @@ class _ProxiesIconStyleViewState extends ConsumerState<ProxiesIconStyleView> {
       final position = ItemPosition.get(index, rules.length);
       final isEditing = selected.isNotEmpty;
       final isSelected = selected.contains(rule.id);
-      return MemoBuilder(
+      return SortableItem(
         key: ValueKey(rule.id),
-        inputs: [
-          appLocalizations,
-          rule,
-          index,
-          position,
-          isEditing,
-          isSelected,
-        ],
-        builder: (_) => SortableItem(
-          index: index,
-          child: ContextMenuRegion(
-            menuItems: isEditing
-                ? null
-                : [
-                    PopupMenuItem(
-                      glyph: AppGlyphs.edit,
-                      label: appLocalizations.edit,
-                      onPressed: () => _handleEdit(index),
-                    ),
-                    PopupMenuItem(
-                      danger: true,
-                      glyph: AppGlyphs.delete,
-                      label: appLocalizations.delete,
-                      onPressed: () => _handleDelete(rule),
-                    ),
-                  ],
-            child: ItemPositionProvider(
-              position: position,
-              child: DecorationListItem(
-                invalid: rule.regExp == null,
-                isSelected: isSelected,
-                contentPadding: const EdgeInsets.only(left: 16),
-                onPressed: isEditing
-                    ? () => _handleToggleSelected(rule.id)
-                    : () => _handleEdit(index),
-                leading: SizedBox.square(
-                  dimension: 32,
-                  child: IconTheme.merge(
-                    data: const IconThemeData(size: 32),
-                    child: CommonTargetIcon(src: rule.icon),
+        index: index,
+        child: ContextMenuRegion(
+          menuItems: (isEditing || _sorting)
+              ? null
+              : [
+                  PopupMenuItem(
+                    glyph: AppGlyphs.edit,
+                    label: appLocalizations.edit,
+                    onPressed: () => _handleEdit(index),
                   ),
-                ),
-                title: TooltipText(
-                  text: Text(
-                    rule.pattern,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  PopupMenuItem(
+                    danger: true,
+                    glyph: AppGlyphs.delete,
+                    label: appLocalizations.delete,
+                    onPressed: () => _handleDelete(rule),
                   ),
+                ],
+          child: ItemPositionProvider(
+            position: position,
+            child: DecorationListItem(
+              invalid: rule.regExp == null,
+              isSelected: isSelected,
+              contentPadding: const EdgeInsets.only(left: 16),
+              onPressed: isEditing
+                  ? () => _handleToggleSelected(rule.id)
+                  : () => _handleEdit(index),
+              leading: SizedBox.square(
+                dimension: 32,
+                child: IconTheme.merge(
+                  data: const IconThemeData(size: 32),
+                  child: CommonTargetIcon(src: rule.icon),
                 ),
-                subtitle: rule.regExp == null
-                    ? Text(
-                        appLocalizations.invalidRegex,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: context.listCaptionStyle,
-                      )
-                    : null,
-                trailing: Checkbox(
-                  value: isSelected,
-                  isCircle: true,
-                  onChanged: (_) => _handleToggleSelected(rule.id),
+              ),
+              title: TooltipText(
+                text: Text(
+                  rule.pattern,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
+              ),
+              subtitle: rule.regExp == null
+                  ? Text(
+                      appLocalizations.invalidRegex,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.listCaptionStyle,
+                    )
+                  : null,
+              trailing: Checkbox(
+                value: isSelected,
+                isCircle: true,
+                onChanged: (_) => _handleToggleSelected(rule.id),
               ),
             ),
           ),
@@ -259,11 +249,11 @@ class _ProxiesIconStyleViewState extends ConsumerState<ProxiesIconStyleView> {
               });
               return false;
             },
-      child: SortModeScope(
-        sorting: _sorting,
-        child: Scaffold(
-          title: appLocalizations.iconStyle,
-          body: CustomScrollView(
+      child: Scaffold(
+        title: appLocalizations.iconStyle,
+        body: SortModeScope(
+          sorting: _sorting,
+          child: CustomScrollView(
             slivers: [
               SliverPadding(
                 padding: const EdgeInsets.symmetric(
