@@ -197,7 +197,7 @@ class _ProxiesIconStyleViewState extends ConsumerState<ProxiesIconStyleView> {
             generateGroup([
               for (final (index, rule) in rules.indexed)
                 KeyedSubtree(
-                  key: ValueKey('${rule.pattern}#${rule.iconSetId}#$index'),
+                  key: ValueKey('${rule.pattern}#${rule.icon}#$index'),
                   child: _buildRule(index, rule),
                 ),
             ]),
