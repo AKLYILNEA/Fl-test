@@ -9158,6 +9158,26 @@ class AppLocalizations {
     );
   }
 
+  /// `Add regex icon`
+  String get addIconRule {
+    return Intl.message(
+      'Add regex icon',
+      name: 'addIconRule',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Edit regex icon`
+  String get editIconRule {
+    return Intl.message(
+      'Edit regex icon',
+      name: 'editIconRule',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Keep screen on`
   String get wakelock {
     return Intl.message('Keep screen on', name: 'wakelock', desc: '', args: []);

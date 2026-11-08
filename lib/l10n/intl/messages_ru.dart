@@ -317,6 +317,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "addOverrideEntry": MessageLookupByLibrary.simpleMessage(
       "Добавить параметр",
     ),
+    "addIconRule": MessageLookupByLibrary.simpleMessage(
+      "Добавить значок по regex",
+    ),
     "addProfile": MessageLookupByLibrary.simpleMessage("Добавить профиль"),
     "addProxyGroup": MessageLookupByLibrary.simpleMessage(
       "Добавить группу прокси",
@@ -858,6 +861,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "editDashboard": MessageLookupByLibrary.simpleMessage("Изменить панель"),
     "editGlobalRules": MessageLookupByLibrary.simpleMessage(
       "Редактировать глобальные правила",
+    ),
+    "editIconRule": MessageLookupByLibrary.simpleMessage(
+      "Изменить значок по regex",
     ),
     "editProxy": MessageLookupByLibrary.simpleMessage("Редактировать прокси"),
     "editProxyGroup": MessageLookupByLibrary.simpleMessage(

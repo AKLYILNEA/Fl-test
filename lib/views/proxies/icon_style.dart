@@ -53,7 +53,10 @@ class _ProxiesIconStyleViewState extends ConsumerState<ProxiesIconStyleView> {
       context: context,
       props: nestedPagedSheetProps,
       builder: (_) => NestedPagedSheet(
-        builder: (_) => _IconRuleForm(rule: rules[index]),
+        builder: (_) => _IconRuleForm(
+          rule: rules[index],
+          onDelete: () => _handleDelete(index),
+        ),
       ),
     );
     if (rule == null || !mounted) {
@@ -66,11 +69,11 @@ class _ProxiesIconStyleViewState extends ConsumerState<ProxiesIconStyleView> {
     }
   }
 
-  Future<void> _handleDelete(int index) async {
+  Future<bool> _handleDelete(int index) async {
     final appLocalizations = context.appLocalizations;
     final rules = ref.read(iconRulesProvider);
     if (index >= rules.length) {
-      return;
+      return false;
     }
     final res = await dialogs.showMessage(
       title: appLocalizations.tip,
@@ -79,13 +82,14 @@ class _ProxiesIconStyleViewState extends ConsumerState<ProxiesIconStyleView> {
       confirmText: appLocalizations.delete,
     );
     if (res != true || !mounted) {
-      return;
+      return false;
     }
     final next = [...ref.read(iconRulesProvider)];
     if (index < next.length) {
       next.removeAt(index);
       _putRules(next);
     }
+    return true;
   }
 
   Widget _buildRule(int index, IconRule rule) {
@@ -169,7 +173,7 @@ class _ProxiesIconStyleViewState extends ConsumerState<ProxiesIconStyleView> {
                 actions: [
                   IconButtonData(
                     glyph: AppGlyphs.addCircle,
-                    tooltip: appLocalizations.add,
+                    tooltip: appLocalizations.addIconRule,
                     onPressed: _handleAdd,
                   ),
                 ],
@@ -221,9 +225,10 @@ class _ProxiesIconStyleViewState extends ConsumerState<ProxiesIconStyleView> {
 }
 
 class _IconRuleForm extends ConsumerStatefulWidget {
-  const _IconRuleForm({this.rule});
+  const _IconRuleForm({this.rule, this.onDelete});
 
   final IconRule? rule;
+  final Future<bool> Function()? onDelete;
 
   @override
   ConsumerState<_IconRuleForm> createState() => _IconRuleFormState();
@@ -298,6 +303,13 @@ class _IconRuleFormState extends ConsumerState<_IconRuleForm> {
     });
   }
 
+  Future<void> _handleDelete() async {
+    final deleted = await widget.onDelete?.call();
+    if (deleted == true && mounted) {
+      context.safeNestedPop();
+    }
+  }
+
   void _handleSubmit() {
     if (_issue() != null) {
       setState(() {
@@ -316,14 +328,15 @@ class _IconRuleFormState extends ConsumerState<_IconRuleForm> {
     final issue = _attempted ? _issue() : null;
     return Scaffold(
       title: widget.rule == null
-          ? appLocalizations.add
-          : appLocalizations.edit,
+          ? appLocalizations.addIconRule
+          : appLocalizations.editIconRule,
       confirmationAction: IconButtonData(
         glyph: AppGlyphs.check,
         tooltip: appLocalizations.confirm,
         onPressed: _handleSubmit,
       ),
       body: ListView(
+        shrinkWrap: true,
         padding: const EdgeInsets.symmetric(horizontal: 16).copyWith(
           top: context.sectionsTopPadding,
           bottom: 20 + context.bottomInset,
@@ -331,6 +344,7 @@ class _IconRuleFormState extends ConsumerState<_IconRuleForm> {
         children: [
           ErrorBanner(message: issue?.message),
           generateSection(
+            title: appLocalizations.general,
             items: [
               FormRow(
                 title: appLocalizations.regex,
@@ -374,6 +388,17 @@ class _IconRuleFormState extends ConsumerState<_IconRuleForm> {
               ),
             ],
           ),
+          if (widget.rule != null)
+            generateSection(
+              title: appLocalizations.action,
+              items: [
+                FormRow(
+                  title: appLocalizations.delete,
+                  titleStyle: TextStyle(color: context.colorScheme.error),
+                  onPressed: _handleDelete,
+                ),
+              ],
+            ),
         ],
       ),
     );

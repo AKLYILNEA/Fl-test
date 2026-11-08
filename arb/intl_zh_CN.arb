@@ -1125,5 +1125,7 @@
   "iconRulesTip": "名称匹配该正则的策略组，会使用所选图标集中与其名称对应的图标。",
   "invalidRegex": "正则表达式无效",
   "iconSetRemoved": "图标集已被移除",
-  "iconRulesEmpty": "正则图标为空"
+  "iconRulesEmpty": "正则图标为空",
+  "addIconRule": "添加正则图标",
+  "editIconRule": "编辑正则图标"
 }

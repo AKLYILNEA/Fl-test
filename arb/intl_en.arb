@@ -1125,5 +1125,7 @@
   "iconRulesTip": "A group whose name matches the regex takes its icon from the chosen icon set.",
   "invalidRegex": "Invalid regular expression",
   "iconSetRemoved": "Icon set removed",
-  "iconRulesEmpty": "Regex icons are empty"
+  "iconRulesEmpty": "Regex icons are empty",
+  "addIconRule": "Add regex icon",
+  "editIconRule": "Edit regex icon"
 }
