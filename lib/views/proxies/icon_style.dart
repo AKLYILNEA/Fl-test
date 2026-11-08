@@ -182,7 +182,7 @@ class _ProxiesIconStyleViewState extends ConsumerState<ProxiesIconStyleView> {
         key: ValueKey(rule.id),
         index: index,
         child: ContextMenuRegion(
-          menuItems: (isEditing || _sorting)
+          menuItems: isEditing
               ? null
               : [
                   PopupMenuItem(
