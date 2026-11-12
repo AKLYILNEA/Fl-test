@@ -18,10 +18,6 @@ import '../helpers/test_app.dart';
 
 class _MockIconCache extends Mock implements CacheManager {}
 
-class _MockIconCacheConfig extends Mock implements Config {}
-
-class _MockIconCacheRepository extends Mock implements CacheInfoRepository {}
-
 Future<void> _pump(WidgetTester tester, Widget icon) {
   return tester.pumpWidget(
     TestApp(
@@ -34,27 +30,21 @@ Future<void> _pump(WidgetTester tester, Widget icon) {
 
 void main() {
   test('refresh removes disk icons and downloads PNG and SVG again, '
-      'including cached icons from earlier sessions', () async {
+      'without restoring unused icons from earlier sessions', () async {
     final manager = _MockIconCache();
-    final repo = _MockIconCacheRepository();
-    final config = _MockIconCacheConfig();
-    when(() => config.repo).thenReturn(repo);
     final fs = MemoryFileSystem();
     final file = fs.file('/icon.png')..writeAsBytesSync(_onePixelPng);
     final events = <String>[];
-    when(() => manager.config).thenReturn(config);
-    when(() => repo.open()).thenAnswer((_) async => true);
-    when(() => repo.getAllObjects()).thenAnswer((_) async => [
-      CacheObject(
-        'https://example.com/previous-session.svg',
-        relativePath: 'previous-session.svg',
-        validTill: DateTime.now().add(const Duration(days: 1)),
-      ),
-    ]);
     when(manager.emptyCache).thenAnswer((_) async {
       events.add('clear');
     });
-    when(() => manager.downloadFile(any(), force: true)).thenAnswer((call) async {
+    when(
+      () => manager.downloadFile(
+        any(),
+        force: true,
+        authHeaders: any(named: 'authHeaders'),
+      ),
+    ).thenAnswer((call) async {
       final url = call.positionalArguments.first as String;
       events.add(url);
       return FileInfo(file, FileSource.Online, DateTime.now(), url);
@@ -72,23 +62,62 @@ void main() {
     ]);
 
     expect(events.first, 'clear');
-    expect(events, contains('https://example.com/previous-session.svg'));
+    expect(events, isNot(contains('https://example.com/previous-session.svg')));
     expect(events.where((url) => url.endsWith('/group.png')), hasLength(1));
     expect(events, contains('https://example.com/group.svg'));
     expect(events.skip(1).every((url) => url.startsWith('https://')), isTrue);
   });
 
+  test(
+    'refresh clears icons before reloading sets and requests fresh images',
+    () async {
+      final manager = _MockIconCache();
+      final events = <String>[];
+      final file = MemoryFileSystem().file('/new.png')
+        ..writeAsBytesSync(_onePixelPng);
+      when(manager.emptyCache).thenAnswer((_) async => events.add('clear'));
+      when(
+        () => manager.downloadFile(
+          any(),
+          force: true,
+          authHeaders: any(named: 'authHeaders'),
+        ),
+      ).thenAnswer((call) async {
+        expect(call.namedArguments[#authHeaders], {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+        });
+        final url = call.positionalArguments.first as String;
+        events.add(url);
+        return FileInfo(file, FileSource.Online, DateTime.now(), url);
+      });
+      targetIconCacheManager = manager;
+      addTearDown(() => targetIconCacheManager = null);
+      await refreshTargetIcons(
+        const [],
+        reloadSources: () async {
+          events.add('reload sets');
+          return ['https://example.com/latest-cover.png'];
+        },
+      );
+      expect(events, [
+        'clear',
+        'reload sets',
+        'https://example.com/latest-cover.png',
+      ]);
+    },
+  );
+
   test('a failed download releases the refresh lock for a retry', () async {
     final manager = _MockIconCache();
-    final repo = _MockIconCacheRepository();
-    final config = _MockIconCacheConfig();
-    when(() => config.repo).thenReturn(repo);
-    when(() => manager.config).thenReturn(config);
-    when(() => repo.open()).thenAnswer((_) async => true);
-    when(() => repo.getAllObjects()).thenAnswer((_) async => []);
     when(manager.emptyCache).thenAnswer((_) async {});
-    when(() => manager.downloadFile(any(), force: true))
-        .thenThrow(StateError('offline'));
+    when(
+      () => manager.downloadFile(
+        any(),
+        force: true,
+        authHeaders: any(named: 'authHeaders'),
+      ),
+    ).thenThrow(StateError('offline'));
     targetIconCacheManager = manager;
     addTearDown(() => targetIconCacheManager = null);
 
@@ -149,6 +178,57 @@ void main() {
     });
 
     tearDown(() => readRemoteIcon = null);
+
+    testWidgets('refresh replaces a displayed cached image with new pixels', (
+      tester,
+    ) async {
+      final manager = _MockIconCache();
+      final next = (await tester.runAsync(() => _squarePng(2)))!;
+      final file = MemoryFileSystem().file('/replacement.png')
+        ..writeAsBytesSync(next);
+      var refreshed = false;
+      readRemoteIcon = (_) => Stream.value(refreshed ? next : _onePixelPng);
+      when(manager.emptyCache).thenAnswer((_) async {});
+      when(
+        () => manager.downloadFile(
+          any(),
+          force: true,
+          authHeaders: any(named: 'authHeaders'),
+        ),
+      ).thenAnswer((call) async {
+        refreshed = true;
+        return FileInfo(
+          file,
+          FileSource.Online,
+          DateTime.now(),
+          call.positionalArguments.first as String,
+        );
+      });
+      targetIconCacheManager = manager;
+      addTearDown(() => targetIconCacheManager = null);
+      const src = 'https://example.com/replaced-image.png';
+      await _pump(tester, const CommonTargetIcon(src: src));
+      await tester.pump();
+      await tester.runAsync(
+        () => precacheImage(
+          tester.widget<Image>(find.byType(Image)).image,
+          tester.element(find.byType(Image)),
+        ),
+      );
+      await tester.pump();
+      expect(tester.widget<RawImage>(find.byType(RawImage)).image!.width, 1);
+      await tester.runAsync(() => refreshTargetIcons([src]));
+      await tester.pump();
+      await tester.runAsync(
+        () => precacheImage(
+          tester.widget<Image>(find.byType(Image)).image,
+          tester.element(find.byType(Image)),
+        ),
+      );
+      await tester.pump();
+      expect(tester.widget<RawImage>(find.byType(RawImage)).image!.width, 2);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
 
     testWidgets('a cold group icon stays visible until its first image frame', (
       tester,

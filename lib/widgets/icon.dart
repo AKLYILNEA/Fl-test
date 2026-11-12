@@ -257,39 +257,54 @@ set targetIconCacheManager(CacheManager? value) {
   _cacheManagerOverride = value;
 }
 
-Future<void> refreshTargetIcons(Iterable<String> sources) {
-  return _refreshingIcons ??= _refreshTargetIcons(sources).whenComplete(() {
-    _refreshingIcons = null;
-    _iconCacheRevision.value++;
-  });
+Future<void> refreshTargetIcons(
+  Iterable<String> sources, {
+  Future<Iterable<String>> Function()? reloadSources,
+}) {
+  return _refreshingIcons ??=
+      _refreshTargetIcons(sources, reloadSources: reloadSources).whenComplete(
+        () {
+          _refreshingIcons = null;
+          _iconCacheRevision.value++;
+        },
+      );
 }
 
-Future<void> _refreshTargetIcons(Iterable<String> sources) async {
+Future<void> _refreshTargetIcons(
+  Iterable<String> sources, {
+  Future<Iterable<String>> Function()? reloadSources,
+}) async {
   await Future.wait(_pendingIconReads.toList());
-  await _cacheManager.config.repo.open();
-  final cached = await _cacheManager.config.repo.getAllObjects();
-  final urls = {
-    ...sources,
-    ..._remoteIcons.keys,
-    for (final entry in cached) entry.url,
-  }.where((src) {
-    final uri = Uri.tryParse(src);
-    return uri != null && (uri.scheme == 'http' || uri.scheme == 'https');
-  }).toList();
   await _cacheManager.emptyCache();
-  for (final src in _remoteIcons.keys.toList()) {
-    final bytes = _remoteIcons[src];
-    if (bytes != null && !src.isSvg) {
-      await _iconImage(bytes).evict();
+  for (final cache in [_remoteIcons, _decodedIcons]) {
+    for (final src in cache.keys.toList()) {
+      final bytes = cache[src];
+      if (bytes != null && !src.isSvg) {
+        await _iconImage(bytes).evict();
+      }
     }
+    cache.clear();
   }
-  _remoteIcons.clear();
   svg.cache.clear();
+  _iconCacheRevision.value++;
+  final urls = {...sources, if (reloadSources != null) ...await reloadSources()}
+      .where((src) {
+        final uri = Uri.tryParse(src);
+        return uri != null && (uri.scheme == 'http' || uri.scheme == 'https');
+      })
+      .toList();
   final pool = TaskPool(maxConcurrentIconLoads);
   await Future.wait([
     for (final url in urls)
       pool.run(() async {
-        final file = await _cacheManager.downloadFile(url, force: true);
+        final file = await _cacheManager.downloadFile(
+          url,
+          force: true,
+          authHeaders: const {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache',
+          },
+        );
         _remoteIcons[url] = await file.file.readAsBytes();
       }),
   ]);

@@ -652,14 +652,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "editSsid": MessageLookupByLibrary.simpleMessage("编辑SSID"),
     "editorUnavailable": MessageLookupByLibrary.simpleMessage("编辑器不可用"),
     "elapsed": MessageLookupByLibrary.simpleMessage("耗时"),
-    "iconRules": MessageLookupByLibrary.simpleMessage("正则图标"),
-    "iconRuleHelp": MessageLookupByLibrary.simpleMessage(
-      "1. 完全匹配：如 ^YouTube\$ 仅匹配名称完全为 YouTube 的策略组。\n2. 关键词匹配：如 YouTube 可匹配所有名称包含 YouTube 的策略组。\n3. 多项匹配：如 (YouTube|Netflix|Disney) 可同时匹配多个流媒体策略组。\n4. 全局通配：如 .* 可匹配所有策略组，全部使用该 Icon 图标。\n5. 前缀与后缀：如 ^PROXY 匹配前缀， Auto\$ 匹配后缀；规则自上而下按序生效。",
-    ),
-    "iconRulesTip": MessageLookupByLibrary.simpleMessage("名称匹配该正则的策略组，会使用所选图标集中与其名称对应的图标。"),
-    "invalidRegex": MessageLookupByLibrary.simpleMessage("正则表达式无效"),
-    "iconSetRemoved": MessageLookupByLibrary.simpleMessage("图标集已被移除"),
-    "iconRulesEmpty": MessageLookupByLibrary.simpleMessage("正则图标为空"),
     "emojiStyle": MessageLookupByLibrary.simpleMessage("Emoji字体"),
     "emptyFallback": MessageLookupByLibrary.simpleMessage("空组兜底"),
     "emptyTip": m26,
@@ -777,6 +769,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "groupBy": MessageLookupByLibrary.simpleMessage("分类"),
     "groupCount": m32,
     "groupCountUnit": MessageLookupByLibrary.simpleMessage("个"),
+    "groupIconsRefreshed": MessageLookupByLibrary.simpleMessage("策略组图标已刷新"),
     "groupTimeoutCount": m33,
     "hasCacheChange": MessageLookupByLibrary.simpleMessage("是否缓存修改"),
     "hashByInUser": MessageLookupByLibrary.simpleMessage("按入站用户哈希"),
@@ -836,6 +829,15 @@ class MessageLookup extends MessageLookupByLibrary {
     "hue": MessageLookupByLibrary.simpleMessage("色相"),
     "icon": MessageLookupByLibrary.simpleMessage("图标"),
     "iconRecords": MessageLookupByLibrary.simpleMessage("图标记录"),
+    "iconRuleHelp": MessageLookupByLibrary.simpleMessage(
+      "1. 完全匹配：如 ^YouTube\$ 仅匹配名称完全为 YouTube 的策略组。\n2. 关键词匹配：如 YouTube 可匹配所有名称包含 YouTube 的策略组。\n3. 多项匹配：如 (YouTube|Netflix|Disney) 可同时匹配多个流媒体策略组。\n4. 全局通配：如 .* 可匹配所有策略组，全部使用该 Icon 图标。\n5. 前缀与后缀：如 ^PROXY 匹配前缀， Auto\$ 匹配后缀；规则自上而下按序生效。",
+    ),
+    "iconRules": MessageLookupByLibrary.simpleMessage("正则图标"),
+    "iconRulesEmpty": MessageLookupByLibrary.simpleMessage("正则图标为空"),
+    "iconRulesTip": MessageLookupByLibrary.simpleMessage(
+      "名称匹配该正则的策略组，会使用所选图标集中与其名称对应的图标。",
+    ),
+    "iconSetRemoved": MessageLookupByLibrary.simpleMessage("图标集已被移除"),
     "iconSets": MessageLookupByLibrary.simpleMessage("图标集"),
     "iconSetsEmptyTip": MessageLookupByLibrary.simpleMessage(
       "暂无图标集，可在「自定义配置资源 → 图标集」中添加",
@@ -928,6 +930,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "invalidRangeContent": MessageLookupByLibrary.simpleMessage(
       "请输入数字或范围，如 80 或 8000-9000，多个用 / 分隔",
     ),
+    "invalidRegex": MessageLookupByLibrary.simpleMessage("正则表达式无效"),
     "invalidRuleSet": m44,
     "invalidSubRule": m45,
     "ipAddress": MessageLookupByLibrary.simpleMessage("IP 地址"),
@@ -1351,6 +1354,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "recordType": MessageLookupByLibrary.simpleMessage("记录类型"),
     "redirPort": MessageLookupByLibrary.simpleMessage("Redir端口"),
     "redo": MessageLookupByLibrary.simpleMessage("重做"),
+    "refreshGroupIcons": MessageLookupByLibrary.simpleMessage("刷新策略组图标"),
+    "refreshGroupIconsTip": MessageLookupByLibrary.simpleMessage(
+      "???????????????????????????????????????????????????????",
+    ),
     "regenerateCertificate": MessageLookupByLibrary.simpleMessage("重新生成证书"),
     "regenerateCertificateTip": MessageLookupByLibrary.simpleMessage(
       "新证书会替换当前证书，FlClash 会尽量把当前证书从本机信任的根证书中移除。信任当前证书的其他设备都需要安装新证书。",

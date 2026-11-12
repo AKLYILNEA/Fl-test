@@ -313,12 +313,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "add": MessageLookupByLibrary.simpleMessage("Добавить"),
     "addCustomProxy": MessageLookupByLibrary.simpleMessage("Добавить прокси"),
     "addFilters": MessageLookupByLibrary.simpleMessage("Добавить фильтры"),
+    "addIconRule": MessageLookupByLibrary.simpleMessage(
+      "Добавить значок по regex",
+    ),
     "addNodes": MessageLookupByLibrary.simpleMessage("Добавить узлы"),
     "addOverrideEntry": MessageLookupByLibrary.simpleMessage(
       "Добавить параметр",
-    ),
-    "addIconRule": MessageLookupByLibrary.simpleMessage(
-      "Добавить значок по regex",
     ),
     "addProfile": MessageLookupByLibrary.simpleMessage("Добавить профиль"),
     "addProxyGroup": MessageLookupByLibrary.simpleMessage(
@@ -875,14 +875,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "Редактор недоступен",
     ),
     "elapsed": MessageLookupByLibrary.simpleMessage("Время"),
-    "iconRules": MessageLookupByLibrary.simpleMessage("Значки по regex"),
-    "iconRuleHelp": MessageLookupByLibrary.simpleMessage(
-      "1. Точное совпадение: например, ^YouTube\$ соответствует только группе с именем YouTube.\n2. По ключевому слову: например, YouTube соответствует любой группе, содержащей YouTube.\n3. Несколько условий: например, (YouTube|Netflix|Disney) совпадает сразу с несколькими группами.\n4. Подстановочный знак: например, .* соответствует всем группам и применяет выбранный значок Icon.\n5. Префикс и суффикс: например, ^PROXY для префикса, Auto\$ для суффикса; правила применяются сверху вниз.",
-    ),
-    "iconRulesTip": MessageLookupByLibrary.simpleMessage("Группа, имя которой соответствует регулярному выражению, берёт значок из выбранного набора значков."),
-    "invalidRegex": MessageLookupByLibrary.simpleMessage("Недопустимое регулярное выражение"),
-    "iconSetRemoved": MessageLookupByLibrary.simpleMessage("Набор значков удалён"),
-    "iconRulesEmpty": MessageLookupByLibrary.simpleMessage("Правила значков пусты"),
     "emojiStyle": MessageLookupByLibrary.simpleMessage("Шрифт эмодзи"),
     "emptyFallback": MessageLookupByLibrary.simpleMessage(
       "Резерв для пустой группы",
@@ -1038,6 +1030,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "groupBy": MessageLookupByLibrary.simpleMessage("Группировка"),
     "groupCount": m32,
     "groupCountUnit": MessageLookupByLibrary.simpleMessage("групп"),
+    "groupIconsRefreshed": MessageLookupByLibrary.simpleMessage(
+      "Значки групп обновлены",
+    ),
     "groupTimeoutCount": m33,
     "hasCacheChange": MessageLookupByLibrary.simpleMessage(
       "Кэшировать изменения?",
@@ -1117,6 +1112,19 @@ class MessageLookup extends MessageLookupByLibrary {
     "hue": MessageLookupByLibrary.simpleMessage("Оттенок"),
     "icon": MessageLookupByLibrary.simpleMessage("Значок"),
     "iconRecords": MessageLookupByLibrary.simpleMessage("История значков"),
+    "iconRuleHelp": MessageLookupByLibrary.simpleMessage(
+      "1. Точное совпадение: например, ^YouTube\$ соответствует только группе с именем YouTube.\n2. По ключевому слову: например, YouTube соответствует любой группе, содержащей YouTube.\n3. Несколько условий: например, (YouTube|Netflix|Disney) совпадает сразу с несколькими группами.\n4. Подстановочный знак: например, .* соответствует всем группам и применяет выбранный значок Icon.\n5. Префикс и суффикс: например, ^PROXY для префикса, Auto\$ для суффикса; правила применяются сверху вниз.",
+    ),
+    "iconRules": MessageLookupByLibrary.simpleMessage("Значки по regex"),
+    "iconRulesEmpty": MessageLookupByLibrary.simpleMessage(
+      "Правила значков пусты",
+    ),
+    "iconRulesTip": MessageLookupByLibrary.simpleMessage(
+      "Группа, имя которой соответствует регулярному выражению, берёт значок из выбранного набора значков.",
+    ),
+    "iconSetRemoved": MessageLookupByLibrary.simpleMessage(
+      "Набор значков удалён",
+    ),
     "iconSets": MessageLookupByLibrary.simpleMessage("Наборы значков"),
     "iconSetsEmptyTip": MessageLookupByLibrary.simpleMessage(
       "Наборов значков пока нет. Добавьте их в разделе «Ресурсы пользовательских профилей → Наборы значков»",
@@ -1173,9 +1181,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "installCertificateSuccess": MessageLookupByLibrary.simpleMessage(
       "Сертификат установлен",
     ),
-    "installedAppsPermissionDeniedMessage": MessageLookupByLibrary.simpleMessage(
-      "Разрешение на список приложений отклонено, поэтому установленные приложения недоступны. Предоставьте его вручную в системных настройках.",
-    ),
+    "installedAppsPermissionDeniedMessage":
+        MessageLookupByLibrary.simpleMessage(
+          "Разрешение на список приложений отклонено, поэтому установленные приложения недоступны. Предоставьте его вручную в системных настройках.",
+        ),
     "installedAppsPermissionDesc": MessageLookupByLibrary.simpleMessage(
       "Эта система не выдаёт список установленных приложений без разрешения. Предоставьте его, чтобы настроить прокси для отдельных приложений.",
     ),
@@ -1237,6 +1246,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "invalidProxyProvider": m43,
     "invalidRangeContent": MessageLookupByLibrary.simpleMessage(
       "Введите числа или диапазоны, например 80 или 8000-9000, через /",
+    ),
+    "invalidRegex": MessageLookupByLibrary.simpleMessage(
+      "Недопустимое регулярное выражение",
     ),
     "invalidRuleSet": m44,
     "invalidSubRule": m45,
@@ -1803,6 +1815,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "recordType": MessageLookupByLibrary.simpleMessage("Тип записи"),
     "redirPort": MessageLookupByLibrary.simpleMessage("Порт Redir"),
     "redo": MessageLookupByLibrary.simpleMessage("Повторить"),
+    "refreshGroupIcons": MessageLookupByLibrary.simpleMessage(
+      "Обновить значки групп",
+    ),
+    "refreshGroupIconsTip": MessageLookupByLibrary.simpleMessage(
+      "???????? ??? ????????? ??????? ? ??????????? ???????, ???????? ????????? ?????? ? ????????? ?????? ??????? ?????????? ?????? ? ????????? ???????? ????? ??????????.",
+    ),
     "regenerateCertificate": MessageLookupByLibrary.simpleMessage(
       "Пересоздать сертификат",
     ),

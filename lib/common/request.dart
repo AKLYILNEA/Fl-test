@@ -59,13 +59,24 @@ class Request {
     return FlClashHttpOverrides.findProxyForReader(read, uri);
   }
 
-  Future<Response<T>> _download<T>(String url, ResponseType responseType) {
+  Future<Response<T>> _download<T>(
+    String url,
+    ResponseType responseType, {
+    bool fresh = false,
+  }) {
     final target = downloadTarget(url);
     final cancelToken = CancelToken();
     return _clashDio
         .getUri<T>(
           target.uri,
-          options: Options(responseType: responseType, headers: target.headers),
+          options: Options(
+            responseType: responseType,
+            headers: {
+              ...target.headers,
+              if (fresh) 'Cache-Control': 'no-cache',
+              if (fresh) 'Pragma': 'no-cache',
+            },
+          ),
           cancelToken: cancelToken,
         )
         .timeout(
@@ -92,9 +103,12 @@ class Request {
     }
   }
 
-  Future<Response<String>> getTextResponseForUrl(String url) async {
+  Future<Response<String>> getTextResponseForUrl(
+    String url, {
+    bool fresh = false,
+  }) async {
     try {
-      return await _download<String>(url, ResponseType.plain);
+      return await _download<String>(url, ResponseType.plain, fresh: fresh);
     } catch (e) {
       commonPrint.log(
         'getTextResponseForUrl error ${compactError(e)}',

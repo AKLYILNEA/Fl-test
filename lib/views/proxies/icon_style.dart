@@ -1,6 +1,7 @@
-﻿import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/features/form/form.dart';
+import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/ui/icons/icons.dart';
 import 'package:fl_clash/views/profiles/custom/icon.dart';
@@ -27,6 +28,7 @@ class _ProxiesIconStyleViewState extends ConsumerState<ProxiesIconStyleView> {
       return;
     }
     final l10n = context.appLocalizations;
+    final container = ProviderScope.containerOf(context, listen: false);
     setState(() => _refreshing = true);
     try {
       final confirmed = await dialogs.showMessage(
@@ -38,13 +40,29 @@ class _ProxiesIconStyleViewState extends ConsumerState<ProxiesIconStyleView> {
       if (confirmed != true || !mounted) {
         return;
       }
-      await refreshTargetIcons([
-        for (final group in ref.read(groupsProvider))
-          ref.read(proxyGroupIconProvider(group.name)),
-        for (final rule in ref.read(iconRulesProvider)) rule.icon,
-      ]);
+      await refreshTargetIcons(
+        const [],
+        reloadSources: () async {
+          final sets = await container.read(iconSetsProvider.future);
+          final actions = container.read(iconSetsActionProvider.notifier);
+          await Future.wait([
+            for (final set in sets)
+              if (set.isRemote) actions.sync(set, fresh: true),
+          ]);
+          return [
+            for (final group in container.read(groupsProvider))
+              container.read(proxyGroupIconProvider(group.name)),
+            for (final rule in container.read(iconRulesProvider)) rule.icon,
+            for (final set in container.read(iconSetsProvider).value ?? [])
+              set.cover,
+          ];
+        },
+      );
       if (mounted) {
-        dialogs.showBanner(l10n.groupIconsRefreshed, level: BannerLevel.success);
+        dialogs.showBanner(
+          l10n.groupIconsRefreshed,
+          level: BannerLevel.success,
+        );
       }
     } catch (error) {
       commonPrint.log('Failed to refresh group icons: $error');
@@ -111,9 +129,7 @@ class _ProxiesIconStyleViewState extends ConsumerState<ProxiesIconStyleView> {
     final rule = await showFormSheet<IconRule>(
       context: context,
       props: nestedPagedSheetProps,
-      builder: (_) => NestedPagedSheet(
-        builder: (_) => const _IconRuleForm(),
-      ),
+      builder: (_) => NestedPagedSheet(builder: (_) => const _IconRuleForm()),
     );
     if (rule == null || !mounted) {
       return;
@@ -290,8 +306,7 @@ class _ProxiesIconStyleViewState extends ConsumerState<ProxiesIconStyleView> {
           IconButtonData(
             glyph: AppGlyphs.refresh,
             tooltip: appLocalizations.refreshGroupIcons,
-            isLoading: _refreshing,
-            onPressed: _handleRefreshIcons,
+            onPressed: _refreshing ? null : _handleRefreshIcons,
           ),
         ],
         body: SortModeScope(
@@ -305,9 +320,15 @@ class _ProxiesIconStyleViewState extends ConsumerState<ProxiesIconStyleView> {
                 sliver: SliverToBoxAdapter(
                   child: SegmentedControl<ProxiesIconStyle>(
                     segments: [
-                      (ProxiesIconStyle.filled, appLocalizations.iconStyleFilled),
+                      (
+                        ProxiesIconStyle.filled,
+                        appLocalizations.iconStyleFilled,
+                      ),
                       (ProxiesIconStyle.plain, appLocalizations.iconStylePlain),
-                      (ProxiesIconStyle.hidden, appLocalizations.iconStyleHidden),
+                      (
+                        ProxiesIconStyle.hidden,
+                        appLocalizations.iconStyleHidden,
+                      ),
                     ],
                     value: iconStyle,
                     onChanged: _handleStyle,
@@ -359,9 +380,7 @@ class _ProxiesIconStyleViewState extends ConsumerState<ProxiesIconStyleView> {
                   horizontal: 16,
                 ).copyWith(bottom: 16 + context.bottomInset),
                 sliver: SliverToBoxAdapter(
-                  child: ListFooter(
-                    text: appLocalizations.iconRulesTip,
-                  ),
+                  child: ListFooter(text: appLocalizations.iconRulesTip),
                 ),
               ),
             ],
@@ -467,14 +486,8 @@ class _IconRuleFormState extends ConsumerState<_IconRuleForm> {
     }
     context.safeNestedPop(
       widget.rule != null
-          ? widget.rule!.copyWith(
-              pattern: _controller.text.trim(),
-              icon: _icon,
-            )
-          : IconRule(
-              pattern: _controller.text.trim(),
-              icon: _icon,
-            ),
+          ? widget.rule!.copyWith(pattern: _controller.text.trim(), icon: _icon)
+          : IconRule(pattern: _controller.text.trim(), icon: _icon),
     );
   }
 

@@ -702,14 +702,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "editSsid": MessageLookupByLibrary.simpleMessage("SSID 편집"),
     "editorUnavailable": MessageLookupByLibrary.simpleMessage("편집기를 사용할 수 없음"),
     "elapsed": MessageLookupByLibrary.simpleMessage("소요"),
-    "iconRules": MessageLookupByLibrary.simpleMessage("정규식 아이콘"),
-    "iconRuleHelp": MessageLookupByLibrary.simpleMessage(
-      "1. 완전 일치: 예: ^YouTube\$ 는 이름이 YouTube 인 그룹에만 일치합니다.\n2. 키워드 일치: 예: YouTube 는 이름에 YouTube 가 포함된 모든 그룹에 일치합니다.\n3. 다중 일치: 예: (YouTube|Netflix|Disney) 는 여러 미디어 그룹과 동시에 일치합니다.\n4. 전체 와일드카드: 예: .* 는 모든 그룹과 일치하며 해당 Icon 아이콘을 적용합니다.\n5. 접두사 및 접미사: 예: ^PROXY 는 접두사, Auto\$ 는 접미사에 일치하며 위에서 아래 순서로 적용됩니다.",
-    ),
-    "iconRulesTip": MessageLookupByLibrary.simpleMessage("이름이 정규식과 일치하는 그룹은 선택한 아이콘 세트의 아이콘을 사용합니다."),
-    "invalidRegex": MessageLookupByLibrary.simpleMessage("잘못된 정규식"),
-    "iconSetRemoved": MessageLookupByLibrary.simpleMessage("아이콘 세트가 삭제됨"),
-    "iconRulesEmpty": MessageLookupByLibrary.simpleMessage("정규식 아이콘이 비어 있습니다"),
     "emojiStyle": MessageLookupByLibrary.simpleMessage("이모지 글꼴"),
     "emptyFallback": MessageLookupByLibrary.simpleMessage("빈 폴백"),
     "emptyTip": m26,
@@ -835,6 +827,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "groupBy": MessageLookupByLibrary.simpleMessage("분류"),
     "groupCount": m32,
     "groupCountUnit": MessageLookupByLibrary.simpleMessage("개"),
+    "groupIconsRefreshed": MessageLookupByLibrary.simpleMessage(
+      "그룹 아이콘을 새로고침했습니다",
+    ),
     "groupTimeoutCount": m33,
     "hasCacheChange": MessageLookupByLibrary.simpleMessage("변경 사항을 캐시하시겠습니까?"),
     "hashByInUser": MessageLookupByLibrary.simpleMessage("인바운드 사용자별 해시"),
@@ -902,6 +897,15 @@ class MessageLookup extends MessageLookupByLibrary {
     "hue": MessageLookupByLibrary.simpleMessage("색조"),
     "icon": MessageLookupByLibrary.simpleMessage("아이콘"),
     "iconRecords": MessageLookupByLibrary.simpleMessage("아이콘 기록"),
+    "iconRuleHelp": MessageLookupByLibrary.simpleMessage(
+      "1. 완전 일치: 예: ^YouTube\$ 는 이름이 YouTube 인 그룹에만 일치합니다.\n2. 키워드 일치: 예: YouTube 는 이름에 YouTube 가 포함된 모든 그룹에 일치합니다.\n3. 다중 일치: 예: (YouTube|Netflix|Disney) 는 여러 미디어 그룹과 동시에 일치합니다.\n4. 전체 와일드카드: 예: .* 는 모든 그룹과 일치하며 해당 Icon 아이콘을 적용합니다.\n5. 접두사 및 접미사: 예: ^PROXY 는 접두사, Auto\$ 는 접미사에 일치하며 위에서 아래 순서로 적용됩니다.",
+    ),
+    "iconRules": MessageLookupByLibrary.simpleMessage("정규식 아이콘"),
+    "iconRulesEmpty": MessageLookupByLibrary.simpleMessage("정규식 아이콘이 비어 있습니다"),
+    "iconRulesTip": MessageLookupByLibrary.simpleMessage(
+      "이름이 정규식과 일치하는 그룹은 선택한 아이콘 세트의 아이콘을 사용합니다.",
+    ),
+    "iconSetRemoved": MessageLookupByLibrary.simpleMessage("아이콘 세트가 삭제됨"),
     "iconSets": MessageLookupByLibrary.simpleMessage("아이콘 세트"),
     "iconSetsEmptyTip": MessageLookupByLibrary.simpleMessage(
       "아이콘 세트가 아직 없습니다. 사용자 지정 프로필 리소스 → 아이콘 세트에서 추가하세요",
@@ -1006,6 +1010,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "invalidRangeContent": MessageLookupByLibrary.simpleMessage(
       "80 또는 8000-9000과 같은 숫자나 범위를 /로 구분하여 입력하세요",
     ),
+    "invalidRegex": MessageLookupByLibrary.simpleMessage("잘못된 정규식"),
     "invalidRuleSet": m44,
     "invalidSubRule": m45,
     "ipAddress": MessageLookupByLibrary.simpleMessage("IP 주소"),
@@ -1461,6 +1466,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "recordType": MessageLookupByLibrary.simpleMessage("레코드 유형"),
     "redirPort": MessageLookupByLibrary.simpleMessage("Redir 포트"),
     "redo": MessageLookupByLibrary.simpleMessage("다시 실행"),
+    "refreshGroupIcons": MessageLookupByLibrary.simpleMessage("그룹 아이콘 새로고침"),
+    "refreshGroupIconsTip": MessageLookupByLibrary.simpleMessage(
+      "?? ???? ??? ?? ???? ??? ?? ??? ?? ??? ??? ?? ???? ?? ?????? ?? ???? ???? ??? ?? ??? ?????.",
+    ),
     "regenerateCertificate": MessageLookupByLibrary.simpleMessage("인증서 다시 생성"),
     "regenerateCertificateTip": MessageLookupByLibrary.simpleMessage(
       "새 인증서가 현재 인증서를 대체하며, FlClash는 가능한 경우 현재 인증서를 이 기기의 신뢰할 수 있는 루트에서 제거합니다. 현재 인증서를 신뢰하는 다른 모든 기기에는 새 인증서를 설치해야 합니다.",

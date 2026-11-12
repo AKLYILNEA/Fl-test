@@ -712,14 +712,6 @@ class MessageLookup extends MessageLookupByLibrary {
     "editSsid": MessageLookupByLibrary.simpleMessage("SSIDを編集"),
     "editorUnavailable": MessageLookupByLibrary.simpleMessage("エディターを利用できません"),
     "elapsed": MessageLookupByLibrary.simpleMessage("所要時間"),
-    "iconRules": MessageLookupByLibrary.simpleMessage("正規表現アイコン"),
-    "iconRuleHelp": MessageLookupByLibrary.simpleMessage(
-      "1. 完全一致：例 ^YouTube\$ は YouTube という名前のグループにのみ一致します。\n2. キーワード一致：例 YouTube は名前に YouTube を含むすべてのグループに一致します。\n3. 複数一致：例 (YouTube|Netflix|Disney) は複数のストリーミンググループに同時に一致します。\n4. ワイルドカード：例 .* はすべてのグループに一致し、選択したアイコンを適用します。\n5. 前方・後方一致：例 ^PROXY は前方一致、 Auto\$ は後方一致；上から順に評価されます。",
-    ),
-    "iconRulesTip": MessageLookupByLibrary.simpleMessage("名前が正規表現に一致するグループは、選択したアイコンセットのアイコンを使用します。"),
-    "invalidRegex": MessageLookupByLibrary.simpleMessage("正規表現が無効です"),
-    "iconSetRemoved": MessageLookupByLibrary.simpleMessage("アイコンセットは削除されました"),
-    "iconRulesEmpty": MessageLookupByLibrary.simpleMessage("正規表現アイコンが空です"),
     "emojiStyle": MessageLookupByLibrary.simpleMessage("絵文字フォント"),
     "emptyFallback": MessageLookupByLibrary.simpleMessage("空グループのフォールバック"),
     "emptyTip": m26,
@@ -845,6 +837,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "groupBy": MessageLookupByLibrary.simpleMessage("分類"),
     "groupCount": m32,
     "groupCountUnit": MessageLookupByLibrary.simpleMessage("個"),
+    "groupIconsRefreshed": MessageLookupByLibrary.simpleMessage(
+      "グループアイコンを更新しました",
+    ),
     "groupTimeoutCount": m33,
     "hasCacheChange": MessageLookupByLibrary.simpleMessage("変更をキャッシュしますか？"),
     "hashByInUser": MessageLookupByLibrary.simpleMessage("インバウンドユーザーでハッシュ"),
@@ -914,6 +909,15 @@ class MessageLookup extends MessageLookupByLibrary {
     "hue": MessageLookupByLibrary.simpleMessage("色相"),
     "icon": MessageLookupByLibrary.simpleMessage("アイコン"),
     "iconRecords": MessageLookupByLibrary.simpleMessage("アイコン履歴"),
+    "iconRuleHelp": MessageLookupByLibrary.simpleMessage(
+      "1. 完全一致：例 ^YouTube\$ は YouTube という名前のグループにのみ一致します。\n2. キーワード一致：例 YouTube は名前に YouTube を含むすべてのグループに一致します。\n3. 複数一致：例 (YouTube|Netflix|Disney) は複数のストリーミンググループに同時に一致します。\n4. ワイルドカード：例 .* はすべてのグループに一致し、選択したアイコンを適用します。\n5. 前方・後方一致：例 ^PROXY は前方一致、 Auto\$ は後方一致；上から順に評価されます。",
+    ),
+    "iconRules": MessageLookupByLibrary.simpleMessage("正規表現アイコン"),
+    "iconRulesEmpty": MessageLookupByLibrary.simpleMessage("正規表現アイコンが空です"),
+    "iconRulesTip": MessageLookupByLibrary.simpleMessage(
+      "名前が正規表現に一致するグループは、選択したアイコンセットのアイコンを使用します。",
+    ),
+    "iconSetRemoved": MessageLookupByLibrary.simpleMessage("アイコンセットは削除されました"),
     "iconSets": MessageLookupByLibrary.simpleMessage("アイコンセット"),
     "iconSetsEmptyTip": MessageLookupByLibrary.simpleMessage(
       "アイコンセットはまだありません。「カスタムプロファイルのリソース → アイコンセット」で追加できます",
@@ -1020,6 +1024,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "invalidRangeContent": MessageLookupByLibrary.simpleMessage(
       "80 や 8000-9000 のような数値または範囲を / 区切りで入力してください",
     ),
+    "invalidRegex": MessageLookupByLibrary.simpleMessage("正規表現が無効です"),
     "invalidRuleSet": m44,
     "invalidSubRule": m45,
     "ipAddress": MessageLookupByLibrary.simpleMessage("IP アドレス"),
@@ -1483,6 +1488,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "recordType": MessageLookupByLibrary.simpleMessage("レコードタイプ"),
     "redirPort": MessageLookupByLibrary.simpleMessage("Redirポート"),
     "redo": MessageLookupByLibrary.simpleMessage("やり直す"),
+    "refreshGroupIcons": MessageLookupByLibrary.simpleMessage("グループアイコンを更新"),
+    "refreshGroupIconsTip": MessageLookupByLibrary.simpleMessage(
+      "??????????????????????????????????????????????????????????????????????????????????????????????",
+    ),
     "regenerateCertificate": MessageLookupByLibrary.simpleMessage("証明書を再生成"),
     "regenerateCertificateTip": MessageLookupByLibrary.simpleMessage(
       "新しい証明書が現在の証明書を置き換えます。FlClash は可能な場合、現在の証明書をこのデバイスの信頼されたルートから削除します。現在の証明書を信頼している他のデバイスには、新しい証明書をインストールする必要があります。",

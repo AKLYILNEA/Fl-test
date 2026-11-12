@@ -309,11 +309,11 @@ class MessageLookup extends MessageLookupByLibrary {
     "add": MessageLookupByLibrary.simpleMessage("Add"),
     "addCustomProxy": MessageLookupByLibrary.simpleMessage("Add proxy"),
     "addFilters": MessageLookupByLibrary.simpleMessage("Add filters"),
+    "addIconRule": MessageLookupByLibrary.simpleMessage("Add regex icon"),
     "addNodes": MessageLookupByLibrary.simpleMessage("Add nodes"),
     "addOverrideEntry": MessageLookupByLibrary.simpleMessage(
       "Add override entry",
     ),
-    "addIconRule": MessageLookupByLibrary.simpleMessage("Add regex icon"),
     "addProfile": MessageLookupByLibrary.simpleMessage("Add profile"),
     "addProxyGroup": MessageLookupByLibrary.simpleMessage("Add proxy group"),
     "addRule": MessageLookupByLibrary.simpleMessage("Add rule"),
@@ -835,16 +835,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "Editor unavailable",
     ),
     "elapsed": MessageLookupByLibrary.simpleMessage("Took"),
-    "iconRules": MessageLookupByLibrary.simpleMessage("Regex icons"),
-    "iconRuleHelp": MessageLookupByLibrary.simpleMessage(
-      "1. Exact match: e.g. ^YouTube\$ matches only the group named YouTube.\n2. Keyword match: e.g. YouTube matches any group whose name contains YouTube.\n3. Multiple match: e.g. (YouTube|Netflix|Disney) matches multiple media groups.\n4. Wildcard: e.g. .* matches all groups to use the selected icon.\n5. Prefix & suffix: e.g. ^PROXY matches prefix, Auto\$ matches suffix; evaluated from top to bottom.",
-    ),
-    "iconRulesTip": MessageLookupByLibrary.simpleMessage("A group whose name matches the regex takes its icon from the chosen icon set."),
-    "invalidRegex": MessageLookupByLibrary.simpleMessage("Invalid regular expression"),
-    "iconSetRemoved": MessageLookupByLibrary.simpleMessage("Icon set removed"),
-    "iconRulesEmpty": MessageLookupByLibrary.simpleMessage(
-      "Regex icons are empty",
-    ),
     "emojiStyle": MessageLookupByLibrary.simpleMessage("Emoji font"),
     "emptyFallback": MessageLookupByLibrary.simpleMessage("Empty fallback"),
     "emptyTip": m26,
@@ -992,6 +982,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "groupBy": MessageLookupByLibrary.simpleMessage("Group by"),
     "groupCount": m32,
     "groupCountUnit": MessageLookupByLibrary.simpleMessage("groups"),
+    "groupIconsRefreshed": MessageLookupByLibrary.simpleMessage(
+      "Group icons refreshed",
+    ),
     "groupTimeoutCount": m33,
     "hasCacheChange": MessageLookupByLibrary.simpleMessage(
       "Cache the changes?",
@@ -1067,6 +1060,17 @@ class MessageLookup extends MessageLookupByLibrary {
     "hue": MessageLookupByLibrary.simpleMessage("Hue"),
     "icon": MessageLookupByLibrary.simpleMessage("Icon"),
     "iconRecords": MessageLookupByLibrary.simpleMessage("Icon records"),
+    "iconRuleHelp": MessageLookupByLibrary.simpleMessage(
+      "1. Exact match: e.g. ^YouTube\$ matches only the group named YouTube.\n2. Keyword match: e.g. YouTube matches any group whose name contains YouTube.\n3. Multiple match: e.g. (YouTube|Netflix|Disney) matches multiple media groups.\n4. Wildcard: e.g. .* matches all groups to use the selected icon.\n5. Prefix & suffix: e.g. ^PROXY matches prefix, Auto\$ matches suffix; evaluated from top to bottom.",
+    ),
+    "iconRules": MessageLookupByLibrary.simpleMessage("Regex icons"),
+    "iconRulesEmpty": MessageLookupByLibrary.simpleMessage(
+      "Regex icons are empty",
+    ),
+    "iconRulesTip": MessageLookupByLibrary.simpleMessage(
+      "A group whose name matches the regex takes its icon from the chosen icon set.",
+    ),
+    "iconSetRemoved": MessageLookupByLibrary.simpleMessage("Icon set removed"),
     "iconSets": MessageLookupByLibrary.simpleMessage("Icon sets"),
     "iconSetsEmptyTip": MessageLookupByLibrary.simpleMessage(
       "No icon sets yet. Add them in Custom profile resources → Icon sets",
@@ -1121,9 +1125,10 @@ class MessageLookup extends MessageLookupByLibrary {
     "installCertificateSuccess": MessageLookupByLibrary.simpleMessage(
       "Certificate installed",
     ),
-    "installedAppsPermissionDeniedMessage": MessageLookupByLibrary.simpleMessage(
-      "The app list permission was denied, so installed apps cannot be listed. Please grant it manually in system settings.",
-    ),
+    "installedAppsPermissionDeniedMessage":
+        MessageLookupByLibrary.simpleMessage(
+          "The app list permission was denied, so installed apps cannot be listed. Please grant it manually in system settings.",
+        ),
     "installedAppsPermissionDesc": MessageLookupByLibrary.simpleMessage(
       "This system hides the installed app list until the permission is granted. Authorize it to configure the per-app proxy.",
     ),
@@ -1185,6 +1190,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "invalidProxyProvider": m43,
     "invalidRangeContent": MessageLookupByLibrary.simpleMessage(
       "Enter numbers or ranges such as 80 or 8000-9000, separated by /",
+    ),
+    "invalidRegex": MessageLookupByLibrary.simpleMessage(
+      "Invalid regular expression",
     ),
     "invalidRuleSet": m44,
     "invalidSubRule": m45,
@@ -1719,6 +1727,12 @@ class MessageLookup extends MessageLookupByLibrary {
     "recordType": MessageLookupByLibrary.simpleMessage("Record type"),
     "redirPort": MessageLookupByLibrary.simpleMessage("Redir port"),
     "redo": MessageLookupByLibrary.simpleMessage("Redo"),
+    "refreshGroupIcons": MessageLookupByLibrary.simpleMessage(
+      "Refresh group icons",
+    ),
+    "refreshGroupIconsTip": MessageLookupByLibrary.simpleMessage(
+      "Clear all cached remote icons and icon-set images, update remote icon sets and fetch fresh icons? Built-in icons and locally imported source files will be kept.",
+    ),
     "regenerateCertificate": MessageLookupByLibrary.simpleMessage(
       "Regenerate certificate",
     ),

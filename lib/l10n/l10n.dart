@@ -7678,8 +7678,7 @@ class AppLocalizations {
   String customImportDroppedSubRules(num count, Object label) {
     return Intl.plural(
       count,
-      one:
-          '1 SUB-RULE rule was dropped, since custom profiles do not support sub-rules',
+      one: '1 SUB-RULE rule was dropped, since custom profiles do not support sub-rules',
       other:
           '$label SUB-RULE rules were dropped, since custom profiles do not support sub-rules',
       name: 'customImportDroppedSubRules',
@@ -9108,86 +9107,6 @@ class AppLocalizations {
     );
   }
 
-  /// `Regex icons`
-  String get iconRules {
-    return Intl.message(
-      'Regex icons',
-      name: 'iconRules',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `A group whose name matches the regex takes its icon from the chosen icon set.`
-  String get iconRulesTip {
-    return Intl.message(
-      'A group whose name matches the regex takes its icon from the chosen icon set.',
-      name: 'iconRulesTip',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Invalid regular expression`
-  String get invalidRegex {
-    return Intl.message(
-      'Invalid regular expression',
-      name: 'invalidRegex',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Icon set removed`
-  String get iconSetRemoved {
-    return Intl.message(
-      'Icon set removed',
-      name: 'iconSetRemoved',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Regex icons are empty`
-  String get iconRulesEmpty {
-    return Intl.message(
-      'Regex icons are empty',
-      name: 'iconRulesEmpty',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Add regex icon`
-  String get addIconRule {
-    return Intl.message(
-      'Add regex icon',
-      name: 'addIconRule',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `Edit regex icon`
-  String get editIconRule {
-    return Intl.message(
-      'Edit regex icon',
-      name: 'editIconRule',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// Regex icon help examples
-  String get iconRuleHelp {
-    return Intl.message(
-      '1. Exact match: e.g. ^YouTube\$ matches only the group named YouTube.\\n2. Keyword match: e.g. YouTube matches any group whose name contains YouTube.\\n3. Multiple match: e.g. (YouTube|Netflix|Disney) matches multiple media groups.\\n4. Wildcard: e.g. .* matches all groups to use the selected icon.\\n5. Prefix & suffix: e.g. ^PROXY matches prefix, Auto\$ matches suffix; evaluated from top to bottom.',
-      name: 'iconRuleHelp',
-      desc: '',
-      args: [],
-    );
-  }
-
   /// `Keep screen on`
   String get wakelock {
     return Intl.message('Keep screen on', name: 'wakelock', desc: '', args: []);
@@ -9528,6 +9447,111 @@ class AppLocalizations {
     return Intl.message(
       'Current profile',
       name: 'currentProfile',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Regex icons`
+  String get iconRules {
+    return Intl.message('Regex icons', name: 'iconRules', desc: '', args: []);
+  }
+
+  /// `A group whose name matches the regex takes its icon from the chosen icon set.`
+  String get iconRulesTip {
+    return Intl.message(
+      'A group whose name matches the regex takes its icon from the chosen icon set.',
+      name: 'iconRulesTip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Invalid regular expression`
+  String get invalidRegex {
+    return Intl.message(
+      'Invalid regular expression',
+      name: 'invalidRegex',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Icon set removed`
+  String get iconSetRemoved {
+    return Intl.message(
+      'Icon set removed',
+      name: 'iconSetRemoved',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Regex icons are empty`
+  String get iconRulesEmpty {
+    return Intl.message(
+      'Regex icons are empty',
+      name: 'iconRulesEmpty',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Add regex icon`
+  String get addIconRule {
+    return Intl.message(
+      'Add regex icon',
+      name: 'addIconRule',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Edit regex icon`
+  String get editIconRule {
+    return Intl.message(
+      'Edit regex icon',
+      name: 'editIconRule',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `1. Exact match: e.g. ^YouTube$ matches only the group named YouTube.\n2. Keyword match: e.g. YouTube matches any group whose name contains YouTube.\n3. Multiple match: e.g. (YouTube|Netflix|Disney) matches multiple media groups.\n4. Wildcard: e.g. .* matches all groups to use the selected icon.\n5. Prefix & suffix: e.g. ^PROXY matches prefix, Auto$ matches suffix; evaluated from top to bottom.`
+  String get iconRuleHelp {
+    return Intl.message(
+      '1. Exact match: e.g. ^YouTube\$ matches only the group named YouTube.\n2. Keyword match: e.g. YouTube matches any group whose name contains YouTube.\n3. Multiple match: e.g. (YouTube|Netflix|Disney) matches multiple media groups.\n4. Wildcard: e.g. .* matches all groups to use the selected icon.\n5. Prefix & suffix: e.g. ^PROXY matches prefix, Auto\$ matches suffix; evaluated from top to bottom.',
+      name: 'iconRuleHelp',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Refresh group icons`
+  String get refreshGroupIcons {
+    return Intl.message(
+      'Refresh group icons',
+      name: 'refreshGroupIcons',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Clear all cached remote icons and icon-set images, update remote icon sets and fetch fresh icons? Built-in icons and locally imported source files will be kept.`
+  String get refreshGroupIconsTip {
+    return Intl.message(
+      'Clear all cached remote icons and icon-set images, update remote icon sets and fetch fresh icons? Built-in icons and locally imported source files will be kept.',
+      name: 'refreshGroupIconsTip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Group icons refreshed`
+  String get groupIconsRefreshed {
+    return Intl.message(
+      'Group icons refreshed',
+      name: 'groupIconsRefreshed',
       desc: '',
       args: [],
     );
