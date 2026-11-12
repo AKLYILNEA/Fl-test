@@ -8,6 +8,8 @@ import 'package:fl_clash/providers/mitm.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/ui/ui.dart';
 import 'package:fl_clash/widgets/icon.dart';
+import 'package:fl_clash/core/controller.dart';
+import 'package:fl_clash/core/method.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -25,6 +27,10 @@ class _AppStateManagerState extends ConsumerState<AppStateManager>
   @override
   void initState() {
     super.initState();
+    ref.listenManual(currentProfileIdProvider, (_, _) => _syncTrafficProfile());
+    ref.listenManual(runTimeProvider, (_, next) {
+      if (next != null) _syncTrafficProfile();
+    });
     WidgetsBinding.instance.addObserver(this);
     // A desktop build started to the tray mounts while hidden, and a paused
     // render never runs a post-frame callback.
@@ -65,6 +71,19 @@ class _AppStateManagerState extends ConsumerState<AppStateManager>
       ref.listenManual(shouldPatchSystemDnsProvider, (prev, next) {
         unawaited(systemDns.sync(next));
       }, fireImmediately: true);
+    }
+  }
+
+  Future<void> _syncTrafficProfile() async {
+    if (ref.read(runTimeProvider) == null) return;
+    final name = ref.read(currentProfileProvider)?.label ?? '';
+    try {
+      await coreController.invokeMethod(
+        method: CoreMethod.toolboxTrafficProfile,
+        arguments: {'profile': name},
+      );
+    } catch (error) {
+      commonPrint.log('Unable to update toolbox traffic profile: $error');
     }
   }
 

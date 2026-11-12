@@ -1,0 +1,3 @@
+Adapted from appshubcc/Bettbox, GPL-3.0.
+https://github.com/appshubcc/Bettbox/tree/88b9597ad88f597e61a2843ad6fe33d5bdee8950/core/toolbox
+FlClash integration: native RPC envelopes, lazy host state, local traffic settings and tracker lifetime.

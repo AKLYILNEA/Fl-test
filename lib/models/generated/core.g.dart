@@ -451,6 +451,7 @@ Map<String, dynamic> _$CoreEventToJson(_CoreEvent instance) =>
     };
 
 const _$CoreEventTypeEnumMap = {
+  CoreEventType.toolbox: 'toolbox',
   CoreEventType.log: 'log',
   CoreEventType.delay: 'delay',
   CoreEventType.request: 'request',

@@ -17,6 +17,7 @@ import 'config/advanced.dart';
 import 'developer.dart';
 import 'disclaimer.dart';
 import 'theme.dart';
+import 'toolbox.dart';
 
 class ToolsView extends ConsumerStatefulWidget {
   const ToolsView({super.key});
@@ -70,11 +71,17 @@ class _ToolViewState extends ConsumerState<ToolsView> {
       Consumer(
         builder: (_, ref, _) {
           final state = ref.watch(moreToolsSelectorStateProvider);
-          if (state.navigationItems.isEmpty) {
-            return Container();
-          }
           return generateSection(
-            items: state.navigationItems.map(_buildNavigationMenuItem),
+            items: [
+              for (final item in state.navigationItems) ...[
+                _buildNavigationMenuItem(item),
+                if (item.label == PageLabel.resources) _toolboxItem(),
+              ],
+              if (!state.navigationItems.any(
+                (item) => item.label == PageLabel.resources,
+              ))
+                _toolboxItem(),
+            ],
           );
         },
       ),
@@ -102,6 +109,12 @@ class _ToolViewState extends ConsumerState<ToolsView> {
       ),
     );
   }
+
+  Widget _toolboxItem() => ListItem.open(
+    leading: const GlyphIcon(AppGlyphs.tools),
+    title: Text(context.appLocalizations.toolbox),
+    widget: const ToolboxView(),
+  );
 }
 
 class _LocaleItem extends ConsumerWidget {

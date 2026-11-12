@@ -22,6 +22,8 @@ List<CoreEvent> coreEventsFromData(Object? data) {
 }
 
 abstract mixin class CoreEventListener {
+  void onToolbox(String kind, Map<String, Object?> data) {}
+
   void onLog(Log log) {}
 
   void onDelay(Delay delay) {}
@@ -56,6 +58,13 @@ class CoreEventManager {
       for (final CoreEventListener listener in List.of(_listeners)) {
         try {
           switch (event.type) {
+            case CoreEventType.toolbox:
+              final value = Map<String, Object?>.from(event.data as Map);
+              listener.onToolbox(
+                value['kind'] as String,
+                Map<String, Object?>.from(value['data'] as Map),
+              );
+              break;
             case CoreEventType.log:
               listener.onLog(Log.fromJson(event.data));
               break;

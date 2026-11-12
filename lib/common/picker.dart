@@ -44,7 +44,9 @@ class Picker {
     return uri;
   }
 
-  Future<String?> pickerConfigQRCode() async {
+  Future<String?> pickerConfigQRCode({
+    String? Function(Iterable<String?>)? decode,
+  }) async {
     final xFile = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (xFile == null) {
       return null;
@@ -55,7 +57,7 @@ class Picker {
       xFile.path,
       formats: const [BarcodeFormat.qrCode],
     );
-    final url = profileUrlFromQrCodes(
+    final url = (decode ?? profileUrlFromQrCodes)(
       capture?.barcodes.map((barcode) => barcode.rawValue) ?? const [],
     );
     if (url == null) {

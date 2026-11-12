@@ -33,7 +33,9 @@ const _previewRevealAwaitingFirstFrame = Interval(
 );
 
 class ScanPage extends ConsumerStatefulWidget {
-  const ScanPage({super.key});
+  const ScanPage({super.key, this.decode});
+
+  final String? Function(Iterable<String?>)? decode;
 
   @override
   ConsumerState<ScanPage> createState() => _ScanPageState();
@@ -156,7 +158,7 @@ class _ScanPageState extends ConsumerState<ScanPage>
     if (_leaving || !mounted || capture.barcodes.isEmpty) {
       return;
     }
-    final url = profileUrlFromQrCodes(
+    final url = (widget.decode ?? profileUrlFromQrCodes)(
       capture.barcodes.map((barcode) => barcode.rawValue),
     );
     if (url == null) {
@@ -200,7 +202,9 @@ class _ScanPageState extends ConsumerState<ScanPage>
     _picking = true;
     final String? url;
     try {
-      url = await globalState.safeRun<String?>(picker.pickerConfigQRCode);
+      url = await globalState.safeRun<String?>(
+        () => picker.pickerConfigQRCode(decode: widget.decode),
+      );
     } finally {
       _picking = false;
     }

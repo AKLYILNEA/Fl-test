@@ -1,6 +1,7 @@
 package core
 
 import (
+	"core/toolbox"
 	"sync"
 	"time"
 
@@ -19,6 +20,8 @@ func init() {
 		sendMessage(DelayMessage, &Delay{Url: url, Name: name, Value: delayValue(delay, timedOut)})
 	}
 	statistic.DefaultRequestNotify = func(c statistic.Tracker) {
+		toolbox.ObserveSpeedTestTracker(c.Info())
+		toolbox.ObserveLiveTrafficTracker(c)
 		notifyProbeRoute(c)
 		if hasEventListener() {
 			sendMessage(RequestMessage, c)

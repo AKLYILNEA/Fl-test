@@ -131,6 +131,19 @@ jobs:
           flutter analyze --no-fatal-infos lib/widgets/icon.dart lib/views/proxies/icon_style.dart test/widgets/target_icon_test.dart
           flutter test test/widgets/target_icon_test.dart test/l10n test/lint/dynamic_message_key_test.dart
 
+      - name: Check toolbox
+        if: matrix.platform == 'android'
+        run: |
+          flutter analyze --no-fatal-infos lib/features/toolbox lib/models/toolbox_ip.dart lib/views/toolbox.dart lib/views/tools.dart lib/manager/app_manager.dart test/features/toolbox_test.dart
+          flutter test test/features/toolbox_test.dart test/views/tools_scroll_test.dart test/core/protocol_contract_test.dart test/providers/icon_sets_action_test.dart
+
+      - name: Check toolbox core
+        if: matrix.platform == 'android'
+        working-directory: core
+        env:
+          CGO_ENABLED: '0'
+        run: go test ./toolbox .
+
       # The core embeds this bundle and FlClashHttpOverrides.trustCoreRoots loads it for Dart.
       # Pinned by hash, so a new bundle from https://curl.se/docs/caextract.html is a reviewed bump.
       - name: Fetch CA certificates

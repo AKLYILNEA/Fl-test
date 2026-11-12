@@ -9556,6 +9556,2701 @@ class AppLocalizations {
       args: [],
     );
   }
+
+  /// `Age Secret Key (Optional)`
+  String get ageSecretKeyOptional {
+    return Intl.message(
+      'Age Secret Key (Optional)',
+      name: 'ageSecretKeyOptional',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please enter a valid Age secret key (must start with AGE-SECRET-KEY-)`
+  String get ageSecretKeyInvalidValidationDesc {
+    return Intl.message(
+      'Please enter a valid Age secret key (must start with AGE-SECRET-KEY-)',
+      name: 'ageSecretKeyInvalidValidationDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Age Key Generation`
+  String get ageKeyGenerateTitle {
+    return Intl.message(
+      'Age Key Generation',
+      name: 'ageKeyGenerateTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Age Private Key`
+  String get agePrivateKeyLabel {
+    return Intl.message(
+      'Age Private Key',
+      name: 'agePrivateKeyLabel',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Age Public Key`
+  String get agePublicKeyLabel {
+    return Intl.message(
+      'Age Public Key',
+      name: 'agePublicKeyLabel',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `X25519 Key pair generated, please keep it safe`
+  String get ageKeyPairGeneratedSuccess {
+    return Intl.message(
+      'X25519 Key pair generated, please keep it safe',
+      name: 'ageKeyPairGeneratedSuccess',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Please enter a correct Age private key first`
+  String get agePrivateKeyRequired {
+    return Intl.message(
+      'Please enter a correct Age private key first',
+      name: 'agePrivateKeyRequired',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Speed Test`
+  String get speedTest {
+    return Intl.message('Speed Test', name: 'speedTest', desc: '', args: []);
+  }
+
+  /// `Start Test`
+  String get speedTestStart {
+    return Intl.message(
+      'Start Test',
+      name: 'speedTestStart',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Test Again`
+  String get speedTestAgain {
+    return Intl.message(
+      'Test Again',
+      name: 'speedTestAgain',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Test History`
+  String get speedTestHistory {
+    return Intl.message(
+      'Test History',
+      name: 'speedTestHistory',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No test history yet`
+  String get speedTestHistoryEmpty {
+    return Intl.message(
+      'No test history yet',
+      name: 'speedTestHistoryEmpty',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Kept for 14 days`
+  String get speedTestHistoryRetention {
+    return Intl.message(
+      'Kept for 14 days',
+      name: 'speedTestHistoryRetention',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Clear all speed test history?`
+  String get speedTestClearHistoryTip {
+    return Intl.message(
+      'Clear all speed test history?',
+      name: 'speedTestClearHistoryTip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Follow Rules`
+  String get speedTestFollowRules {
+    return Intl.message(
+      'Follow Rules',
+      name: 'speedTestFollowRules',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Outbound`
+  String get speedTestOutbound {
+    return Intl.message(
+      'Outbound',
+      name: 'speedTestOutbound',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Not started · Direct test`
+  String get speedTestCoreStopped {
+    return Intl.message(
+      'Not started · Direct test',
+      name: 'speedTestCoreStopped',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Ready`
+  String get speedTestReady {
+    return Intl.message('Ready', name: 'speedTestReady', desc: '', args: []);
+  }
+
+  /// `Connecting`
+  String get speedTestConnecting {
+    return Intl.message(
+      'Connecting',
+      name: 'speedTestConnecting',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Packet Loss`
+  String get speedTestPacketLoss {
+    return Intl.message(
+      'Packet Loss',
+      name: 'speedTestPacketLoss',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Jitter`
+  String get speedTestJitter {
+    return Intl.message('Jitter', name: 'speedTestJitter', desc: '', args: []);
+  }
+
+  /// `Loaded Latency`
+  String get speedTestLoadedLatency {
+    return Intl.message(
+      'Loaded Latency',
+      name: 'speedTestLoadedLatency',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Responsiveness`
+  String get speedTestResponsiveness {
+    return Intl.message(
+      'Responsiveness',
+      name: 'speedTestResponsiveness',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Data Used`
+  String get speedTestDataUsed {
+    return Intl.message(
+      'Data Used',
+      name: 'speedTestDataUsed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Test Server`
+  String get speedTestServer {
+    return Intl.message(
+      'Test Server',
+      name: 'speedTestServer',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Automatically select Speedtest server`
+  String get speedTestServerAutoDesc {
+    return Intl.message(
+      'Automatically select Speedtest server',
+      name: 'speedTestServerAutoDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Protocol`
+  String get speedTestProtocol {
+    return Intl.message(
+      'Protocol',
+      name: 'speedTestProtocol',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `You are on mobile data. One test may use hundreds of MB. Continue?`
+  String get speedTestMobileDataTip {
+    return Intl.message(
+      'You are on mobile data. One test may use hundreds of MB. Continue?',
+      name: 'speedTestMobileDataTip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Blocked by rules`
+  String get speedTestErrorRejected {
+    return Intl.message(
+      'Blocked by rules',
+      name: 'speedTestErrorRejected',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The current rules route the test domain to REJECT. Choose another outbound and retry.`
+  String get speedTestErrorRejectedDesc {
+    return Intl.message(
+      'The current rules route the test domain to REJECT. Choose another outbound and retry.',
+      name: 'speedTestErrorRejectedDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Speed test unavailable`
+  String get speedTestErrorBlocked {
+    return Intl.message(
+      'Speed test unavailable',
+      name: 'speedTestErrorBlocked',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The outbound may be blocking {provider} speed tests. Switch the test source or the outbound.`
+  String speedTestErrorBlockedDesc(Object provider) {
+    return Intl.message(
+      'The outbound may be blocking $provider speed tests. Switch the test source or the outbound.',
+      name: 'speedTestErrorBlockedDesc',
+      desc: '',
+      args: [provider],
+    );
+  }
+
+  /// `Cannot reach the speed test service`
+  String get speedTestErrorUnavailable {
+    return Intl.message(
+      'Cannot reach the speed test service',
+      name: 'speedTestErrorUnavailable',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Speed test timed out`
+  String get speedTestErrorTimeout {
+    return Intl.message(
+      'Speed test timed out',
+      name: 'speedTestErrorTimeout',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Check whether the outbound is available, then retry.`
+  String get speedTestErrorNetworkDesc {
+    return Intl.message(
+      'Check whether the outbound is available, then retry.',
+      name: 'speedTestErrorNetworkDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Switch to {provider}`
+  String speedTestSwitchProvider(Object provider) {
+    return Intl.message(
+      'Switch to $provider',
+      name: 'speedTestSwitchProvider',
+      desc: '',
+      args: [provider],
+    );
+  }
+
+  /// `Change Outbound`
+  String get speedTestChangeOutbound {
+    return Intl.message(
+      'Change Outbound',
+      name: 'speedTestChangeOutbound',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Speed Test Settings`
+  String get speedTestSettings {
+    return Intl.message(
+      'Speed Test Settings',
+      name: 'speedTestSettings',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Test Duration`
+  String get speedTestDuration {
+    return Intl.message(
+      'Test Duration',
+      name: 'speedTestDuration',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Connections`
+  String get speedTestConnections {
+    return Intl.message(
+      'Connections',
+      name: 'speedTestConnections',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Single`
+  String get speedTestSingleThread {
+    return Intl.message(
+      'Single',
+      name: 'speedTestSingleThread',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Multi`
+  String get speedTestMultiThread {
+    return Intl.message(
+      'Multi',
+      name: 'speedTestMultiThread',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Multi uses {count} parallel connections to saturate bandwidth`
+  String speedTestConnectionsDesc(Object count) {
+    return Intl.message(
+      'Multi uses $count parallel connections to saturate bandwidth',
+      name: 'speedTestConnectionsDesc',
+      desc: '',
+      args: [count],
+    );
+  }
+
+  /// `HTTP/3 runs over QUIC (UDP); if unavailable it falls back to HTTP/2, and to HTTP/1.1 if HTTP/2 is unavailable too`
+  String get speedTestProtocolDesc {
+    return Intl.message(
+      'HTTP/3 runs over QUIC (UDP); if unavailable it falls back to HTTP/2, and to HTTP/1.1 if HTTP/2 is unavailable too',
+      name: 'speedTestProtocolDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `{protocol} unavailable, fell back to {fallback}`
+  String speedTestProtocolFallback(Object protocol, Object fallback) {
+    return Intl.message(
+      '$protocol unavailable, fell back to $fallback',
+      name: 'speedTestProtocolFallback',
+      desc: '',
+      args: [protocol, fallback],
+    );
+  }
+
+  /// `Detecting outbound…`
+  String get speedTestProbing {
+    return Intl.message(
+      'Detecting outbound…',
+      name: 'speedTestProbing',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Realtime Throughput`
+  String get speedTestRealtime {
+    return Intl.message(
+      'Realtime Throughput',
+      name: 'speedTestRealtime',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Network Quality`
+  String get speedTestQuality {
+    return Intl.message(
+      'Network Quality',
+      name: 'speedTestQuality',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `{count} connections`
+  String speedTestStreams(Object count) {
+    return Intl.message(
+      '$count connections',
+      name: 'speedTestStreams',
+      desc: '',
+      args: [count],
+    );
+  }
+
+  /// `Manual`
+  String get speedTestManual {
+    return Intl.message('Manual', name: 'speedTestManual', desc: '', args: []);
+  }
+
+  /// `Exit Node`
+  String get speedTestExitNode {
+    return Intl.message(
+      'Exit Node',
+      name: 'speedTestExitNode',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Route Rule`
+  String get speedTestRoute {
+    return Intl.message(
+      'Route Rule',
+      name: 'speedTestRoute',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Resolve with System DNS`
+  String get speedTestUseSystemDns {
+    return Intl.message(
+      'Resolve with System DNS',
+      name: 'speedTestUseSystemDns',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `When enabled, the selected speed test server is always resolved with system DNS, which can help in some cases`
+  String get speedTestUseSystemDnsDesc {
+    return Intl.message(
+      'When enabled, the selected speed test server is always resolved with system DNS, which can help in some cases',
+      name: 'speedTestUseSystemDnsDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Speed test servers are provided by public third parties. Special thanks to Apple, Cloudflare and Speedtest by Ookla.`
+  String get speedTestCredit {
+    return Intl.message(
+      'Speed test servers are provided by public third parties. Special thanks to Apple, Cloudflare and Speedtest by Ookla.',
+      name: 'speedTestCredit',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Toolbox`
+  String get toolbox {
+    return Intl.message('Toolbox', name: 'toolbox', desc: '', args: []);
+  }
+
+  /// `Network diagnostics, debugging and utilities`
+  String get toolboxDesc {
+    return Intl.message(
+      'Network diagnostics, debugging and utilities',
+      name: 'toolboxDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `NAT Detection`
+  String get natTest {
+    return Intl.message('NAT Detection', name: 'natTest', desc: '', args: []);
+  }
+
+  /// `Check NAT type, external address and UDP connectivity`
+  String get natTestDesc {
+    return Intl.message(
+      'Check NAT type, external address and UDP connectivity',
+      name: 'natTestDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Measure download, upload and latency`
+  String get toolSpeedTestDesc {
+    return Intl.message(
+      'Measure download, upload and latency',
+      name: 'toolSpeedTestDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Route Trace`
+  String get routeTrace {
+    return Intl.message('Route Trace', name: 'routeTrace', desc: '', args: []);
+  }
+
+  /// `See how the core resolves and matches a domain or IP`
+  String get routeTraceDesc {
+    return Intl.message(
+      'See how the core resolves and matches a domain or IP',
+      name: 'routeTraceDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Domain, IP or URL`
+  String get routeTraceHint {
+    return Intl.message(
+      'Domain, IP or URL',
+      name: 'routeTraceHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Proxy is not running, route trace is unavailable`
+  String get routeTraceStopped {
+    return Intl.message(
+      'Proxy is not running, route trace is unavailable',
+      name: 'routeTraceStopped',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Target`
+  String get routeTraceInput {
+    return Intl.message('Target', name: 'routeTraceInput', desc: '', args: []);
+  }
+
+  /// `DNS Resolution`
+  String get routeTraceDns {
+    return Intl.message(
+      'DNS Resolution',
+      name: 'routeTraceDns',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Hosts hit: {ips}`
+  String routeTraceHostsHit(Object ips) {
+    return Intl.message(
+      'Hosts hit: $ips',
+      name: 'routeTraceHostsHit',
+      desc: '',
+      args: [ips],
+    );
+  }
+
+  /// `Resolved by rule #{index} · {time} ms`
+  String routeTraceDnsBy(Object index, Object time) {
+    return Intl.message(
+      'Resolved by rule #$index · $time ms',
+      name: 'routeTraceDnsBy',
+      desc: '',
+      args: [index, time],
+    );
+  }
+
+  /// `No IP resolution was needed while matching`
+  String get routeTraceDnsSkipped {
+    return Intl.message(
+      'No IP resolution was needed while matching',
+      name: 'routeTraceDnsSkipped',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The target is an IP, no resolution needed`
+  String get routeTraceDnsIp {
+    return Intl.message(
+      'The target is an IP, no resolution needed',
+      name: 'routeTraceDnsIp',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Rule Matching`
+  String get routeTraceRules {
+    return Intl.message(
+      'Rule Matching',
+      name: 'routeTraceRules',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `{total} rules, matched #{index}`
+  String routeTraceRulesSummary(Object total, Object index) {
+    return Intl.message(
+      '$total rules, matched #$index',
+      name: 'routeTraceRulesSummary',
+      desc: '',
+      args: [total, index],
+    );
+  }
+
+  /// `{total} rules`
+  String routeTraceRulesTotal(Object total) {
+    return Intl.message(
+      '$total rules',
+      name: 'routeTraceRulesTotal',
+      desc: '',
+      args: [total],
+    );
+  }
+
+  /// `No rule matched, using DIRECT`
+  String get routeTraceNoMatch {
+    return Intl.message(
+      'No rule matched, using DIRECT',
+      name: 'routeTraceNoMatch',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Global mode: all traffic uses GLOBAL`
+  String get routeTraceModeGlobal {
+    return Intl.message(
+      'Global mode: all traffic uses GLOBAL',
+      name: 'routeTraceModeGlobal',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Direct mode: all traffic goes direct`
+  String get routeTraceModeDirect {
+    return Intl.message(
+      'Direct mode: all traffic goes direct',
+      name: 'routeTraceModeDirect',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Proxy Chain`
+  String get routeTraceChain {
+    return Intl.message(
+      'Proxy Chain',
+      name: 'routeTraceChain',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Final Outbound`
+  String get routeTraceFinal {
+    return Intl.message(
+      'Final Outbound',
+      name: 'routeTraceFinal',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `View checked rules`
+  String get routeTraceViewRules {
+    return Intl.message(
+      'View checked rules',
+      name: 'routeTraceViewRules',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Checked Rules`
+  String get routeTraceCheckedRules {
+    return Intl.message(
+      'Checked Rules',
+      name: 'routeTraceCheckedRules',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Skipped by PASS`
+  String get routeTraceSkipPass {
+    return Intl.message(
+      'Skipped by PASS',
+      name: 'routeTraceSkipPass',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Skipped, no UDP support`
+  String get routeTraceSkipUdp {
+    return Intl.message(
+      'Skipped, no UDP support',
+      name: 'routeTraceSkipUdp',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Skipped, target not found`
+  String get routeTraceSkipMissing {
+    return Intl.message(
+      'Skipped, target not found',
+      name: 'routeTraceSkipMissing',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Triggered DNS`
+  String get routeTraceTrigger {
+    return Intl.message(
+      'Triggered DNS',
+      name: 'routeTraceTrigger',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `This outbound does not support UDP`
+  String get routeTraceUdpUnsupported {
+    return Intl.message(
+      'This outbound does not support UDP',
+      name: 'routeTraceUdpUnsupported',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Only the first 3000 rules are shown`
+  String get routeTraceTruncated {
+    return Intl.message(
+      'Only the first 3000 rules are shown',
+      name: 'routeTraceTruncated',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `IP Lookup`
+  String get ipLookup {
+    return Intl.message('IP Lookup', name: 'ipLookup', desc: '', args: []);
+  }
+
+  /// `Your exit IPs, or look up any IP or domain`
+  String get ipLookupDesc {
+    return Intl.message(
+      'Your exit IPs, or look up any IP or domain',
+      name: 'ipLookupDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `IP or domain`
+  String get ipLookupHint {
+    return Intl.message(
+      'IP or domain',
+      name: 'ipLookupHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enter a valid IP or domain`
+  String get ipLookupInvalid {
+    return Intl.message(
+      'Enter a valid IP or domain',
+      name: 'ipLookupInvalid',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Unable to resolve this domain`
+  String get ipLookupResolveFailed {
+    return Intl.message(
+      'Unable to resolve this domain',
+      name: 'ipLookupResolveFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `My IP`
+  String get ipLookupMine {
+    return Intl.message('My IP', name: 'ipLookupMine', desc: '', args: []);
+  }
+
+  /// `Default Node IP`
+  String get ipLookupProxyExit {
+    return Intl.message(
+      'Default Node IP',
+      name: 'ipLookupProxyExit',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Domestic Local IP`
+  String get ipLookupDomesticExit {
+    return Intl.message(
+      'Domestic Local IP',
+      name: 'ipLookupDomesticExit',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Local Network`
+  String get ipLookupLocal {
+    return Intl.message(
+      'Local Network',
+      name: 'ipLookupLocal',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Results`
+  String get ipLookupResult {
+    return Intl.message('Results', name: 'ipLookupResult', desc: '', args: []);
+  }
+
+  /// `MRS Lookup`
+  String get mrsLookup {
+    return Intl.message('MRS Lookup', name: 'mrsLookup', desc: '', args: []);
+  }
+
+  /// `Find the GEO / RULE-SET rule sets for a domain or IP`
+  String get mrsLookupDesc {
+    return Intl.message(
+      'Find the GEO / RULE-SET rule sets for a domain or IP',
+      name: 'mrsLookupDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Domain or IP`
+  String get mrsLookupHint {
+    return Intl.message(
+      'Domain or IP',
+      name: 'mrsLookupHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Failed to load rule sets`
+  String get mrsPrepareFailed {
+    return Intl.message(
+      'Failed to load rule sets',
+      name: 'mrsPrepareFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Bundled BundleMRS not found`
+  String get mrsMissing {
+    return Intl.message(
+      'Bundled BundleMRS not found',
+      name: 'mrsMissing',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No rule set matched`
+  String get mrsNoMatch {
+    return Intl.message(
+      'No rule set matched',
+      name: 'mrsNoMatch',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `In use`
+  String get mrsReferenced {
+    return Intl.message('In use', name: 'mrsReferenced', desc: '', args: []);
+  }
+
+  /// `{count} entries`
+  String mrsRules(Object count) {
+    return Intl.message(
+      '$count entries',
+      name: 'mrsRules',
+      desc: '',
+      args: [count],
+    );
+  }
+
+  /// `via {ip}`
+  String mrsVia(Object ip) {
+    return Intl.message('via $ip', name: 'mrsVia', desc: '', args: [ip]);
+  }
+
+  /// `Tap action`
+  String get mrsTapAction {
+    return Intl.message('Tap action', name: 'mrsTapAction', desc: '', args: []);
+  }
+
+  /// `View rules`
+  String get mrsViewRules {
+    return Intl.message('View rules', name: 'mrsViewRules', desc: '', args: []);
+  }
+
+  /// `Copy URL`
+  String get mrsCopyUrl {
+    return Intl.message('Copy URL', name: 'mrsCopyUrl', desc: '', args: []);
+  }
+
+  /// `Resolve domains with DNS rules`
+  String get mrsResolveDns {
+    return Intl.message(
+      'Resolve domains with DNS rules',
+      name: 'mrsResolveDns',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `When on, domains are resolved to IPs with the current DNS config and the IPs are matched too`
+  String get mrsResolveDnsDesc {
+    return Intl.message(
+      'When on, domains are resolved to IPs with the current DNS config and the IPs are matched too',
+      name: 'mrsResolveDnsDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `DNS Lookup`
+  String get dnsQuery {
+    return Intl.message('DNS Lookup', name: 'dnsQuery', desc: '', args: []);
+  }
+
+  /// `Resolve with rules, system or a chosen server`
+  String get dnsQueryDesc {
+    return Intl.message(
+      'Resolve with rules, system or a chosen server',
+      name: 'dnsQueryDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Domain`
+  String get dnsQueryHint {
+    return Intl.message('Domain', name: 'dnsQueryHint', desc: '', args: []);
+  }
+
+  /// `System DNS`
+  String get dnsQuerySystem {
+    return Intl.message(
+      'System DNS',
+      name: 'dnsQuerySystem',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `DNS Server`
+  String get dnsQueryServer {
+    return Intl.message(
+      'DNS Server',
+      name: 'dnsQueryServer',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `e.g. 1.1.1.1, https://cloudflare-dns.com/dns-query`
+  String get dnsQueryServerHint {
+    return Intl.message(
+      'e.g. 1.1.1.1, https://cloudflare-dns.com/dns-query',
+      name: 'dnsQueryServerHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Invalid DNS server`
+  String get dnsQueryServerInvalid {
+    return Intl.message(
+      'Invalid DNS server',
+      name: 'dnsQueryServerInvalid',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Compare`
+  String get dnsQueryCompare {
+    return Intl.message('Compare', name: 'dnsQueryCompare', desc: '', args: []);
+  }
+
+  /// `Resolve with rules, system DNS and the chosen server side by side to spot pollution or routing differences`
+  String get dnsQueryCompareDesc {
+    return Intl.message(
+      'Resolve with rules, system DNS and the chosen server side by side to spot pollution or routing differences',
+      name: 'dnsQueryCompareDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Proxy is not running, "Follow Rules" is unavailable`
+  String get dnsQueryStopped {
+    return Intl.message(
+      'Proxy is not running, "Follow Rules" is unavailable',
+      name: 'dnsQueryStopped',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No records`
+  String get dnsQueryNoRecords {
+    return Intl.message(
+      'No records',
+      name: 'dnsQueryNoRecords',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Fake-IP · {reason}: will return a virtual address from {range}`
+  String dnsQueryFakeIpOn(Object reason, Object range) {
+    return Intl.message(
+      'Fake-IP · $reason: will return a virtual address from $range',
+      name: 'dnsQueryFakeIpOn',
+      desc: '',
+      args: [reason, range],
+    );
+  }
+
+  /// `Fake-IP · {reason}: will return the real IP`
+  String dnsQueryFakeIpOff(Object reason) {
+    return Intl.message(
+      'Fake-IP · $reason: will return the real IP',
+      name: 'dnsQueryFakeIpOff',
+      desc: '',
+      args: [reason],
+    );
+  }
+
+  /// `not in blacklist`
+  String get dnsQueryFilterBlackMiss {
+    return Intl.message(
+      'not in blacklist',
+      name: 'dnsQueryFilterBlackMiss',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `in blacklist`
+  String get dnsQueryFilterBlackHit {
+    return Intl.message(
+      'in blacklist',
+      name: 'dnsQueryFilterBlackHit',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `in whitelist`
+  String get dnsQueryFilterWhiteHit {
+    return Intl.message(
+      'in whitelist',
+      name: 'dnsQueryFilterWhiteHit',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `not in whitelist`
+  String get dnsQueryFilterWhiteMiss {
+    return Intl.message(
+      'not in whitelist',
+      name: 'dnsQueryFilterWhiteMiss',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `rule says fake-ip`
+  String get dnsQueryFilterRuleFake {
+    return Intl.message(
+      'rule says fake-ip',
+      name: 'dnsQueryFilterRuleFake',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `rule says real-ip`
+  String get dnsQueryFilterRuleReal {
+    return Intl.message(
+      'rule says real-ip',
+      name: 'dnsQueryFilterRuleReal',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Redir-Host: will return the real IP, domain restored on connect`
+  String get dnsQueryRedirHost {
+    return Intl.message(
+      'Redir-Host: will return the real IP, domain restored on connect',
+      name: 'dnsQueryRedirHost',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Normal: will return the real IP, rules match by IP`
+  String get dnsQueryNormalMode {
+    return Intl.message(
+      'Normal: will return the real IP, rules match by IP',
+      name: 'dnsQueryNormalMode',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Matched Hosts: will return {ips}`
+  String dnsQueryHostsHit(Object ips) {
+    return Intl.message(
+      'Matched Hosts: will return $ips',
+      name: 'dnsQueryHostsHit',
+      desc: '',
+      args: [ips],
+    );
+  }
+
+  /// `Final outbound "{outbound}", the node resolves the domain`
+  String dnsQueryViaProxy(Object outbound) {
+    return Intl.message(
+      'Final outbound "$outbound", the node resolves the domain',
+      name: 'dnsQueryViaProxy',
+      desc: '',
+      args: [outbound],
+    );
+  }
+
+  /// `Final outbound "{outbound}", the node resolves the domain; Hosts not applied`
+  String dnsQueryViaProxyHosts(Object outbound) {
+    return Intl.message(
+      'Final outbound "$outbound", the node resolves the domain; Hosts not applied',
+      name: 'dnsQueryViaProxyHosts',
+      desc: '',
+      args: [outbound],
+    );
+  }
+
+  /// `Final outbound DIRECT, resolved locally by the core and connected directly`
+  String get dnsQueryViaDirect {
+    return Intl.message(
+      'Final outbound DIRECT, resolved locally by the core and connected directly',
+      name: 'dnsQueryViaDirect',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Final outbound DIRECT, connects to the Hosts address`
+  String get dnsQueryViaDirectHosts {
+    return Intl.message(
+      'Final outbound DIRECT, connects to the Hosts address',
+      name: 'dnsQueryViaDirectHosts',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Rejected by rules`
+  String get dnsQueryViaReject {
+    return Intl.message(
+      'Rejected by rules',
+      name: 'dnsQueryViaReject',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Age Encrypt / Decrypt`
+  String get ageTool {
+    return Intl.message(
+      'Age Encrypt / Decrypt',
+      name: 'ageTool',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Generate keys, encrypt or decrypt text and configs`
+  String get ageToolDesc {
+    return Intl.message(
+      'Generate keys, encrypt or decrypt text and configs',
+      name: 'ageToolDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Keys`
+  String get ageTabKeys {
+    return Intl.message('Keys', name: 'ageTabKeys', desc: '', args: []);
+  }
+
+  /// `Key type`
+  String get ageKeyType {
+    return Intl.message('Key type', name: 'ageKeyType', desc: '', args: []);
+  }
+
+  /// `Post-quantum hybrid key. Stronger, but the public key is much longer and requires age v1.3 or later.`
+  String get ageKeyHybridTip {
+    return Intl.message(
+      'Post-quantum hybrid key. Stronger, but the public key is much longer and requires age v1.3 or later.',
+      name: 'ageKeyHybridTip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Encrypt`
+  String get ageTabEncrypt {
+    return Intl.message('Encrypt', name: 'ageTabEncrypt', desc: '', args: []);
+  }
+
+  /// `Decrypt`
+  String get ageTabDecrypt {
+    return Intl.message('Decrypt', name: 'ageTabDecrypt', desc: '', args: []);
+  }
+
+  /// `New Key Pair`
+  String get ageGenerateKeyPair {
+    return Intl.message(
+      'New Key Pair',
+      name: 'ageGenerateKeyPair',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Use to Encrypt`
+  String get ageUseForEncrypt {
+    return Intl.message(
+      'Use to Encrypt',
+      name: 'ageUseForEncrypt',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Plain Text`
+  String get agePlainText {
+    return Intl.message('Plain Text', name: 'agePlainText', desc: '', args: []);
+  }
+
+  /// `Cipher Text (-----BEGIN AGE ENCRYPTED FILE-----)`
+  String get ageCipherText {
+    return Intl.message(
+      'Cipher Text (-----BEGIN AGE ENCRYPTED FILE-----)',
+      name: 'ageCipherText',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Recipient Public Keys`
+  String get ageRecipients {
+    return Intl.message(
+      'Recipient Public Keys',
+      name: 'ageRecipients',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `One age1… key per line, multiple allowed`
+  String get ageRecipientsHint {
+    return Intl.message(
+      'One age1… key per line, multiple allowed',
+      name: 'ageRecipientsHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Add at least one recipient public key`
+  String get ageRecipientRequired {
+    return Intl.message(
+      'Add at least one recipient public key',
+      name: 'ageRecipientRequired',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enter content or choose a file`
+  String get ageInputRequired {
+    return Intl.message(
+      'Enter content or choose a file',
+      name: 'ageInputRequired',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Result`
+  String get ageOutput {
+    return Intl.message('Result', name: 'ageOutput', desc: '', args: []);
+  }
+
+  /// `Encryption failed`
+  String get ageEncryptFailed {
+    return Intl.message(
+      'Encryption failed',
+      name: 'ageEncryptFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Decryption failed`
+  String get ageDecryptFailed {
+    return Intl.message(
+      'Decryption failed',
+      name: 'ageDecryptFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Content is not Age encrypted`
+  String get ageNotEncrypted {
+    return Intl.message(
+      'Content is not Age encrypted',
+      name: 'ageNotEncrypted',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `File too large (8 MB max)`
+  String get ageFileTooLarge {
+    return Intl.message(
+      'File too large (8 MB max)',
+      name: 'ageFileTooLarge',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Use Current Profile Key`
+  String get ageUseProfileKey {
+    return Intl.message(
+      'Use Current Profile Key',
+      name: 'ageUseProfileKey',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Everything runs locally. Private keys are never stored or uploaded.`
+  String get ageToolTip {
+    return Intl.message(
+      'Everything runs locally. Private keys are never stored or uploaded.',
+      name: 'ageToolTip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Tap a card to change its size, long-press and drag to rearrange`
+  String get toolboxEditTip {
+    return Intl.message(
+      'Tap a card to change its size, long-press and drag to rearrange',
+      name: 'toolboxEditTip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Click a card to change its size, drag to rearrange`
+  String get toolboxEditTipDesktop {
+    return Intl.message(
+      'Click a card to change its size, drag to rearrange',
+      name: 'toolboxEditTipDesktop',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Select a card and press OK to change its size`
+  String get toolboxEditTipTv {
+    return Intl.message(
+      'Select a card and press OK to change its size',
+      name: 'toolboxEditTipTv',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `iPerf3 Tool`
+  String get iperfTest {
+    return Intl.message('iPerf3 Tool', name: 'iperfTest', desc: '', args: []);
+  }
+
+  /// `Measure bandwidth between devices on your LAN, compatible with iperf3`
+  String get iperfTestDesc {
+    return Intl.message(
+      'Measure bandwidth between devices on your LAN, compatible with iperf3',
+      name: 'iperfTestDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Server`
+  String get iperfServer {
+    return Intl.message('Server', name: 'iperfServer', desc: '', args: []);
+  }
+
+  /// `Client`
+  String get iperfClient {
+    return Intl.message('Client', name: 'iperfClient', desc: '', args: []);
+  }
+
+  /// `Start server`
+  String get iperfServerStart {
+    return Intl.message(
+      'Start server',
+      name: 'iperfServerStart',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Stop server`
+  String get iperfServerStop {
+    return Intl.message(
+      'Stop server',
+      name: 'iperfServerStop',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Server is not running`
+  String get iperfServerOff {
+    return Intl.message(
+      'Server is not running',
+      name: 'iperfServerOff',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Listening on port {port}`
+  String iperfServerListening(Object port) {
+    return Intl.message(
+      'Listening on port $port',
+      name: 'iperfServerListening',
+      desc: '',
+      args: [port],
+    );
+  }
+
+  /// `Once started, other devices can scan the QR code or enter this device's address to connect`
+  String get iperfServerOffHint {
+    return Intl.message(
+      'Once started, other devices can scan the QR code or enter this device\'s address to connect',
+      name: 'iperfServerOffHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Scan with Bettbox on another device to connect in one tap`
+  String get iperfScanHint {
+    return Intl.message(
+      'Scan with Bettbox on another device to connect in one tap',
+      name: 'iperfScanHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `This device`
+  String get iperfAddresses {
+    return Intl.message(
+      'This device',
+      name: 'iperfAddresses',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `iperf3 commands`
+  String get iperfCommands {
+    return Intl.message(
+      'iperf3 commands',
+      name: 'iperfCommands',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No LAN address found. Make sure Wi-Fi or Ethernet is connected`
+  String get iperfNoAddress {
+    return Intl.message(
+      'No LAN address found. Make sure Wi-Fi or Ethernet is connected',
+      name: 'iperfNoAddress',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Port`
+  String get iperfPort {
+    return Intl.message('Port', name: 'iperfPort', desc: '', args: []);
+  }
+
+  /// `Enter a port between 1 and 65535`
+  String get iperfPortInvalid {
+    return Intl.message(
+      'Enter a port between 1 and 65535',
+      name: 'iperfPortInvalid',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The server only runs while this page is open and stops when you leave. The screen stays on while it runs.`
+  String get iperfServerTip {
+    return Intl.message(
+      'The server only runs while this page is open and stops when you leave. The screen stays on while it runs.',
+      name: 'iperfServerTip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `If other devices can't connect, allow incoming connections for the Bettbox core in your system firewall.`
+  String get iperfFirewallTip {
+    return Intl.message(
+      'If other devices can\'t connect, allow incoming connections for the Bettbox core in your system firewall.',
+      name: 'iperfFirewallTip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The UDP port is in use, so only TCP tests are available.`
+  String get iperfUdpUnavailable {
+    return Intl.message(
+      'The UDP port is in use, so only TCP tests are available.',
+      name: 'iperfUdpUnavailable',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Server address, e.g. 192.168.1.5`
+  String get iperfAddressHint {
+    return Intl.message(
+      'Server address, e.g. 192.168.1.5',
+      name: 'iperfAddressHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Scan to connect`
+  String get iperfScan {
+    return Intl.message(
+      'Scan to connect',
+      name: 'iperfScan',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Scanned: {name}`
+  String iperfScanned(Object name) {
+    return Intl.message(
+      'Scanned: $name',
+      name: 'iperfScanned',
+      desc: '',
+      args: [name],
+    );
+  }
+
+  /// `This isn't an iPerf3 connection QR code`
+  String get iperfScanInvalid {
+    return Intl.message(
+      'This isn\'t an iPerf3 connection QR code',
+      name: 'iperfScanInvalid',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enter a server address`
+  String get iperfAddressRequired {
+    return Intl.message(
+      'Enter a server address',
+      name: 'iperfAddressRequired',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Protocol`
+  String get iperfProtocol {
+    return Intl.message('Protocol', name: 'iperfProtocol', desc: '', args: []);
+  }
+
+  /// `Direction`
+  String get iperfDirection {
+    return Intl.message(
+      'Direction',
+      name: 'iperfDirection',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Streams`
+  String get iperfParallel {
+    return Intl.message('Streams', name: 'iperfParallel', desc: '', args: []);
+  }
+
+  /// `Duration`
+  String get iperfDuration {
+    return Intl.message('Duration', name: 'iperfDuration', desc: '', args: []);
+  }
+
+  /// `Send rate`
+  String get iperfBandwidth {
+    return Intl.message(
+      'Send rate',
+      name: 'iperfBandwidth',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Both`
+  String get iperfBidir {
+    return Intl.message('Both', name: 'iperfBidir', desc: '', args: []);
+  }
+
+  /// `Receive`
+  String get iperfReceive {
+    return Intl.message('Receive', name: 'iperfReceive', desc: '', args: []);
+  }
+
+  /// `Send`
+  String get iperfSend {
+    return Intl.message('Send', name: 'iperfSend', desc: '', args: []);
+  }
+
+  /// `Start test`
+  String get iperfStart {
+    return Intl.message('Start test', name: 'iperfStart', desc: '', args: []);
+  }
+
+  /// `Test again`
+  String get iperfRetest {
+    return Intl.message('Test again', name: 'iperfRetest', desc: '', args: []);
+  }
+
+  /// `Enter a server address or scan a QR code to start`
+  String get iperfReady {
+    return Intl.message(
+      'Enter a server address or scan a QR code to start',
+      name: 'iperfReady',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Connecting…`
+  String get iperfConnecting {
+    return Intl.message(
+      'Connecting…',
+      name: 'iperfConnecting',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Testing`
+  String get iperfRunning {
+    return Intl.message('Testing', name: 'iperfRunning', desc: '', args: []);
+  }
+
+  /// `Test complete`
+  String get iperfDone {
+    return Intl.message('Test complete', name: 'iperfDone', desc: '', args: []);
+  }
+
+  /// `Waiting for a client`
+  String get iperfWaiting {
+    return Intl.message(
+      'Waiting for a client',
+      name: 'iperfWaiting',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Throughput`
+  String get iperfThroughput {
+    return Intl.message(
+      'Throughput',
+      name: 'iperfThroughput',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Retransmits`
+  String get iperfRetransmits {
+    return Intl.message(
+      'Retransmits',
+      name: 'iperfRetransmits',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `RTT`
+  String get iperfRtt {
+    return Intl.message('RTT', name: 'iperfRtt', desc: '', args: []);
+  }
+
+  /// `Local Ping`
+  String get localPing {
+    return Intl.message('Local Ping', name: 'localPing', desc: '', args: []);
+  }
+
+  /// `Direct ICMP, TCP and UDP latency and loss test`
+  String get localPingDesc {
+    return Intl.message(
+      'Direct ICMP, TCP and UDP latency and loss test',
+      name: 'localPingDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Domain or IP address`
+  String get localPingTargetHint {
+    return Intl.message(
+      'Domain or IP address',
+      name: 'localPingTargetHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Gateway`
+  String get localPingGateway {
+    return Intl.message(
+      'Gateway',
+      name: 'localPingGateway',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Count`
+  String get localPingCount {
+    return Intl.message('Count', name: 'localPingCount', desc: '', args: []);
+  }
+
+  /// `Packet size`
+  String get localPingSize {
+    return Intl.message(
+      'Packet size',
+      name: 'localPingSize',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Choose a target to start`
+  String get localPingReady {
+    return Intl.message(
+      'Choose a target to start',
+      name: 'localPingReady',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Resolving`
+  String get localPingResolving {
+    return Intl.message(
+      'Resolving',
+      name: 'localPingResolving',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Pinging`
+  String get localPingRunning {
+    return Intl.message(
+      'Pinging',
+      name: 'localPingRunning',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Ping finished`
+  String get localPingDone {
+    return Intl.message(
+      'Ping finished',
+      name: 'localPingDone',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Ping result`
+  String get localPingResult {
+    return Intl.message(
+      'Ping result',
+      name: 'localPingResult',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Start ping`
+  String get localPingStart {
+    return Intl.message(
+      'Start ping',
+      name: 'localPingStart',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Sent`
+  String get localPingSent {
+    return Intl.message('Sent', name: 'localPingSent', desc: '', args: []);
+  }
+
+  /// `Received`
+  String get localPingReceived {
+    return Intl.message(
+      'Received',
+      name: 'localPingReceived',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Average`
+  String get localPingAverage {
+    return Intl.message(
+      'Average',
+      name: 'localPingAverage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Min`
+  String get localPingMin {
+    return Intl.message('Min', name: 'localPingMin', desc: '', args: []);
+  }
+
+  /// `Max`
+  String get localPingMax {
+    return Intl.message('Max', name: 'localPingMax', desc: '', args: []);
+  }
+
+  /// `From {address}`
+  String localPingFrom(Object address) {
+    return Intl.message(
+      'From $address',
+      name: 'localPingFrom',
+      desc: '',
+      args: [address],
+    );
+  }
+
+  /// `{count} bytes`
+  String localPingBytes(Object count) {
+    return Intl.message(
+      '$count bytes',
+      name: 'localPingBytes',
+      desc: '',
+      args: [count],
+    );
+  }
+
+  /// `Request timed out`
+  String get localPingTimeout {
+    return Intl.message(
+      'Request timed out',
+      name: 'localPingTimeout',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Port closed`
+  String get localPingClosed {
+    return Intl.message(
+      'Port closed',
+      name: 'localPingClosed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Destination unreachable`
+  String get localPingUnreachable {
+    return Intl.message(
+      'Destination unreachable',
+      name: 'localPingUnreachable',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Send failed`
+  String get localPingFailed {
+    return Intl.message(
+      'Send failed',
+      name: 'localPingFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Could not resolve the domain`
+  String get localPingErrorResolve {
+    return Intl.message(
+      'Could not resolve the domain',
+      name: 'localPingErrorResolve',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `ICMP is not permitted on this system. Try TCP or UDP ping`
+  String get localPingErrorDenied {
+    return Intl.message(
+      'ICMP is not permitted on this system. Try TCP or UDP ping',
+      name: 'localPingErrorDenied',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Unable to send ping packets`
+  String get localPingErrorNetwork {
+    return Intl.message(
+      'Unable to send ping packets',
+      name: 'localPingErrorNetwork',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `TCP ping measures connection setup time. A refused connection also means the host is reachable`
+  String get localPingTcpTip {
+    return Intl.message(
+      'TCP ping measures connection setup time. A refused connection also means the host is reachable',
+      name: 'localPingTcpTip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Port 53 sends a DNS query and waits for the answer. Most other ports never reply, so a timeout does not mean the host is down`
+  String get localPingUdpTip {
+    return Intl.message(
+      'Port 53 sends a DNS query and waits for the answer. Most other ports never reply, so a timeout does not mean the host is down',
+      name: 'localPingUdpTip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Showing the latest {count}. Copy the result to see all`
+  String localPingListLimit(Object count) {
+    return Intl.message(
+      'Showing the latest $count. Copy the result to see all',
+      name: 'localPingListLimit',
+      desc: '',
+      args: [count],
+    );
+  }
+
+  /// `Sent {sent}, received {received}, lost {lost} ({loss}% loss)`
+  String localPingSummary(
+    Object sent,
+    Object received,
+    Object lost,
+    Object loss,
+  ) {
+    return Intl.message(
+      'Sent $sent, received $received, lost $lost ($loss% loss)',
+      name: 'localPingSummary',
+      desc: '',
+      args: [sent, received, lost, loss],
+    );
+  }
+
+  /// `Round trip: min {min} / avg {avg} / max {max} / jitter {jitter} ms`
+  String localPingRttSummary(
+    Object min,
+    Object avg,
+    Object max,
+    Object jitter,
+  ) {
+    return Intl.message(
+      'Round trip: min $min / avg $avg / max $max / jitter $jitter ms',
+      name: 'localPingRttSummary',
+      desc: '',
+      args: [min, avg, max, jitter],
+    );
+  }
+
+  /// `Ping statistics for {target}`
+  String localPingStats(Object target) {
+    return Intl.message(
+      'Ping statistics for $target',
+      name: 'localPingStats',
+      desc: '',
+      args: [target],
+    );
+  }
+
+  /// `Data`
+  String get iperfTransferred {
+    return Intl.message('Data', name: 'iperfTransferred', desc: '', args: []);
+  }
+
+  /// `Peer`
+  String get iperfPeer {
+    return Intl.message('Peer', name: 'iperfPeer', desc: '', args: []);
+  }
+
+  /// `{count} streams`
+  String iperfStreams(Object count) {
+    return Intl.message(
+      '$count streams',
+      name: 'iperfStreams',
+      desc: '',
+      args: [count],
+    );
+  }
+
+  /// `{value} s`
+  String iperfSeconds(Object value) {
+    return Intl.message(
+      '$value s',
+      name: 'iperfSeconds',
+      desc: '',
+      args: [value],
+    );
+  }
+
+  /// `{lost}/{total} packets`
+  String iperfLostPackets(Object lost, Object total) {
+    return Intl.message(
+      '$lost/$total packets',
+      name: 'iperfLostPackets',
+      desc: '',
+      args: [lost, total],
+    );
+  }
+
+  /// `The server is busy with another test. Try again later`
+  String get iperfErrorBusy {
+    return Intl.message(
+      'The server is busy with another test. Try again later',
+      name: 'iperfErrorBusy',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Connection refused. Make sure the iPerf3 server is running`
+  String get iperfErrorRefused {
+    return Intl.message(
+      'Connection refused. Make sure the iPerf3 server is running',
+      name: 'iperfErrorRefused',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Connection timed out. Check the address and network`
+  String get iperfErrorTimeout {
+    return Intl.message(
+      'Connection timed out. Check the address and network',
+      name: 'iperfErrorTimeout',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Can't reach the server`
+  String get iperfErrorUnreachable {
+    return Intl.message(
+      'Can\'t reach the server',
+      name: 'iperfErrorUnreachable',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `UDP handshake failed. It may be blocked by a firewall`
+  String get iperfErrorUdp {
+    return Intl.message(
+      'UDP handshake failed. It may be blocked by a firewall',
+      name: 'iperfErrorUdp',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Unexpected response. The other side may not be an iPerf3 server`
+  String get iperfErrorProtocol {
+    return Intl.message(
+      'Unexpected response. The other side may not be an iPerf3 server',
+      name: 'iperfErrorProtocol',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The test was interrupted`
+  String get iperfErrorInterrupted {
+    return Intl.message(
+      'The test was interrupted',
+      name: 'iperfErrorInterrupted',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The server rejected the test (error {code})`
+  String iperfErrorServer(Object code) {
+    return Intl.message(
+      'The server rejected the test (error $code)',
+      name: 'iperfErrorServer',
+      desc: '',
+      args: [code],
+    );
+  }
+
+  /// `Port {port} is already in use. Try another port`
+  String iperfErrorPortInUse(Object port) {
+    return Intl.message(
+      'Port $port is already in use. Try another port',
+      name: 'iperfErrorPortInUse',
+      desc: '',
+      args: [port],
+    );
+  }
+
+  /// `Couldn't start the server`
+  String get iperfErrorListen {
+    return Intl.message(
+      'Couldn\'t start the server',
+      name: 'iperfErrorListen',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Result`
+  String get iperfResult {
+    return Intl.message('Result', name: 'iperfResult', desc: '', args: []);
+  }
+
+  /// `See exactly where your traffic goes by day, week and month`
+  String get trafficStatsDesc {
+    return Intl.message(
+      'See exactly where your traffic goes by day, week and month',
+      name: 'trafficStatsDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Traffic statistics`
+  String get trafficStatsEnable {
+    return Intl.message(
+      'Traffic statistics',
+      name: 'trafficStatsEnable',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Record details`
+  String get trafficStatsDetail {
+    return Intl.message(
+      'Record details',
+      name: 'trafficStatsDetail',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Record domains, processes, nodes and rules. When off, only totals are kept`
+  String get trafficStatsDetailDesc {
+    return Intl.message(
+      'Record domains, processes, nodes and rules. When off, only totals are kept',
+      name: 'trafficStatsDetailDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Show site icons`
+  String get trafficStatsSiteIcon {
+    return Intl.message(
+      'Show site icons',
+      name: 'trafficStatsSiteIcon',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Fetch icons from the sites first, use Google's icon service when a site has no sharp icon, and cache them locally`
+  String get trafficStatsSiteIconDesc {
+    return Intl.message(
+      'Fetch icons from the sites first, use Google\'s icon service when a site has no sharp icon, and cache them locally',
+      name: 'trafficStatsSiteIconDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Data retention`
+  String get trafficStatsRetention {
+    return Intl.message(
+      'Data retention',
+      name: 'trafficStatsRetention',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Clear all traffic statistics?`
+  String get trafficStatsClearTip {
+    return Intl.message(
+      'Clear all traffic statistics?',
+      name: 'trafficStatsClearTip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Off by default. Once on, traffic is recorded on this device only`
+  String get trafficStatsDisabledTip {
+    return Intl.message(
+      'Off by default. Once on, traffic is recorded on this device only',
+      name: 'trafficStatsDisabledTip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enter a target first`
+  String get tbTargetRequired {
+    return Intl.message(
+      'Enter a target first',
+      name: 'tbTargetRequired',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Domain filter`
+  String get tbHostFilter {
+    return Intl.message(
+      'Domain filter',
+      name: 'tbHostFilter',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Optional`
+  String get tbOptional {
+    return Intl.message('Optional', name: 'tbOptional', desc: '', args: []);
+  }
+
+  /// `Recent targets`
+  String get tbRecentTargets {
+    return Intl.message(
+      'Recent targets',
+      name: 'tbRecentTargets',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Batch test`
+  String get tbBatch {
+    return Intl.message('Batch test', name: 'tbBatch', desc: '', args: []);
+  }
+
+  /// `All nodes`
+  String get tbAllNodes {
+    return Intl.message('All nodes', name: 'tbAllNodes', desc: '', args: []);
+  }
+
+  /// `Source`
+  String get tbSource {
+    return Intl.message('Source', name: 'tbSource', desc: '', args: []);
+  }
+
+  /// `Status`
+  String get tbStatus {
+    return Intl.message('Status', name: 'tbStatus', desc: '', args: []);
+  }
+
+  /// `Mode`
+  String get tbMode {
+    return Intl.message('Mode', name: 'tbMode', desc: '', args: []);
+  }
+
+  /// `Type`
+  String get tbType {
+    return Intl.message('Type', name: 'tbType', desc: '', args: []);
+  }
+
+  /// `Interval (ms)`
+  String get tbInterval {
+    return Intl.message(
+      'Interval (ms)',
+      name: 'tbInterval',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Role`
+  String get tbRole {
+    return Intl.message('Role', name: 'tbRole', desc: '', args: []);
+  }
+
+  /// `Period (days)`
+  String get tbPeriod {
+    return Intl.message('Period (days)', name: 'tbPeriod', desc: '', args: []);
+  }
+
+  /// `Host`
+  String get tbHost {
+    return Intl.message('Host', name: 'tbHost', desc: '', args: []);
+  }
+
+  /// `Rules`
+  String get tbRules {
+    return Intl.message('Rules', name: 'tbRules', desc: '', args: []);
+  }
+
+  /// `Answer`
+  String get tbAnswer {
+    return Intl.message('Answer', name: 'tbAnswer', desc: '', args: []);
+  }
+
+  /// `Count`
+  String get tbCount {
+    return Intl.message('Count', name: 'tbCount', desc: '', args: []);
+  }
+
+  /// `Address`
+  String get tbAddress {
+    return Intl.message('Address', name: 'tbAddress', desc: '', args: []);
+  }
+
+  /// `Matches`
+  String get tbMatches {
+    return Intl.message('Matches', name: 'tbMatches', desc: '', args: []);
+  }
+
+  /// `Processes`
+  String get tbProcesses {
+    return Intl.message('Processes', name: 'tbProcesses', desc: '', args: []);
+  }
+
+  /// `Nodes`
+  String get tbNodes {
+    return Intl.message('Nodes', name: 'tbNodes', desc: '', args: []);
+  }
+
+  /// `Profiles`
+  String get tbProfiles {
+    return Intl.message('Profiles', name: 'tbProfiles', desc: '', args: []);
+  }
+
+  /// `Trend`
+  String get tbTrend {
+    return Intl.message('Trend', name: 'tbTrend', desc: '', args: []);
+  }
+
+  /// `Time`
+  String get tbTime {
+    return Intl.message('Time', name: 'tbTime', desc: '', args: []);
+  }
+
+  /// `Elapsed (s)`
+  String get tbElapsed {
+    return Intl.message('Elapsed (s)', name: 'tbElapsed', desc: '', args: []);
+  }
+
+  /// `Matched`
+  String get tbMatched {
+    return Intl.message('Matched', name: 'tbMatched', desc: '', args: []);
+  }
+
+  /// `Checked`
+  String get tbChecked {
+    return Intl.message('Checked', name: 'tbChecked', desc: '', args: []);
+  }
+
+  /// `Total`
+  String get tbTotal {
+    return Intl.message('Total', name: 'tbTotal', desc: '', args: []);
+  }
+
+  /// `Payload`
+  String get tbPayload {
+    return Intl.message('Payload', name: 'tbPayload', desc: '', args: []);
+  }
+
+  /// `Path`
+  String get tbPath {
+    return Intl.message('Path', name: 'tbPath', desc: '', args: []);
+  }
+
+  /// `NAT mapping`
+  String get tbMapping {
+    return Intl.message('NAT mapping', name: 'tbMapping', desc: '', args: []);
+  }
+
+  /// `NAT filtering`
+  String get tbFiltering {
+    return Intl.message(
+      'NAT filtering',
+      name: 'tbFiltering',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `NAT type`
+  String get tbNatType {
+    return Intl.message('NAT type', name: 'tbNatType', desc: '', args: []);
+  }
+
+  /// `External address`
+  String get tbExternalAddress {
+    return Intl.message(
+      'External address',
+      name: 'tbExternalAddress',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Local address`
+  String get tbLocalAddress {
+    return Intl.message(
+      'Local address',
+      name: 'tbLocalAddress',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Port preserved`
+  String get tbPortPreserved {
+    return Intl.message(
+      'Port preserved',
+      name: 'tbPortPreserved',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Public address`
+  String get tbPublicAddress {
+    return Intl.message(
+      'Public address',
+      name: 'tbPublicAddress',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Sequence`
+  String get tbSequence {
+    return Intl.message('Sequence', name: 'tbSequence', desc: '', args: []);
+  }
+
+  /// `Error`
+  String get tbError {
+    return Intl.message('Error', name: 'tbError', desc: '', args: []);
+  }
+
+  /// `Progress`
+  String get tbProgress {
+    return Intl.message('Progress', name: 'tbProgress', desc: '', args: []);
+  }
+
+  /// `Data`
+  String get tbData {
+    return Intl.message('Data', name: 'tbData', desc: '', args: []);
+  }
+
+  /// `Records`
+  String get tbRecords {
+    return Intl.message('Records', name: 'tbRecords', desc: '', args: []);
+  }
+
+  /// `Category`
+  String get tbCategory {
+    return Intl.message('Category', name: 'tbCategory', desc: '', args: []);
+  }
+
+  /// `Download rule database`
+  String get tbDownloadMrs {
+    return Intl.message(
+      'Download rule database',
+      name: 'tbDownloadMrs',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Download the MRS rule database used by this tool.`
+  String get tbMrsDownloadTip {
+    return Intl.message(
+      'Download the MRS rule database used by this tool.',
+      name: 'tbMrsDownloadTip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Local network`
+  String get tbLocalNetwork {
+    return Intl.message(
+      'Local network',
+      name: 'tbLocalNetwork',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `IP risk`
+  String get tbIpRisk {
+    return Intl.message('IP risk', name: 'tbIpRisk', desc: '', args: []);
+  }
+
+  /// `Clear history`
+  String get tbClearHistory {
+    return Intl.message(
+      'Clear history',
+      name: 'tbClearHistory',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `version`
+  String get version {
+    return Intl.message('version', name: 'version', desc: '', args: []);
+  }
+
+  /// `Import`
+  String get tbImport {
+    return Intl.message('Import', name: 'tbImport', desc: '', args: []);
+  }
+
+  /// `Export`
+  String get tbExport {
+    return Intl.message('Export', name: 'tbExport', desc: '', args: []);
+  }
+
+  /// `Enabled`
+  String get tbEnabled {
+    return Intl.message('Enabled', name: 'tbEnabled', desc: '', args: []);
+  }
+
+  /// `Disabled`
+  String get tbDisabled {
+    return Intl.message('Disabled', name: 'tbDisabled', desc: '', args: []);
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {

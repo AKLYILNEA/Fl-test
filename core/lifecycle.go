@@ -30,6 +30,7 @@ func handleInit(params *InitParams) error {
 	defer configMu.Unlock()
 	sdkVersion.Store(int32(params.Version))
 	constant.SetHomeDir(params.HomeDir)
+	initToolbox(params.HomeDir)
 	initOwnership(params.HomeDir)
 	clearSpilledResponses()
 	isInit.Store(true)
@@ -90,6 +91,7 @@ func updateListeners(cfg *config.Config) {
 }
 
 func handleShutdown() {
+	stopToolbox()
 	handleStopLog()
 	stopRouteWatch()
 

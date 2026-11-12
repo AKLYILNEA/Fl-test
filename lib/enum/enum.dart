@@ -187,6 +187,7 @@ enum ResultType {
 }
 
 enum CoreEventType {
+  toolbox,
   log,
   delay,
   request,

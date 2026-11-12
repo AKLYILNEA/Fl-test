@@ -82,6 +82,37 @@ const (
 	mitmExchangeMethod            CoreMethod = "mitm.exchange"
 	mitmBodyMethod                CoreMethod = "mitm.body"
 
+	toolboxRouteTraceMethod       CoreMethod = "toolbox.routeTrace"
+	toolboxDnsQueryMethod         CoreMethod = "toolbox.dnsQuery"
+	toolboxMrsPrepareMethod       CoreMethod = "toolbox.mrsPrepare"
+	toolboxMrsLookupMethod        CoreMethod = "toolbox.mrsLookup"
+	toolboxMrsDumpMethod          CoreMethod = "toolbox.mrsDump"
+	toolboxMrsCancelMethod        CoreMethod = "toolbox.mrsCancel"
+	toolboxSpeedStartMethod       CoreMethod = "toolbox.speedStart"
+	toolboxSpeedProbeMethod       CoreMethod = "toolbox.speedProbe"
+	toolboxSpeedCancelMethod      CoreMethod = "toolbox.speedCancel"
+	toolboxSpeedServersMethod     CoreMethod = "toolbox.speedServers"
+	toolboxStunStartMethod        CoreMethod = "toolbox.stunStart"
+	toolboxStunCancelMethod       CoreMethod = "toolbox.stunCancel"
+	toolboxPingStartMethod        CoreMethod = "toolbox.pingStart"
+	toolboxPingCancelMethod       CoreMethod = "toolbox.pingCancel"
+	toolboxIperfStartMethod       CoreMethod = "toolbox.iperfStart"
+	toolboxIperfCancelMethod      CoreMethod = "toolbox.iperfCancel"
+	toolboxIperfListenMethod      CoreMethod = "toolbox.iperfListen"
+	toolboxIperfStopMethod        CoreMethod = "toolbox.iperfStop"
+	toolboxAgeCryptMethod         CoreMethod = "toolbox.ageCrypt"
+	toolboxAgeKeysMethod          CoreMethod = "toolbox.ageKeys"
+	toolboxTrafficQueryMethod     CoreMethod = "toolbox.trafficQuery"
+	toolboxTrafficClearMethod     CoreMethod = "toolbox.trafficClear"
+	toolboxTrafficConfigureMethod CoreMethod = "toolbox.trafficConfigure"
+	toolboxTrafficProfileMethod   CoreMethod = "toolbox.trafficProfile"
+	toolboxStoreGetMethod         CoreMethod = "toolbox.storeGet"
+	toolboxStoreSetMethod         CoreMethod = "toolbox.storeSet"
+	toolboxStoreListMethod        CoreMethod = "toolbox.storeList"
+	toolboxStoreClearMethod       CoreMethod = "toolbox.storeClear"
+	toolboxProxyStartMethod       CoreMethod = "toolbox.proxyStart"
+	toolboxProxyStopMethod        CoreMethod = "toolbox.proxyStop"
+
 	// The envelope of a batch of events, which the Core sends and never receives.
 	messageMethod CoreMethod = "message"
 )
@@ -89,6 +120,7 @@ const (
 type MessageType string
 
 const (
+	ToolboxMessage   MessageType = "toolbox"
 	LogMessage       MessageType = "log"
 	DelayMessage     MessageType = "delay"
 	RequestMessage   MessageType = "request"
