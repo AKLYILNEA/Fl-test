@@ -246,14 +246,15 @@ final _defaultCacheManager = CacheManager(
   ),
 );
 
-var _cacheManager = _defaultCacheManager;
+CacheManager? _cacheManagerOverride;
+CacheManager get _cacheManager => _cacheManagerOverride ?? _defaultCacheManager;
 final _iconCacheRevision = ValueNotifier(0);
 final _pendingIconReads = <Future<void>>{};
 Future<void>? _refreshingIcons;
 
 @visibleForTesting
 set targetIconCacheManager(CacheManager? value) {
-  _cacheManager = value ?? _defaultCacheManager;
+  _cacheManagerOverride = value;
 }
 
 Future<void> refreshTargetIcons(Iterable<String> sources) {

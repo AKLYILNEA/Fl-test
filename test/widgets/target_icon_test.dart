@@ -18,6 +18,8 @@ import '../helpers/test_app.dart';
 
 class _MockIconCache extends Mock implements CacheManager {}
 
+class _MockIconCacheConfig extends Mock implements Config {}
+
 class _MockIconCacheRepository extends Mock implements CacheInfoRepository {}
 
 Future<void> _pump(WidgetTester tester, Widget icon) {
@@ -35,7 +37,8 @@ void main() {
       'including cached icons from earlier sessions', () async {
     final manager = _MockIconCache();
     final repo = _MockIconCacheRepository();
-    final config = Config('icon-refresh-test', repo: repo);
+    final config = _MockIconCacheConfig();
+    when(() => config.repo).thenReturn(repo);
     final fs = MemoryFileSystem();
     final file = fs.file('/icon.png')..writeAsBytesSync(_onePixelPng);
     final events = <String>[];
@@ -78,7 +81,9 @@ void main() {
   test('a failed download releases the refresh lock for a retry', () async {
     final manager = _MockIconCache();
     final repo = _MockIconCacheRepository();
-    when(() => manager.config).thenReturn(Config('icon-retry-test', repo: repo));
+    final config = _MockIconCacheConfig();
+    when(() => config.repo).thenReturn(repo);
+    when(() => manager.config).thenReturn(config);
     when(() => repo.open()).thenAnswer((_) async => true);
     when(() => repo.getAllObjects()).thenAnswer((_) async => []);
     when(manager.emptyCache).thenAnswer((_) async {});
