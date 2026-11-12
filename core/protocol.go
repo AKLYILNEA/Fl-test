@@ -69,6 +69,11 @@ const (
 	routeWatchMethod    CoreMethod = "route.watch"
 	routeCheckMethod    CoreMethod = "route.check"
 
+	speedTestStartMethod   CoreMethod = "speedTest.start"
+	speedTestProbeMethod   CoreMethod = "speedTest.probe"
+	speedTestCancelMethod  CoreMethod = "speedTest.cancel"
+	speedTestServersMethod CoreMethod = "speedTest.servers"
+
 	probeOutboundIPMethod CoreMethod = "probe.outboundIp"
 	probeServicesMethod   CoreMethod = "probe.services"
 	ipCountryMethod       CoreMethod = "ip.country"
@@ -89,6 +94,7 @@ const (
 type MessageType string
 
 const (
+	SpeedTestMessage MessageType = "speedTest"
 	LogMessage       MessageType = "log"
 	DelayMessage     MessageType = "delay"
 	RequestMessage   MessageType = "request"

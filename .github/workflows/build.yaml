@@ -137,6 +137,14 @@ jobs:
           flutter analyze --no-fatal-infos lib/features/ip_quality lib/views/dashboard/widgets/current_outbound.dart test/features/ip_risk_sheet_test.dart test/views/dashboard/current_outbound_test.dart
           flutter test test/features/ip_risk_sheet_test.dart test/widgets/ip_address_row_test.dart test/views/dashboard/current_outbound_test.dart
 
+      - name: Check Speedtest
+        if: matrix.platform == 'android'
+        run: |
+          flutter analyze --no-fatal-infos lib/features/speed_test lib/models/speed_test.dart lib/widgets/traffic_chart.dart test/features/speed_test_test.dart test/features/speed_test_store_test.dart
+          flutter test test/features/speed_test_test.dart test/features/speed_test_store_test.dart test/core/protocol_contract_test.dart
+          cd core
+          CGO_ENABLED=0 go test . -run '^TestSpeedTest' -count=1
+
       # The core embeds this bundle and FlClashHttpOverrides.trustCoreRoots loads it for Dart.
       # Pinned by hash, so a new bundle from https://curl.se/docs/caextract.html is a reviewed bump.
       - name: Fetch CA certificates

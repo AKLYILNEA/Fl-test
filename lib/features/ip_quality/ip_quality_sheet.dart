@@ -69,13 +69,6 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
                 .read(appSettingProvider.notifier)
                 .update((s) => s.copyWith(hideIp: !hidden)),
           ),
-          IconButtonData(
-            glyph: AppGlyphs.refresh,
-            tooltip: l.ipQualityRetry,
-            onPressed: state.isLoading
-                ? null
-                : () => ref.invalidate(ipRiskProvider(_ip)),
-          ),
         ],
         body: Builder(
           builder: (context) => NullStatusSwitcher(
@@ -114,7 +107,10 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
                               ? AppTextStyle.headline
                                     .of(context, emphasized: true)
                                     .toJetBrainsMono
-                              : AppTextStyle.headline.of(context, emphasized: true),
+                              : AppTextStyle.headline.of(
+                                  context,
+                                  emphasized: true,
+                                ),
                         ),
                       ],
                     ),

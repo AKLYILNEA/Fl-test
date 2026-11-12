@@ -1,0 +1,460 @@
+import 'dart:async';
+import 'dart:io';
+import 'dart:ui' as ui;
+
+import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/enum/enum.dart';
+import 'package:fl_clash/features/speed_test/client.dart';
+import 'package:fl_clash/features/speed_test/gauge.dart';
+import 'package:fl_clash/features/speed_test/history.dart';
+import 'package:fl_clash/features/speed_test/settings.dart';
+import 'package:fl_clash/features/speed_test/store.dart';
+import 'package:fl_clash/features/speed_test/view.dart';
+import 'package:fl_clash/features/speed_test/widgets.dart';
+import 'package:fl_clash/models/models.dart';
+import 'package:fl_clash/providers/providers.dart';
+import 'package:fl_clash/widgets/traffic_chart.dart';
+import 'package:fl_clash/ui/ui.dart' as app_ui;
+import 'package:fl_clash/views/tools.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+import '../helpers/test_app.dart';
+
+class _MemoryStore extends SpeedTestStore {
+  @override
+  Future<SpeedTestData> build() async => const SpeedTestData();
+  @override
+  Future<void> settings(SpeedTestSettings settings) async {
+    state = AsyncData(
+      SpeedTestData(
+        settings: settings,
+        records: state.value?.records ?? const [],
+      ),
+    );
+  }
+
+  @override
+  Future<void> add(SpeedTestRecord record) async {
+    state = AsyncData(
+      SpeedTestData(
+        settings: state.value!.settings,
+        records: [record, ...state.value!.records],
+      ),
+    );
+  }
+
+  @override
+  Future<void> clear() async {
+    state = AsyncData(SpeedTestData(settings: state.value!.settings));
+  }
+}
+
+class _Client implements SpeedTestClient {
+  final events = StreamController<SpeedTestState>.broadcast();
+  Future<void> dispose() => events.close();
+  final cancelled = <String>[];
+  final queries = <String>[];
+  final probed = <String>[];
+  SpeedTestSettings? lastSettings;
+  Completer<SpeedTestState>? run;
+  String runId = '';
+  bool fail = false;
+  @override
+  Stream<SpeedTestState> get updates => events.stream;
+  @override
+  Future<SpeedTestState> probe(
+    SpeedTestSettings settings,
+    String proxy,
+    String id,
+  ) async {
+    probed.add(proxy);
+    lastSettings = settings;
+    return SpeedTestState(
+      id: id,
+      server: const SpeedTestServer(
+        sponsor: 'Example',
+        city: 'Tokyo',
+        host: 'speed.example',
+      ),
+      outbound: SpeedTestOutbound(chains: [proxy.isEmpty ? 'Node A' : proxy]),
+    );
+  }
+
+  @override
+  Future<SpeedTestState> start(
+    SpeedTestSettings settings,
+    String proxy,
+    String id,
+  ) async {
+    if (fail) throw StateError('Core unavailable');
+    runId = id;
+    run = Completer();
+    return run!.future;
+  }
+
+  @override
+  Future<void> cancel(String id) async {
+    cancelled.add(id);
+    if (id == runId && run != null && !run!.isCompleted) {
+      run!.complete(SpeedTestState(id: id, error: 'cancelled'));
+    }
+  }
+
+  @override
+  Future<List<SpeedTestNode>> servers(
+    String proxy,
+    String search,
+    String id,
+  ) async {
+    queries.add(search);
+    return const [
+      SpeedTestNode(
+        host: 'tokyo.example',
+        name: 'Tokyo',
+        cc: 'JP',
+        sponsor: 'Example',
+        latency: 12,
+      ),
+    ];
+  }
+
+  void finish() => run!.complete(
+    SpeedTestState(
+      id: runId,
+      phase: SpeedTestPhase.done,
+      download: 240e6,
+      upload: 80e6,
+      latency: 12,
+      jitter: 2,
+      downloadLatency: 40,
+      uploadLatency: 60,
+      rpm: 1000,
+      bytes: 20000000,
+      outbound: const SpeedTestOutbound(chains: ['Node A']),
+      server: const SpeedTestServer(sponsor: 'Example', city: 'Tokyo'),
+    ),
+  );
+}
+
+const _preview = ValueKey('speed-preview');
+Widget _app(
+  _Client client, {
+  Locale locale = const Locale('en'),
+  bool running = false,
+  bool dark = false,
+  Widget page = const SpeedTestView(),
+}) => RepaintBoundary(
+  key: _preview,
+  child: TestApp(
+    locale: locale,
+    theme: app_ui.ThemeData(fontFamily: 'SpeedPreview'),
+    darkTheme: app_ui.ThemeData(
+      brightness: Brightness.dark,
+      fontFamily: 'SpeedPreview',
+    ),
+    themeMode: dark ? app_ui.ThemeMode.dark : app_ui.ThemeMode.light,
+    overrides: [
+      speedTestClientProvider.overrideWithValue(client),
+      speedTestStoreProvider.overrideWith(_MemoryStore.new),
+      moreToolsSelectorStateProvider.overrideWithValue(
+        const MoreToolsSelectorState(navigationItems: []),
+      ),
+      runTimeProvider.overrideWithBuild((_, _) => running ? 1 : null),
+      groupsProvider.overrideWithValue(const [
+        Group(
+          type: GroupType.Selector,
+          name: 'Group',
+          now: 'Node B',
+          all: [
+            Proxy(name: 'DIRECT', type: 'Direct'),
+            Proxy(name: 'Node A', type: 'Shadowsocks'),
+            Proxy(name: 'Node B', type: 'Vmess'),
+          ],
+        ),
+      ]),
+    ],
+    child: page,
+  ),
+);
+
+void _size(WidgetTester tester, double width, [double height = 1300]) {
+  tester.view.physicalSize = Size(width, height);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
+}
+
+Future<void> _snapshot(WidgetTester tester, String path) async {
+  await tester.runAsync(() async {
+    final boundary = tester.renderObject<RenderRepaintBoundary>(
+      find.byKey(_preview),
+    );
+    final image = await boundary.toImage(pixelRatio: 2);
+    final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+    await File(path).writeAsBytes(bytes!.buffer.asUint8List());
+    image.dispose();
+  });
+}
+
+void main() {
+  setUpAll(() async {
+    final font = File('.dart_tool/risk-preview-font.ttf');
+    if (await font.exists()) {
+      await (FontLoader('SpeedPreview')..addFont(
+            Future.value(ByteData.sublistView(await font.readAsBytes())),
+          ))
+          .load();
+    }
+  });
+
+  test('model roundtrip and gauge boundaries retain real units', () {
+    const settings = SpeedTestSettings(
+      duration: 15,
+      protocol: 'h3',
+      multiThread: false,
+      server: SpeedTestNode(host: 'server.example', sponsor: 'Example'),
+    );
+    final copy = SpeedTestSettings.fromJson(settings.toJson());
+    expect(copy.toParams('Node A', 'owned')['provider'], 'speedtest');
+    expect(copy.toParams('Node A', 'owned')['streams'], 1);
+    expect(copy.server!.host, 'server.example');
+    expect(copy.copyWith(automatic: true).server, isNull);
+    expect(speedGaugeFraction(0), 0);
+    expect(speedGaugeFraction(1e9), 1);
+    expect(speedTestValue(2.5e9), '2.50');
+    expect(speedTestUnit(2.5e9), 'Gbps');
+    expect(SpeedTestState.fromJson({'speed': double.nan}).speed, 0);
+  });
+
+  testWidgets(
+    'tools keeps one Speedtest entry when other navigation moves away',
+    (tester) async {
+      _size(tester, 430);
+      final client = _Client();
+      addTearDown(client.dispose);
+      await tester.pumpWidget(_app(client, page: const ToolsView()));
+      await tester.pumpAndSettle();
+      expect(find.text('Speed Test'), findsOneWidget);
+      await tester.tap(find.text('Speed Test'));
+      await tester.pumpAndSettle();
+      expect(find.byType(SpeedTestView), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
+  for (final width in [360.0, 430.0, 960.0]) {
+    testWidgets('Speedtest layout fits $width without other sources', (
+      tester,
+    ) async {
+      _size(tester, width);
+      final client = _Client();
+      addTearDown(client.dispose);
+      await tester.pumpWidget(_app(client, dark: width == 960));
+      await tester.pumpAndSettle();
+      expect(find.text('Speedtest'), findsOneWidget);
+      expect(find.textContaining('Apple'), findsNothing);
+      expect(find.textContaining('Cloudflare'), findsNothing);
+      expect(find.byType(SpeedTestGauge), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await _snapshot(
+        tester,
+        '.dart_tool/speed-test-layout-${width.toInt()}.png',
+      );
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+  }
+
+  testWidgets('progress uses dashboard waveform and saves completed history', (
+    tester,
+  ) async {
+    _size(tester, 430, 1500);
+    final client = _Client();
+    addTearDown(client.dispose);
+    await tester.pumpWidget(_app(client, locale: const Locale('zh', 'CN')));
+    await tester.pumpAndSettle();
+    final l = tester.element(find.byType(SpeedTestView)).appLocalizations;
+    await tester.tap(find.text(l.speedTestStart));
+    await tester.pump();
+    client.events.add(
+      const SpeedTestState(
+        id: 'obsolete-run',
+        phase: SpeedTestPhase.download,
+        progress: .9,
+        speed: 1e9,
+      ),
+    );
+    await tester.pump();
+    expect(find.byType(SpeedTestWaveform), findsNothing);
+    client.events.add(
+      SpeedTestState(
+        id: client.runId,
+        phase: SpeedTestPhase.download,
+        progress: .6,
+        speed: 240e6,
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.byType(SpeedTestWaveform), findsOneWidget);
+    expect(find.byType(TrafficBarsChart), findsOneWidget);
+    client.events.add(
+      SpeedTestState(
+        id: client.runId,
+        phase: SpeedTestPhase.upload,
+        progress: .7,
+        speed: 80e6,
+      ),
+    );
+    await tester.pump();
+    client.finish();
+    await tester.pumpAndSettle();
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(SpeedTestView)),
+    );
+    expect(container.read(speedTestStoreProvider).value!.records, hasLength(1));
+    expect(find.text(l.speedTestAgain), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await _snapshot(tester, '.dart_tool/speed-test-preview.png');
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('stop cancels the owned run without recording partial results', (
+    tester,
+  ) async {
+    _size(tester, 430);
+    final client = _Client();
+    addTearDown(client.dispose);
+    await tester.pumpWidget(_app(client));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Start Test'));
+    await tester.pump();
+    final id = client.runId;
+    await tester.tap(find.text('Stop Test'));
+    await tester.pumpAndSettle();
+    expect(client.cancelled, contains(id));
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(SpeedTestView)),
+    );
+    expect(container.read(speedTestStoreProvider).value!.records, isEmpty);
+    expect(find.text('Start Test'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('a Core failure releases the start action', (tester) async {
+    _size(tester, 430);
+    final client = _Client()..fail = true;
+    addTearDown(client.dispose);
+    await tester.pumpWidget(_app(client));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Start Test'));
+    await tester.pumpAndSettle();
+    expect(find.text('Start Test'), findsOneWidget);
+    expect(find.text('Stop Test'), findsNothing);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets(
+    'outbound picker follows rules, direct and nodes without switching a group',
+    (tester) async {
+      _size(tester, 430);
+      final client = _Client();
+      addTearDown(client.dispose);
+      await tester.pumpWidget(_app(client, running: true));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Follow Rules'));
+      await tester.pumpAndSettle();
+      expect(find.text('Direct'), findsWidgets);
+      expect(find.text('Node A'), findsWidgets);
+      expect(find.text('Node B'), findsOneWidget);
+      await tester.tap(find.text('Node A').hitTestable());
+      await tester.pumpAndSettle();
+      expect(client.probed.last, 'Node A');
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(SpeedTestView)),
+      );
+      expect(container.read(groupsProvider).single.now, 'Node B');
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
+  testWidgets('server search pushes inside settings at the same sheet height', (
+    tester,
+  ) async {
+    _size(tester, 430);
+    final client = _Client();
+    addTearDown(client.dispose);
+    await tester.pumpWidget(_app(client));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Speed Test Settings'));
+    await tester.pumpAndSettle();
+    await _snapshot(tester, '.dart_tool/speed-test-settings.png');
+    final size = tester.getSize(find.byType(app_ui.NestedPagedSheet));
+    await tester.tap(
+      find.descendant(
+        of: find.byType(SpeedTestSettingsView),
+        matching: find.text('Test Server'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(SpeedTestServerPicker), findsOneWidget);
+    expect(
+      tester.getSize(find.byType(app_ui.NestedPagedSheet)).height,
+      closeTo(size.height, 1),
+    );
+    final page = tester.widget<app_ui.Scaffold>(
+      find.descendant(
+        of: find.byType(SpeedTestServerPicker),
+        matching: find.byType(app_ui.Scaffold),
+      ),
+    );
+    expect(page.searchState, isNotNull);
+    page.searchState!.onSearch('Tokyo');
+    await tester.pump(const Duration(milliseconds: 350));
+    await tester.pumpAndSettle();
+    expect(client.queries.last, 'Tokyo');
+    await _snapshot(tester, '.dart_tool/speed-test-servers.png');
+    await tester.tap(
+      find
+          .descendant(
+            of: find.byType(SpeedTestServerPicker),
+            matching: find.textContaining('Tokyo'),
+          )
+          .first,
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(SpeedTestSettingsView), findsOneWidget);
+    final settingsPage = tester.widget<app_ui.Scaffold>(
+      find.descendant(
+        of: find.byType(SpeedTestSettingsView),
+        matching: find.byType(app_ui.Scaffold),
+      ),
+    );
+    settingsPage.confirmationAction!.onPressed!();
+    await tester.pumpAndSettle();
+    expect(client.lastSettings!.server!.host, 'tokyo.example');
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('history opens as a sheet with a native empty state', (
+    tester,
+  ) async {
+    _size(tester, 430);
+    final client = _Client();
+    addTearDown(client.dispose);
+    await tester.pumpWidget(_app(client));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Test History'));
+    await tester.pumpAndSettle();
+    expect(find.byType(SpeedTestHistoryView), findsOneWidget);
+    expect(find.text('No test history yet'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+}

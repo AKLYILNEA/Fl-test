@@ -265,20 +265,31 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m96(label) => "«${label}» — только одно значение";
 
-  static String m97(value) => "Пик ${value}";
+  static String m97(count) =>
+      "Несколько — ${count} параллельных соединений для полной загрузки канала";
 
-  static String m98(value) => "Всего ${value}";
+  static String m98(provider) =>
+      "Выход может блокировать тесты ${provider}. Смените источник теста или выход.";
 
-  static String m99(transport) => "Заголовки ${transport}";
+  static String m99(protocol, fallback) =>
+      "${protocol} недоступен, используется ${fallback}";
 
-  static String m100(label) => "Значение «${label}» должно быть URL";
+  static String m100(count) => "Соединений: ${count}";
 
-  static String m101(date) => "Действителен до ${date}";
+  static String m101(value) => "Пик ${value}";
 
-  static String m102(count) =>
+  static String m102(value) => "Всего ${value}";
+
+  static String m103(transport) => "Заголовки ${transport}";
+
+  static String m104(label) => "Значение «${label}» должно быть URL";
+
+  static String m105(date) => "Действителен до ${date}";
+
+  static String m106(count) =>
       "${Intl.plural(count, one: '${count} год назад', few: '${count} года назад', many: '${count} лет назад', other: '${count} года назад')}";
 
-  static String m103(count) =>
+  static String m107(count) =>
       "${Intl.plural(count, one: '${count} г. назад', few: '${count} г. назад', many: '${count} л. назад', other: '${count} г. назад')}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
@@ -2313,6 +2324,92 @@ class MessageLookup extends MessageLookupByLibrary {
     "speedStatistics": MessageLookupByLibrary.simpleMessage(
       "Статистика скорости",
     ),
+    "speedTest": MessageLookupByLibrary.simpleMessage("Тест скорости"),
+    "speedTestAgain": MessageLookupByLibrary.simpleMessage("Повторить"),
+    "speedTestChangeOutbound": MessageLookupByLibrary.simpleMessage(
+      "Сменить выход",
+    ),
+    "speedTestClearHistoryTip": MessageLookupByLibrary.simpleMessage(
+      "Очистить всю историю тестов?",
+    ),
+    "speedTestConnecting": MessageLookupByLibrary.simpleMessage("Подключение"),
+    "speedTestConnections": MessageLookupByLibrary.simpleMessage("Соединения"),
+    "speedTestConnectionsDesc": m97,
+    "speedTestCoreStopped": MessageLookupByLibrary.simpleMessage(
+      "Не запущен · Прямой тест",
+    ),
+    "speedTestCredit": MessageLookupByLibrary.simpleMessage(
+      "Серверы тестирования предоставляет Speedtest by Ookla.",
+    ),
+    "speedTestDataUsed": MessageLookupByLibrary.simpleMessage("Трафик"),
+    "speedTestDuration": MessageLookupByLibrary.simpleMessage("Длительность"),
+    "speedTestErrorBlocked": MessageLookupByLibrary.simpleMessage(
+      "Тест скорости недоступен",
+    ),
+    "speedTestErrorBlockedDesc": m98,
+    "speedTestErrorNetworkDesc": MessageLookupByLibrary.simpleMessage(
+      "Проверьте доступность выхода и повторите.",
+    ),
+    "speedTestErrorRejected": MessageLookupByLibrary.simpleMessage(
+      "Заблокировано правилами",
+    ),
+    "speedTestErrorRejectedDesc": MessageLookupByLibrary.simpleMessage(
+      "Текущие правила направляют домен теста в REJECT. Выберите другой выход и повторите.",
+    ),
+    "speedTestErrorTimeout": MessageLookupByLibrary.simpleMessage(
+      "Время ожидания истекло",
+    ),
+    "speedTestErrorUnavailable": MessageLookupByLibrary.simpleMessage(
+      "Не удаётся подключиться к сервису",
+    ),
+    "speedTestExitNode": MessageLookupByLibrary.simpleMessage("Выходной узел"),
+    "speedTestFollowRules": MessageLookupByLibrary.simpleMessage("По правилам"),
+    "speedTestHistory": MessageLookupByLibrary.simpleMessage("История тестов"),
+    "speedTestHistoryEmpty": MessageLookupByLibrary.simpleMessage(
+      "История пуста",
+    ),
+    "speedTestHistoryRetention": MessageLookupByLibrary.simpleMessage(
+      "Хранится 14 дней",
+    ),
+    "speedTestJitter": MessageLookupByLibrary.simpleMessage("Джиттер"),
+    "speedTestLoadedLatency": MessageLookupByLibrary.simpleMessage(
+      "Задержка под нагрузкой",
+    ),
+    "speedTestManual": MessageLookupByLibrary.simpleMessage("Вручную"),
+    "speedTestMobileDataTip": MessageLookupByLibrary.simpleMessage(
+      "Используются мобильные данные. Один тест может потратить сотни МБ. Продолжить?",
+    ),
+    "speedTestMultiThread": MessageLookupByLibrary.simpleMessage("Несколько"),
+    "speedTestOutbound": MessageLookupByLibrary.simpleMessage("Выход"),
+    "speedTestPacketLoss": MessageLookupByLibrary.simpleMessage("Потери"),
+    "speedTestProbing": MessageLookupByLibrary.simpleMessage(
+      "Определение выхода…",
+    ),
+    "speedTestProtocol": MessageLookupByLibrary.simpleMessage("Протокол"),
+    "speedTestProtocolDesc": MessageLookupByLibrary.simpleMessage(
+      "HTTP/3 работает поверх QUIC (UDP); если он недоступен — откат на HTTP/2, а если недоступен и HTTP/2 — на HTTP/1.1",
+    ),
+    "speedTestProtocolFallback": m99,
+    "speedTestQuality": MessageLookupByLibrary.simpleMessage("Качество сети"),
+    "speedTestReady": MessageLookupByLibrary.simpleMessage("Готово"),
+    "speedTestRealtime": MessageLookupByLibrary.simpleMessage(
+      "Скорость в реальном времени",
+    ),
+    "speedTestResponsiveness": MessageLookupByLibrary.simpleMessage(
+      "Отзывчивость",
+    ),
+    "speedTestRoute": MessageLookupByLibrary.simpleMessage("Правило"),
+    "speedTestServer": MessageLookupByLibrary.simpleMessage("Сервер теста"),
+    "speedTestServerAutoDesc": MessageLookupByLibrary.simpleMessage(
+      "Автоматически выбирать сервер Speedtest",
+    ),
+    "speedTestSettings": MessageLookupByLibrary.simpleMessage(
+      "Настройки теста",
+    ),
+    "speedTestSingleThread": MessageLookupByLibrary.simpleMessage("Одно"),
+    "speedTestStart": MessageLookupByLibrary.simpleMessage("Начать тест"),
+    "speedTestStop": MessageLookupByLibrary.simpleMessage("Остановить тест"),
+    "speedTestStreams": m100,
     "splitStrategy": MessageLookupByLibrary.simpleMessage(
       "Стратегия распределения",
     ),
@@ -2404,11 +2501,11 @@ class MessageLookup extends MessageLookupByLibrary {
     "totalUpload": MessageLookupByLibrary.simpleMessage("Отдано"),
     "tproxyPort": MessageLookupByLibrary.simpleMessage("Порт TProxy"),
     "traffic": MessageLookupByLibrary.simpleMessage("Трафик"),
-    "trafficPeak": m97,
-    "trafficTotal": m98,
+    "trafficPeak": m101,
+    "trafficTotal": m102,
     "trafficUsage": MessageLookupByLibrary.simpleMessage("Статистика трафика"),
     "transport": MessageLookupByLibrary.simpleMessage("Транспорт"),
-    "transportHeaders": m99,
+    "transportHeaders": m103,
     "trustCertificate": MessageLookupByLibrary.simpleMessage(
       "Доверять сертификату",
     ),
@@ -2469,7 +2566,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "uploadBandwidth": MessageLookupByLibrary.simpleMessage("Скорость отдачи"),
     "url": MessageLookupByLibrary.simpleMessage("URL"),
     "urlRewrite": MessageLookupByLibrary.simpleMessage("Перезапись URL"),
-    "urlTip": m100,
+    "urlTip": m104,
     "useHosts": MessageLookupByLibrary.simpleMessage("Использовать hosts"),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage(
       "Использовать системный hosts",
@@ -2480,7 +2577,7 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "userAgent": MessageLookupByLibrary.simpleMessage("User-Agent"),
     "username": MessageLookupByLibrary.simpleMessage("Имя пользователя"),
-    "validUntil": m101,
+    "validUntil": m105,
     "value": MessageLookupByLibrary.simpleMessage("Значение"),
     "view": MessageLookupByLibrary.simpleMessage("Просмотр"),
     "viewAll": MessageLookupByLibrary.simpleMessage("Показать всё"),
@@ -2505,8 +2602,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "writeToSystemDesc": MessageLookupByLibrary.simpleMessage(
       "«Записывать в систему» также устанавливает системные часы; Android это игнорирует.",
     ),
-    "yearsAgo": m102,
-    "yearsAgoShort": m103,
+    "yearsAgo": m106,
+    "yearsAgoShort": m107,
     "yes": MessageLookupByLibrary.simpleMessage("Да"),
     "zhCN": MessageLookupByLibrary.simpleMessage("Упрощённый китайский"),
   };

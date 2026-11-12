@@ -234,9 +234,13 @@ var methodHandlers = map[CoreMethod]methodHandler{
 	routeWatchMethod:    watchRouteHandler,
 	routeCheckMethod:    withArguments(handleCheckRoutes),
 
-	probeOutboundIPMethod: withArguments(handleOutboundIp),
-	probeServicesMethod:   withArguments(handleServiceCheck),
-	ipCountryMethod:       withArguments(handleIPCountry),
+	speedTestStartMethod:   withArguments(handleStartSpeedTest),
+	speedTestProbeMethod:   withArguments(handleProbeSpeedTest),
+	speedTestCancelMethod:  command(handleCancelSpeedTest),
+	speedTestServersMethod: withFallible(handleSpeedTestServers),
+	probeOutboundIPMethod:  withArguments(handleOutboundIp),
+	probeServicesMethod:    withArguments(handleServiceCheck),
+	ipCountryMethod:        withArguments(handleIPCountry),
 }
 
 func watchRouteHandler(call *MethodCall) (any, error) {

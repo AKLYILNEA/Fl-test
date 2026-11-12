@@ -36,6 +36,14 @@ class _RecordingCoreHandler extends CoreHandlerInterface {
   }) async {
     calls[method] = arguments;
     return switch (method) {
+      CoreMethod.speedTestStart || CoreMethod.speedTestProbe => {
+        'id': (arguments as Map)['id'],
+        'phase': 'done',
+        'download': 125000000,
+      },
+      CoreMethod.speedTestServers => [
+        {'host': 'speed.example:8080', 'name': 'Tokyo', 'latency': 12},
+      ],
       CoreMethod.coreInitialized => true,
       CoreMethod.trafficCurrent ||
       CoreMethod.trafficTotal => {'up': 12, 'down': 34},
@@ -198,6 +206,37 @@ class _EmptyConfigCoreHandler extends _RecordingCoreHandler {
 }
 
 void main() {
+  test(
+    'Speedtest uses structured payloads and retains cancellation ownership',
+    () async {
+      final handler = _RecordingCoreHandler();
+      const settings = SpeedTestSettings(duration: 15, multiThread: false);
+      final result = await handler.startSpeedTest(settings, 'Node A', 'run-1');
+      expect(result.id, 'run-1');
+      expect(result.download, 125000000);
+      expect(
+        handler.calls[CoreMethod.speedTestStart],
+        settings.toParams('Node A', 'run-1'),
+      );
+      expect(
+        (await handler.probeSpeedTest(settings, 'DIRECT', 'probe-1')).id,
+        'probe-1',
+      );
+      final servers = await handler.speedTestServers(
+        'Node A',
+        'Tokyo',
+        'search-1',
+      );
+      expect(servers.single.host, 'speed.example:8080');
+      expect(handler.calls[CoreMethod.speedTestServers], {
+        'proxy': 'Node A',
+        'search': 'Tokyo',
+        'id': 'search-1',
+      });
+      await handler.cancelSpeedTest('run-1');
+      expect(handler.calls[CoreMethod.speedTestCancel], {'id': 'run-1'});
+    },
+  );
   test('method call keeps structured arguments', () async {
     final fixture =
         json.decode(

@@ -234,19 +234,27 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m96(label) => "${label}只能是一项";
 
-  static String m97(value) => "峰值 ${value}";
+  static String m97(count) => "多线程会并发 ${count} 条连接以跑满带宽";
 
-  static String m98(value) => "累计 ${value}";
+  static String m98(provider) => "出站节点可能屏蔽了 ${provider} 测速，可切换测速源或更换出站";
 
-  static String m99(transport) => "${transport} 请求头";
+  static String m99(protocol, fallback) => "${protocol} 不可用，已回退到 ${fallback}";
 
-  static String m100(label) => "${label}必须为URL";
+  static String m100(count) => "${count} 条连接";
 
-  static String m101(date) => "有效期至 ${date}";
+  static String m101(value) => "峰值 ${value}";
 
-  static String m102(count) => "${count} 年前";
+  static String m102(value) => "累计 ${value}";
 
-  static String m103(count) => "${count} 年前";
+  static String m103(transport) => "${transport} 请求头";
+
+  static String m104(label) => "${label}必须为URL";
+
+  static String m105(date) => "有效期至 ${date}";
+
+  static String m106(count) => "${count} 年前";
+
+  static String m107(count) => "${count} 年前";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -1702,6 +1710,70 @@ class MessageLookup extends MessageLookupByLibrary {
     "specialRules": MessageLookupByLibrary.simpleMessage("特殊规则"),
     "spectrum": MessageLookupByLibrary.simpleMessage("光谱"),
     "speedStatistics": MessageLookupByLibrary.simpleMessage("网速统计"),
+    "speedTest": MessageLookupByLibrary.simpleMessage("网速测试"),
+    "speedTestAgain": MessageLookupByLibrary.simpleMessage("重新测速"),
+    "speedTestChangeOutbound": MessageLookupByLibrary.simpleMessage("更换出站"),
+    "speedTestClearHistoryTip": MessageLookupByLibrary.simpleMessage(
+      "确定清空全部测速记录？",
+    ),
+    "speedTestConnecting": MessageLookupByLibrary.simpleMessage("连接中"),
+    "speedTestConnections": MessageLookupByLibrary.simpleMessage("连接方式"),
+    "speedTestConnectionsDesc": m97,
+    "speedTestCoreStopped": MessageLookupByLibrary.simpleMessage("未启动 · 直连测速"),
+    "speedTestCredit": MessageLookupByLibrary.simpleMessage(
+      "测速服务器由 Speedtest by Ookla 提供。",
+    ),
+    "speedTestDataUsed": MessageLookupByLibrary.simpleMessage("已用流量"),
+    "speedTestDuration": MessageLookupByLibrary.simpleMessage("测试时长"),
+    "speedTestErrorBlocked": MessageLookupByLibrary.simpleMessage("测速服务不可用"),
+    "speedTestErrorBlockedDesc": m98,
+    "speedTestErrorNetworkDesc": MessageLookupByLibrary.simpleMessage(
+      "请检查出站是否可用后重试",
+    ),
+    "speedTestErrorRejected": MessageLookupByLibrary.simpleMessage("测速请求被规则拦截"),
+    "speedTestErrorRejectedDesc": MessageLookupByLibrary.simpleMessage(
+      "当前规则将测速域名指向了 REJECT，可更换出站后重试",
+    ),
+    "speedTestErrorTimeout": MessageLookupByLibrary.simpleMessage("连接测速服务超时"),
+    "speedTestErrorUnavailable": MessageLookupByLibrary.simpleMessage(
+      "无法连接测速服务",
+    ),
+    "speedTestExitNode": MessageLookupByLibrary.simpleMessage("出站节点"),
+    "speedTestFollowRules": MessageLookupByLibrary.simpleMessage("跟随规则"),
+    "speedTestHistory": MessageLookupByLibrary.simpleMessage("测速记录"),
+    "speedTestHistoryEmpty": MessageLookupByLibrary.simpleMessage("暂无测速记录"),
+    "speedTestHistoryRetention": MessageLookupByLibrary.simpleMessage(
+      "保留 14 天",
+    ),
+    "speedTestJitter": MessageLookupByLibrary.simpleMessage("抖动"),
+    "speedTestLoadedLatency": MessageLookupByLibrary.simpleMessage("负载延迟"),
+    "speedTestManual": MessageLookupByLibrary.simpleMessage("手动指定"),
+    "speedTestMobileDataTip": MessageLookupByLibrary.simpleMessage(
+      "当前正在使用移动数据，一次测速可能消耗数百 MB 流量，是否继续？",
+    ),
+    "speedTestMultiThread": MessageLookupByLibrary.simpleMessage("多线程"),
+    "speedTestOutbound": MessageLookupByLibrary.simpleMessage("出站"),
+    "speedTestPacketLoss": MessageLookupByLibrary.simpleMessage("丢包"),
+    "speedTestProbing": MessageLookupByLibrary.simpleMessage("正在探测出站…"),
+    "speedTestProtocol": MessageLookupByLibrary.simpleMessage("协议"),
+    "speedTestProtocolDesc": MessageLookupByLibrary.simpleMessage(
+      "HTTP/3 基于 QUIC (UDP)，不可用时依次回退到 HTTP/2、（HTTP/2 不可用时）HTTP/1.1",
+    ),
+    "speedTestProtocolFallback": m99,
+    "speedTestQuality": MessageLookupByLibrary.simpleMessage("网络质量"),
+    "speedTestReady": MessageLookupByLibrary.simpleMessage("准备就绪"),
+    "speedTestRealtime": MessageLookupByLibrary.simpleMessage("实时速率"),
+    "speedTestResponsiveness": MessageLookupByLibrary.simpleMessage("响应性"),
+    "speedTestRoute": MessageLookupByLibrary.simpleMessage("路由规则"),
+    "speedTestServer": MessageLookupByLibrary.simpleMessage("测速服务器"),
+    "speedTestServerAutoDesc": MessageLookupByLibrary.simpleMessage(
+      "自动选择 Speedtest 服务器",
+    ),
+    "speedTestSettings": MessageLookupByLibrary.simpleMessage("测速设置"),
+    "speedTestSingleThread": MessageLookupByLibrary.simpleMessage("单线程"),
+    "speedTestStart": MessageLookupByLibrary.simpleMessage("开始测速"),
+    "speedTestStop": MessageLookupByLibrary.simpleMessage("停止测速"),
+    "speedTestStreams": m100,
     "splitStrategy": MessageLookupByLibrary.simpleMessage("分流策略"),
     "splitStrategyNotEmpty": MessageLookupByLibrary.simpleMessage("分流策略不能为空"),
     "ssidsEmpty": MessageLookupByLibrary.simpleMessage("SSIDs为空"),
@@ -1765,11 +1837,11 @@ class MessageLookup extends MessageLookupByLibrary {
     "totalUpload": MessageLookupByLibrary.simpleMessage("上传总量"),
     "tproxyPort": MessageLookupByLibrary.simpleMessage("Tproxy端口"),
     "traffic": MessageLookupByLibrary.simpleMessage("流量"),
-    "trafficPeak": m97,
-    "trafficTotal": m98,
+    "trafficPeak": m101,
+    "trafficTotal": m102,
     "trafficUsage": MessageLookupByLibrary.simpleMessage("流量统计"),
     "transport": MessageLookupByLibrary.simpleMessage("传输协议"),
-    "transportHeaders": m99,
+    "transportHeaders": m103,
     "trustCertificate": MessageLookupByLibrary.simpleMessage("信任证书"),
     "tun": MessageLookupByLibrary.simpleMessage("虚拟网卡"),
     "tunAuthorizationFailed": MessageLookupByLibrary.simpleMessage(
@@ -1814,14 +1886,14 @@ class MessageLookup extends MessageLookupByLibrary {
     "uploadBandwidth": MessageLookupByLibrary.simpleMessage("上行带宽"),
     "url": MessageLookupByLibrary.simpleMessage("URL"),
     "urlRewrite": MessageLookupByLibrary.simpleMessage("URL 重写"),
-    "urlTip": m100,
+    "urlTip": m104,
     "useHosts": MessageLookupByLibrary.simpleMessage("使用Hosts"),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage("使用系统Hosts"),
     "usedShort": MessageLookupByLibrary.simpleMessage("已用"),
     "usedTraffic": MessageLookupByLibrary.simpleMessage("已用流量"),
     "userAgent": MessageLookupByLibrary.simpleMessage("用户代理"),
     "username": MessageLookupByLibrary.simpleMessage("用户名"),
-    "validUntil": m101,
+    "validUntil": m105,
     "value": MessageLookupByLibrary.simpleMessage("值"),
     "view": MessageLookupByLibrary.simpleMessage("查看"),
     "viewAll": MessageLookupByLibrary.simpleMessage("查看全部"),
@@ -1840,8 +1912,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "writeToSystemDesc": MessageLookupByLibrary.simpleMessage(
       "写入系统会同时设置系统时钟，Android 上不生效。",
     ),
-    "yearsAgo": m102,
-    "yearsAgoShort": m103,
+    "yearsAgo": m106,
+    "yearsAgoShort": m107,
     "yes": MessageLookupByLibrary.simpleMessage("是"),
     "zhCN": MessageLookupByLibrary.simpleMessage("简体中文"),
   };

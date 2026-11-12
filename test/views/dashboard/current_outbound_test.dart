@@ -408,7 +408,10 @@ void main() {
         findsOneWidget,
       );
 
-      await tester.tap(find.byTooltip('Check again'));
+      await tester.tap(find.byTooltip('Edit'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(EditableText), '8.8.8.8');
+      await tester.tap(find.text('Submit'));
       await tester.pumpAndSettle();
 
       expect(calls, 2);

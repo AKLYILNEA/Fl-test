@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
@@ -225,79 +224,25 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
-  for (final fail in [false, true]) {
-    testWidgets('grouped refresh disables without rotation (failure=$fail)', (
-      tester,
-    ) async {
-      final pending = Completer<IpRisk>();
-      var calls = 0;
-      await tester.pumpWidget(
-        TestApp(
-          locale: const Locale('en'),
-          overrides: [
-            ipRiskProvider(sampleRisk.ip).overrideWith((_) {
-              calls++;
-              return calls == 1 ? Future.value(sampleRisk) : pending.future;
-            }),
-          ],
-          child: const IpRiskSheet(ip: '158.247.202.50'),
-        ),
-      );
-      await tester.pumpAndSettle();
-      final refreshButton = find.byWidgetPredicate(
-        (widget) =>
-            widget is app_ui.AppBarActionButton &&
-            widget.data.tooltip == 'Check again',
-      );
-      final refreshGroup = find.ancestor(
-        of: find.byTooltip('Check again'),
-        matching: find.byType(app_ui.TonalButtonGroup),
-      );
-      final hideGroup = find.ancestor(
-        of: find.byTooltip('Hide IP'),
-        matching: find.byType(app_ui.TonalButtonGroup),
-      );
-      expect(refreshGroup, findsOneWidget);
-      expect(tester.element(refreshGroup), same(tester.element(hideGroup)));
-      await tester.tap(find.byTooltip('Check again'));
-      await tester.pump();
-      expect(
-        tester.widget<app_ui.AppBarActionButton>(refreshButton).data.onPressed,
-        isNull,
-      );
-      expect(
-        find.descendant(
-          of: find.byTooltip('Check again'),
-          matching: find.byType(RotationTransition),
-        ),
-        findsNothing,
-      );
-      await tester.tap(find.byTooltip('Check again'));
-      await tester.pump(const Duration(milliseconds: 250));
-      expect(calls, 2);
-      if (fail) {
-        pending.completeError(StateError('source unavailable'));
-      } else {
-        pending.complete(sampleRisk);
-      }
-      await tester.pumpAndSettle();
-      expect(
-        tester.widget<app_ui.AppBarActionButton>(refreshButton).data.onPressed,
-        isNotNull,
-      );
-      if (fail) {
-        expect(
-          find.text("Couldn't load IP information. Try again."),
-          findsOneWidget,
-        );
-        expect(find.byType(RiskScoreCard), findsNothing);
-      } else {
-        expect(find.byType(RiskScoreCard), findsOneWidget);
-      }
-      expect(tester.takeException(), isNull);
-      await tester.pumpWidget(const SizedBox.shrink());
-    });
-  }
+  testWidgets('IP details keeps hiding but has no recheck action', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      TestApp(
+        locale: const Locale('en'),
+        overrides: [
+          ipRiskProvider(sampleRisk.ip).overrideWith((_) async => sampleRisk),
+        ],
+        child: const IpRiskSheet(ip: '158.247.202.50'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Hide IP'), findsOneWidget);
+    expect(find.byTooltip('Check again'), findsNothing);
+    expect(find.byGlyph(AppGlyphs.refresh), findsNothing);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
   test('Scamalytics parser preserves score, supplied risk and flags', () {
     final result = parseScamalytics('1.2.3.4', '''Fraud Score: 28
       <div class="panel_title">Medium Risk</div><table>
@@ -382,10 +327,12 @@ void main() {
       expect(tester.widget<Text>(find.text('服务器')).style!.color, isNotNull);
       expect(find.byType(RiskScoreCard), findsOneWidget);
       final col = tester.widget<Column>(
-        find.descendant(
-          of: find.byType(RiskChecksCard),
-          matching: find.byType(Column),
-        ).first,
+        find
+            .descendant(
+              of: find.byType(RiskChecksCard),
+              matching: find.byType(Column),
+            )
+            .first,
       );
       expect(col.crossAxisAlignment, CrossAxisAlignment.stretch);
       final checkTopLeft = tester.getTopLeft(find.text('机房或代理'));

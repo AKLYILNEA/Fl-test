@@ -238,19 +238,29 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m96(label) => "${label}は1項目のみ指定できます";
 
-  static String m97(value) => "ピーク ${value}";
+  static String m97(count) => "マルチは ${count} 本の並列接続で帯域を使い切ります";
 
-  static String m98(value) => "累計 ${value}";
+  static String m98(provider) =>
+      "アウトバウンドが ${provider} の速度テストをブロックしている可能性があります。測定元またはアウトバウンドを変更してください。";
 
-  static String m99(transport) => "${transport} リクエストヘッダー";
+  static String m99(protocol, fallback) =>
+      "${protocol} が利用できないため ${fallback} に切り替えました";
 
-  static String m100(label) => "${label}はURLである必要があります";
+  static String m100(count) => "${count} 接続";
 
-  static String m101(date) => "有効期限 ${date}";
+  static String m101(value) => "ピーク ${value}";
 
-  static String m102(count) => "${count} 年前";
+  static String m102(value) => "累計 ${value}";
 
-  static String m103(count) => "${count} 年前";
+  static String m103(transport) => "${transport} リクエストヘッダー";
+
+  static String m104(label) => "${label}はURLである必要があります";
+
+  static String m105(date) => "有効期限 ${date}";
+
+  static String m106(count) => "${count} 年前";
+
+  static String m107(count) => "${count} 年前";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -1884,6 +1894,78 @@ class MessageLookup extends MessageLookupByLibrary {
     "specialRules": MessageLookupByLibrary.simpleMessage("特殊ルール"),
     "spectrum": MessageLookupByLibrary.simpleMessage("スペクトル"),
     "speedStatistics": MessageLookupByLibrary.simpleMessage("速度統計"),
+    "speedTest": MessageLookupByLibrary.simpleMessage("速度テスト"),
+    "speedTestAgain": MessageLookupByLibrary.simpleMessage("再測定"),
+    "speedTestChangeOutbound": MessageLookupByLibrary.simpleMessage(
+      "アウトバウンドを変更",
+    ),
+    "speedTestClearHistoryTip": MessageLookupByLibrary.simpleMessage(
+      "すべての測定履歴を削除しますか？",
+    ),
+    "speedTestConnecting": MessageLookupByLibrary.simpleMessage("接続中"),
+    "speedTestConnections": MessageLookupByLibrary.simpleMessage("接続方式"),
+    "speedTestConnectionsDesc": m97,
+    "speedTestCoreStopped": MessageLookupByLibrary.simpleMessage("未起動・直接接続で測定"),
+    "speedTestCredit": MessageLookupByLibrary.simpleMessage(
+      "テストサーバーの提供元: Speedtest by Ookla。",
+    ),
+    "speedTestDataUsed": MessageLookupByLibrary.simpleMessage("使用データ量"),
+    "speedTestDuration": MessageLookupByLibrary.simpleMessage("測定時間"),
+    "speedTestErrorBlocked": MessageLookupByLibrary.simpleMessage(
+      "速度テストを利用できません",
+    ),
+    "speedTestErrorBlockedDesc": m98,
+    "speedTestErrorNetworkDesc": MessageLookupByLibrary.simpleMessage(
+      "アウトバウンドが利用可能か確認してから再試行してください。",
+    ),
+    "speedTestErrorRejected": MessageLookupByLibrary.simpleMessage(
+      "ルールによりブロックされました",
+    ),
+    "speedTestErrorRejectedDesc": MessageLookupByLibrary.simpleMessage(
+      "現在のルールでは測定ドメインが REJECT に割り当てられています。別のアウトバウンドを選んで再試行してください。",
+    ),
+    "speedTestErrorTimeout": MessageLookupByLibrary.simpleMessage(
+      "速度テストがタイムアウトしました",
+    ),
+    "speedTestErrorUnavailable": MessageLookupByLibrary.simpleMessage(
+      "速度テストサービスに接続できません",
+    ),
+    "speedTestExitNode": MessageLookupByLibrary.simpleMessage("出口ノード"),
+    "speedTestFollowRules": MessageLookupByLibrary.simpleMessage("ルールに従う"),
+    "speedTestHistory": MessageLookupByLibrary.simpleMessage("測定履歴"),
+    "speedTestHistoryEmpty": MessageLookupByLibrary.simpleMessage("測定履歴はありません"),
+    "speedTestHistoryRetention": MessageLookupByLibrary.simpleMessage(
+      "14 日間保存",
+    ),
+    "speedTestJitter": MessageLookupByLibrary.simpleMessage("ジッター"),
+    "speedTestLoadedLatency": MessageLookupByLibrary.simpleMessage("負荷時遅延"),
+    "speedTestManual": MessageLookupByLibrary.simpleMessage("手動指定"),
+    "speedTestMobileDataTip": MessageLookupByLibrary.simpleMessage(
+      "モバイルデータ通信中です。1 回の測定で数百 MB を消費する場合があります。続行しますか？",
+    ),
+    "speedTestMultiThread": MessageLookupByLibrary.simpleMessage("マルチ"),
+    "speedTestOutbound": MessageLookupByLibrary.simpleMessage("アウトバウンド"),
+    "speedTestPacketLoss": MessageLookupByLibrary.simpleMessage("パケットロス"),
+    "speedTestProbing": MessageLookupByLibrary.simpleMessage("アウトバウンドを検出中…"),
+    "speedTestProtocol": MessageLookupByLibrary.simpleMessage("プロトコル"),
+    "speedTestProtocolDesc": MessageLookupByLibrary.simpleMessage(
+      "HTTP/3 は QUIC (UDP) を使用し、使えない場合は HTTP/2 に、HTTP/2 も使えない場合は HTTP/1.1 に切り替えます",
+    ),
+    "speedTestProtocolFallback": m99,
+    "speedTestQuality": MessageLookupByLibrary.simpleMessage("ネットワーク品質"),
+    "speedTestReady": MessageLookupByLibrary.simpleMessage("準備完了"),
+    "speedTestRealtime": MessageLookupByLibrary.simpleMessage("リアルタイム速度"),
+    "speedTestResponsiveness": MessageLookupByLibrary.simpleMessage("応答性"),
+    "speedTestRoute": MessageLookupByLibrary.simpleMessage("ルーティング"),
+    "speedTestServer": MessageLookupByLibrary.simpleMessage("測定サーバー"),
+    "speedTestServerAutoDesc": MessageLookupByLibrary.simpleMessage(
+      "Speedtest サーバーを自動選択",
+    ),
+    "speedTestSettings": MessageLookupByLibrary.simpleMessage("測定設定"),
+    "speedTestSingleThread": MessageLookupByLibrary.simpleMessage("シングル"),
+    "speedTestStart": MessageLookupByLibrary.simpleMessage("測定開始"),
+    "speedTestStop": MessageLookupByLibrary.simpleMessage("テストを停止"),
+    "speedTestStreams": m100,
     "splitStrategy": MessageLookupByLibrary.simpleMessage("振り分け戦略"),
     "splitStrategyNotEmpty": MessageLookupByLibrary.simpleMessage(
       "振り分け戦略は空にできません",
@@ -1955,11 +2037,11 @@ class MessageLookup extends MessageLookupByLibrary {
     "totalUpload": MessageLookupByLibrary.simpleMessage("アップロード量"),
     "tproxyPort": MessageLookupByLibrary.simpleMessage("TProxyポート"),
     "traffic": MessageLookupByLibrary.simpleMessage("通信量"),
-    "trafficPeak": m97,
-    "trafficTotal": m98,
+    "trafficPeak": m101,
+    "trafficTotal": m102,
     "trafficUsage": MessageLookupByLibrary.simpleMessage("トラフィック統計"),
     "transport": MessageLookupByLibrary.simpleMessage("トランスポート"),
-    "transportHeaders": m99,
+    "transportHeaders": m103,
     "trustCertificate": MessageLookupByLibrary.simpleMessage("証明書を信頼"),
     "tun": MessageLookupByLibrary.simpleMessage("TUN"),
     "tunAuthorizationFailed": MessageLookupByLibrary.simpleMessage(
@@ -2012,14 +2094,14 @@ class MessageLookup extends MessageLookupByLibrary {
     "uploadBandwidth": MessageLookupByLibrary.simpleMessage("アップロード帯域幅"),
     "url": MessageLookupByLibrary.simpleMessage("URL"),
     "urlRewrite": MessageLookupByLibrary.simpleMessage("URL 書き換え"),
-    "urlTip": m100,
+    "urlTip": m104,
     "useHosts": MessageLookupByLibrary.simpleMessage("Hostsを使用"),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage("システムのHostsを使用"),
     "usedShort": MessageLookupByLibrary.simpleMessage("使用済み"),
     "usedTraffic": MessageLookupByLibrary.simpleMessage("使用済みトラフィック"),
     "userAgent": MessageLookupByLibrary.simpleMessage("User-Agent"),
     "username": MessageLookupByLibrary.simpleMessage("ユーザー名"),
-    "validUntil": m101,
+    "validUntil": m105,
     "value": MessageLookupByLibrary.simpleMessage("値"),
     "view": MessageLookupByLibrary.simpleMessage("表示"),
     "viewAll": MessageLookupByLibrary.simpleMessage("すべて表示"),
@@ -2038,8 +2120,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "writeToSystemDesc": MessageLookupByLibrary.simpleMessage(
       "システムに書き込むを有効にするとシステムクロックも設定します。Android では無視されます。",
     ),
-    "yearsAgo": m102,
-    "yearsAgoShort": m103,
+    "yearsAgo": m106,
+    "yearsAgoShort": m107,
     "yes": MessageLookupByLibrary.simpleMessage("はい"),
     "zhCN": MessageLookupByLibrary.simpleMessage("簡体字中国語"),
   };

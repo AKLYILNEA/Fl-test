@@ -1,0 +1,163 @@
+import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/models/models.dart';
+import 'package:fl_clash/ui/icons/icons.dart';
+import 'package:fl_clash/widgets/widgets.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+
+import 'gauge.dart';
+import 'store.dart';
+import 'widgets.dart';
+
+String _date(SpeedTestRecord record) => DateFormat.yMMMd().add_Hm().format(
+  DateTime.fromMillisecondsSinceEpoch(record.time),
+);
+
+class SpeedTestHistoryView extends ConsumerWidget {
+  const SpeedTestHistoryView({super.key});
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = context.appLocalizations;
+    final data = ref.watch(speedTestStoreProvider);
+    final records = data.value?.records ?? const <SpeedTestRecord>[];
+    return Scaffold(
+      title: l.speedTestHistory,
+      iconActions: [
+        IconButtonData(
+          glyph: AppGlyphs.delete,
+          tooltip: l.delete,
+          onPressed: records.isEmpty
+              ? null
+              : () async {
+                  final clear = await dialogs.showMessage(
+                    message: TextSpan(text: l.speedTestClearHistoryTip),
+                    destructive: true,
+                    confirmText: l.delete,
+                  );
+                  if (clear == true) {
+                    await ref.read(speedTestStoreProvider.notifier).clear();
+                  }
+                },
+        ),
+      ],
+      body: Builder(
+        builder: (context) => NullStatusSwitcher(
+          isLoading: data.isLoading,
+          isEmpty: records.isEmpty,
+          nullStatus: NullStatus(
+            label: l.speedTestHistoryEmpty,
+            illustration: NullStatusIllustration.ntp,
+          ),
+          child: PrismListView(
+            padding: const EdgeInsets.symmetric(horizontal: 16).copyWith(
+              top: context.contentTopPadding + 12,
+              bottom: 20 + context.bottomInset,
+            ),
+            itemCount: records.length + 1,
+            itemBuilder: (context, index) {
+              if (index == records.length) {
+                return ListFooter(text: l.speedTestHistoryRetention);
+              }
+              final record = records[index];
+              final s = record.result;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Card(
+                  radius: AppCorner.xl,
+                  child: ListItem(
+                    leading: const GlyphIcon(AppGlyphs.speed),
+                    title: Text(_date(record)),
+                    subtitle: Text(
+                      '↓ ${speedTestValue(s.download)} ${speedTestUnit(s.download)}   ↑ ${speedTestValue(s.upload)} ${speedTestUnit(s.upload)}',
+                    ),
+                    trailing: const GlyphIcon(
+                      AppGlyphs.chevronForward,
+                      size: 16,
+                    ),
+                    onTap: () => Navigator.of(context).push(
+                      PagedSheetRoute(
+                        builder: (_) => SpeedTestRecordView(record: record),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class SpeedTestRecordView extends StatelessWidget {
+  const SpeedTestRecordView({super.key, required this.record});
+  final SpeedTestRecord record;
+  @override
+  Widget build(BuildContext context) {
+    final l = context.appLocalizations;
+    final result = record.result;
+    final chains = result.outbound?.chains ?? const <String>[];
+    final server = result.server;
+    return Scaffold(
+      title: l.speedTestHistory,
+      body: Builder(
+        builder: (context) => ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 16).copyWith(
+            top: context.contentTopPadding + 12,
+            bottom: 20 + context.bottomInset,
+          ),
+          children: [
+            Card(
+              radius: AppCorner.xl,
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(_date(record), style: AppTextStyle.headline.of(context)),
+                  const SizedBox(height: 24),
+                  SpeedTestMetrics(state: result),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            generateSection(
+              items: [
+                ListItem(
+                  title: Text(l.speedTestExitNode),
+                  subtitle: EmojiText(
+                    chains.isNotEmpty
+                        ? chains.last
+                        : record.proxy.isEmpty
+                        ? l.speedTestFollowRules
+                        : record.proxy,
+                  ),
+                ),
+                if (server != null)
+                  ListItem(
+                    title: Text(l.speedTestServer),
+                    subtitle: Text(
+                      [
+                        server.sponsor,
+                        server.city,
+                        server.host,
+                      ].where((s) => s.isNotEmpty).join(' · '),
+                    ),
+                  ),
+                ListItem(
+                  title: Text(l.speedTestProtocol),
+                  subtitle: Text(speedProtocolLabel(result.protocol)),
+                ),
+                ListItem(
+                  title: Text(l.speedTestDataUsed),
+                  subtitle: Text(speedTestBytes(result.bytes)),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

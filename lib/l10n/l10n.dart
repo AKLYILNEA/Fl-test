@@ -9981,6 +9981,441 @@ class AppLocalizations {
   String get isp {
     return Intl.message('ISP', name: 'isp', desc: '', args: []);
   }
+
+  /// `Speed Test`
+  String get speedTest {
+    return Intl.message('Speed Test', name: 'speedTest', desc: '', args: []);
+  }
+
+  /// `Start Test`
+  String get speedTestStart {
+    return Intl.message(
+      'Start Test',
+      name: 'speedTestStart',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Test Again`
+  String get speedTestAgain {
+    return Intl.message(
+      'Test Again',
+      name: 'speedTestAgain',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Test History`
+  String get speedTestHistory {
+    return Intl.message(
+      'Test History',
+      name: 'speedTestHistory',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No test history yet`
+  String get speedTestHistoryEmpty {
+    return Intl.message(
+      'No test history yet',
+      name: 'speedTestHistoryEmpty',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Kept for 14 days`
+  String get speedTestHistoryRetention {
+    return Intl.message(
+      'Kept for 14 days',
+      name: 'speedTestHistoryRetention',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Clear all speed test history?`
+  String get speedTestClearHistoryTip {
+    return Intl.message(
+      'Clear all speed test history?',
+      name: 'speedTestClearHistoryTip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Follow Rules`
+  String get speedTestFollowRules {
+    return Intl.message(
+      'Follow Rules',
+      name: 'speedTestFollowRules',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Outbound`
+  String get speedTestOutbound {
+    return Intl.message(
+      'Outbound',
+      name: 'speedTestOutbound',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Not started · Direct test`
+  String get speedTestCoreStopped {
+    return Intl.message(
+      'Not started · Direct test',
+      name: 'speedTestCoreStopped',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Ready`
+  String get speedTestReady {
+    return Intl.message('Ready', name: 'speedTestReady', desc: '', args: []);
+  }
+
+  /// `Connecting`
+  String get speedTestConnecting {
+    return Intl.message(
+      'Connecting',
+      name: 'speedTestConnecting',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Packet Loss`
+  String get speedTestPacketLoss {
+    return Intl.message(
+      'Packet Loss',
+      name: 'speedTestPacketLoss',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Jitter`
+  String get speedTestJitter {
+    return Intl.message('Jitter', name: 'speedTestJitter', desc: '', args: []);
+  }
+
+  /// `Loaded Latency`
+  String get speedTestLoadedLatency {
+    return Intl.message(
+      'Loaded Latency',
+      name: 'speedTestLoadedLatency',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Responsiveness`
+  String get speedTestResponsiveness {
+    return Intl.message(
+      'Responsiveness',
+      name: 'speedTestResponsiveness',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Data Used`
+  String get speedTestDataUsed {
+    return Intl.message(
+      'Data Used',
+      name: 'speedTestDataUsed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Test Server`
+  String get speedTestServer {
+    return Intl.message(
+      'Test Server',
+      name: 'speedTestServer',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Automatically select Speedtest server`
+  String get speedTestServerAutoDesc {
+    return Intl.message(
+      'Automatically select Speedtest server',
+      name: 'speedTestServerAutoDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Protocol`
+  String get speedTestProtocol {
+    return Intl.message(
+      'Protocol',
+      name: 'speedTestProtocol',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `You are on mobile data. One test may use hundreds of MB. Continue?`
+  String get speedTestMobileDataTip {
+    return Intl.message(
+      'You are on mobile data. One test may use hundreds of MB. Continue?',
+      name: 'speedTestMobileDataTip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Blocked by rules`
+  String get speedTestErrorRejected {
+    return Intl.message(
+      'Blocked by rules',
+      name: 'speedTestErrorRejected',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The current rules route the test domain to REJECT. Choose another outbound and retry.`
+  String get speedTestErrorRejectedDesc {
+    return Intl.message(
+      'The current rules route the test domain to REJECT. Choose another outbound and retry.',
+      name: 'speedTestErrorRejectedDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Speed test unavailable`
+  String get speedTestErrorBlocked {
+    return Intl.message(
+      'Speed test unavailable',
+      name: 'speedTestErrorBlocked',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The outbound may be blocking {provider} speed tests. Switch the test source or the outbound.`
+  String speedTestErrorBlockedDesc(Object provider) {
+    return Intl.message(
+      'The outbound may be blocking $provider speed tests. Switch the test source or the outbound.',
+      name: 'speedTestErrorBlockedDesc',
+      desc: '',
+      args: [provider],
+    );
+  }
+
+  /// `Cannot reach the speed test service`
+  String get speedTestErrorUnavailable {
+    return Intl.message(
+      'Cannot reach the speed test service',
+      name: 'speedTestErrorUnavailable',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Speed test timed out`
+  String get speedTestErrorTimeout {
+    return Intl.message(
+      'Speed test timed out',
+      name: 'speedTestErrorTimeout',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Check whether the outbound is available, then retry.`
+  String get speedTestErrorNetworkDesc {
+    return Intl.message(
+      'Check whether the outbound is available, then retry.',
+      name: 'speedTestErrorNetworkDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Change Outbound`
+  String get speedTestChangeOutbound {
+    return Intl.message(
+      'Change Outbound',
+      name: 'speedTestChangeOutbound',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Speed Test Settings`
+  String get speedTestSettings {
+    return Intl.message(
+      'Speed Test Settings',
+      name: 'speedTestSettings',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Test Duration`
+  String get speedTestDuration {
+    return Intl.message(
+      'Test Duration',
+      name: 'speedTestDuration',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Connections`
+  String get speedTestConnections {
+    return Intl.message(
+      'Connections',
+      name: 'speedTestConnections',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Single`
+  String get speedTestSingleThread {
+    return Intl.message(
+      'Single',
+      name: 'speedTestSingleThread',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Multi`
+  String get speedTestMultiThread {
+    return Intl.message(
+      'Multi',
+      name: 'speedTestMultiThread',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Multi uses {count} parallel connections to saturate bandwidth`
+  String speedTestConnectionsDesc(Object count) {
+    return Intl.message(
+      'Multi uses $count parallel connections to saturate bandwidth',
+      name: 'speedTestConnectionsDesc',
+      desc: '',
+      args: [count],
+    );
+  }
+
+  /// `HTTP/3 runs over QUIC (UDP); if unavailable it falls back to HTTP/2, and to HTTP/1.1 if HTTP/2 is unavailable too`
+  String get speedTestProtocolDesc {
+    return Intl.message(
+      'HTTP/3 runs over QUIC (UDP); if unavailable it falls back to HTTP/2, and to HTTP/1.1 if HTTP/2 is unavailable too',
+      name: 'speedTestProtocolDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `{protocol} unavailable, fell back to {fallback}`
+  String speedTestProtocolFallback(Object protocol, Object fallback) {
+    return Intl.message(
+      '$protocol unavailable, fell back to $fallback',
+      name: 'speedTestProtocolFallback',
+      desc: '',
+      args: [protocol, fallback],
+    );
+  }
+
+  /// `Detecting outbound…`
+  String get speedTestProbing {
+    return Intl.message(
+      'Detecting outbound…',
+      name: 'speedTestProbing',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Realtime Throughput`
+  String get speedTestRealtime {
+    return Intl.message(
+      'Realtime Throughput',
+      name: 'speedTestRealtime',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Network Quality`
+  String get speedTestQuality {
+    return Intl.message(
+      'Network Quality',
+      name: 'speedTestQuality',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `{count} connections`
+  String speedTestStreams(Object count) {
+    return Intl.message(
+      '$count connections',
+      name: 'speedTestStreams',
+      desc: '',
+      args: [count],
+    );
+  }
+
+  /// `Manual`
+  String get speedTestManual {
+    return Intl.message('Manual', name: 'speedTestManual', desc: '', args: []);
+  }
+
+  /// `Exit Node`
+  String get speedTestExitNode {
+    return Intl.message(
+      'Exit Node',
+      name: 'speedTestExitNode',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Route Rule`
+  String get speedTestRoute {
+    return Intl.message(
+      'Route Rule',
+      name: 'speedTestRoute',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Test servers are provided by Speedtest by Ookla.`
+  String get speedTestCredit {
+    return Intl.message(
+      'Test servers are provided by Speedtest by Ookla.',
+      name: 'speedTestCredit',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Stop Test`
+  String get speedTestStop {
+    return Intl.message('Stop Test', name: 'speedTestStop', desc: '', args: []);
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {

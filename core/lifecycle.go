@@ -56,6 +56,7 @@ func handleStartListener() {
 }
 
 func handleStopListener() {
+	_ = handleCancelSpeedTest(SpeedTestCancelParams{})
 	configMu.Lock()
 	defer configMu.Unlock()
 	setRunning(false)

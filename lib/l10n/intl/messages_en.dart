@@ -266,20 +266,31 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m96(label) => "${label} must be a single item";
 
-  static String m97(value) => "Peak ${value}";
+  static String m97(count) =>
+      "Multi uses ${count} parallel connections to saturate bandwidth";
 
-  static String m98(value) => "Total ${value}";
+  static String m98(provider) =>
+      "The outbound may be blocking ${provider} speed tests. Switch the test source or the outbound.";
 
-  static String m99(transport) => "${transport} Headers";
+  static String m99(protocol, fallback) =>
+      "${protocol} unavailable, fell back to ${fallback}";
 
-  static String m100(label) => "${label} must be a URL";
+  static String m100(count) => "${count} connections";
 
-  static String m101(date) => "Valid until ${date}";
+  static String m101(value) => "Peak ${value}";
 
-  static String m102(count) =>
+  static String m102(value) => "Total ${value}";
+
+  static String m103(transport) => "${transport} Headers";
+
+  static String m104(label) => "${label} must be a URL";
+
+  static String m105(date) => "Valid until ${date}";
+
+  static String m106(count) =>
       "${Intl.plural(count, one: '1 year ago', other: '${count} years ago')}";
 
-  static String m103(count) => "${Intl.plural(count, other: '${count}y ago')}";
+  static String m107(count) => "${Intl.plural(count, other: '${count}y ago')}";
 
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
@@ -2191,6 +2202,94 @@ class MessageLookup extends MessageLookupByLibrary {
     "specialRules": MessageLookupByLibrary.simpleMessage("Special rules"),
     "spectrum": MessageLookupByLibrary.simpleMessage("Spectrum"),
     "speedStatistics": MessageLookupByLibrary.simpleMessage("Speed statistics"),
+    "speedTest": MessageLookupByLibrary.simpleMessage("Speed Test"),
+    "speedTestAgain": MessageLookupByLibrary.simpleMessage("Test Again"),
+    "speedTestChangeOutbound": MessageLookupByLibrary.simpleMessage(
+      "Change Outbound",
+    ),
+    "speedTestClearHistoryTip": MessageLookupByLibrary.simpleMessage(
+      "Clear all speed test history?",
+    ),
+    "speedTestConnecting": MessageLookupByLibrary.simpleMessage("Connecting"),
+    "speedTestConnections": MessageLookupByLibrary.simpleMessage("Connections"),
+    "speedTestConnectionsDesc": m97,
+    "speedTestCoreStopped": MessageLookupByLibrary.simpleMessage(
+      "Not started · Direct test",
+    ),
+    "speedTestCredit": MessageLookupByLibrary.simpleMessage(
+      "Test servers are provided by Speedtest by Ookla.",
+    ),
+    "speedTestDataUsed": MessageLookupByLibrary.simpleMessage("Data Used"),
+    "speedTestDuration": MessageLookupByLibrary.simpleMessage("Test Duration"),
+    "speedTestErrorBlocked": MessageLookupByLibrary.simpleMessage(
+      "Speed test unavailable",
+    ),
+    "speedTestErrorBlockedDesc": m98,
+    "speedTestErrorNetworkDesc": MessageLookupByLibrary.simpleMessage(
+      "Check whether the outbound is available, then retry.",
+    ),
+    "speedTestErrorRejected": MessageLookupByLibrary.simpleMessage(
+      "Blocked by rules",
+    ),
+    "speedTestErrorRejectedDesc": MessageLookupByLibrary.simpleMessage(
+      "The current rules route the test domain to REJECT. Choose another outbound and retry.",
+    ),
+    "speedTestErrorTimeout": MessageLookupByLibrary.simpleMessage(
+      "Speed test timed out",
+    ),
+    "speedTestErrorUnavailable": MessageLookupByLibrary.simpleMessage(
+      "Cannot reach the speed test service",
+    ),
+    "speedTestExitNode": MessageLookupByLibrary.simpleMessage("Exit Node"),
+    "speedTestFollowRules": MessageLookupByLibrary.simpleMessage(
+      "Follow Rules",
+    ),
+    "speedTestHistory": MessageLookupByLibrary.simpleMessage("Test History"),
+    "speedTestHistoryEmpty": MessageLookupByLibrary.simpleMessage(
+      "No test history yet",
+    ),
+    "speedTestHistoryRetention": MessageLookupByLibrary.simpleMessage(
+      "Kept for 14 days",
+    ),
+    "speedTestJitter": MessageLookupByLibrary.simpleMessage("Jitter"),
+    "speedTestLoadedLatency": MessageLookupByLibrary.simpleMessage(
+      "Loaded Latency",
+    ),
+    "speedTestManual": MessageLookupByLibrary.simpleMessage("Manual"),
+    "speedTestMobileDataTip": MessageLookupByLibrary.simpleMessage(
+      "You are on mobile data. One test may use hundreds of MB. Continue?",
+    ),
+    "speedTestMultiThread": MessageLookupByLibrary.simpleMessage("Multi"),
+    "speedTestOutbound": MessageLookupByLibrary.simpleMessage("Outbound"),
+    "speedTestPacketLoss": MessageLookupByLibrary.simpleMessage("Packet Loss"),
+    "speedTestProbing": MessageLookupByLibrary.simpleMessage(
+      "Detecting outbound…",
+    ),
+    "speedTestProtocol": MessageLookupByLibrary.simpleMessage("Protocol"),
+    "speedTestProtocolDesc": MessageLookupByLibrary.simpleMessage(
+      "HTTP/3 runs over QUIC (UDP); if unavailable it falls back to HTTP/2, and to HTTP/1.1 if HTTP/2 is unavailable too",
+    ),
+    "speedTestProtocolFallback": m99,
+    "speedTestQuality": MessageLookupByLibrary.simpleMessage("Network Quality"),
+    "speedTestReady": MessageLookupByLibrary.simpleMessage("Ready"),
+    "speedTestRealtime": MessageLookupByLibrary.simpleMessage(
+      "Realtime Throughput",
+    ),
+    "speedTestResponsiveness": MessageLookupByLibrary.simpleMessage(
+      "Responsiveness",
+    ),
+    "speedTestRoute": MessageLookupByLibrary.simpleMessage("Route Rule"),
+    "speedTestServer": MessageLookupByLibrary.simpleMessage("Test Server"),
+    "speedTestServerAutoDesc": MessageLookupByLibrary.simpleMessage(
+      "Automatically select Speedtest server",
+    ),
+    "speedTestSettings": MessageLookupByLibrary.simpleMessage(
+      "Speed Test Settings",
+    ),
+    "speedTestSingleThread": MessageLookupByLibrary.simpleMessage("Single"),
+    "speedTestStart": MessageLookupByLibrary.simpleMessage("Start Test"),
+    "speedTestStop": MessageLookupByLibrary.simpleMessage("Stop Test"),
+    "speedTestStreams": m100,
     "splitStrategy": MessageLookupByLibrary.simpleMessage("Split strategy"),
     "splitStrategyNotEmpty": MessageLookupByLibrary.simpleMessage(
       "Split strategy cannot be empty",
@@ -2274,11 +2373,11 @@ class MessageLookup extends MessageLookupByLibrary {
     "totalUpload": MessageLookupByLibrary.simpleMessage("Uploaded"),
     "tproxyPort": MessageLookupByLibrary.simpleMessage("TProxy port"),
     "traffic": MessageLookupByLibrary.simpleMessage("Traffic"),
-    "trafficPeak": m97,
-    "trafficTotal": m98,
+    "trafficPeak": m101,
+    "trafficTotal": m102,
     "trafficUsage": MessageLookupByLibrary.simpleMessage("Traffic usage"),
     "transport": MessageLookupByLibrary.simpleMessage("Transport"),
-    "transportHeaders": m99,
+    "transportHeaders": m103,
     "trustCertificate": MessageLookupByLibrary.simpleMessage(
       "Trust certificate",
     ),
@@ -2337,14 +2436,14 @@ class MessageLookup extends MessageLookupByLibrary {
     "uploadBandwidth": MessageLookupByLibrary.simpleMessage("Upload bandwidth"),
     "url": MessageLookupByLibrary.simpleMessage("URL"),
     "urlRewrite": MessageLookupByLibrary.simpleMessage("URL rewrite"),
-    "urlTip": m100,
+    "urlTip": m104,
     "useHosts": MessageLookupByLibrary.simpleMessage("Use hosts"),
     "useSystemHosts": MessageLookupByLibrary.simpleMessage("Use system hosts"),
     "usedShort": MessageLookupByLibrary.simpleMessage("used"),
     "usedTraffic": MessageLookupByLibrary.simpleMessage("Used traffic"),
     "userAgent": MessageLookupByLibrary.simpleMessage("User-Agent"),
     "username": MessageLookupByLibrary.simpleMessage("Username"),
-    "validUntil": m101,
+    "validUntil": m105,
     "value": MessageLookupByLibrary.simpleMessage("Value"),
     "view": MessageLookupByLibrary.simpleMessage("View"),
     "viewAll": MessageLookupByLibrary.simpleMessage("View all"),
@@ -2365,8 +2464,8 @@ class MessageLookup extends MessageLookupByLibrary {
     "writeToSystemDesc": MessageLookupByLibrary.simpleMessage(
       "Write to system also sets the system clock; Android ignores it.",
     ),
-    "yearsAgo": m102,
-    "yearsAgoShort": m103,
+    "yearsAgo": m106,
+    "yearsAgoShort": m107,
     "yes": MessageLookupByLibrary.simpleMessage("Yes"),
     "zhCN": MessageLookupByLibrary.simpleMessage("Simplified Chinese"),
   };

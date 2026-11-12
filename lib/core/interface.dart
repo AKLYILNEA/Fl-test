@@ -441,6 +441,42 @@ abstract class CoreHandlerInterface {
       timeout: const Duration(hours: 1, minutes: 1),
     );
   }
+
+  Future<SpeedTestState> startSpeedTest(
+    SpeedTestSettings settings,
+    String proxy,
+    String id,
+  ) => _query(
+    CoreMethod.speedTestStart,
+    (data) => SpeedTestState.fromJson(speedTestMap(data)),
+    arguments: settings.toParams(proxy, id),
+    timeout: const Duration(minutes: 4),
+  );
+  Future<SpeedTestState> probeSpeedTest(
+    SpeedTestSettings settings,
+    String proxy,
+    String id,
+  ) => _query(
+    CoreMethod.speedTestProbe,
+    (data) => SpeedTestState.fromJson(speedTestMap(data)),
+    arguments: settings.toParams(proxy, id),
+    timeout: const Duration(minutes: 4),
+  );
+  Future<void> cancelSpeedTest(String id) =>
+      _command(CoreMethod.speedTestCancel, arguments: {'id': id});
+  Future<List<SpeedTestNode>> speedTestServers(
+    String proxy,
+    String search,
+    String id,
+  ) => _query(
+    CoreMethod.speedTestServers,
+    (data) => [
+      for (final item in data as List)
+        SpeedTestNode.fromJson(speedTestMap(item)),
+    ],
+    arguments: {'proxy': proxy, 'search': search, 'id': id},
+    timeout: const Duration(seconds: 25),
+  );
 }
 
 T _cast<T>(Object data) => data as T;
