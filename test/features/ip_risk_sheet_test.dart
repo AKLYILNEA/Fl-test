@@ -376,6 +376,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+      expect(find.byType(app_ui.NullStatusSwitcher), findsOneWidget);
       expect(find.text('28'), findsOneWidget);
       expect(find.text('数据中心'), findsOneWidget);
       expect(tester.widget<Text>(find.text('服务器')).style!.color, isNotNull);

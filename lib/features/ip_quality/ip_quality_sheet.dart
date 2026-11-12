@@ -55,7 +55,7 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
   Widget build(BuildContext context) {
     final l = context.appLocalizations;
     final state = ref.watch(ipRiskProvider(_ip));
-    final risk = state.isLoading || state.hasError ? null : state.value;
+    final risk = state.hasError ? null : state.value;
     final hidden = ref.watch(appSettingProvider.select((s) => s.hideIp));
     return Theme(
       data: Theme.of(context).copyWith(visualDensity: VisualDensity.standard),
@@ -78,77 +78,78 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
           ),
         ],
         body: Builder(
-          builder: (context) => ListView(
-            padding: EdgeInsets.fromLTRB(
-              16,
-              context.contentTopPadding + 12,
-              16,
-              20 + context.bottomInset,
-            ),
-            children: [
-              Card(
-                radius: AppCorner.xl,
-                child: ListItem(
-                  leading: const GlyphIcon(AppGlyphs.proxies),
-                  title: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l.ipAddress,
-                        style: AppTextStyle.footnote
-                            .of(context)
-                            .copyWith(
-                              color: context.colorScheme.onSurfaceVariant,
-                            ),
+          builder: (context) => NullStatusSwitcher(
+            key: ValueKey(_ip),
+            isLoading: state.isLoading && !state.hasValue,
+            holdsArrival: false,
+            loadingStatus: const Center(child: ActivityIndicator.page()),
+            child: ListView(
+              padding: EdgeInsets.fromLTRB(
+                16,
+                context.contentTopPadding + 12,
+                16,
+                20 + context.bottomInset,
+              ),
+              children: [
+                Card(
+                  radius: AppCorner.xl,
+                  child: ListItem(
+                    leading: const GlyphIcon(AppGlyphs.proxies),
+                    title: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l.ipAddress,
+                          style: AppTextStyle.footnote
+                              .of(context)
+                              .copyWith(
+                                color: context.colorScheme.onSurfaceVariant,
+                              ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          hidden ? '*****' : _ip,
+                          style: hidden
+                              ? AppTextStyle.headline
+                                    .of(context, emphasized: true)
+                                    .toJetBrainsMono
+                              : AppTextStyle.headline.of(context, emphasized: true),
+                        ),
+                      ],
+                    ),
+                    trailing: MinIconButtonTheme(
+                      child: IconButton(
+                        tooltip: l.edit,
+                        onPressed: _editIp,
+                        icon: const GlyphIcon(AppGlyphs.edit, size: 16),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        hidden ? '*****' : _ip,
-                        style: hidden
-                            ? AppTextStyle.headline
-                                  .of(context, emphasized: true)
-                                  .toJetBrainsMono
-                            : AppTextStyle.headline.of(context, emphasized: true),
-                      ),
-                    ],
-                  ),
-                  trailing: MinIconButtonTheme(
-                    child: IconButton(
-                      tooltip: l.edit,
-                      onPressed: _editIp,
-                      icon: const GlyphIcon(AppGlyphs.edit, size: 16),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              if (risk != null) ...[
-                RiskScoreCard(risk: risk),
                 const SizedBox(height: 12),
-                if (risk.checks.isNotEmpty) ...[
-                  RiskChecksCard(risk: risk),
+                if (risk != null) ...[
+                  RiskScoreCard(risk: risk),
                   const SizedBox(height: 12),
-                ],
-                _LocationCard(risk: risk, hidden: hidden),
-                ListFooter(text: '${l.ipRiskSource} Scamalytics'),
-              ] else if (state.isLoading)
-                const Padding(
-                  padding: EdgeInsets.all(48),
-                  child: Center(child: ActivityIndicator.page()),
-                )
-              else
-                Card(
-                  radius: AppCorner.xl,
-                  padding: const EdgeInsets.all(24),
-                  child: Text(
-                    l.ipRiskFailed,
-                    style: AppTextStyle.body
-                        .of(context)
-                        .copyWith(color: context.colorScheme.error),
+                  if (risk.checks.isNotEmpty) ...[
+                    RiskChecksCard(risk: risk),
+                    const SizedBox(height: 12),
+                  ],
+                  _LocationCard(risk: risk, hidden: hidden),
+                  ListFooter(text: '${l.ipRiskSource} Scamalytics'),
+                ] else
+                  Card(
+                    radius: AppCorner.xl,
+                    padding: const EdgeInsets.all(24),
+                    child: Text(
+                      l.ipRiskFailed,
+                      style: AppTextStyle.body
+                          .of(context)
+                          .copyWith(color: context.colorScheme.error),
+                    ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
