@@ -249,12 +249,7 @@ class _RiskScale extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final rect = Rect.fromLTWH(
-      8,
-      8,
-      (size.width - 16).clamp(0, double.infinity),
-      8,
-    );
+    final rect = Rect.fromLTWH(0, 8, size.width, 8);
     canvas.drawRSuperellipse(
       RSuperellipse.fromRectAndRadius(rect, AppRadius.full.topLeft),
       Paint()
@@ -280,7 +275,7 @@ class _RiskScale extends CustomPainter {
     );
     canvas.restore();
     final center = Offset(
-      rect.left + rect.width * score.clamp(0, 100) / 100,
+      (rect.width * score.clamp(0, 100) / 100).clamp(8, size.width - 8),
       12,
     );
     canvas.drawCircle(center, 8, Paint()..color = riskScoreColor(score));
