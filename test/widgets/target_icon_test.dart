@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:ui' as ui;
 
 import 'package:file/memory.dart';
+import 'package:fl_clash/models/models.dart' hide FileInfo;
 import 'package:fl_clash/ui/icons/icons.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/foundation.dart';
@@ -107,6 +108,21 @@ void main() {
       ]);
     },
   );
+
+  test('IconSet cover getter is accessible statically via IconSetExt', () {
+    const iconSet = IconSet(
+      id: 1,
+      name: 'Test Set',
+      url: 'https://example.com/set.json',
+      icons: [
+        IconSetIcon(name: 'test.png', url: 'https://example.com/test.png'),
+      ],
+    );
+    expect(iconSet.cover, 'https://example.com/test.png');
+    final List<IconSet> list = [iconSet];
+    final covers = [for (final IconSet set in list) set.cover];
+    expect(covers, ['https://example.com/test.png']);
+  });
 
   test('a failed download releases the refresh lock for a retry', () async {
     final manager = _MockIconCache();

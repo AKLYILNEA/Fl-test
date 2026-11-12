@@ -1356,7 +1356,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "redo": MessageLookupByLibrary.simpleMessage("重做"),
     "refreshGroupIcons": MessageLookupByLibrary.simpleMessage("刷新策略组图标"),
     "refreshGroupIconsTip": MessageLookupByLibrary.simpleMessage(
-      "???????????????????????????????????????????????????????",
+      "清空所有已缓存的远程图标与图标集图片，重新同步远程图标集并拉取最新图标？内置图标和本地导入的图标文件将被保留。",
     ),
     "regenerateCertificate": MessageLookupByLibrary.simpleMessage("重新生成证书"),
     "regenerateCertificateTip": MessageLookupByLibrary.simpleMessage(
