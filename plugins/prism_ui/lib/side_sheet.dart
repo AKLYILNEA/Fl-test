@@ -2,7 +2,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
-import 'package:prism_ui/barrier.dart';
 import 'package:prism_ui/l10n.dart';
 import 'package:prism_ui/color.dart';
 import 'package:prism_ui/drag_back.dart';
@@ -394,25 +393,13 @@ class ModalSideSheetRoute<T> extends PopupRoute<T>
           end: barrierColor,
         ).chain(CurveTween(curve: barrierCurve)),
       );
-      final barrier = AnimatedModalBarrier(
+      return AnimatedModalBarrier(
         color: color,
         dismissible: barrierDismissible,
         semanticsLabel: barrierLabel,
         barrierSemanticsDismissible: semanticsDismissible,
         clipDetailsNotifier: _clipDetailsNotifier,
         semanticsOnTapHint: barrierOnTapHint,
-      );
-      return RepaintBoundary(
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            FadeTransition(
-              opacity: animation!.drive(CurveTween(curve: barrierCurve)),
-              child: const BarrierBlur(),
-            ),
-            barrier,
-          ],
-        ),
       );
     } else {
       return ModalBarrier(

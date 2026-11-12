@@ -11,7 +11,11 @@ bool isSheetPage(BuildContext context) =>
 /// A sheet opened from inside another sheet goes over it, sized by the space
 /// that sheet is shown in rather than squeezed among its pages.
 NavigatorState sheetNavigatorOf(BuildContext context) {
-  return Navigator.of(context, rootNavigator: true);
+  var navigator = Navigator.of(context);
+  while (navigator.widget is SheetPagesNavigator) {
+    navigator = navigator.context.findAncestorStateOfType<NavigatorState>()!;
+  }
+  return navigator;
 }
 
 final _covers = Expando<ProxyAnimation>();
