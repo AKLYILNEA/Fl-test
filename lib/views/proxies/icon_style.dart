@@ -22,6 +22,43 @@ class ProxiesIconStyleView extends ConsumerStatefulWidget {
 class _ProxiesIconStyleViewState extends ConsumerState<ProxiesIconStyleView> {
   var _selected = <int>{};
   var _sorting = false;
+  var _refreshing = false;
+
+  Future<void> _handleRefreshIcons() async {
+    if (_refreshing) {
+      return;
+    }
+    final l10n = context.appLocalizations;
+    setState(() => _refreshing = true);
+    try {
+      final confirmed = await dialogs.showMessage(
+        context: context,
+        title: l10n.refreshGroupIcons,
+        message: TextSpan(text: l10n.refreshGroupIconsTip),
+        confirmText: l10n.confirm,
+      );
+      if (confirmed != true || !mounted) {
+        return;
+      }
+      await refreshTargetIcons([
+        for (final group in ref.read(groupsProvider))
+          ref.read(proxyGroupIconProvider(group.name)),
+        for (final rule in ref.read(iconRulesProvider)) rule.icon,
+      ]);
+      if (mounted) {
+        dialogs.showBanner(l10n.groupIconsRefreshed, level: BannerLevel.success);
+      }
+    } catch (error) {
+      commonPrint.log('Failed to refresh group icons: $error');
+      if (mounted) {
+        dialogs.showBanner(l10n.updateFailed, level: BannerLevel.error);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _refreshing = false);
+      }
+    }
+  }
 
   void _handleStyle(ProxiesIconStyle iconStyle) {
     ref
@@ -251,6 +288,14 @@ class _ProxiesIconStyleViewState extends ConsumerState<ProxiesIconStyleView> {
             },
       child: Scaffold(
         title: appLocalizations.iconStyle,
+        iconActions: [
+          IconButtonData(
+            glyph: AppGlyphs.refresh,
+            tooltip: appLocalizations.refreshGroupIcons,
+            isLoading: _refreshing,
+            onPressed: _handleRefreshIcons,
+          ),
+        ],
         body: SortModeScope(
           sorting: _sorting,
           child: CustomScrollView(

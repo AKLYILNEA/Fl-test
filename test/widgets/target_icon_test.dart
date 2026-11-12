@@ -2,16 +2,23 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:ui' as ui;
 
+import 'package:file/memory.dart';
 import 'package:fl_clash/ui/icons/icons.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:mocktail/mocktail.dart';
 
 import '../helpers/glyph_finders.dart';
 import '../helpers/test_app.dart';
+
+class _MockIconCache extends Mock implements CacheManager {}
+
+class _MockIconCacheRepository extends Mock implements CacheInfoRepository {}
 
 Future<void> _pump(WidgetTester tester, Widget icon) {
   return tester.pumpWidget(
@@ -24,6 +31,66 @@ Future<void> _pump(WidgetTester tester, Widget icon) {
 }
 
 void main() {
+  test('refresh removes disk icons and downloads PNG and SVG again, '
+      'including cached icons from earlier sessions', () async {
+    final manager = _MockIconCache();
+    final repo = _MockIconCacheRepository();
+    final config = Config('icon-refresh-test', repo: repo);
+    final fs = MemoryFileSystem();
+    final file = fs.file('/icon.png')..writeAsBytesSync(_onePixelPng);
+    final events = <String>[];
+    when(() => manager.config).thenReturn(config);
+    when(() => repo.open()).thenAnswer((_) async => true);
+    when(() => repo.getAllObjects()).thenAnswer((_) async => [
+      CacheObject('https://example.com/previous-session.svg'),
+    ]);
+    when(manager.emptyCache).thenAnswer((_) async {
+      events.add('clear');
+    });
+    when(() => manager.downloadFile(any(), force: true)).thenAnswer((call) async {
+      final url = call.positionalArguments.first as String;
+      events.add(url);
+      return FileInfo(file, FileSource.Online, DateTime.now(), url);
+    });
+    targetIconCacheManager = manager;
+    addTearDown(() => targetIconCacheManager = null);
+
+    await refreshTargetIcons([
+      'https://example.com/group.png',
+      'https://example.com/group.svg',
+      'https://example.com/group.png',
+      'data:image/png;base64,embedded',
+      'assets/images/icon.png',
+      'file:///local/icon.svg',
+    ]);
+
+    expect(events.first, 'clear');
+    expect(events, contains('https://example.com/previous-session.svg'));
+    expect(events.where((url) => url.endsWith('/group.png')), hasLength(1));
+    expect(events, contains('https://example.com/group.svg'));
+    expect(events.skip(1).every((url) => url.startsWith('https://')), isTrue);
+  });
+
+  test('a failed download releases the refresh lock for a retry', () async {
+    final manager = _MockIconCache();
+    final repo = _MockIconCacheRepository();
+    when(() => manager.config).thenReturn(Config('icon-retry-test', repo: repo));
+    when(() => repo.open()).thenAnswer((_) async => true);
+    when(() => repo.getAllObjects()).thenAnswer((_) async => []);
+    when(manager.emptyCache).thenAnswer((_) async {});
+    when(() => manager.downloadFile(any(), force: true))
+        .thenThrow(StateError('offline'));
+    targetIconCacheManager = manager;
+    addTearDown(() => targetIconCacheManager = null);
+
+    await expectLater(
+      refreshTargetIcons(['https://example.com/offline.svg']),
+      throwsStateError,
+    );
+    await refreshTargetIcons([]);
+    verify(manager.emptyCache).called(2);
+  });
+
   testWidgets('a group without an icon shows the first letter of its name, '
       'past a leading emoji', (tester) async {
     for (final (name, mark) in [

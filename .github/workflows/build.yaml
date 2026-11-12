@@ -122,6 +122,15 @@ jobs:
           flutter --version
           flutter pub get
 
+      - name: Generate localizations
+        run: dart run intl_utils:generate
+
+      - name: Check group icon refresh
+        if: matrix.platform == 'android'
+        run: |
+          flutter analyze --no-fatal-infos lib/widgets/icon.dart lib/views/proxies/icon_style.dart test/widgets/target_icon_test.dart
+          flutter test test/widgets/target_icon_test.dart test/l10n test/lint/dynamic_message_key_test.dart
+
       # The core embeds this bundle and FlClashHttpOverrides.trustCoreRoots loads it for Dart.
       # Pinned by hash, so a new bundle from https://curl.se/docs/caextract.html is a reviewed bump.
       - name: Fetch CA certificates
