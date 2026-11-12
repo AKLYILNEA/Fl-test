@@ -212,6 +212,26 @@ void main() {
   });
 
   group('the exit address', () {
+    for (final running in [false, true]) {
+      testWidgets('shows native IP type with running=$running', (tester) async {
+        const home = IpRisk(
+          ip: _ip,
+          score: 0,
+          level: IpRiskLevel.low,
+          checks: [
+            IpRiskCheck(group: IpRiskGroup.datacenter, name: 'Datacenter'),
+          ],
+        );
+        await tester.pumpWidget(_app((_, _) async => home));
+        final container = ProviderScope.containerOf(
+          tester.element(find.byType(CurrentOutboundCard)),
+        );
+        container.read(runTimeProvider.notifier).value = running ? 1 : null;
+        await tester.pump();
+        expect(find.text('Premium Residential IP'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      });
+    }
     testWidgets('shows its country and residential proxy type', (tester) async {
       await tester.pumpWidget(_app((_, _) async => _residential));
       await tester.pump();

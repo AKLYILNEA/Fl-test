@@ -1178,5 +1178,6 @@
   "ipRiskLocation": "국가 / 지역",
   "ipRiskCity": "지역 / 도시",
   "operatorOrAsn": "소속 / ASN",
-  "ipRiskFailed": "IP 정보를 불러오지 못했습니다. 다시 시도해 주세요."
+  "ipRiskFailed": "IP 정보를 불러오지 못했습니다. 다시 시도해 주세요.",
+  "isp": "통신사"
 }

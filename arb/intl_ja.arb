@@ -1178,5 +1178,6 @@
   "ipRiskLocation": "国・地域",
   "ipRiskCity": "地域・都市",
   "operatorOrAsn": "組織 / ASN",
-  "ipRiskFailed": "IP 情報を取得できませんでした。再試行してください。"
+  "ipRiskFailed": "IP 情報を取得できませんでした。再試行してください。",
+  "isp": "プロバイダ"
 }

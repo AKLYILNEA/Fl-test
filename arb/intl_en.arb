@@ -1178,5 +1178,6 @@
   "ipRiskLocation": "Country / region",
   "ipRiskCity": "Region / city",
   "operatorOrAsn": "Organization / ASN",
-  "ipRiskFailed": "Couldn't load IP information. Try again."
+  "ipRiskFailed": "Couldn't load IP information. Try again.",
+  "isp": "ISP"
 }

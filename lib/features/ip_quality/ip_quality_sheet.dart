@@ -38,7 +38,7 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
   Widget build(BuildContext context) {
     final l = context.appLocalizations;
     final state = ref.watch(ipRiskProvider(_ip));
-    final risk = state.value;
+    final risk = state.isLoading || state.hasError ? null : state.value;
     final hidden = ref.watch(appSettingProvider.select((s) => s.hideIp));
     return Scaffold(
       title: widget.outbound ? l.outboundIp : l.ipDetails,
@@ -50,12 +50,17 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
               .read(appSettingProvider.notifier)
               .update((s) => s.copyWith(hideIp: !hidden)),
         ),
-        IconButtonData(
-          glyph: AppGlyphs.refresh,
-          tooltip: l.ipQualityRetry,
-          onPressed: state.isLoading
-              ? null
-              : () => ref.invalidate(ipRiskProvider(_ip)),
+      ],
+      actions: [
+        AppBarActionButton(
+          data: IconButtonData(
+            glyph: AppGlyphs.refresh,
+            tooltip: l.ipQualityRetry,
+            onPressed: state.isLoading
+                ? null
+                : () => ref.invalidate(ipRiskProvider(_ip)),
+          ),
+          icon: _RiskRefreshIcon(loading: state.isLoading),
         ),
       ],
       body: Builder(
@@ -86,10 +91,11 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
                     const SizedBox(height: 4),
                     Text(
                       hidden ? '*****' : _ip,
-                      style: AppTextStyle.headline.of(
-                        context,
-                        emphasized: true,
-                      ),
+                      style: hidden
+                          ? AppTextStyle.headline
+                                .of(context, emphasized: true)
+                                .toJetBrainsMono
+                          : AppTextStyle.headline.of(context, emphasized: true),
                     ),
                   ],
                 ),
@@ -109,13 +115,15 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
             if (risk != null) ...[
               RiskScoreCard(risk: risk),
               const SizedBox(height: 12),
-              RiskChecksCard(risk: risk),
-              const SizedBox(height: 12),
+              if (risk.checks.isNotEmpty) ...[
+                RiskChecksCard(risk: risk),
+                const SizedBox(height: 12),
+              ],
               _LocationCard(risk: risk, hidden: hidden),
               const SizedBox(height: 16),
               Text(
                 '${l.ipRiskSource} Scamalytics',
-                textAlign: TextAlign.end,
+                textAlign: TextAlign.start,
                 style: AppTextStyle.footnote
                     .of(context)
                     .copyWith(color: context.colorScheme.onSurfaceVariant),
@@ -164,14 +172,13 @@ class _LocationCard extends StatelessWidget {
       ),
       const SizedBox(height: 6),
       if (emoji)
-        EmojiText(
-          value.isEmpty ? '—' : value,
-          style: AppTextStyle.body.of(context, emphasized: true),
-        )
+        EmojiText(value, style: AppTextStyle.body.of(context, emphasized: true))
       else
         SelectableText(
-          value.isEmpty ? '—' : value,
-          style: AppTextStyle.body.of(context, emphasized: true),
+          value,
+          style: hidden && value.contains('*****')
+              ? AppTextStyle.body.of(context, emphasized: true).toJetBrainsMono
+              : AppTextStyle.body.of(context, emphasized: true),
         ),
     ],
   );
@@ -181,58 +188,122 @@ class _LocationCard extends StatelessWidget {
     final l = context.appLocalizations;
     final country = [
       if (risk.countryCode.isNotEmpty) risk.countryCode.countryFlagEmoji,
-      risk.country,
+      risk.country.isNotEmpty ? risk.country : risk.countryCode,
     ].where((s) => s.isNotEmpty).join(' ');
     final place = [
       risk.region,
       risk.city,
     ].where((s) => s.isNotEmpty).toSet().join(' · ');
     final owner = [
-      risk.organization.isNotEmpty ? risk.organization : risk.isp,
+      risk.organization,
       risk.asn,
     ].where((s) => s.isNotEmpty).join(' · ');
+    final rows = <Widget>[
+      if (country.isNotEmpty || place.isNotEmpty)
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final a = _value(context, l.ipRiskLocation, country, emoji: true);
+            final b = _value(context, l.ipRiskCity, place);
+            if (country.isEmpty) return b;
+            if (place.isEmpty) return a;
+            if (constraints.maxWidth < 320 ||
+                MediaQuery.textScalerOf(context).scale(16) > 22) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [a, const SizedBox(height: 18), b],
+              );
+            }
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: a),
+                const SizedBox(width: 20),
+                Expanded(child: b),
+              ],
+            );
+          },
+        ),
+      if (owner.isNotEmpty) _value(context, l.operatorOrAsn, owner),
+      if (risk.isp.isNotEmpty && risk.isp != risk.organization)
+        _value(context, l.isp, risk.isp),
+      if (risk.hostname.isNotEmpty)
+        _value(
+          context,
+          l.ipRiskHostname,
+          hidden
+              ? risk.hostname.replaceAll(
+                  RegExp(RegExp.escape(risk.ip), caseSensitive: false),
+                  '*****',
+                )
+              : risk.hostname,
+        ),
+    ];
+    if (rows.isEmpty) return const SizedBox.shrink();
     return Card(
       radius: AppCorner.xl,
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final a = _value(context, l.ipRiskLocation, country, emoji: true);
-              final b = _value(context, l.ipRiskCity, place);
-              if (constraints.maxWidth < 320 ||
-                  MediaQuery.textScalerOf(context).scale(16) > 22) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [a, const SizedBox(height: 18), b],
-                );
-              }
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(child: a),
-                  const SizedBox(width: 20),
-                  Expanded(child: b),
-                ],
-              );
-            },
-          ),
-          const SizedBox(height: 20),
-          _value(context, l.operatorOrAsn, owner),
-          const SizedBox(height: 20),
-          _value(
-            context,
-            l.ipRiskHostname,
-            hidden
-                ? risk.hostname.replaceAll(
-                    RegExp(RegExp.escape(risk.ip), caseSensitive: false),
-                    '*****',
-                  )
-                : risk.hostname,
-          ),
+          for (final (index, row) in rows.indexed) ...[
+            if (index > 0) const SizedBox(height: 20),
+            row,
+          ],
         ],
       ),
     );
   }
+}
+
+class _RiskRefreshIcon extends StatefulWidget {
+  const _RiskRefreshIcon({required this.loading});
+  final bool loading;
+
+  @override
+  State<_RiskRefreshIcon> createState() => _RiskRefreshIconState();
+}
+
+class _RiskRefreshIconState extends State<_RiskRefreshIcon>
+    with SingleTickerProviderStateMixin {
+  late final _turns = AnimationController(
+    vsync: this,
+    duration: const Duration(seconds: 1),
+  );
+
+  void _sync() {
+    if (widget.loading && !MediaQuery.disableAnimationsOf(context)) {
+      if (!_turns.isAnimating) {
+        _turns.repeat();
+      }
+    } else {
+      _turns.reset();
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _sync();
+  }
+
+  @override
+  void didUpdateWidget(covariant _RiskRefreshIcon oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _sync();
+  }
+
+  @override
+  void dispose() {
+    _turns.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => RotationTransition(
+    turns: _turns,
+    child: GlyphIcon(
+      AppGlyphs.refresh,
+      color: widget.loading ? context.colorScheme.onSurface : null,
+    ),
+  );
 }

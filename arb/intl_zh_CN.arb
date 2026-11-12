@@ -1178,5 +1178,6 @@
   "ipRiskLocation": "国家 / 地区",
   "ipRiskCity": "省份 / 城市",
   "operatorOrAsn": "归属 / ASN",
-  "ipRiskFailed": "无法获取 IP 信息，请重试。"
+  "ipRiskFailed": "无法获取 IP 信息，请重试。",
+  "isp": "运营商"
 }

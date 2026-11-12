@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
@@ -10,12 +11,14 @@ import 'package:fl_clash/features/ip_quality/risk_provider.dart';
 import 'package:fl_clash/features/ip_quality/risk_view.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/ui/ui.dart' as app_ui;
+import 'package:fl_clash/ui/icons/icons.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import '../helpers/test_app.dart';
+import '../helpers/glyph_finders.dart';
 
 const sampleRisk = IpRisk(
   ip: '158.247.202.50',
@@ -58,6 +61,34 @@ const sampleRisk = IpRisk(
 );
 
 void main() {
+  testWidgets('unknown hosting mark shows a question, distinct from no', (
+    tester,
+  ) async {
+    const risk = IpRisk(
+      ip: '1.2.3.4',
+      score: 20,
+      level: IpRiskLevel.low,
+      checks: [
+        IpRiskCheck(group: IpRiskGroup.datacenter, name: 'Datacenter'),
+        IpRiskCheck(
+          group: IpRiskGroup.datacenter,
+          name: 'Residential Proxy',
+          hit: true,
+        ),
+        IpRiskCheck(group: IpRiskGroup.proxy, name: 'Server', hit: false),
+      ],
+    );
+    await tester.pumpWidget(
+      const TestApp(
+        locale: Locale('en'),
+        child: RiskChecksCard(risk: risk),
+      ),
+    );
+    expect(find.byGlyph(AppGlyphs.helpCircle), findsOneWidget);
+    expect(find.text('—'), findsNothing);
+    expect(find.text('Datacenter'), findsOneWidget);
+    expect(find.text('Premium Residential IP'), findsNothing);
+  });
   setUpAll(() async {
     await (FontLoader(
       app_ui.FontFamily.twEmoji.value,
@@ -69,6 +100,128 @@ void main() {
       await loader.load();
     }
   });
+  testWidgets('native IP replaces hosting flags and omits missing fields', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(600, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    const home = IpRisk(
+      ip: '1.2.3.4',
+      score: 0,
+      level: IpRiskLevel.low,
+      isp: 'Example ISP',
+      checks: [
+        IpRiskCheck(group: IpRiskGroup.datacenter, name: 'Datacenter'),
+        IpRiskCheck(
+          group: IpRiskGroup.datacenter,
+          name: 'Residential Proxy',
+          hit: false,
+        ),
+        IpRiskCheck(group: IpRiskGroup.proxy, name: 'Server', hit: false),
+      ],
+    );
+    expect(home.isHomeBroadband, isTrue);
+    await tester.pumpWidget(
+      TestApp(
+        locale: const Locale('en'),
+        overrides: [ipRiskProvider(home.ip).overrideWith((_) async => home)],
+        child: const IpRiskSheet(ip: '1.2.3.4'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Premium Residential IP'), findsOneWidget);
+    expect(find.text('Datacenter'), findsNothing);
+    expect(find.text('Residential proxy'), findsNothing);
+    expect(find.text('Hostname'), findsNothing);
+    expect(find.text('Country / region'), findsNothing);
+    expect(find.text('Organization / ASN'), findsNothing);
+    expect(find.text('External blacklists'), findsNothing);
+    expect(find.text('Example ISP'), findsOneWidget);
+    expect(find.text('—'), findsNothing);
+    final note = riskNoteMessage(
+      tester.element(find.byType(IpRiskSheet)),
+      const IpRisk(
+        ip: '1.2.3.4',
+        score: 12,
+        level: IpRiskLevel.low,
+        note: IpRiskNote(
+          direct: false,
+          isp: 'Source Network',
+          amount: IpRiskAmount.medium,
+          share: IpRiskShare.some,
+          operatorName: 'Source Network',
+          operatorLevel: IpRiskLevel.low,
+          ownerName: 'Owner Network',
+          ownerLevel: IpRiskLevel.high,
+          connection: IpRiskConnection.vpn,
+          warning: IpRiskLevel.high,
+        ),
+      ),
+    ).toPlainText();
+    expect(note, contains('Source Network'));
+    expect(note, contains('Owner Network'));
+    expect(note, contains('12'));
+    expect(note, contains('Anonymizing VPN'));
+    expect(note, contains('fraudsters'));
+    expect(
+      tester.widget<Text>(find.text('Source Scamalytics')).textAlign,
+      TextAlign.start,
+    );
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  for (final fail in [false, true]) {
+    testWidgets('refresh rotates until source finishes (failure=$fail)', (
+      tester,
+    ) async {
+      final pending = Completer<IpRisk>();
+      var calls = 0;
+      await tester.pumpWidget(
+        TestApp(
+          locale: const Locale('en'),
+          overrides: [
+            ipRiskProvider(sampleRisk.ip).overrideWith((_) {
+              calls++;
+              return calls == 1 ? Future.value(sampleRisk) : pending.future;
+            }),
+          ],
+          child: const IpRiskSheet(ip: '158.247.202.50'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Check again'));
+      await tester.pump();
+      final finder = find.descendant(
+        of: find.byTooltip('Check again'),
+        matching: find.byType(RotationTransition),
+      );
+      final turns = tester.widget<RotationTransition>(finder).turns;
+      final initial = turns.value;
+      await tester.pump(const Duration(milliseconds: 250));
+      expect(turns.value, isNot(initial));
+      expect(calls, 2);
+      if (fail) {
+        pending.completeError(StateError('source unavailable'));
+      } else {
+        pending.complete(sampleRisk);
+      }
+      await tester.pumpAndSettle();
+      expect(turns.value, 0);
+      if (fail) {
+        expect(
+          find.text("Couldn't load IP information. Try again."),
+          findsOneWidget,
+        );
+        expect(find.byType(RiskScoreCard), findsNothing);
+      } else {
+        expect(find.byType(RiskScoreCard), findsOneWidget);
+      }
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+  }
   test('Scamalytics parser preserves score, supplied risk and flags', () {
     final result = parseScamalytics('1.2.3.4', '''Fraud Score: 28
       <div class="panel_title">Medium Risk</div><table>
@@ -173,6 +326,10 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('158.247.202.50'), findsNothing);
       expect(find.text('158.247.202.50.vultrusercontent.com'), findsNothing);
+      expect(
+        tester.widget<Text>(find.text('*****')).style!.fontFamily,
+        app_ui.FontFamily.mapleMono.value,
+      );
       await tester.pumpWidget(const SizedBox.shrink());
     });
   }

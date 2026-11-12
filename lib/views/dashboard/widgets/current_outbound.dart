@@ -652,7 +652,9 @@ class _Cells extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: _cellStyle(context).copyWith(
-              color: quality!.isDatacenter || quality!.isResidentialProxy
+              color: quality!.isHomeBroadband
+                  ? riskGradient.first
+                  : quality!.isDatacenter || quality!.isResidentialProxy
                   ? context.colorScheme.error
                   : null,
             ),

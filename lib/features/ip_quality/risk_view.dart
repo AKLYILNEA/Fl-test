@@ -15,12 +15,18 @@ Color riskScoreColor(int score) {
 }
 
 extension RiskView on IpRisk {
-  String? typeLabel(BuildContext context) => isDatacenter
+  String? typeLabel(BuildContext context) => isHomeBroadband
+      ? context.appLocalizations.ipRiskHomeBroadband
+      : isDatacenter
       ? context.appLocalizations.ipRiskDatacenter
       : isResidentialProxy
       ? context.appLocalizations.ipRiskResidentialProxy
       : null;
-  String levelLabel(BuildContext context) => switch (level) {
+  String levelLabel(BuildContext context) => level.label(context);
+}
+
+extension RiskLevelView on IpRiskLevel {
+  String label(BuildContext context) => switch (this) {
     IpRiskLevel.low => context.appLocalizations.ipRiskLow,
     IpRiskLevel.medium => context.appLocalizations.ipRiskMedium,
     IpRiskLevel.high => context.appLocalizations.ipRiskHigh,
@@ -65,7 +71,8 @@ class RiskScoreCard extends StatelessWidget {
                 child: IconButton(
                   tooltip: l.ipRiskNoteTitle,
                   onPressed: () => dialogs.showAlert(
-                    message: TextSpan(text: l.ipRiskNoteGeneric),
+                    title: l.ipRiskNoteTitle,
+                    message: riskNoteMessage(context, risk),
                   ),
                   icon: const GlyphIcon(AppGlyphs.info, size: 16),
                 ),
@@ -145,6 +152,96 @@ class RiskScoreCard extends StatelessWidget {
   }
 }
 
+InlineSpan riskNoteMessage(BuildContext context, IpRisk risk) {
+  final l = context.appLocalizations;
+  final note = risk.note;
+  final basis = switch (note?.direct) {
+    true => l.ipRiskNoteDirect(risk.displayScore),
+    false => l.ipRiskNoteIndirect(
+      risk.displayScore,
+      note!.isp.isNotEmpty ? note.isp : risk.isp,
+    ),
+    null => l.ipRiskNoteGeneric,
+  };
+  final spans = <InlineSpan>[TextSpan(text: basis)];
+  void row(String title, String value) {
+    spans.add(TextSpan(text: '\n\n$title: $value'));
+  }
+
+  void party(String title, String name, IpRiskLevel? level) {
+    spans.add(TextSpan(text: '\n\n$title: $name'));
+    if (level == null) return;
+    final label = level.label(context);
+    spans.add(
+      TextSpan(
+        text: ' · $label',
+        style: TextStyle(
+          color: riskScoreColor(switch (level) {
+            IpRiskLevel.low => 0,
+            IpRiskLevel.medium => 50,
+            IpRiskLevel.high || IpRiskLevel.veryHigh => 100,
+          }),
+        ),
+      ),
+    );
+  }
+
+  if (note?.amount case final amount?) {
+    row(
+      note?.direct == false ? l.ipRiskNoteAmountIsp : l.ipRiskNoteAmount,
+      switch (amount) {
+        IpRiskAmount.low => l.ipRiskAmountLow,
+        IpRiskAmount.medium => l.ipRiskAmountMedium,
+        IpRiskAmount.high => l.ipRiskAmountHigh,
+      },
+    );
+  }
+  if (note?.share case final share?) {
+    row(l.ipRiskNoteShare, switch (share) {
+      IpRiskShare.little => l.ipRiskShareLittle,
+      IpRiskShare.some => l.ipRiskShareSome,
+      IpRiskShare.almostAll => l.ipRiskShareAlmostAll,
+    });
+  }
+  if (note != null) {
+    if (note.operatorName.isNotEmpty) {
+      party(l.isp, note.operatorName, note.operatorLevel);
+    }
+    if (note.ownerName.isNotEmpty &&
+        (note.ownerName != note.operatorName ||
+            note.ownerLevel != note.operatorLevel)) {
+      party(l.ipRiskNoteOwner, note.ownerName, note.ownerLevel);
+    }
+    if (note.connection case final connection?) {
+      row(l.ipRiskNoteConnection, switch (connection) {
+        IpRiskConnection.server => l.ipRiskCommercialServer,
+        IpRiskConnection.vpn => l.ipRiskAnonymousVpn,
+        IpRiskConnection.publicProxy => l.ipRiskPublicProxy,
+        IpRiskConnection.tor => l.ipRiskTorExit,
+        IpRiskConnection.webProxy => l.ipRiskWebProxy,
+      });
+      if (connection != IpRiskConnection.server) {
+        spans.add(TextSpan(text: '\n${l.ipRiskNoteProxying}'));
+      }
+    }
+    final warning = switch (note.warning) {
+      IpRiskLevel.high => l.ipRiskNoteWarningHigh,
+      IpRiskLevel.veryHigh => l.ipRiskNoteWarningVeryHigh,
+      _ => null,
+    };
+    if (warning != null) {
+      spans.add(
+        TextSpan(
+          text: '\n\n$warning',
+          style: TextStyle(color: context.colorScheme.error),
+        ),
+      );
+    }
+  }
+  spans.add(TextSpan(text: '\n\n${l.ipRiskNoteFootnote}'));
+  return TextSpan(children: spans);
+}
+
 class _RiskScale extends CustomPainter {
   const _RiskScale(this.score, this.surface);
   final int score;
@@ -202,14 +299,17 @@ class RiskChecksCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = context.appLocalizations;
+    final groups = IpRiskGroup.values
+        .where((group) => risk.checks.any((c) => c.group == group))
+        .toList();
     return Card(
       radius: AppCorner.xl,
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          for (final group in IpRiskGroup.values) ...[
-            if (group != IpRiskGroup.datacenter) const SizedBox(height: 20),
+          for (final (index, group) in groups.indexed) ...[
+            if (index > 0) const SizedBox(height: 20),
             Text(
               switch (group) {
                 IpRiskGroup.datacenter => l.ipRiskHostingOrProxy,
@@ -225,8 +325,20 @@ class RiskChecksCard extends StatelessWidget {
               spacing: 8,
               runSpacing: 8,
               children: [
-                for (final check in risk.checks.where((c) => c.group == group))
-                  _RiskFlag(check: check),
+                if (risk.isHomeBroadband && group == IpRiskGroup.datacenter)
+                  const _RiskFlag(
+                    check: IpRiskCheck(
+                      group: IpRiskGroup.datacenter,
+                      name: 'Home Broadband',
+                      hit: false,
+                    ),
+                    home: true,
+                  )
+                else
+                  for (final check in risk.checks.where(
+                    (c) => c.group == group,
+                  ))
+                    _RiskFlag(check: check),
               ],
             ),
           ],
@@ -237,19 +349,22 @@ class RiskChecksCard extends StatelessWidget {
 }
 
 class _RiskFlag extends StatelessWidget {
-  const _RiskFlag({required this.check});
+  const _RiskFlag({required this.check, this.home = false});
   final IpRiskCheck check;
+  final bool home;
 
   @override
   Widget build(BuildContext context) {
     final hit = check.hit == true;
-    final color = hit
+    final color = home
+        ? riskGradient.first
+        : hit
         ? context.colorScheme.error
         : context.colorScheme.onSurfaceVariant;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: ShapeDecoration(
-        color: hit
+        color: hit || home
             ? color.withValues(alpha: .1)
             : context.colorScheme.onSurface.withValues(alpha: .045),
         shape: AppShape.sm,
@@ -257,13 +372,12 @@ class _RiskFlag extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (hit)
+          if (home)
+            GlyphIcon(AppGlyphs.checkCircle, size: 14, color: color)
+          else if (hit)
             GlyphIcon(AppGlyphs.error, size: 14, color: color)
           else if (check.hit == null)
-            Text(
-              '—',
-              style: AppTextStyle.caption1.of(context).copyWith(color: color),
-            )
+            GlyphIcon(AppGlyphs.helpCircle, size: 14, color: color)
           else
             DecoratedBox(
               decoration: ShapeDecoration(
@@ -276,9 +390,11 @@ class _RiskFlag extends StatelessWidget {
           const SizedBox(width: 6),
           Flexible(
             child: Text(
-              riskCheckLabel(context, check.name),
+              home
+                  ? context.appLocalizations.ipRiskHomeBroadband
+                  : riskCheckLabel(context, check.name),
               style: AppTextStyle.footnote
-                  .of(context, emphasized: hit)
+                  .of(context, emphasized: hit || home)
                   .copyWith(color: color),
             ),
           ),
