@@ -390,6 +390,7 @@ void main() {
       final checkTopLeft = tester.getTopLeft(find.text('机房或代理'));
       final cardTopLeft = tester.getTopLeft(find.byType(RiskChecksCard));
       expect(checkTopLeft.dx, cardTopLeft.dx + 20);
+      expect(checkTopLeft.dy, cardTopLeft.dy + 20);
       expect(tester.takeException(), isNull);
       if (width == 430) {
         await tester.runAsync(() async {
