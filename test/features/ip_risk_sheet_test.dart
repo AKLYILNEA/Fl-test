@@ -380,11 +380,13 @@ void main() {
       expect(find.text('数据中心'), findsOneWidget);
       expect(tester.widget<Text>(find.text('服务器')).style!.color, isNotNull);
       expect(find.byType(RiskScoreCard), findsOneWidget);
-      final checksCard = tester.widget<app_ui.Card>(find.byType(RiskChecksCard));
-      expect(
-        (checksCard.child as Column).crossAxisAlignment,
-        CrossAxisAlignment.stretch,
+      final col = tester.widget<Column>(
+        find.descendant(
+          of: find.byType(RiskChecksCard),
+          matching: find.byType(Column),
+        ).first,
       );
+      expect(col.crossAxisAlignment, CrossAxisAlignment.stretch);
       final checkTopLeft = tester.getTopLeft(find.text('机房或代理'));
       final cardTopLeft = tester.getTopLeft(find.byType(RiskChecksCard));
       expect(checkTopLeft.dx, cardTopLeft.dx + 20);
