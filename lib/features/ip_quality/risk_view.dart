@@ -301,7 +301,7 @@ class RiskChecksCard extends StatelessWidget {
       radius: AppCorner.xl,
       padding: const EdgeInsets.all(20),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           for (final (index, group) in groups.indexed) ...[
             if (index > 0) const SizedBox(height: 20),
