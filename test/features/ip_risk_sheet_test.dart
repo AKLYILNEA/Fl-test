@@ -166,14 +166,21 @@ void main() {
     expect(note, contains('Anonymizing VPN'));
     expect(note, contains('fraudsters'));
     expect(
-      tester.widget<Text>(find.text('Source Scamalytics')).textAlign,
-      TextAlign.start,
+      find.ancestor(
+        of: find.text('Source Scamalytics'),
+        matching: find.byType(app_ui.ListFooter),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      tester.getTopLeft(find.text('Source Scamalytics')).dx,
+      greaterThan(tester.getTopLeft(find.byType(RiskScoreCard)).dx),
     );
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
   for (final fail in [false, true]) {
-    testWidgets('refresh rotates until source finishes (failure=$fail)', (
+    testWidgets('grouped refresh disables without rotation (failure=$fail)', (
       tester,
     ) async {
       final pending = Completer<IpRisk>();
@@ -191,16 +198,36 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+      final refreshButton = find.byWidgetPredicate(
+        (widget) =>
+            widget is app_ui.AppBarActionButton &&
+            widget.data.tooltip == 'Check again',
+      );
+      final refreshGroup = find.ancestor(
+        of: find.byTooltip('Check again'),
+        matching: find.byType(app_ui.TonalButtonGroup),
+      );
+      final hideGroup = find.ancestor(
+        of: find.byTooltip('Hide IP'),
+        matching: find.byType(app_ui.TonalButtonGroup),
+      );
+      expect(refreshGroup, findsOneWidget);
+      expect(tester.element(refreshGroup), same(tester.element(hideGroup)));
       await tester.tap(find.byTooltip('Check again'));
       await tester.pump();
-      final finder = find.descendant(
-        of: find.byTooltip('Check again'),
-        matching: find.byType(RotationTransition),
+      expect(
+        tester.widget<app_ui.AppBarActionButton>(refreshButton).data.onPressed,
+        isNull,
       );
-      final turns = tester.widget<RotationTransition>(finder).turns;
-      final initial = turns.value;
+      expect(
+        find.descendant(
+          of: find.byTooltip('Check again'),
+          matching: find.byType(RotationTransition),
+        ),
+        findsNothing,
+      );
+      await tester.tap(find.byTooltip('Check again'));
       await tester.pump(const Duration(milliseconds: 250));
-      expect(turns.value, isNot(initial));
       expect(calls, 2);
       if (fail) {
         pending.completeError(StateError('source unavailable'));
@@ -208,7 +235,10 @@ void main() {
         pending.complete(sampleRisk);
       }
       await tester.pumpAndSettle();
-      expect(turns.value, 0);
+      expect(
+        tester.widget<app_ui.AppBarActionButton>(refreshButton).data.onPressed,
+        isNotNull,
+      );
       if (fail) {
         expect(
           find.text("Couldn't load IP information. Try again."),

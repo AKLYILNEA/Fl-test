@@ -50,17 +50,12 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
               .read(appSettingProvider.notifier)
               .update((s) => s.copyWith(hideIp: !hidden)),
         ),
-      ],
-      actions: [
-        AppBarActionButton(
-          data: IconButtonData(
-            glyph: AppGlyphs.refresh,
-            tooltip: l.ipQualityRetry,
-            onPressed: state.isLoading
-                ? null
-                : () => ref.invalidate(ipRiskProvider(_ip)),
-          ),
-          icon: _RiskRefreshIcon(loading: state.isLoading),
+        IconButtonData(
+          glyph: AppGlyphs.refresh,
+          tooltip: l.ipQualityRetry,
+          onPressed: state.isLoading
+              ? null
+              : () => ref.invalidate(ipRiskProvider(_ip)),
         ),
       ],
       body: Builder(
@@ -120,14 +115,7 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
                 const SizedBox(height: 12),
               ],
               _LocationCard(risk: risk, hidden: hidden),
-              const SizedBox(height: 16),
-              Text(
-                '${l.ipRiskSource} Scamalytics',
-                textAlign: TextAlign.start,
-                style: AppTextStyle.footnote
-                    .of(context)
-                    .copyWith(color: context.colorScheme.onSurfaceVariant),
-              ),
+              ListFooter(text: '${l.ipRiskSource} Scamalytics'),
             ] else if (state.isLoading)
               const Padding(
                 padding: EdgeInsets.all(48),
@@ -253,57 +241,4 @@ class _LocationCard extends StatelessWidget {
       ),
     );
   }
-}
-
-class _RiskRefreshIcon extends StatefulWidget {
-  const _RiskRefreshIcon({required this.loading});
-  final bool loading;
-
-  @override
-  State<_RiskRefreshIcon> createState() => _RiskRefreshIconState();
-}
-
-class _RiskRefreshIconState extends State<_RiskRefreshIcon>
-    with SingleTickerProviderStateMixin {
-  late final _turns = AnimationController(
-    vsync: this,
-    duration: const Duration(seconds: 1),
-  );
-
-  void _sync() {
-    if (widget.loading && !MediaQuery.disableAnimationsOf(context)) {
-      if (!_turns.isAnimating) {
-        _turns.repeat();
-      }
-    } else {
-      _turns.reset();
-    }
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _sync();
-  }
-
-  @override
-  void didUpdateWidget(covariant _RiskRefreshIcon oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    _sync();
-  }
-
-  @override
-  void dispose() {
-    _turns.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => RotationTransition(
-    turns: _turns,
-    child: GlyphIcon(
-      AppGlyphs.refresh,
-      color: widget.loading ? context.colorScheme.onSurface : null,
-    ),
-  );
 }
