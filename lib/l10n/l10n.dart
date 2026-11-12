@@ -7678,7 +7678,8 @@ class AppLocalizations {
   String customImportDroppedSubRules(num count, Object label) {
     return Intl.plural(
       count,
-      one: '1 SUB-RULE rule was dropped, since custom profiles do not support sub-rules',
+      one:
+          '1 SUB-RULE rule was dropped, since custom profiles do not support sub-rules',
       other:
           '$label SUB-RULE rules were dropped, since custom profiles do not support sub-rules',
       name: 'customImportDroppedSubRules',
@@ -9537,10 +9538,10 @@ class AppLocalizations {
     );
   }
 
-  /// `Clear all cached remote icons and icon-set images, update remote icon sets and fetch fresh icons? Built-in icons and locally imported source files will be kept.`
+  /// `Clear all cached remote icons and icon-set images, update remote icon sets and fetch fresh icons.`
   String get refreshGroupIconsTip {
     return Intl.message(
-      'Clear all cached remote icons and icon-set images, update remote icon sets and fetch fresh icons? Built-in icons and locally imported source files will be kept.',
+      'Clear all cached remote icons and icon-set images, update remote icon sets and fetch fresh icons.',
       name: 'refreshGroupIconsTip',
       desc: '',
       args: [],
@@ -9552,6 +9553,426 @@ class AppLocalizations {
     return Intl.message(
       'Group icons refreshed',
       name: 'groupIconsRefreshed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `IP Risk Alert`
+  String get ipRiskAlert {
+    return Intl.message(
+      'IP Risk Alert',
+      name: 'ipRiskAlert',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Check IP purity`
+  String get ipRiskCheck {
+    return Intl.message(
+      'Check IP purity',
+      name: 'ipRiskCheck',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Fraud score`
+  String get ipRiskScore {
+    return Intl.message('Fraud score', name: 'ipRiskScore', desc: '', args: []);
+  }
+
+  /// `Low risk`
+  String get ipRiskLow {
+    return Intl.message('Low risk', name: 'ipRiskLow', desc: '', args: []);
+  }
+
+  /// `Medium risk`
+  String get ipRiskMedium {
+    return Intl.message(
+      'Medium risk',
+      name: 'ipRiskMedium',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `High risk`
+  String get ipRiskHigh {
+    return Intl.message('High risk', name: 'ipRiskHigh', desc: '', args: []);
+  }
+
+  /// `Very high risk`
+  String get ipRiskVeryHigh {
+    return Intl.message(
+      'Very high risk',
+      name: 'ipRiskVeryHigh',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Hosting or proxy`
+  String get ipRiskHostingOrProxy {
+    return Intl.message(
+      'Hosting or proxy',
+      name: 'ipRiskHostingOrProxy',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Datacenter`
+  String get ipRiskDatacenter {
+    return Intl.message(
+      'Datacenter',
+      name: 'ipRiskDatacenter',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Residential proxy`
+  String get ipRiskResidentialProxy {
+    return Intl.message(
+      'Residential proxy',
+      name: 'ipRiskResidentialProxy',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Blacklist flags`
+  String get ipRiskBlacklist {
+    return Intl.message(
+      'Blacklist flags',
+      name: 'ipRiskBlacklist',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Proxy type`
+  String get ipRiskProxyType {
+    return Intl.message(
+      'Proxy type',
+      name: 'ipRiskProxyType',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Anonymizing VPN`
+  String get ipRiskAnonymousVpn {
+    return Intl.message(
+      'Anonymizing VPN',
+      name: 'ipRiskAnonymousVpn',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Tor exit node`
+  String get ipRiskTorExit {
+    return Intl.message(
+      'Tor exit node',
+      name: 'ipRiskTorExit',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Server`
+  String get ipRiskServer {
+    return Intl.message('Server', name: 'ipRiskServer', desc: '', args: []);
+  }
+
+  /// `Public proxy`
+  String get ipRiskPublicProxy {
+    return Intl.message(
+      'Public proxy',
+      name: 'ipRiskPublicProxy',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Web proxy`
+  String get ipRiskWebProxy {
+    return Intl.message(
+      'Web proxy',
+      name: 'ipRiskWebProxy',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Search engine robot`
+  String get ipRiskSearchRobot {
+    return Intl.message(
+      'Search engine robot',
+      name: 'ipRiskSearchRobot',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Hostname`
+  String get ipRiskHostname {
+    return Intl.message('Hostname', name: 'ipRiskHostname', desc: '', args: []);
+  }
+
+  /// `Enter an IP to check`
+  String get ipRiskHint {
+    return Intl.message(
+      'Enter an IP to check',
+      name: 'ipRiskHint',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enter a valid public IP`
+  String get ipRiskInvalid {
+    return Intl.message(
+      'Enter a valid public IP',
+      name: 'ipRiskInvalid',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Source`
+  String get ipRiskSource {
+    return Intl.message('Source', name: 'ipRiskSource', desc: '', args: []);
+  }
+
+  /// `Premium Residential IP`
+  String get ipRiskHomeBroadband {
+    return Intl.message(
+      'Premium Residential IP',
+      name: 'ipRiskHomeBroadband',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `About the fraud score`
+  String get ipRiskNoteTitle {
+    return Intl.message(
+      'About the fraud score',
+      name: 'ipRiskNoteTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Scamalytics can see web traffic from this IP directly. The score of {score} reflects the share of that traffic suspected to be fraudulent.`
+  String ipRiskNoteDirect(Object score) {
+    return Intl.message(
+      'Scamalytics can see web traffic from this IP directly. The score of $score reflects the share of that traffic suspected to be fraudulent.',
+      name: 'ipRiskNoteDirect',
+      desc: '',
+      args: [score],
+    );
+  }
+
+  /// `Scamalytics can't see web traffic from this IP directly. The score of {score} is estimated from the overall risk of IPs operated by {isp}.`
+  String ipRiskNoteIndirect(Object score, Object isp) {
+    return Intl.message(
+      'Scamalytics can\'t see web traffic from this IP directly. The score of $score is estimated from the overall risk of IPs operated by $isp.',
+      name: 'ipRiskNoteIndirect',
+      desc: '',
+      args: [score, isp],
+    );
+  }
+
+  /// `The fraud score (0–100) reflects the share of web traffic from this IP that Scamalytics suspects to be fraudulent.`
+  String get ipRiskNoteGeneric {
+    return Intl.message(
+      'The fraud score (0–100) reflects the share of web traffic from this IP that Scamalytics suspects to be fraudulent.',
+      name: 'ipRiskNoteGeneric',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Observed traffic`
+  String get ipRiskNoteAmount {
+    return Intl.message(
+      'Observed traffic',
+      name: 'ipRiskNoteAmount',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Operator traffic`
+  String get ipRiskNoteAmountIsp {
+    return Intl.message(
+      'Operator traffic',
+      name: 'ipRiskNoteAmountIsp',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Suspected fraud`
+  String get ipRiskNoteShare {
+    return Intl.message(
+      'Suspected fraud',
+      name: 'ipRiskNoteShare',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Low`
+  String get ipRiskAmountLow {
+    return Intl.message('Low', name: 'ipRiskAmountLow', desc: '', args: []);
+  }
+
+  /// `Medium`
+  String get ipRiskAmountMedium {
+    return Intl.message(
+      'Medium',
+      name: 'ipRiskAmountMedium',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `High`
+  String get ipRiskAmountHigh {
+    return Intl.message('High', name: 'ipRiskAmountHigh', desc: '', args: []);
+  }
+
+  /// `Very little`
+  String get ipRiskShareLittle {
+    return Intl.message(
+      'Very little',
+      name: 'ipRiskShareLittle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Some`
+  String get ipRiskShareSome {
+    return Intl.message('Some', name: 'ipRiskShareSome', desc: '', args: []);
+  }
+
+  /// `Almost all`
+  String get ipRiskShareAlmostAll {
+    return Intl.message(
+      'Almost all',
+      name: 'ipRiskShareAlmostAll',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Owner`
+  String get ipRiskNoteOwner {
+    return Intl.message('Owner', name: 'ipRiskNoteOwner', desc: '', args: []);
+  }
+
+  /// `Connection`
+  String get ipRiskNoteConnection {
+    return Intl.message(
+      'Connection',
+      name: 'ipRiskNoteConnection',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Commercial server`
+  String get ipRiskCommercialServer {
+    return Intl.message(
+      'Commercial server',
+      name: 'ipRiskCommercialServer',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `May be relaying traffic from elsewhere; the actual user could be anywhere`
+  String get ipRiskNoteProxying {
+    return Intl.message(
+      'May be relaying traffic from elsewhere; the actual user could be anywhere',
+      name: 'ipRiskNoteProxying',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Web traffic from this IP is likely to come from fraudsters.`
+  String get ipRiskNoteWarningHigh {
+    return Intl.message(
+      'Web traffic from this IP is likely to come from fraudsters.',
+      name: 'ipRiskNoteWarningHigh',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Web traffic from this IP is very likely to come from fraudsters.`
+  String get ipRiskNoteWarningVeryHigh {
+    return Intl.message(
+      'Web traffic from this IP is very likely to come from fraudsters.',
+      name: 'ipRiskNoteWarningVeryHigh',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `This assessment covers web traffic only; other traffic may carry a different risk.`
+  String get ipRiskNoteFootnote {
+    return Intl.message(
+      'This assessment covers web traffic only; other traffic may carry a different risk.',
+      name: 'ipRiskNoteFootnote',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Country / region`
+  String get ipRiskLocation {
+    return Intl.message(
+      'Country / region',
+      name: 'ipRiskLocation',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Region / city`
+  String get ipRiskCity {
+    return Intl.message(
+      'Region / city',
+      name: 'ipRiskCity',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Organization / ASN`
+  String get operatorOrAsn {
+    return Intl.message(
+      'Organization / ASN',
+      name: 'operatorOrAsn',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Couldn't load IP information. Try again.`
+  String get ipRiskFailed {
+    return Intl.message(
+      'Couldn\'t load IP information. Try again.',
+      name: 'ipRiskFailed',
       desc: '',
       args: [],
     );
