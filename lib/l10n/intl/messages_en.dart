@@ -1731,7 +1731,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Refresh group icons",
     ),
     "refreshGroupIconsTip": MessageLookupByLibrary.simpleMessage(
-      "Clear all cached remote icons and icon-set images, update remote icon sets and fetch fresh icons? Built-in icons and locally imported source files will be kept.",
+      "Clear all cached remote icons and icon-set images, update remote icon sets and fetch fresh icons.",
     ),
     "regenerateCertificate": MessageLookupByLibrary.simpleMessage(
       "Regenerate certificate",
