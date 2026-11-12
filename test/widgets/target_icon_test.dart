@@ -42,7 +42,11 @@ void main() {
     when(() => manager.config).thenReturn(config);
     when(() => repo.open()).thenAnswer((_) async => true);
     when(() => repo.getAllObjects()).thenAnswer((_) async => [
-      CacheObject('https://example.com/previous-session.svg'),
+      CacheObject(
+        'https://example.com/previous-session.svg',
+        relativePath: 'previous-session.svg',
+        validTill: DateTime.now().add(const Duration(days: 1)),
+      ),
     ]);
     when(manager.emptyCache).thenAnswer((_) async {
       events.add('clear');

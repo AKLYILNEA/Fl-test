@@ -1,10 +1,10 @@
 name: build
 
-# One tag produces one release: only tagged pushes build here, so there is no
-# separate branch build to duplicate. Start the workflow by hand to get
-# artifacts without publishing a release.
+# Test branch pushes produce artifacts; only tagged builds publish a release.
 on:
   push:
+    branches:
+      - dev
     tags:
       - 'v*'
   workflow_dispatch:
