@@ -61,6 +61,52 @@ const sampleRisk = IpRisk(
 );
 
 void main() {
+  testWidgets('only the small edit button opens and updates the IP', (
+    tester,
+  ) async {
+    final queried = <String>[];
+    await tester.pumpWidget(
+      TestApp(
+        locale: const Locale('en'),
+        overrides: [
+          ipRiskProvider.overrideWith((_, ip) async {
+            queried.add(ip);
+            return IpRisk(ip: ip, score: 0, level: IpRiskLevel.low);
+          }),
+        ],
+        child: const IpRiskSheet(ip: '158.247.202.50'),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('158.247.202.50'));
+    await tester.pumpAndSettle();
+    expect(find.byType(app_ui.InputDialog), findsNothing);
+    final edit = find.byTooltip('Edit');
+    expect(
+      find.ancestor(of: edit, matching: find.byType(app_ui.MinIconButtonTheme)),
+      findsOneWidget,
+    );
+    await tester.tap(edit);
+    await tester.pumpAndSettle();
+    expect(find.byType(app_ui.InputDialog), findsOneWidget);
+    final submit = tester
+        .element(find.byType(app_ui.InputDialog))
+        .appLocalizations
+        .submit;
+    await tester.enterText(find.byType(EditableText), '192.168.1.1');
+    await tester.tap(find.text(submit));
+    await tester.pumpAndSettle();
+    expect(find.byType(app_ui.InputDialog), findsOneWidget);
+    expect(queried, ['158.247.202.50']);
+    await tester.enterText(find.byType(EditableText), '8.8.8.8');
+    await tester.tap(find.text(submit));
+    await tester.pumpAndSettle();
+    expect(find.byType(app_ui.InputDialog), findsNothing);
+    expect(find.text('8.8.8.8'), findsOneWidget);
+    expect(queried, ['158.247.202.50', '8.8.8.8']);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
   testWidgets('unknown hosting mark shows a question, distinct from no', (
     tester,
   ) async {

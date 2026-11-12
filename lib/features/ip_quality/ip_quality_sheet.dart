@@ -34,6 +34,23 @@ class IpRiskSheet extends ConsumerStatefulWidget {
 class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
   late String _ip = widget.ip;
 
+  Future<void> _editIp() async {
+    final l = context.appLocalizations;
+    final value = await showFloatingDialog<String>(
+      context: context,
+      child: InputDialog(
+        title: l.ipRiskHint,
+        value: ref.read(appSettingProvider).hideIp ? '' : _ip,
+        validator: (v) => publicIpOf(v ?? '') == null ? l.ipRiskInvalid : null,
+      ),
+    );
+    if (!mounted || value == null) return;
+    final ip = publicIpOf(value);
+    if (ip != null && ip != _ip) {
+      setState(() => _ip = ip);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = context.appLocalizations;
@@ -69,7 +86,7 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
           children: [
             Card(
               radius: AppCorner.xl,
-              child: ListItem.input(
+              child: ListItem(
                 leading: const GlyphIcon(AppGlyphs.proxies),
                 title: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -94,16 +111,13 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
                     ),
                   ],
                 ),
-                dialogTitle: l.ipRiskHint,
-                value: hidden ? '*****' : _ip,
-                validator: (v) =>
-                    publicIpOf(v ?? '') == null ? l.ipRiskInvalid : null,
-                onChanged: (v) {
-                  if (v != null && publicIpOf(v) != null) {
-                    setState(() => _ip = publicIpOf(v)!);
-                  }
-                },
-                trailing: const GlyphIcon(AppGlyphs.edit, size: 16),
+                trailing: MinIconButtonTheme(
+                  child: IconButton(
+                    tooltip: l.edit,
+                    onPressed: _editIp,
+                    icon: const GlyphIcon(AppGlyphs.edit, size: 16),
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 12),
