@@ -103,6 +103,28 @@ class Request {
     }
   }
 
+  Future<Uint8List?> getSiteIconBytes(
+    String url, {
+    CancelToken? cancelToken,
+    Duration timeout = const Duration(seconds: 6),
+  }) async {
+    try {
+      final response = await _clashDio.get<Uint8List>(
+        url,
+        options: Options(
+          responseType: ResponseType.bytes,
+          sendTimeout: timeout,
+          receiveTimeout: timeout,
+          validateStatus: (status) => status == 200,
+        ),
+        cancelToken: cancelToken,
+      );
+      return response.data;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<Response<String>> getTextResponseForUrl(
     String url, {
     bool fresh = false,

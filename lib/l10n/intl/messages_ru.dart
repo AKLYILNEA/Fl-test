@@ -292,6 +292,12 @@ class MessageLookup extends MessageLookupByLibrary {
   static String m107(count) =>
       "${Intl.plural(count, one: '${count} г. назад', few: '${count} г. назад', many: '${count} л. назад', other: '${count} г. назад')}";
 
+  static String m108(count) => "${count} раз";
+
+  static String m109(count) => "${count} дн.";
+
+  static String m110(date) => "С ${date}";
+
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
     "about": MessageLookupByLibrary.simpleMessage("О программе"),
@@ -2503,6 +2509,52 @@ class MessageLookup extends MessageLookupByLibrary {
     "traffic": MessageLookupByLibrary.simpleMessage("Трафик"),
     "trafficPeak": m101,
     "trafficTotal": m102,
+    "trafficStats": MessageLookupByLibrary.simpleMessage("Статистика трафика"),
+    "trafficStatsClearTip": MessageLookupByLibrary.simpleMessage(
+      "Очистить все сохранённые данные статистики трафика?",
+    ),
+    "trafficStatsDay": MessageLookupByLibrary.simpleMessage("День"),
+    "trafficStatsDays": m109,
+    "trafficStatsDesc": MessageLookupByLibrary.simpleMessage(
+      "Подробная разбивка трафика по дням, неделям и месяцам",
+    ),
+    "trafficStatsDetail": MessageLookupByLibrary.simpleMessage("Подробный учёт"),
+    "trafficStatsDetailDesc": MessageLookupByLibrary.simpleMessage(
+      "Записывать детализацию по доменам, процессам, узлам, профилям и правилам",
+    ),
+    "trafficStatsDetailOffTip": MessageLookupByLibrary.simpleMessage(
+      "Подробный учёт выключен. Записывается только общий трафик и динамика.",
+    ),
+    "trafficStatsDisabled": MessageLookupByLibrary.simpleMessage(
+      "Статистика трафика отключена",
+    ),
+    "trafficStatsDisabledDesc": MessageLookupByLibrary.simpleMessage(
+      "Включите сбор статистики для локального учёта трафика по доменам, процессам, узлам и правилам.",
+    ),
+    "trafficStatsEnable": MessageLookupByLibrary.simpleMessage(
+      "Включить статистику трафика",
+    ),
+    "trafficStatsEnableAction": MessageLookupByLibrary.simpleMessage("Включить"),
+    "trafficStatsHitCount": m108,
+    "trafficStatsMonth": MessageLookupByLibrary.simpleMessage("Месяц"),
+    "trafficStatsNode": MessageLookupByLibrary.simpleMessage("Узел"),
+    "trafficStatsOverview": MessageLookupByLibrary.simpleMessage("Обзор"),
+    "trafficStatsRanking": MessageLookupByLibrary.simpleMessage("Рейтинг трафика"),
+    "trafficStatsRetention": MessageLookupByLibrary.simpleMessage("Срок хранения"),
+    "trafficStatsRuleHits": MessageLookupByLibrary.simpleMessage(
+      "Срабатывания правил",
+    ),
+    "trafficStatsSettings": MessageLookupByLibrary.simpleMessage(
+      "Настройки статистики",
+    ),
+    "trafficStatsSince": m110,
+    "trafficStatsSiteIcon": MessageLookupByLibrary.simpleMessage("Иконки сайтов"),
+    "trafficStatsSiteIconDesc": MessageLookupByLibrary.simpleMessage(
+      "Загружать и кэшировать иконки доменов локально",
+    ),
+    "trafficStatsTotal": MessageLookupByLibrary.simpleMessage("Всего трафика"),
+    "trafficStatsTrend": MessageLookupByLibrary.simpleMessage("Динамика трафика"),
+    "trafficStatsWeek": MessageLookupByLibrary.simpleMessage("Неделя"),
     "trafficUsage": MessageLookupByLibrary.simpleMessage("Статистика трафика"),
     "transport": MessageLookupByLibrary.simpleMessage("Транспорт"),
     "transportHeaders": m103,

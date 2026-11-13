@@ -266,6 +266,12 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m107(count) => "${Intl.plural(count, other: '${count}년 전')}";
 
+  static String m108(count) => "${count}회";
+
+  static String m109(count) => "${count}일";
+
+  static String m110(date) => "${date}부터";
+
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
     "about": MessageLookupByLibrary.simpleMessage("정보"),
@@ -2009,6 +2015,44 @@ class MessageLookup extends MessageLookupByLibrary {
     "traffic": MessageLookupByLibrary.simpleMessage("트래픽"),
     "trafficPeak": m101,
     "trafficTotal": m102,
+    "trafficStats": MessageLookupByLibrary.simpleMessage("트래픽 통계"),
+    "trafficStatsClearTip": MessageLookupByLibrary.simpleMessage(
+      "저장된 모든 트래픽 통계 데이터를 지우시겠습니까?",
+    ),
+    "trafficStatsDay": MessageLookupByLibrary.simpleMessage("일"),
+    "trafficStatsDays": m109,
+    "trafficStatsDesc": MessageLookupByLibrary.simpleMessage(
+      "일, 주, 월별 트래픽 세부 내역을 확인합니다",
+    ),
+    "trafficStatsDetail": MessageLookupByLibrary.simpleMessage("세부 통계"),
+    "trafficStatsDetailDesc": MessageLookupByLibrary.simpleMessage(
+      "도메인, 프로세스, 노드, 프로필, 규칙별 트래픽 기록",
+    ),
+    "trafficStatsDetailOffTip": MessageLookupByLibrary.simpleMessage(
+      "세부 통계가 꺼져 있어 총량과 시간별 추이만 기록됩니다.",
+    ),
+    "trafficStatsDisabled": MessageLookupByLibrary.simpleMessage("트래픽 통계 꺼짐"),
+    "trafficStatsDisabledDesc": MessageLookupByLibrary.simpleMessage(
+      "켜면 도메인, 프로세스, 노드, 규칙별 일일 사용량을 로컬에 기록합니다.",
+    ),
+    "trafficStatsEnable": MessageLookupByLibrary.simpleMessage("트래픽 통계 사용"),
+    "trafficStatsEnableAction": MessageLookupByLibrary.simpleMessage("켜기"),
+    "trafficStatsHitCount": m108,
+    "trafficStatsMonth": MessageLookupByLibrary.simpleMessage("월"),
+    "trafficStatsNode": MessageLookupByLibrary.simpleMessage("노드"),
+    "trafficStatsOverview": MessageLookupByLibrary.simpleMessage("요약"),
+    "trafficStatsRanking": MessageLookupByLibrary.simpleMessage("트래픽 순위"),
+    "trafficStatsRetention": MessageLookupByLibrary.simpleMessage("데이터 보관 기간"),
+    "trafficStatsRuleHits": MessageLookupByLibrary.simpleMessage("규칙 일치"),
+    "trafficStatsSettings": MessageLookupByLibrary.simpleMessage("통계 설정"),
+    "trafficStatsSince": m110,
+    "trafficStatsSiteIcon": MessageLookupByLibrary.simpleMessage("사이트 아이콘"),
+    "trafficStatsSiteIconDesc": MessageLookupByLibrary.simpleMessage(
+      "도메인 순위용 파비콘을 로컬에 캐시합니다",
+    ),
+    "trafficStatsTotal": MessageLookupByLibrary.simpleMessage("총 트래픽"),
+    "trafficStatsTrend": MessageLookupByLibrary.simpleMessage("트래픽 추이"),
+    "trafficStatsWeek": MessageLookupByLibrary.simpleMessage("주"),
     "trafficUsage": MessageLookupByLibrary.simpleMessage("트래픽 사용량"),
     "transport": MessageLookupByLibrary.simpleMessage("전송"),
     "transportHeaders": m103,

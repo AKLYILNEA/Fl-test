@@ -262,6 +262,12 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m107(count) => "${count} 年前";
 
+  static String m108(count) => "${count} 回";
+
+  static String m109(count) => "${count} 日";
+
+  static String m110(date) => "${date} 以降の統計";
+
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
     "about": MessageLookupByLibrary.simpleMessage("アプリについて"),
@@ -2039,6 +2045,44 @@ class MessageLookup extends MessageLookupByLibrary {
     "traffic": MessageLookupByLibrary.simpleMessage("通信量"),
     "trafficPeak": m101,
     "trafficTotal": m102,
+    "trafficStats": MessageLookupByLibrary.simpleMessage("トラフィック統計"),
+    "trafficStatsClearTip": MessageLookupByLibrary.simpleMessage(
+      "保存されているトラフィック統計データをすべて消去しますか？",
+    ),
+    "trafficStatsDay": MessageLookupByLibrary.simpleMessage("日"),
+    "trafficStatsDays": m109,
+    "trafficStatsDesc": MessageLookupByLibrary.simpleMessage(
+      "日・週・月ごとのトラフィック内訳を確認します",
+    ),
+    "trafficStatsDetail": MessageLookupByLibrary.simpleMessage("詳細統計"),
+    "trafficStatsDetailDesc": MessageLookupByLibrary.simpleMessage(
+      "ドメイン・プロセス・ノード・プロファイル・ルールの内訳を記録",
+    ),
+    "trafficStatsDetailOffTip": MessageLookupByLibrary.simpleMessage(
+      "詳細統計がオフのため、合計と時間帯別の推移のみ記録されます。",
+    ),
+    "trafficStatsDisabled": MessageLookupByLibrary.simpleMessage("トラフィック統計が無効です"),
+    "trafficStatsDisabledDesc": MessageLookupByLibrary.simpleMessage(
+      "有効にすると、ドメイン・プロセス・ノード・ルール別の通信量をローカルに記録します。",
+    ),
+    "trafficStatsEnable": MessageLookupByLibrary.simpleMessage("トラフィック統計を有効にする"),
+    "trafficStatsEnableAction": MessageLookupByLibrary.simpleMessage("有効化"),
+    "trafficStatsHitCount": m108,
+    "trafficStatsMonth": MessageLookupByLibrary.simpleMessage("月"),
+    "trafficStatsNode": MessageLookupByLibrary.simpleMessage("ノード"),
+    "trafficStatsOverview": MessageLookupByLibrary.simpleMessage("概要"),
+    "trafficStatsRanking": MessageLookupByLibrary.simpleMessage("トラフィックランキング"),
+    "trafficStatsRetention": MessageLookupByLibrary.simpleMessage("データ保持期間"),
+    "trafficStatsRuleHits": MessageLookupByLibrary.simpleMessage("ルール一致"),
+    "trafficStatsSettings": MessageLookupByLibrary.simpleMessage("統計設定"),
+    "trafficStatsSince": m110,
+    "trafficStatsSiteIcon": MessageLookupByLibrary.simpleMessage("サイトアイコン"),
+    "trafficStatsSiteIconDesc": MessageLookupByLibrary.simpleMessage(
+      "ドメインランキング用にファビコンを取得してキャッシュします",
+    ),
+    "trafficStatsTotal": MessageLookupByLibrary.simpleMessage("合計トラフィック"),
+    "trafficStatsTrend": MessageLookupByLibrary.simpleMessage("トラフィック推移"),
+    "trafficStatsWeek": MessageLookupByLibrary.simpleMessage("週"),
     "trafficUsage": MessageLookupByLibrary.simpleMessage("トラフィック統計"),
     "transport": MessageLookupByLibrary.simpleMessage("トランスポート"),
     "transportHeaders": m103,

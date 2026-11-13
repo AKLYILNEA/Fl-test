@@ -477,6 +477,37 @@ abstract class CoreHandlerInterface {
     arguments: {'proxy': proxy, 'search': search, 'id': id},
     timeout: const Duration(seconds: 25),
   );
+
+  Future<void> configureTrafficStats(
+    TrafficStatsSettings settings, {
+    required String profile,
+    required int tzOffset,
+    bool? screenOn,
+    bool? suspended,
+  }) => _command(
+    CoreMethod.trafficStatsConfigure,
+    arguments: {
+      'enable': settings.enable,
+      'detail': settings.detail,
+      'retention-days': settings.retentionDays,
+      'tz-offset': tzOffset,
+      'profile': profile,
+      'screen-on': ?screenOn,
+      'suspended': ?suspended,
+    },
+  );
+
+  Future<TrafficStatsResult> getTrafficStats({
+    required String start,
+    required String end,
+    int top = 50,
+  }) => _query(
+    CoreMethod.trafficStatsGet,
+    (data) => TrafficStatsResult.fromJson(trafficStatsMap(data)),
+    arguments: {'start': start, 'end': end, 'top': top},
+  );
+
+  Future<void> clearTrafficStats() => _command(CoreMethod.trafficStatsClear);
 }
 
 T _cast<T>(Object data) => data as T;

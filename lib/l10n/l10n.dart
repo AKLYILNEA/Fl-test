@@ -10416,6 +10416,246 @@ class AppLocalizations {
   String get speedTestStop {
     return Intl.message('Stop Test', name: 'speedTestStop', desc: '', args: []);
   }
+
+  /// `Traffic Statistics`
+  String get trafficStats {
+    return Intl.message(
+      'Traffic Statistics',
+      name: 'trafficStats',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `View detailed breakdown of traffic by day, week, or month`
+  String get trafficStatsDesc {
+    return Intl.message(
+      'View detailed breakdown of traffic by day, week, or month',
+      name: 'trafficStatsDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Day`
+  String get trafficStatsDay {
+    return Intl.message('Day', name: 'trafficStatsDay', desc: '', args: []);
+  }
+
+  /// `Week`
+  String get trafficStatsWeek {
+    return Intl.message('Week', name: 'trafficStatsWeek', desc: '', args: []);
+  }
+
+  /// `Month`
+  String get trafficStatsMonth {
+    return Intl.message('Month', name: 'trafficStatsMonth', desc: '', args: []);
+  }
+
+  /// `Total Traffic`
+  String get trafficStatsTotal {
+    return Intl.message(
+      'Total Traffic',
+      name: 'trafficStatsTotal',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Overview`
+  String get trafficStatsOverview {
+    return Intl.message(
+      'Overview',
+      name: 'trafficStatsOverview',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Traffic Trend`
+  String get trafficStatsTrend {
+    return Intl.message(
+      'Traffic Trend',
+      name: 'trafficStatsTrend',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Rule Hits`
+  String get trafficStatsRuleHits {
+    return Intl.message(
+      'Rule Hits',
+      name: 'trafficStatsRuleHits',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `{count} hits`
+  String trafficStatsHitCount(Object count) {
+    return Intl.message(
+      '$count hits',
+      name: 'trafficStatsHitCount',
+      desc: '',
+      args: [count],
+    );
+  }
+
+  /// `Traffic Ranking`
+  String get trafficStatsRanking {
+    return Intl.message(
+      'Traffic Ranking',
+      name: 'trafficStatsRanking',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Node`
+  String get trafficStatsNode {
+    return Intl.message('Node', name: 'trafficStatsNode', desc: '', args: []);
+  }
+
+  /// `Traffic statistics not enabled`
+  String get trafficStatsDisabled {
+    return Intl.message(
+      'Traffic statistics not enabled',
+      name: 'trafficStatsDisabled',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Turn on traffic statistics to record daily usage by domain, process, node, and rule locally.`
+  String get trafficStatsDisabledDesc {
+    return Intl.message(
+      'Turn on traffic statistics to record daily usage by domain, process, node, and rule locally.',
+      name: 'trafficStatsDisabledDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enable Traffic Statistics`
+  String get trafficStatsEnable {
+    return Intl.message(
+      'Enable Traffic Statistics',
+      name: 'trafficStatsEnable',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Enable`
+  String get trafficStatsEnableAction {
+    return Intl.message(
+      'Enable',
+      name: 'trafficStatsEnableAction',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Detailed Breakdown`
+  String get trafficStatsDetail {
+    return Intl.message(
+      'Detailed Breakdown',
+      name: 'trafficStatsDetail',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Record per-domain, process, node, profile, and rule traffic`
+  String get trafficStatsDetailDesc {
+    return Intl.message(
+      'Record per-domain, process, node, profile, and rule traffic',
+      name: 'trafficStatsDetailDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Website Icons`
+  String get trafficStatsSiteIcon {
+    return Intl.message(
+      'Website Icons',
+      name: 'trafficStatsSiteIcon',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Fetch website favicons for domain rankings locally`
+  String get trafficStatsSiteIconDesc {
+    return Intl.message(
+      'Fetch website favicons for domain rankings locally',
+      name: 'trafficStatsSiteIconDesc',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Data Retention`
+  String get trafficStatsRetention {
+    return Intl.message(
+      'Data Retention',
+      name: 'trafficStatsRetention',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `{count} days`
+  String trafficStatsDays(Object count) {
+    return Intl.message(
+      '$count days',
+      name: 'trafficStatsDays',
+      desc: '',
+      args: [count],
+    );
+  }
+
+  /// `Statistics Settings`
+  String get trafficStatsSettings {
+    return Intl.message(
+      'Statistics Settings',
+      name: 'trafficStatsSettings',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Are you sure you want to clear all saved traffic statistics data?`
+  String get trafficStatsClearTip {
+    return Intl.message(
+      'Are you sure you want to clear all saved traffic statistics data?',
+      name: 'trafficStatsClearTip',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Since {date}`
+  String trafficStatsSince(Object date) {
+    return Intl.message(
+      'Since $date',
+      name: 'trafficStatsSince',
+      desc: '',
+      args: [date],
+    );
+  }
+
+  /// `Detailed breakdown is turned off. Only total and hourly traffic are recorded.`
+  String get trafficStatsDetailOffTip {
+    return Intl.message(
+      'Detailed breakdown is turned off. Only total and hourly traffic are recorded.',
+      name: 'trafficStatsDetailOffTip',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {

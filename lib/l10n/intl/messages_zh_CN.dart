@@ -256,6 +256,12 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m107(count) => "${count} 年前";
 
+  static String m108(count) => "${count} 次";
+
+  static String m109(count) => "${count} 天";
+
+  static String m110(date) => "统计自 ${date}";
+
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
     "about": MessageLookupByLibrary.simpleMessage("关于"),
@@ -1840,6 +1846,42 @@ class MessageLookup extends MessageLookupByLibrary {
     "trafficPeak": m101,
     "trafficTotal": m102,
     "trafficUsage": MessageLookupByLibrary.simpleMessage("流量统计"),
+    "trafficStats": MessageLookupByLibrary.simpleMessage("流量统计"),
+    "trafficStatsClearTip": MessageLookupByLibrary.simpleMessage(
+      "确定要清除所有已保存的流量统计数据吗？",
+    ),
+    "trafficStatsDay": MessageLookupByLibrary.simpleMessage("日"),
+    "trafficStatsDays": m109,
+    "trafficStatsDesc": MessageLookupByLibrary.simpleMessage("按日、周、月查看流量具体去向"),
+    "trafficStatsDetail": MessageLookupByLibrary.simpleMessage("详细统计"),
+    "trafficStatsDetailDesc": MessageLookupByLibrary.simpleMessage(
+      "记录域名、进程、节点、配置与规则的流量明细",
+    ),
+    "trafficStatsDetailOffTip": MessageLookupByLibrary.simpleMessage(
+      "当前未开启详细统计，仅记录总流量与时段趋势。",
+    ),
+    "trafficStatsDisabled": MessageLookupByLibrary.simpleMessage("未开启流量统计"),
+    "trafficStatsDisabledDesc": MessageLookupByLibrary.simpleMessage(
+      "开启后将按域名、进程、节点与规则本地统计每日流量使用情况。",
+    ),
+    "trafficStatsEnable": MessageLookupByLibrary.simpleMessage("启用流量统计"),
+    "trafficStatsEnableAction": MessageLookupByLibrary.simpleMessage("开启"),
+    "trafficStatsHitCount": m108,
+    "trafficStatsMonth": MessageLookupByLibrary.simpleMessage("月"),
+    "trafficStatsNode": MessageLookupByLibrary.simpleMessage("节点"),
+    "trafficStatsOverview": MessageLookupByLibrary.simpleMessage("流量概览"),
+    "trafficStatsRanking": MessageLookupByLibrary.simpleMessage("流量排行"),
+    "trafficStatsRetention": MessageLookupByLibrary.simpleMessage("数据保留天数"),
+    "trafficStatsRuleHits": MessageLookupByLibrary.simpleMessage("规则命中"),
+    "trafficStatsSettings": MessageLookupByLibrary.simpleMessage("统计设置"),
+    "trafficStatsSince": m110,
+    "trafficStatsSiteIcon": MessageLookupByLibrary.simpleMessage("网站图标"),
+    "trafficStatsSiteIconDesc": MessageLookupByLibrary.simpleMessage(
+      "为域名排行获取并本地缓存网站图标",
+    ),
+    "trafficStatsTotal": MessageLookupByLibrary.simpleMessage("总流量"),
+    "trafficStatsTrend": MessageLookupByLibrary.simpleMessage("流量趋势"),
+    "trafficStatsWeek": MessageLookupByLibrary.simpleMessage("周"),
     "transport": MessageLookupByLibrary.simpleMessage("传输协议"),
     "transportHeaders": m103,
     "trustCertificate": MessageLookupByLibrary.simpleMessage("信任证书"),

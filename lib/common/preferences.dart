@@ -237,6 +237,12 @@ class Preferences {
     await (await _store.value)?.setString('speed_test_data', data);
   }
 
+  Future<String?> getTrafficStatsSettings() async =>
+      (await _store.value)?.getString('traffic_stats_settings');
+  Future<void> setTrafficStatsSettings(String data) async {
+    await (await _store.value)?.setString('traffic_stats_settings', data);
+  }
+
   Future<String?> getIconRules() async {
     final sharedPreferencesIns = await _store.value;
     return sharedPreferencesIns?.getString(iconRulesKey);

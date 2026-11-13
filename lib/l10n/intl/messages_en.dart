@@ -292,6 +292,12 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m107(count) => "${Intl.plural(count, other: '${count}y ago')}";
 
+  static String m108(count) => "${count} hits";
+
+  static String m109(count) => "${count} days";
+
+  static String m110(date) => "Since ${date}";
+
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
     "about": MessageLookupByLibrary.simpleMessage("About"),
@@ -2376,6 +2382,58 @@ class MessageLookup extends MessageLookupByLibrary {
     "trafficPeak": m101,
     "trafficTotal": m102,
     "trafficUsage": MessageLookupByLibrary.simpleMessage("Traffic usage"),
+    "trafficStats": MessageLookupByLibrary.simpleMessage("Traffic Statistics"),
+    "trafficStatsClearTip": MessageLookupByLibrary.simpleMessage(
+      "Are you sure you want to clear all saved traffic statistics data?",
+    ),
+    "trafficStatsDay": MessageLookupByLibrary.simpleMessage("Day"),
+    "trafficStatsDays": m109,
+    "trafficStatsDesc": MessageLookupByLibrary.simpleMessage(
+      "View detailed breakdown of traffic by day, week, or month",
+    ),
+    "trafficStatsDetail": MessageLookupByLibrary.simpleMessage(
+      "Detailed Breakdown",
+    ),
+    "trafficStatsDetailDesc": MessageLookupByLibrary.simpleMessage(
+      "Record per-domain, process, node, profile, and rule traffic",
+    ),
+    "trafficStatsDetailOffTip": MessageLookupByLibrary.simpleMessage(
+      "Detailed breakdown is turned off. Only total and hourly traffic are recorded.",
+    ),
+    "trafficStatsDisabled": MessageLookupByLibrary.simpleMessage(
+      "Traffic statistics not enabled",
+    ),
+    "trafficStatsDisabledDesc": MessageLookupByLibrary.simpleMessage(
+      "Turn on traffic statistics to record daily usage by domain, process, node, and rule locally.",
+    ),
+    "trafficStatsEnable": MessageLookupByLibrary.simpleMessage(
+      "Enable Traffic Statistics",
+    ),
+    "trafficStatsEnableAction": MessageLookupByLibrary.simpleMessage("Enable"),
+    "trafficStatsHitCount": m108,
+    "trafficStatsMonth": MessageLookupByLibrary.simpleMessage("Month"),
+    "trafficStatsNode": MessageLookupByLibrary.simpleMessage("Node"),
+    "trafficStatsOverview": MessageLookupByLibrary.simpleMessage("Overview"),
+    "trafficStatsRanking": MessageLookupByLibrary.simpleMessage(
+      "Traffic Ranking",
+    ),
+    "trafficStatsRetention": MessageLookupByLibrary.simpleMessage(
+      "Data Retention",
+    ),
+    "trafficStatsRuleHits": MessageLookupByLibrary.simpleMessage("Rule Hits"),
+    "trafficStatsSettings": MessageLookupByLibrary.simpleMessage(
+      "Statistics Settings",
+    ),
+    "trafficStatsSince": m110,
+    "trafficStatsSiteIcon": MessageLookupByLibrary.simpleMessage(
+      "Website Icons",
+    ),
+    "trafficStatsSiteIconDesc": MessageLookupByLibrary.simpleMessage(
+      "Fetch website favicons for domain rankings locally",
+    ),
+    "trafficStatsTotal": MessageLookupByLibrary.simpleMessage("Total Traffic"),
+    "trafficStatsTrend": MessageLookupByLibrary.simpleMessage("Traffic Trend"),
+    "trafficStatsWeek": MessageLookupByLibrary.simpleMessage("Week"),
     "transport": MessageLookupByLibrary.simpleMessage("Transport"),
     "transportHeaders": m103,
     "trustCertificate": MessageLookupByLibrary.simpleMessage(

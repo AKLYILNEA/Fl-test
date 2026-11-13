@@ -107,7 +107,6 @@ class SpeedTestRecordView extends StatelessWidget {
         : [
             server.sponsor,
             server.city,
-            server.host,
           ].where((s) => s.isNotEmpty).join(' · ');
     return SpeedTestScope(
       child: Scaffold(

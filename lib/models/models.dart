@@ -11,3 +11,4 @@ export 'references.dart';
 export 'state.dart';
 
 export 'speed_test.dart';
+export 'traffic_stats.dart';

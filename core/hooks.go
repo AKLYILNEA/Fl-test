@@ -21,6 +21,7 @@ func init() {
 	statistic.DefaultRequestNotify = func(c statistic.Tracker) {
 		notifyProbeRoute(c)
 		observeSpeedTestTracker(c.Info())
+		observeTrafficTracker(c.Info())
 		if hasEventListener() {
 			sendMessage(RequestMessage, c)
 			watchRequestTraffic(c)
