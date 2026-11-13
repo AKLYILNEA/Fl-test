@@ -42,35 +42,50 @@ class SpeedTestGauge extends StatefulWidget {
 
 class _SpeedTestGaugeState extends State<SpeedTestGauge>
     with TickerProviderStateMixin {
-  late final _fraction = AnimationController(
+  late final _motion = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 350),
+    duration: const Duration(milliseconds: 240),
   );
   late final _spinner = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 1600),
   );
   bool _initialized = false;
-  double? _targetFraction;
+  double _fromFraction = 0;
+  double _toFraction = 0;
+  double _fromSpeed = 0;
+  double _toSpeed = 0;
 
   SpeedTestPhase? get _phase {
     final state = widget.state;
     return state?.error.isNotEmpty == true ? null : state?.phase;
   }
 
-  double get _desiredFraction {
+  double get _desiredSpeed {
     if (widget.waiting) return 0;
     final state = widget.state;
     final phase = _phase;
-    final value = phase == SpeedTestPhase.done
+    final raw = phase == SpeedTestPhase.done
         ? state!.download
         : state?.speed ?? 0;
-    return speedGaugeFraction(value);
+    return raw < 0 ? 0 : raw;
+  }
+
+  double get _desiredFraction => speedGaugeFraction(_desiredSpeed);
+
+  double get _currentFraction {
+    final t = Curves.easeOutCubic.transform(_motion.value);
+    return ui.lerpDouble(_fromFraction, _toFraction, t) ?? _toFraction;
+  }
+
+  double get _currentSpeed {
+    final t = Curves.easeOutCubic.transform(_motion.value);
+    return ui.lerpDouble(_fromSpeed, _toSpeed, t) ?? _toSpeed;
   }
 
   void _syncSpinner({required bool disableAnimations}) {
     final canSpin =
-        widget.waiting && !disableAnimations && _fraction.value <= 0.002;
+        widget.waiting && !disableAnimations && _currentFraction <= 0.002;
     if (canSpin) {
       if (!_spinner.isAnimating) {
         _spinner.repeat(reverse: true);
@@ -82,20 +97,26 @@ class _SpeedTestGaugeState extends State<SpeedTestGauge>
 
   void _sync({bool initial = false}) {
     final disableAnimations = MediaQuery.disableAnimationsOf(context);
-    final target = _desiredFraction;
+    final targetFraction = _desiredFraction;
+    final targetSpeed = _desiredSpeed;
     if (initial || disableAnimations) {
-      _targetFraction = target;
-      _fraction.value = target;
+      _fromFraction = _toFraction = targetFraction;
+      _fromSpeed = _toSpeed = targetSpeed;
+      _motion.value = 1;
       _syncSpinner(disableAnimations: disableAnimations);
       return;
     }
-    if (_targetFraction == null || (_targetFraction! - target).abs() > 0.0001) {
-      _targetFraction = target;
+    if ((_toFraction - targetFraction).abs() > 0.0001 ||
+        (_toSpeed - targetSpeed).abs() > 1) {
+      _fromFraction = _currentFraction;
+      _toFraction = targetFraction;
+      _fromSpeed = _currentSpeed;
+      _toSpeed = targetSpeed;
       // Clear the probing arc before returning to 0 or restoring progress so
       // the two arcs never overlap.
       _spinner.reset();
       unawaited(
-        _fraction.animateTo(target, curve: Curves.easeOutCubic).whenComplete(() {
+        _motion.forward(from: 0).whenComplete(() {
           if (!mounted) return;
           _syncSpinner(
             disableAnimations: MediaQuery.disableAnimationsOf(context),
@@ -123,7 +144,7 @@ class _SpeedTestGaugeState extends State<SpeedTestGauge>
 
   @override
   void dispose() {
-    _fraction.dispose();
+    _motion.dispose();
     _spinner.dispose();
     super.dispose();
   }
@@ -131,14 +152,8 @@ class _SpeedTestGaugeState extends State<SpeedTestGauge>
   @override
   Widget build(BuildContext context) {
     final l = context.appLocalizations;
-    final state = widget.state;
     final phase = _phase;
     final waiting = widget.waiting;
-    final value = waiting
-        ? 0.0
-        : phase == SpeedTestPhase.done
-        ? state!.download
-        : state?.speed ?? 0;
     final label = waiting
         ? switch (phase) {
             SpeedTestPhase.connecting => l.speedTestConnecting,
@@ -165,9 +180,10 @@ class _SpeedTestGaugeState extends State<SpeedTestGauge>
             height: width * .96,
             child: RepaintBoundary(
               child: AnimatedBuilder(
-                animation: Listenable.merge([_fraction, _spinner]),
+                animation: Listenable.merge([_motion, _spinner]),
                 builder: (context, _) {
-                  final fraction = _fraction.value;
+                  final fraction = _currentFraction;
+                  final value = _currentSpeed;
                   return CustomPaint(
                     painter: _GaugePainter(
                       fraction: fraction,
@@ -218,7 +234,7 @@ class _SpeedTestGaugeState extends State<SpeedTestGauge>
                                 .toTabular,
                           ),
                           Text(
-                            speedTestUnit(value),
+                            speedTestUnit(waiting ? 0 : value),
                             style: AppTextStyle.footnote
                                 .of(context)
                                 .copyWith(

@@ -38,7 +38,7 @@ const (
 	speedTestLatencyCount   = 20
 	speedTestRequestTimeout = 8 * time.Second
 	speedTestSampleInterval = 100 * time.Millisecond
-	speedTestPushInterval   = 200 * time.Millisecond
+	speedTestPushInterval   = 100 * time.Millisecond
 	speedTestLoadedInterval = 400 * time.Millisecond
 	speedTestRampUp         = 0.3
 	speedTestDownloadBytes  = 25_000_000
