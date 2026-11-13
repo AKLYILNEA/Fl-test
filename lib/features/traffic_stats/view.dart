@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/models/models.dart';
@@ -177,11 +176,8 @@ class _TrafficStatsViewState extends ConsumerState<TrafficStatsView> {
             loadingStatus: const ActivityIndicator.page(),
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final sidePadding = math.max(
-                  16.0,
-                  (constraints.maxWidth - 928) / 2,
-                );
-                final horizontalInsets = EdgeInsets.symmetric(
+                const sidePadding = 16.0;
+                const horizontalInsets = EdgeInsets.symmetric(
                   horizontal: sidePadding,
                 );
                 final isWide = constraints.maxWidth >= 760;
