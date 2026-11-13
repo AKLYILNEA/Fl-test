@@ -645,18 +645,23 @@ class _Cells extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appLocalizations = context.appLocalizations;
-    final typeLabel = quality?.typeLabel(context);
-    final Widget typeValue = typeLabel != null
-        ? Text(
-            typeLabel,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: _cellStyle(context).copyWith(
-              color: quality!.isHomeBroadband
-                  ? riskGradient.first
-                  : quality!.isDatacenter || quality!.isResidentialProxy
-                  ? context.colorScheme.error
-                  : null,
+    final risk = quality;
+    final Widget scoreValue = risk != null
+        ? FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: AlignmentDirectional.centerStart,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '${risk.displayScore}',
+                  style: _cellStyle(
+                    context,
+                  ).copyWith(color: context.colorScheme.onSurface),
+                ),
+                const SizedBox(width: 6),
+                RiskLevelBadge(risk: risk),
+              ],
             ),
           )
         : loading
@@ -668,7 +673,11 @@ class _Cells extends StatelessWidget {
         _RunTimeCell(active: active),
         SizedBox(width: gap),
         Expanded(
-          child: _Cell(label: appLocalizations.ipType, value: typeValue),
+          child: _Cell(
+            label: appLocalizations.ipRiskScore,
+            value: scoreValue,
+            valueHeight: 28,
+          ),
         ),
       ],
     );
@@ -676,14 +685,19 @@ class _Cells extends StatelessWidget {
 }
 
 class _Cell extends StatelessWidget {
-  const _Cell({required this.label, required this.value});
+  const _Cell({
+    required this.label,
+    required this.value,
+    this.valueHeight = 20,
+  });
+  final double valueHeight;
 
   final String label;
   final Widget value;
 
   @override
   Widget build(BuildContext context) {
-    final cellHeight = MediaQuery.textScalerOf(context).scale(20.0);
+    final cellHeight = MediaQuery.textScalerOf(context).scale(valueHeight);
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,

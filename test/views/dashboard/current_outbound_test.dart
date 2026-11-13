@@ -1,5 +1,6 @@
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/features/ip_quality/risk_model.dart';
+import 'package:fl_clash/features/ip_quality/risk_view.dart';
 import 'package:fl_clash/common/service_probe.dart'
     show directOutbound, routedOutbound;
 import 'package:fl_clash/core/controller.dart';
@@ -213,7 +214,7 @@ void main() {
 
   group('the exit address', () {
     for (final running in [false, true]) {
-      testWidgets('shows native IP type with running=$running', (tester) async {
+      testWidgets('shows fraud score with running=$running', (tester) async {
         const home = IpRisk(
           ip: _ip,
           score: 0,
@@ -228,19 +229,21 @@ void main() {
         );
         container.read(runTimeProvider.notifier).value = running ? 1 : null;
         await tester.pump();
-        expect(find.text('Premium Residential IP'), findsOneWidget);
+        expect(find.text('0'), findsOneWidget);
+        expect(find.byType(RiskLevelBadge), findsOneWidget);
         expect(tester.takeException(), isNull);
       });
     }
-    testWidgets('shows its country and residential proxy type', (tester) async {
+    testWidgets('shows its country and fraud score', (tester) async {
       await tester.pumpWidget(_app((_, _) async => _residential));
       await tester.pump();
 
       expect(find.text(_ip), findsOneWidget);
       expect(find.text('GB'), findsOneWidget);
-      expect(find.text('Residential proxy'), findsOneWidget);
+      expect(find.text('Low risk'), findsOneWidget);
       expect(_chip(tester, 'Not running').tone, DashboardChipTone.idle);
-      expect(find.text('Type'), findsOneWidget);
+      expect(find.text('Fraud score'), findsOneWidget);
+      expect(find.text('Type'), findsNothing);
       expect(find.text('Status'), findsOneWidget);
       expect(find.byGlyph(AppGlyphs.refresh), findsNothing);
     });
@@ -270,7 +273,25 @@ void main() {
       expect(_chip(tester, 'Not running').tone, DashboardChipTone.idle);
     });
 
-    testWidgets('says its type is unknown when no type was found', (
+    testWidgets('shows a neutral score beside the shared colored risk badge', (
+      tester,
+    ) async {
+      const risk = IpRisk(ip: _ip, score: 50, level: IpRiskLevel.medium);
+      await tester.pumpWidget(_app((_, _) async => risk));
+      await tester.pump();
+      final context = tester.element(find.byType(CurrentOutboundCard));
+      final score = tester.widget<Text>(find.text('50'));
+      expect(score.style!.color, context.colorScheme.onSurface);
+      expect(find.byType(RiskLevelBadge), findsOneWidget);
+      expect(
+        tester.widget<Text>(find.text('Medium risk')).style!.color,
+        riskScoreColor(50),
+      );
+      expect(find.text('Type'), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('keeps score unavailable when the risk request fails', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -314,7 +335,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(SkeletonPill), findsNothing);
-      expect(find.text('Residential proxy'), findsOneWidget);
+      expect(find.text('Low risk'), findsOneWidget);
       expect(_cloverTurn(tester) % (math.pi / 2), closeTo(0, 1e-9));
       expect(tester.widget<PressRegion>(_clover()).onTap, isNotNull);
     });
@@ -366,7 +387,7 @@ void main() {
       await tester.pump();
 
       expect(find.text(_ip), findsOneWidget);
-      expect(find.text('Residential proxy'), findsOneWidget);
+      expect(find.text('Low risk'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 
@@ -377,16 +398,22 @@ void main() {
       await tester.pumpWidget(_app((_, _) async => _residential));
       await tester.pump();
 
-      await tester.tap(find.text('Type'));
+      await tester.tap(find.text('Fraud score'));
       await tester.pumpAndSettle();
       expect(find.text('iplocate.io'), findsNothing);
 
       await tester.tap(find.text(_ip));
       await tester.pumpAndSettle();
 
-      expect(find.text('Fraud score'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(RiskScoreCard),
+          matching: find.text('Fraud score'),
+        ),
+        findsOneWidget,
+      );
       expect(find.text('Source Scamalytics'), findsOneWidget);
-      expect(find.text('Residential proxy'), findsNWidgets(2));
+      expect(find.text('Residential proxy'), findsOneWidget);
     });
 
     testWidgets('reports a source failure and checks again', (tester) async {

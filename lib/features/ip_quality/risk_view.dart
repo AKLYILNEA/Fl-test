@@ -49,6 +49,29 @@ String riskCheckLabel(BuildContext context, String name) {
   };
 }
 
+class RiskLevelBadge extends StatelessWidget {
+  const RiskLevelBadge({super.key, required this.risk});
+  final IpRisk risk;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = riskScoreColor(risk.displayScore);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: ShapeDecoration(
+        color: color.withValues(alpha: .12),
+        shape: AppShape.sm,
+      ),
+      child: Text(
+        risk.levelLabel(context),
+        style: AppTextStyle.footnote
+            .of(context, emphasized: true)
+            .copyWith(color: color),
+      ),
+    );
+  }
+}
+
 class RiskScoreCard extends StatelessWidget {
   const RiskScoreCard({super.key, required this.risk});
   final IpRisk risk;
@@ -106,22 +129,7 @@ class RiskScoreCard extends StatelessWidget {
                   ),
                 ],
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 5,
-                ),
-                decoration: ShapeDecoration(
-                  color: color.withValues(alpha: .12),
-                  shape: AppShape.sm,
-                ),
-                child: Text(
-                  risk.levelLabel(context),
-                  style: AppTextStyle.footnote
-                      .of(context, emphasized: true)
-                      .copyWith(color: color),
-                ),
-              ),
+              RiskLevelBadge(risk: risk),
             ],
           ),
           const SizedBox(height: 12),
