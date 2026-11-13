@@ -154,11 +154,15 @@ class _SpeedTestGaugeState extends State<SpeedTestGauge>
     final l = context.appLocalizations;
     final phase = _phase;
     final waiting = widget.waiting;
+    final probing =
+        waiting &&
+        phase != SpeedTestPhase.connecting &&
+        phase != SpeedTestPhase.latency;
     final label = waiting
         ? switch (phase) {
             SpeedTestPhase.connecting => l.speedTestConnecting,
             SpeedTestPhase.latency => l.delay,
-            _ => l.speedTestReady,
+            _ => l.speedTestProbing,
           }
         : switch (phase) {
             SpeedTestPhase.download || SpeedTestPhase.done => l.download,
@@ -213,15 +217,23 @@ class _SpeedTestGaugeState extends State<SpeedTestGauge>
                             constraints: BoxConstraints(maxWidth: width * .62),
                             child: FittedBox(
                               fit: BoxFit.scaleDown,
-                              child: Text(
-                                label,
-                                maxLines: 1,
-                                style: AppTextStyle.footnote
-                                    .of(context)
-                                    .copyWith(
-                                      color:
-                                          context.colorScheme.onSurfaceVariant,
-                                    ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                spacing: 5,
+                                children: [
+                                  if (probing) const ActivityIndicator(size: 12),
+                                  Text(
+                                    label,
+                                    maxLines: 1,
+                                    style: AppTextStyle.footnote
+                                        .of(context)
+                                        .copyWith(
+                                          color: context
+                                              .colorScheme
+                                              .onSurfaceVariant,
+                                        ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),

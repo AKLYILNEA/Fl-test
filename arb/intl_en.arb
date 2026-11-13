@@ -1217,7 +1217,7 @@
   "speedTestConnectionsDesc": "Multi uses {count} parallel connections to saturate bandwidth",
   "speedTestProtocolDesc": "HTTP/3 runs over QUIC (UDP); if unavailable it falls back to HTTP/2, and to HTTP/1.1 if HTTP/2 is unavailable too",
   "speedTestProtocolFallback": "{protocol} unavailable, fell back to {fallback}",
-  "speedTestProbing": "Detecting outbound",
+  "speedTestProbing": "Detecting",
   "speedTestRealtime": "Realtime Throughput",
   "speedTestQuality": "Network Quality",
   "speedTestStreams": "{count} connections",

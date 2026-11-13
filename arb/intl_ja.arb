@@ -1217,7 +1217,7 @@
   "speedTestConnectionsDesc": "マルチは {count} 本の並列接続で帯域を使い切ります",
   "speedTestProtocolDesc": "HTTP/3 は QUIC (UDP) を使用し、使えない場合は HTTP/2 に、HTTP/2 も使えない場合は HTTP/1.1 に切り替えます",
   "speedTestProtocolFallback": "{protocol} が利用できないため {fallback} に切り替えました",
-  "speedTestProbing": "アウトバウンドを検出中",
+  "speedTestProbing": "検出中",
   "speedTestRealtime": "リアルタイム速度",
   "speedTestQuality": "ネットワーク品質",
   "speedTestStreams": "{count} 接続",

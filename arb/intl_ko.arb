@@ -1217,7 +1217,7 @@
   "speedTestConnectionsDesc": "다중은 {count}개의 병렬 연결로 대역폭을 채웁니다",
   "speedTestProtocolDesc": "HTTP/3는 QUIC(UDP)를 사용하며, 사용할 수 없으면 HTTP/2로, HTTP/2도 안 되면 HTTP/1.1로 전환합니다",
   "speedTestProtocolFallback": "{protocol}를 사용할 수 없어 {fallback}로 전환했습니다",
-  "speedTestProbing": "아웃바운드 확인 중",
+  "speedTestProbing": "확인 중",
   "speedTestRealtime": "실시간 속도",
   "speedTestQuality": "네트워크 품질",
   "speedTestStreams": "{count}개 연결",

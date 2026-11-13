@@ -1217,7 +1217,7 @@
   "speedTestConnectionsDesc": "Несколько — {count} параллельных соединений для полной загрузки канала",
   "speedTestProtocolDesc": "HTTP/3 работает поверх QUIC (UDP); если он недоступен — откат на HTTP/2, а если недоступен и HTTP/2 — на HTTP/1.1",
   "speedTestProtocolFallback": "{protocol} недоступен, используется {fallback}",
-  "speedTestProbing": "Определение выхода",
+  "speedTestProbing": "Проверка",
   "speedTestRealtime": "Скорость в реальном времени",
   "speedTestQuality": "Качество сети",
   "speedTestStreams": "Соединений: {count}",

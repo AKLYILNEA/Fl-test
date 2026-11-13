@@ -481,26 +481,6 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
         : _proxy.isEmpty
         ? l.speedTestFollowRules
         : _proxy;
-    final outboundInfo =
-        (_testing ? _state?.outbound : null) ??
-        _probe?.outbound ??
-        _state?.outbound;
-    final chains = outboundInfo?.chains ?? const <String>[];
-    final rule = [
-      outboundInfo?.rule ?? '',
-      outboundInfo?.rulePayload ?? '',
-    ].where((s) => s.isNotEmpty).join(',');
-    final chainText = chains.join(' \u203a ');
-    String? outboundDetail;
-    if (_probing) {
-      outboundDetail = l.speedTestProbing;
-    } else if (outboundInfo != null) {
-      final parts = <String>[
-        if (chainText.isNotEmpty && chainText != selected) chainText,
-        if (rule.isNotEmpty) rule,
-      ];
-      if (parts.isNotEmpty) outboundDetail = parts.join(' \u00b7 ');
-    }
     final actual =
         (_testing ? _state?.server : null) ?? _probe?.server ?? _state?.server;
     final serverText =
@@ -511,23 +491,9 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
                 actual.sponsor,
                 actual.city,
               ].where((s) => s.isNotEmpty).join(' \u00b7 '));
-    String? serverDetail;
-    if (_probing && _settings.server == null && actual == null) {
-      serverDetail = l.speedTestServerAutoDesc;
-    } else if (actual != null) {
-      final host = actual.host.isNotEmpty ? actual.host : actual.ip;
-      final parts = <String>[
-        if (actual.country.isNotEmpty) actual.country,
-        if (host.isNotEmpty) host,
-      ];
-      if (parts.isNotEmpty) serverDetail = parts.join(' \u00b7 ');
-    }
     return SpeedTestConnectionCard(
       outbound: selected,
       server: serverText.isEmpty ? l.auto : serverText,
-      outboundDetail: outboundDetail,
-      serverDetail: serverDetail,
-      probing: _probing,
       selectable: true,
       onSelect: _testing || !running ? null : _chooseOutbound,
     );
