@@ -228,17 +228,8 @@ class _LocationCard extends StatelessWidget {
       if (owner.isNotEmpty) _value(context, l.operatorOrAsn, owner),
       if (risk.isp.isNotEmpty && risk.isp != risk.organization)
         _value(context, l.isp, risk.isp),
-      if (risk.hostname.isNotEmpty)
-        _value(
-          context,
-          l.ipRiskHostname,
-          hidden
-              ? risk.hostname.replaceAll(
-                  RegExp(RegExp.escape(risk.ip), caseSensitive: false),
-                  '*****',
-                )
-              : risk.hostname,
-        ),
+      if (!hidden && risk.hostname.isNotEmpty)
+        _value(context, l.ipRiskHostname, risk.hostname),
     ];
     if (rows.isEmpty) return const SizedBox.shrink();
     return Card(

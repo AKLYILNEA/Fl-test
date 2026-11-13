@@ -4,15 +4,13 @@ import 'package:fl_clash/ui/icons/icons.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import 'gauge.dart';
 import 'store.dart';
 import 'widgets.dart';
 
-String _date(SpeedTestRecord record) => DateFormat.yMMMd().add_Hm().format(
-  DateTime.fromMillisecondsSinceEpoch(record.time),
-);
+String _date(SpeedTestRecord record) =>
+    DateTime.fromMillisecondsSinceEpoch(record.time).showFull;
 
 class SpeedTestHistoryView extends ConsumerWidget {
   const SpeedTestHistoryView({super.key});

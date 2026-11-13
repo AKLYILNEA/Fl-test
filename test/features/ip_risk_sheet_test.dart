@@ -361,6 +361,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('158.247.202.50'), findsNothing);
       expect(find.text('158.247.202.50.vultrusercontent.com'), findsNothing);
+      expect(find.text('主机名'), findsNothing);
+      expect(find.text('*****.vultrusercontent.com'), findsNothing);
       expect(
         tester.widget<Text>(find.text('*****')).style!.fontFamily,
         app_ui.FontFamily.mapleMono.value,

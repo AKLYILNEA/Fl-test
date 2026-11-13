@@ -259,20 +259,26 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView> {
 
   Future<void> _openSettings() async {
     if (_testing || _confirming) return;
-    final settings = await showFormSheet<SpeedTestSettings>(
+    await showFormSheet<SpeedTestSettings>(
       context: context,
       props: nestedPagedSheetProps,
       builder: (_) => NestedPagedSheet(
-        builder: (_) =>
-            SpeedTestSettingsView(settings: _settings, proxy: _route()),
+        builder: (_) => SpeedTestSettingsView(
+          settings: _settings,
+          proxy: _route(),
+          onChanged: (settings) {
+            if (!mounted) return;
+            setState(() {
+              _settings = settings;
+              _state = null;
+            });
+            unawaited(
+              ref.read(speedTestStoreProvider.notifier).settings(settings),
+            );
+          },
+        ),
       ),
     );
-    if (!mounted || settings == null) return;
-    setState(() {
-      _settings = settings;
-      _state = null;
-    });
-    await ref.read(speedTestStoreProvider.notifier).settings(settings);
     if (mounted) await _detect();
   }
 
@@ -305,10 +311,8 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView> {
           (_testing &&
               (phase == SpeedTestPhase.connecting ||
                   phase == SpeedTestPhase.latency)),
-      color: color,
-      otherColor: phase == SpeedTestPhase.upload
-          ? context.colorScheme.primary
-          : speedUploadColor(context),
+      color: Color.lerp(color, const Color(0xffffffff), .14)!,
+      otherColor: Color.lerp(context.colorScheme.surface, color, .28)!,
     );
     final panel = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -331,18 +335,16 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView> {
           ),
         ),
         const SizedBox(height: 24),
-        SpeedTestMetrics(state: _state),
-        if (_state != null && _state!.bytes > 0) ...[
-          const SizedBox(height: 18),
-          Text(
-            '${l.speedTestDataUsed} · ${speedTestBytes(_state!.bytes)}',
-            style: AppTextStyle.footnote
-                .of(context)
-                .copyWith(color: context.colorScheme.onSurfaceVariant),
-          ),
-        ],
+        SpeedTestMetrics(state: _state, speedsOnly: true),
       ],
     );
+    final protocol = _state?.fallback == true
+        ? '${speedProtocolLabel(_settings.protocol)} \u2192 ${speedProtocolLabel(_state!.protocol)}'
+        : speedProtocolLabel(
+            _state == null || phase == SpeedTestPhase.connecting
+                ? _settings.protocol
+                : _state!.protocol,
+          );
     return Card(
       radius: AppCorner.xl,
       padding: const EdgeInsets.all(20),
@@ -350,11 +352,10 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
-            spacing: 8,
             children: [
               GlyphIcon(AppGlyphs.speed, size: 20, color: color),
+              const SizedBox(width: 8),
               Expanded(
-                flex: 2,
                 child: Text(
                   'Speedtest',
                   maxLines: 1,
@@ -362,26 +363,28 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView> {
                   style: AppTextStyle.headline.of(context, emphasized: true),
                 ),
               ),
-              Expanded(
-                child: Text(
-                  _state?.fallback == true
-                      ? '${speedProtocolLabel(_settings.protocol)} → ${speedProtocolLabel(_state!.protocol)}'
-                      : speedProtocolLabel(
-                          _state == null || phase == SpeedTestPhase.connecting
-                              ? _settings.protocol
-                              : _state!.protocol,
-                        ),
-                  textAlign: TextAlign.end,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTextStyle.footnote
-                      .of(context)
-                      .copyWith(color: context.colorScheme.onSurfaceVariant),
+              const SizedBox(width: 12),
+              Flexible(
+                child: SizedBox(
+                  height: 40 * MediaQuery.textScalerOf(context).scale(1),
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      protocol,
+                      textAlign: TextAlign.end,
+                      maxLines: 2,
+                      style: AppTextStyle.footnote
+                          .of(context)
+                          .copyWith(
+                            color: context.colorScheme.onSurfaceVariant,
+                          ),
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 12),
           LayoutBuilder(
             builder: (context, constraints) => constraints.maxWidth >= 640
                 ? Row(
@@ -396,6 +399,14 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView> {
                     children: [gauge, const SizedBox(height: 12), panel],
                   ),
           ),
+          const SizedBox(height: 16),
+          Text(
+            '${l.speedTestDataUsed} \u00b7 ${speedTestBytes(_state?.bytes ?? 0)}',
+            maxLines: 1,
+            style: AppTextStyle.caption1
+                .of(context)
+                .copyWith(color: context.colorScheme.onSurfaceVariant),
+          ),
         ],
       ),
     );
@@ -403,53 +414,86 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView> {
 
   Widget _routeCard(BuildContext context, bool running) {
     final l = context.appLocalizations;
-    final result = _state ?? _probe;
-    final chains = result?.outbound?.chains ?? const <String>[];
     final selected = !running || _proxy == 'DIRECT'
         ? l.direct
         : _proxy.isEmpty
         ? l.speedTestFollowRules
         : _proxy;
-    final server = _settings.server;
-    final actual = result?.server;
+    final actual = _state?.server ?? _probe?.server;
     final serverText =
-        server?.title ??
+        _settings.server?.title ??
         (actual == null
             ? l.auto
             : [
                 actual.sponsor,
                 actual.city,
-              ].where((s) => s.isNotEmpty).join(' · '));
+              ].where((s) => s.isNotEmpty).join(' \u00b7 '));
+    Widget row(Glyph glyph, String title, Widget value) => ListItem(
+      leading: GlyphIcon(glyph),
+      title: Row(
+        children: [
+          Expanded(
+            flex: 4,
+            child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
+          ),
+          const SizedBox(width: 8),
+          Expanded(flex: 6, child: value),
+        ],
+      ),
+    );
     return generateGroup([
-      ListItem(
-        leading: const GlyphIcon(AppGlyphs.proxies),
-        title: Text(l.speedTestExitNode),
-        subtitle: !running
-            ? Text(l.speedTestCoreStopped)
-            : chains.isEmpty
-            ? null
-            : EmojiText(chains.last),
-        trailing: TextButton(
+      row(
+        AppGlyphs.connections,
+        l.speedTestExitNode,
+        TextButton(
           onPressed: _testing || !running ? null : _chooseOutbound,
           child: Row(
-            mainAxisSize: MainAxisSize.min,
-            spacing: 4,
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 160),
-                child: PopupValueText(selected),
-              ),
+              Expanded(child: PopupValueText(selected)),
+              const SizedBox(width: 4),
               const GlyphIcon(Glyphs.picker, size: 16),
             ],
           ),
         ),
       ),
-      ListItem(
-        leading: const GlyphIcon(AppGlyphs.resources),
-        title: Text(l.speedTestServer),
-        subtitle: Text(serverText.isEmpty ? l.auto : serverText),
+      row(
+        AppGlyphs.dns,
+        l.speedTestServer,
+        Tooltip(
+          message: serverText,
+          child: Text(
+            serverText.isEmpty ? l.auto : serverText,
+            textAlign: TextAlign.end,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTextStyle.body
+                .of(context)
+                .copyWith(color: context.colorScheme.onSurfaceVariant),
+          ),
+        ),
       ),
     ]);
+  }
+
+  Widget _errorBanner(BuildContext context) {
+    final l = context.appLocalizations;
+    return Card(
+      isError: true,
+      radius: AppCorner.lg,
+      padding: const EdgeInsets.all(16),
+      child: Text(
+        switch (_error) {
+          'rejected' => l.speedTestErrorRejected,
+          'blocked' => l.speedTestErrorBlocked,
+          'timeout' => l.speedTestErrorTimeout,
+          _ => l.speedTestErrorUnavailable,
+        },
+        style: AppTextStyle.body
+            .of(context)
+            .copyWith(color: context.colorScheme.error),
+      ),
+    );
   }
 
   @override
@@ -470,6 +514,7 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView> {
     });
     return Scaffold(
       title: l.speedTest,
+      groupIconActions: false,
       iconActions: [
         IconButtonData(
           glyph: AppGlyphs.clock,
@@ -485,24 +530,19 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView> {
       body: Builder(
         builder: (context) => ListView(
           padding: const EdgeInsets.symmetric(horizontal: 16).copyWith(
-            top: context.contentTopPadding + 12,
+            top: context.appBarInset,
             bottom: 20 + context.bottomInset,
           ),
           children: [
-            _hero(context),
-            const SizedBox(height: 16),
-            _routeCard(context, running),
             if (_error != null) ...[
+              _errorBanner(context),
               const SizedBox(height: 12),
-              ListFooter(
-                text: switch (_error) {
-                  'rejected' => l.speedTestErrorRejected,
-                  'blocked' => l.speedTestErrorBlocked,
-                  'timeout' => l.speedTestErrorTimeout,
-                  _ => l.speedTestErrorUnavailable,
-                },
-              ),
             ],
+            _hero(context),
+            const SizedBox(height: 12),
+            SpeedTestStatGrid(state: _state, testing: _testing),
+            const SizedBox(height: 12),
+            _routeCard(context, running),
             if (_downIndex >= 0 || _upIndex >= 0) ...[
               const SizedBox(height: 16),
               SpeedTestWaveform(samples: _samples),

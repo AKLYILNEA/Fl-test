@@ -114,8 +114,8 @@ class _SpeedTestGaugeState extends State<SpeedTestGauge>
                       trackColor: context.colorScheme.onSurface.withValues(
                         alpha: .06,
                       ),
-                      needleColor: widget.color,
-                      labelStyle: AppTextStyle.caption2
+                      needleColor: const Color(0xff8e8e93),
+                      labelStyle: AppTextStyle.body
                           .of(context)
                           .copyWith(
                             color: context.colorScheme.onSurfaceVariant,
@@ -233,12 +233,25 @@ class _GaugePainter extends CustomPainter {
     final spin = this.spin;
     if (spin != null) {
       const length = pi / 5;
+      final start = _start + (_sweep - length) * spin;
       canvas.drawArc(
         rect,
-        _start + (_sweep - length) * spin,
+        start,
         length,
         false,
-        stroke..color = color.withValues(alpha: 0.7),
+        stroke
+          ..color = color
+          ..shader = SweepGradient(
+            endAngle: length,
+            colors: [startColor, color],
+            transform: GradientRotation(start),
+          ).createShader(rect),
+      );
+      stroke.shader = null;
+      canvas.drawCircle(
+        center + Offset(cos(start), sin(start)) * radius,
+        strokeWidth / 2,
+        Paint()..color = startColor,
       );
     }
 

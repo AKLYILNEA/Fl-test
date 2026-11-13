@@ -29,7 +29,8 @@ String _loadedLatency(SpeedTestState? state) {
 }
 
 class SpeedTestMetrics extends StatelessWidget {
-  const SpeedTestMetrics({super.key, this.state});
+  const SpeedTestMetrics({super.key, this.state, this.speedsOnly = false});
+  final bool speedsOnly;
   final SpeedTestState? state;
 
   Widget _speed(BuildContext context, bool up) {
@@ -117,6 +118,15 @@ class SpeedTestMetrics extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = context.appLocalizations;
     final s = state;
+    if (speedsOnly) {
+      return Row(
+        children: [
+          Expanded(child: _speed(context, false)),
+          const SizedBox(width: 16),
+          Expanded(child: _speed(context, true)),
+        ],
+      );
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -171,12 +181,118 @@ class SpeedTestMetrics extends StatelessWidget {
   }
 }
 
+class SpeedTestStatGrid extends StatelessWidget {
+  const SpeedTestStatGrid({super.key, this.state, this.testing = false});
+  final SpeedTestState? state;
+  final bool testing;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.appLocalizations;
+    final s = state;
+    final latencyActive = testing && s?.phase == SpeedTestPhase.latency;
+    final loadActive =
+        testing &&
+        (s?.phase == SpeedTestPhase.download ||
+            s?.phase == SpeedTestPhase.upload);
+    String number(double? value) =>
+        value == null || value <= 0 ? '\u2014' : value.round().toString();
+    final items = [
+      (l.delay, number(s?.latency), 'ms', latencyActive),
+      (l.speedTestJitter, number(s?.jitter), 'ms', latencyActive),
+      (
+        l.speedTestLoadedLatency,
+        _loadedLatency(s).replaceAll(' ms', ''),
+        'ms',
+        loadActive,
+      ),
+      (l.speedTestResponsiveness, number(s?.rpm.toDouble()), 'RPM', loadActive),
+    ];
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth >= 640 ? 4 : 2;
+        final width = (constraints.maxWidth - (columns - 1) * 12) / columns;
+        return Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            for (final item in items)
+              SizedBox(
+                width: width,
+                child: Card(
+                  radius: AppCorner.xl,
+                  padding: const EdgeInsets.all(16),
+                  isSelected: item.$4,
+                  selectionTint: item.$4
+                      ? Color.alphaBlend(
+                          context.colorScheme.primary.withValues(alpha: .1),
+                          context.colorScheme.surface,
+                        )
+                      : null,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              item.$1,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTextStyle.footnote
+                                  .of(context)
+                                  .copyWith(
+                                    color: context.colorScheme.onSurfaceVariant,
+                                  ),
+                            ),
+                          ),
+                          SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: item.$4
+                                ? const ActivityIndicator(size: 12)
+                                : null,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 18),
+                      SizedBox(
+                        height: 38,
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            item.$2,
+                            style: AppTextStyle.largeTitle
+                                .of(context, emphasized: true)
+                                .toTabular,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        item.$3,
+                        style: AppTextStyle.caption1
+                            .of(context)
+                            .copyWith(
+                              color: context.colorScheme.onSurfaceVariant,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
 class SpeedTestWaveform extends StatelessWidget {
   const SpeedTestWaveform({super.key, required this.samples});
   final List<Traffic> samples;
 
-  @override
-  Widget build(BuildContext context) {
+  Widget _chart(BuildContext context, {bool? upload}) {
     final l = context.appLocalizations;
     final down = context.colorScheme.primary;
     final up = speedUploadColor(context);
@@ -184,10 +300,15 @@ class SpeedTestWaveform extends StatelessWidget {
       radius: AppCorner.xl,
       padding: const EdgeInsets.all(20),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            l.speedTestRealtime,
+            upload == null
+                ? l.speedTestRealtime
+                : upload
+                ? l.upload
+                : l.download,
             style: AppTextStyle.headline.of(context, emphasized: true),
           ),
           const SizedBox(height: 20),
@@ -200,34 +321,51 @@ class SpeedTestWaveform extends StatelessWidget {
                 downColor: down,
                 upColor: up,
                 baselineColor: Divider.colorOf(context),
+                upload: upload,
               ),
             ),
           ),
-          const SizedBox(height: 16),
-          Wrap(
-            spacing: 20,
-            runSpacing: 8,
-            children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                spacing: 5,
-                children: [
-                  GlyphIcon(AppGlyphs.arrowDown, color: down, size: 14),
-                  Text(l.download, style: AppTextStyle.footnote.of(context)),
-                ],
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                spacing: 5,
-                children: [
-                  GlyphIcon(AppGlyphs.arrowUp, color: up, size: 14),
-                  Text(l.upload, style: AppTextStyle.footnote.of(context)),
-                ],
-              ),
-            ],
-          ),
+          if (upload == null) ...[
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 20,
+              runSpacing: 8,
+              children: [
+                for (final isUp in [false, true])
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    spacing: 5,
+                    children: [
+                      GlyphIcon(
+                        isUp ? AppGlyphs.arrowUp : AppGlyphs.arrowDown,
+                        color: isUp ? up : down,
+                        size: 14,
+                      ),
+                      Text(
+                        isUp ? l.upload : l.download,
+                        style: AppTextStyle.footnote.of(context),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ],
         ],
       ),
     );
   }
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) => constraints.maxWidth >= 640
+        ? Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: _chart(context, upload: false)),
+              const SizedBox(width: 12),
+              Expanded(child: _chart(context, upload: true)),
+            ],
+          )
+        : _chart(context),
+  );
 }

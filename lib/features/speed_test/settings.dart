@@ -14,15 +14,22 @@ class SpeedTestSettingsView extends StatefulWidget {
     super.key,
     required this.settings,
     required this.proxy,
+    this.onChanged,
   });
   final SpeedTestSettings settings;
   final String proxy;
+  final ValueChanged<SpeedTestSettings>? onChanged;
   @override
   State<SpeedTestSettingsView> createState() => _SpeedTestSettingsViewState();
 }
 
 class _SpeedTestSettingsViewState extends State<SpeedTestSettingsView> {
   late SpeedTestSettings _settings = widget.settings;
+  void _change(SpeedTestSettings settings) {
+    setState(() => _settings = settings);
+    widget.onChanged?.call(settings);
+  }
+
   Future<void> _pickServer() async {
     final node = await Navigator.of(context).push<SpeedTestNode>(
       PagedSheetRoute(
@@ -33,12 +40,7 @@ class _SpeedTestSettingsViewState extends State<SpeedTestSettingsView> {
       ),
     );
     if (!mounted || node == null) return;
-    setState(
-      () => _settings = _settings.copyWith(
-        server: node,
-        automatic: node.host.isEmpty,
-      ),
-    );
+    _change(_settings.copyWith(server: node, automatic: node.host.isEmpty));
   }
 
   @override
@@ -80,9 +82,8 @@ class _SpeedTestSettingsViewState extends State<SpeedTestSettingsView> {
                   options: const [5, 10, 15, 20],
                   value: _settings.duration,
                   textBuilder: (value) => '${value}s',
-                  onChanged: (value) => setState(
-                    () => _settings = _settings.copyWith(duration: value),
-                  ),
+                  onChanged: (value) =>
+                      _change(_settings.copyWith(duration: value)),
                 ),
                 ListItem<bool>.options(
                   title: Text(l.speedTestConnections),
@@ -90,9 +91,8 @@ class _SpeedTestSettingsViewState extends State<SpeedTestSettingsView> {
                   value: _settings.multiThread,
                   textBuilder: (value) =>
                       value ? l.speedTestMultiThread : l.speedTestSingleThread,
-                  onChanged: (value) => setState(
-                    () => _settings = _settings.copyWith(multiThread: value),
-                  ),
+                  onChanged: (value) =>
+                      _change(_settings.copyWith(multiThread: value)),
                 ),
                 ListItem<String>.options(
                   title: Text(l.speedTestProtocol),
@@ -100,9 +100,8 @@ class _SpeedTestSettingsViewState extends State<SpeedTestSettingsView> {
                   value: _settings.protocol,
                   textBuilder: (value) =>
                       value == 'h3' ? 'HTTP/3 · QUIC' : 'HTTP/2',
-                  onChanged: (value) => setState(
-                    () => _settings = _settings.copyWith(protocol: value),
-                  ),
+                  onChanged: (value) =>
+                      _change(_settings.copyWith(protocol: value)),
                 ),
               ],
             ),

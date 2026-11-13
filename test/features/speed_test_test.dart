@@ -21,6 +21,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/intl.dart';
 
 import '../helpers/test_app.dart';
 
@@ -146,6 +147,7 @@ Widget _app(
   Locale locale = const Locale('en'),
   bool running = false,
   bool dark = false,
+  String nodeName = 'Node A',
   Widget page = const SpeedTestView(),
 }) => RepaintBoundary(
   key: _preview,
@@ -164,15 +166,15 @@ Widget _app(
         const MoreToolsSelectorState(navigationItems: []),
       ),
       runTimeProvider.overrideWithBuild((_, _) => running ? 1 : null),
-      groupsProvider.overrideWithValue(const [
+      groupsProvider.overrideWithValue([
         Group(
           type: GroupType.Selector,
           name: 'Group',
           now: 'Node B',
           all: [
-            Proxy(name: 'DIRECT', type: 'Direct'),
-            Proxy(name: 'Node A', type: 'Shadowsocks'),
-            Proxy(name: 'Node B', type: 'Vmess'),
+            const Proxy(name: 'DIRECT', type: 'Direct'),
+            Proxy(name: nodeName, type: 'Shadowsocks'),
+            const Proxy(name: 'Node B', type: 'Vmess'),
           ],
         ),
       ]),
@@ -355,6 +357,18 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Start Test'), findsOneWidget);
     expect(find.text('Stop Test'), findsNothing);
+    final banner = tester
+        .widgetList<app_ui.Card>(find.byType(app_ui.Card))
+        .where((card) => card.isError);
+    expect(banner, hasLength(1));
+    final error = tester
+        .element(find.byType(SpeedTestView))
+        .appLocalizations
+        .speedTestErrorUnavailable;
+    expect(
+      tester.getTopLeft(find.text(error)).dy,
+      lessThan(tester.getTopLeft(find.byType(SpeedTestGauge)).dy),
+    );
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
   });
@@ -455,6 +469,170 @@ void main() {
     expect(find.byType(SpeedTestHistoryView), findsOneWidget);
     expect(find.text('No test history yet'), findsOneWidget);
     expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('populated Chinese history opens without locale date tables', (
+    tester,
+  ) async {
+    _size(tester, 430, 1800);
+    final client = _Client();
+    addTearDown(client.dispose);
+    final previousLocale = Intl.defaultLocale;
+    addTearDown(() => Intl.defaultLocale = previousLocale);
+    await tester.pumpWidget(_app(client, locale: const Locale('zh', 'CN')));
+    await tester.pumpAndSettle();
+    final l = tester.element(find.byType(SpeedTestView)).appLocalizations;
+    await tester.tap(find.text(l.speedTestStart));
+    await tester.pump();
+    client.finish();
+    await tester.pumpAndSettle();
+    Intl.defaultLocale = 'zh_CN';
+    await tester.tap(find.byTooltip(l.speedTestHistory));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.byType(SpeedTestHistoryView), findsOneWidget);
+    await _snapshot(tester, '.dart_tool/speed-test-history-populated.png');
+    await tester.tap(find.textContaining('240.0').last);
+    await tester.pumpAndSettle();
+    expect(find.byType(SpeedTestRecordView), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('long outbound names and live metadata preserve card heights', (
+    tester,
+  ) async {
+    _size(tester, 360, 1700);
+    const longName = 'HK-A-02-IEPL [Home] very long node x1.5 2026';
+    final client = _Client();
+    addTearDown(client.dispose);
+    await tester.pumpWidget(_app(client, running: true, nodeName: longName));
+    await tester.pumpAndSettle();
+    final view = tester.widget<app_ui.Scaffold>(
+      find
+          .descendant(
+            of: find.byType(SpeedTestView),
+            matching: find.byType(app_ui.Scaffold),
+          )
+          .first,
+    );
+    expect(view.groupIconActions, isFalse);
+    await tester.tap(find.byType(app_ui.TextButton).first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(longName).hitTestable());
+    await tester.pumpAndSettle();
+    final hero = find
+        .ancestor(
+          of: find.byType(SpeedTestGauge),
+          matching: find.byType(app_ui.Card),
+        )
+        .first;
+    final route = find
+        .ancestor(
+          of: find.text('Exit Node'),
+          matching: find.byType(app_ui.ListItem),
+        )
+        .first;
+    final heroHeight = tester.getSize(hero).height;
+    final routeHeight = tester.getSize(route).height;
+    await tester.tap(find.text('Start Test'));
+    await tester.pump();
+    for (final phase in [
+      SpeedTestPhase.latency,
+      SpeedTestPhase.download,
+      SpeedTestPhase.upload,
+    ]) {
+      client.events.add(
+        SpeedTestState(
+          id: client.runId,
+          phase: phase,
+          progress: .5,
+          speed: 100e6,
+          bytes: 20000000,
+          fallback: true,
+          protocol: 'h1',
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(tester.getSize(hero).height, heroHeight);
+      expect(tester.getSize(route).height, routeHeight);
+      final active = tester
+          .widgetList<app_ui.Card>(
+            find.descendant(
+              of: find.byType(SpeedTestStatGrid),
+              matching: find.byType(app_ui.Card),
+            ),
+          )
+          .where((card) => card.isSelected);
+      expect(active, hasLength(2));
+      expect(tester.takeException(), isNull);
+    }
+    final protocol = tester.widget<Text>(find.text('HTTP/2 → HTTP/1.1'));
+    expect(protocol.maxLines, 2);
+    expect(protocol.overflow, isNot(TextOverflow.ellipsis));
+    client.finish();
+    await tester.pumpAndSettle();
+    await _snapshot(tester, '.dart_tool/speed-test-long-node.png');
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('settings persist immediately when the sheet is dismissed', (
+    tester,
+  ) async {
+    _size(tester, 430);
+    final client = _Client();
+    addTearDown(client.dispose);
+    await tester.pumpWidget(_app(client));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Speed Test Settings'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('10s'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('20s').last);
+    await tester.pumpAndSettle();
+    tester.element(find.byType(SpeedTestSettingsView)).safeNestedPop();
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Speed Test Settings'));
+    await tester.pumpAndSettle();
+    final saved = tester
+        .widget<SpeedTestSettingsView>(find.byType(SpeedTestSettingsView))
+        .settings;
+    expect(saved.duration, 20);
+    expect(saved.protocol, 'h2');
+    expect(saved.multiThread, isTrue);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('wide realtime graph uses separate homepage direction charts', (
+    tester,
+  ) async {
+    _size(tester, 900, 650);
+    final client = _Client();
+    addTearDown(client.dispose);
+    await tester.pumpWidget(
+      _app(
+        client,
+        page: app_ui.Scaffold(
+          title: 'Realtime',
+          body: Center(
+            child: SpeedTestWaveform(
+              samples: List.generate(
+                60,
+                (i) => Traffic(down: (i + 1) * 200000, up: (60 - i) * 50000),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final charts = tester
+        .widgetList<TrafficBarsChart>(find.byType(TrafficBarsChart))
+        .toList();
+    expect(charts.map((c) => c.upload), [false, true]);
+    expect(tester.takeException(), isNull);
+    await _snapshot(tester, '.dart_tool/speed-test-wide-waveform.png');
     await tester.pumpWidget(const SizedBox.shrink());
   });
 }
