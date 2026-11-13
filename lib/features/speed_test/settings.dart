@@ -211,9 +211,7 @@ class _SpeedTestServerPickerState extends ConsumerState<SpeedTestServerPicker> {
     return SpeedTestScope(
       child: Scaffold(
         title: l.speedTestServer,
-        searchState: _failed
-            ? null
-            : AppBarSearchState(query: _query, onSearch: _search),
+        searchState: AppBarSearchState(onSearch: _search),
         body: Builder(
           builder: (context) => NullStatusSwitcher(
             isLoading: _loading,

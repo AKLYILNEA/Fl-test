@@ -20,7 +20,8 @@ class TrafficStatsView extends ConsumerStatefulWidget {
   ConsumerState<TrafficStatsView> createState() => _TrafficStatsViewState();
 }
 
-class _TrafficStatsViewState extends ConsumerState<TrafficStatsView> {
+class _TrafficStatsViewState extends ConsumerState<TrafficStatsView>
+    with RouteMotionHoldMixin<TrafficStatsView> {
   static const _refreshInterval = Duration(seconds: 30);
 
   TrafficStatsPeriod _period = TrafficStatsPeriod.day;
@@ -68,13 +69,19 @@ class _TrafficStatsViewState extends ConsumerState<TrafficStatsView> {
           .read(trafficStatsClientProvider)
           .getStats(start: start, end: end);
       if (!mounted || id != _requestId) return;
-      setState(() {
-        _result = result;
-        _loading = false;
+      updateWhenRouteSettled(() {
+        if (!mounted || id != _requestId) return;
+        setState(() {
+          _result = result;
+          _loading = false;
+        });
       });
     } catch (_) {
       if (!mounted || id != _requestId) return;
-      setState(() => _loading = false);
+      updateWhenRouteSettled(() {
+        if (!mounted || id != _requestId) return;
+        setState(() => _loading = false);
+      });
     } finally {
       if (manual) {
         if (startedAt != null && mounted) {
@@ -171,6 +178,7 @@ class _TrafficStatsViewState extends ConsumerState<TrafficStatsView> {
         ],
         body: Builder(
           builder: (context) => NullStatusSwitcher(
+            holdsArrival: false,
             isLoading: (_loading && _result == null) || store.isLoading,
             isEmpty: false,
             loadingStatus: const ActivityIndicator.page(),

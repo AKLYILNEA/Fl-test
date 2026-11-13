@@ -24,7 +24,8 @@ class SpeedTestView extends ConsumerStatefulWidget {
   ConsumerState<SpeedTestView> createState() => _SpeedTestViewState();
 }
 
-class _SpeedTestViewState extends ConsumerState<SpeedTestView> {
+class _SpeedTestViewState extends ConsumerState<SpeedTestView>
+    with RouteSettledMixin<SpeedTestView> {
   late final SpeedTestClient _client;
   late final StreamSubscription<SpeedTestState> _updates;
   SpeedTestSettings _settings = const SpeedTestSettings();
@@ -46,7 +47,20 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView> {
     super.initState();
     _client = ref.read(speedTestClientProvider);
     _updates = _client.updates.listen(_onUpdate);
-    unawaited(_load());
+    final cached = ref.read(speedTestStoreProvider).value;
+    if (cached != null) {
+      _settings = cached.settings;
+      _loaded = true;
+    }
+  }
+
+  @override
+  void didSettleRoute() {
+    if (_loaded) {
+      unawaited(_detect());
+    } else {
+      unawaited(_load());
+    }
   }
 
   Future<void> _load() async {

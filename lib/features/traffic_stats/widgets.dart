@@ -539,18 +539,12 @@ class _OverviewMetricTile extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 6),
-        Flexible(
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: AlignmentDirectional.centerEnd,
-            child: Text(
-              value,
-              maxLines: 1,
-              style: AppTextStyle.subheadline
-                  .of(context, emphasized: true)
-                  .toTabular,
-            ),
-          ),
+        Text(
+          value,
+          maxLines: 1,
+          style: AppTextStyle.subheadline
+              .of(context, emphasized: true)
+              .toTabular,
         ),
       ],
     );
@@ -858,7 +852,7 @@ class _TrendBarPainter extends CustomPainter {
   ) {
     final scale = _scaleOf(points);
     var maxWidth = 0.0;
-    for (final text in [scale.topLabel, scale.midLabel]) {
+    for (final text in ['0', scale.topLabel, scale.midLabel]) {
       final tp = TextPainter(
         text: TextSpan(text: text, style: labelStyle),
         maxLines: 1,
@@ -893,9 +887,12 @@ class _TrendBarPainter extends CustomPainter {
       final frac = s / steps;
       final y = chartBottom - chartHeight * frac;
       canvas.drawLine(Offset(chartLeft, y), Offset(chartRight, y), gridPaint);
-      if (s == 0) continue;
 
-      final label = s == steps ? scale.topLabel : scale.midLabel;
+      final label = s == 0
+          ? '0'
+          : s == steps
+          ? scale.topLabel
+          : scale.midLabel;
       final tp = TextPainter(
         text: TextSpan(text: label, style: labelStyle),
         maxLines: 1,
@@ -915,7 +912,9 @@ class _TrendBarPainter extends CustomPainter {
     );
     final downPaint = Paint()..color = downloadColor;
     final upPaint = Paint()..color = uploadColor;
-    final radius = Radius.circular(math.min(4.0, barWidth / 2));
+    final capRadius = math.min(4.0, barWidth / 2);
+    final radius = Radius.circular(capRadius);
+    final minCapH = math.max(2.5, capRadius);
 
     for (var i = 0; i < count; i++) {
       final point = points[i];
@@ -934,17 +933,26 @@ class _TrendBarPainter extends CustomPainter {
       }
 
       if (point.total > 0) {
-        final totalH = math.max(2.0, (point.total / maxTotal) * chartHeight);
-        final downH = point.down > 0
-            ? math.max(1.5, totalH * (point.down / point.total))
-            : 0.0;
-        final upH = math.max(0.0, totalH - downH);
+        var totalH = math.max(minCapH, (point.total / maxTotal) * chartHeight);
+        var downH = 0.0;
+        var upH = 0.0;
+        if (point.up > 0 && point.down > 0) {
+          totalH = math.max(totalH, minCapH + 2.0);
+          upH = (totalH * (point.up / point.total))
+              .clamp(minCapH, totalH - 1.5)
+              .toDouble();
+          downH = totalH - upH;
+        } else if (point.down > 0) {
+          downH = totalH;
+        } else if (point.up > 0) {
+          upH = totalH;
+        }
         final barLeft = cx - barWidth / 2;
         final barRight = cx + barWidth / 2;
 
         if (downH > 0) {
           final downTop = chartBottom - downH;
-          final rrect = upH <= 0.5
+          final rrect = upH <= 0
               ? RRect.fromLTRBAndCorners(
                   barLeft,
                   downTop,
@@ -963,7 +971,7 @@ class _TrendBarPainter extends CustomPainter {
           canvas.drawRRect(rrect, downPaint);
         }
 
-        if (upH > 0.5) {
+        if (upH > 0) {
           final top = chartBottom - totalH;
           final bottom = chartBottom - downH;
           canvas.drawRRect(
@@ -1241,9 +1249,6 @@ class TrafficStatsRankingSection extends StatelessWidget {
     final l = context.appLocalizations;
     final cs = context.colorScheme;
     final items = _itemsForTab();
-    final maxItemTotal = items.isNotEmpty
-        ? items.fold<int>(0, (prev, item) => math.max(prev, item.total))
-        : 0;
     final sumTotal = result.total > 0
         ? result.total
         : items.fold<int>(0, (prev, item) => prev + item.total);
@@ -1302,21 +1307,34 @@ class TrafficStatsRankingSection extends StatelessWidget {
             for (final item in items)
               DecorationListItem(
                 leading: _leadingForItem(context, item),
-                title:
-                    tab == TrafficStatsRankTab.node ||
-                        tab == TrafficStatsRankTab.profile
-                    ? EmojiText(
-                        item.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      )
-                    : Text(
-                        item.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                title: Row(
+                  children: [
+                    Expanded(
+                      child:
+                          tab == TrafficStatsRankTab.node ||
+                              tab == TrafficStatsRankTab.profile
+                          ? EmojiText(
+                              item.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            )
+                          : Text(
+                              item.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      trafficStatsFormatBytes(item.total),
+                      style: AppTextStyle.subheadline
+                          .of(context, emphasized: true)
+                          .toTabular,
+                    ),
+                  ],
+                ),
                 subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const SizedBox(height: 6),
                     ClipRRect(
@@ -1330,8 +1348,8 @@ class TrafficStatsRankingSection extends StatelessWidget {
                             alignment: AlignmentDirectional.centerStart,
                             child: FractionallySizedBox(
                               heightFactor: 1,
-                              widthFactor: maxItemTotal > 0 && item.total > 0
-                                  ? (item.total / maxItemTotal)
+                              widthFactor: sumTotal > 0 && item.total > 0
+                                  ? (item.total / sumTotal)
                                         .clamp(0.02, 1.0)
                                         .toDouble()
                                   : 0,
@@ -1347,36 +1365,30 @@ class TrafficStatsRankingSection extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 5),
-                    Text(
-                      '\u2193 ${trafficStatsFormatBytes(item.down)}   \u2191 ${trafficStatsFormatBytes(item.up)}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTextStyle.caption1
-                          .of(context)
-                          .toTabular
-                          .copyWith(color: cs.onSurfaceVariant),
-                    ),
-                  ],
-                ),
-                trailing: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      trafficStatsFormatBytes(item.total),
-                      style: AppTextStyle.subheadline
-                          .of(context, emphasized: true)
-                          .toTabular,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      sumTotal > 0
-                          ? '${(item.total * 100 / sumTotal).toStringAsFixed(1)}%'
-                          : '0.0%',
-                      style: AppTextStyle.caption2
-                          .of(context)
-                          .toTabular
-                          .copyWith(color: cs.onSurfaceVariant),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            '\u2193 ${trafficStatsFormatBytes(item.down)}   \u2191 ${trafficStatsFormatBytes(item.up)}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyle.caption1
+                                .of(context)
+                                .toTabular
+                                .copyWith(color: cs.onSurfaceVariant),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          sumTotal > 0
+                              ? '${(item.total * 100 / sumTotal).toStringAsFixed(1)}%'
+                              : '0.0%',
+                          style: AppTextStyle.caption2
+                              .of(context)
+                              .toTabular
+                              .copyWith(color: cs.onSurfaceVariant),
+                        ),
+                      ],
                     ),
                   ],
                 ),
