@@ -68,23 +68,34 @@ class SpeedTestMetrics extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 6),
-        Text.rich(
-          TextSpan(
-            children: [
+        SizedBox(
+          height: 32 * MediaQuery.textScalerOf(context).scale(1),
+          width: double.infinity,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: AlignmentDirectional.centerStart,
+            child: Text.rich(
               TextSpan(
-                text: value == null || value < 0 ? '—' : speedTestValue(value),
-                style: AppTextStyle.title2
-                    .of(context, emphasized: true)
-                    .toTabular
-                    .copyWith(color: color),
+                children: [
+                  TextSpan(
+                    text: value == null || value < 0
+                        ? '—'
+                        : speedTestValue(value),
+                    style: AppTextStyle.title2
+                        .of(context, emphasized: true)
+                        .toTabular
+                        .copyWith(color: color),
+                  ),
+                  TextSpan(
+                    text: ' ${speedTestUnit(value ?? 0)}',
+                    style: AppTextStyle.caption1
+                        .of(context)
+                        .copyWith(color: context.colorScheme.onSurfaceVariant),
+                  ),
+                ],
               ),
-              TextSpan(
-                text: ' ${speedTestUnit(value ?? 0)}',
-                style: AppTextStyle.caption1
-                    .of(context)
-                    .copyWith(color: context.colorScheme.onSurfaceVariant),
-              ),
-            ],
+              maxLines: 1,
+            ),
           ),
         ),
       ],

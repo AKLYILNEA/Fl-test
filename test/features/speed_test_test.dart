@@ -148,15 +148,16 @@ Widget _app(
   bool running = false,
   bool dark = false,
   String nodeName = 'Node A',
+  String fontFamily = 'SpeedPreview',
   Widget page = const SpeedTestView(),
 }) => RepaintBoundary(
   key: _preview,
   child: TestApp(
     locale: locale,
-    theme: app_ui.ThemeData(fontFamily: 'SpeedPreview'),
+    theme: app_ui.ThemeData(fontFamily: fontFamily),
     darkTheme: app_ui.ThemeData(
       brightness: Brightness.dark,
-      fontFamily: 'SpeedPreview',
+      fontFamily: fontFamily,
     ),
     themeMode: dark ? app_ui.ThemeMode.dark : app_ui.ThemeMode.light,
     overrides: [
@@ -507,7 +508,9 @@ void main() {
     const longName = 'HK-A-02-IEPL [Home] very long node x1.5 2026';
     final client = _Client();
     addTearDown(client.dispose);
-    await tester.pumpWidget(_app(client, running: true, nodeName: longName));
+    await tester.pumpWidget(
+      _app(client, running: true, nodeName: longName, fontFamily: 'Ahem'),
+    );
     await tester.pumpAndSettle();
     final view = tester.widget<app_ui.Scaffold>(
       find
