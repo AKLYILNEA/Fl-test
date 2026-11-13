@@ -15,6 +15,7 @@ import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/widgets/traffic_chart.dart';
 import 'package:fl_clash/ui/ui.dart' as app_ui;
+import 'package:fl_clash/ui/icons/icons.dart';
 import 'package:fl_clash/views/tools.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -497,6 +498,27 @@ void main() {
     await tester.tap(find.textContaining('240.0').last);
     await tester.pumpAndSettle();
     expect(find.byType(SpeedTestRecordView), findsOneWidget);
+    final summary = find
+        .descendant(
+          of: find.byType(SpeedTestRecordView),
+          matching: find.byType(app_ui.Card),
+        )
+        .first;
+    final details = find.byKey(const ValueKey('speed-record-details'));
+    final body = tester.renderObject<RenderBox>(
+      find
+          .descendant(
+            of: find.byType(SpeedTestRecordView),
+            matching: find.byType(ListView),
+          )
+          .first,
+    );
+    expect(
+      body.globalToLocal(tester.getTopLeft(details)).dy -
+          body.globalToLocal(tester.getBottomLeft(summary)).dy,
+      closeTo(12, .01),
+    );
+    await _snapshot(tester, '.dart_tool/speed-test-record-details.png');
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
   });
@@ -521,7 +543,7 @@ void main() {
           .first,
     );
     expect(view.groupIconActions, isFalse);
-    await tester.tap(find.byType(app_ui.TextButton).first);
+    await tester.tap(find.byKey(const ValueKey('speed-test-outbound-picker')));
     await tester.pumpAndSettle();
     await tester.tap(find.text(longName).hitTestable());
     await tester.pumpAndSettle();
@@ -531,12 +553,7 @@ void main() {
           matching: find.byType(app_ui.Card),
         )
         .first;
-    final route = find
-        .ancestor(
-          of: find.text('Exit Node'),
-          matching: find.byType(app_ui.ListItem),
-        )
-        .first;
+    final route = find.byType(SpeedTestConnectionCard);
     final heroHeight = tester.getSize(hero).height;
     final routeHeight = tester.getSize(route).height;
     await tester.tap(find.text('Start Test'));
@@ -569,6 +586,13 @@ void main() {
           )
           .where((card) => card.isSelected);
       expect(active, hasLength(2));
+      for (final card in active) {
+        expect(card.side.width, 1.5);
+        expect(
+          card.side.color,
+          tester.element(find.byType(SpeedTestStatGrid)).colorScheme.primary,
+        );
+      }
       expect(tester.takeException(), isNull);
     }
     final protocol = tester.widget<Text>(find.text('HTTP/2 → HTTP/1.1'));
@@ -634,8 +658,88 @@ void main() {
         .widgetList<TrafficBarsChart>(find.byType(TrafficBarsChart))
         .toList();
     expect(charts.map((c) => c.upload), [false, true]);
+    final glyphs = tester
+        .widgetList<GlyphIcon>(find.byType(GlyphIcon))
+        .map((icon) => icon.glyph);
+    expect(glyphs, contains(AppGlyphs.arrowDown));
+    expect(glyphs, contains(AppGlyphs.arrowUp));
     expect(tester.takeException(), isNull);
     await _snapshot(tester, '.dart_tool/speed-test-wide-waveform.png');
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets(
+    'connection values use their full width and the picker follows short text',
+    (tester) async {
+      _size(tester, 360, 900);
+      final client = _Client();
+      addTearDown(client.dispose);
+      const target =
+          'NetNam Corporation · San Jose, California — Speedtest Server';
+      await tester.pumpWidget(
+        _app(
+          client,
+          page: const app_ui.Scaffold(
+            title: 'Connections',
+            body: Center(
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: SpeedTestConnectionCard(
+                  outbound: 'Direct',
+                  server: target,
+                  selectable: true,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final value = tester.widget<Text>(find.text(target));
+      expect(value.maxLines, isNull);
+      expect(value.overflow, isNot(TextOverflow.ellipsis));
+      final picker = find.byWidgetPredicate(
+        (widget) => widget is GlyphIcon && widget.glyph == Glyphs.picker,
+      );
+      expect(
+        tester.getTopLeft(picker).dx -
+            tester.getTopRight(find.text('Direct')).dx,
+        closeTo(6, .01),
+      );
+      expect(tester.takeException(), isNull);
+      await _snapshot(tester, '.dart_tool/speed-test-connection-card.png');
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
+  testWidgets('probe marquee paints a single gradient arc', (tester) async {
+    _size(tester, 430, 700);
+    final client = _Client();
+    addTearDown(client.dispose);
+    await tester.pumpWidget(
+      _app(
+        client,
+        page: app_ui.Scaffold(
+          title: 'Probe',
+          body: Builder(
+            builder: (context) => Center(
+              child: SpeedTestGauge(
+                waiting: true,
+                color: context.colorScheme.primary,
+                otherColor: Color.lerp(
+                  context.colorScheme.surface,
+                  context.colorScheme.primary,
+                  .28,
+                )!,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 700));
+    expect(tester.takeException(), isNull);
+    await _snapshot(tester, '.dart_tool/speed-test-probe-arc.png');
     await tester.pumpWidget(const SizedBox.shrink());
   });
 }

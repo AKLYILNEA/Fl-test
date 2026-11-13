@@ -119,9 +119,10 @@ class SpeedTestRecordView extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
-            generateSection(
-              items: [
+            const SizedBox(height: 12),
+            KeyedSubtree(
+              key: const ValueKey('speed-record-details'),
+              child: generateGroup([
                 ListItem(
                   title: Text(l.speedTestExitNode),
                   subtitle: EmojiText(
@@ -151,7 +152,7 @@ class SpeedTestRecordView extends StatelessWidget {
                   title: Text(l.speedTestDataUsed),
                   subtitle: Text(speedTestBytes(result.bytes)),
                 ),
-              ],
+              ]),
             ),
           ],
         ),

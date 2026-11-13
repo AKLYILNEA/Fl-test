@@ -234,6 +234,7 @@ class _GaugePainter extends CustomPainter {
     if (spin != null) {
       const length = pi / 5;
       final start = _start + (_sweep - length) * spin;
+      final capMargin = strokeWidth / radius;
       canvas.drawArc(
         rect,
         start,
@@ -242,17 +243,12 @@ class _GaugePainter extends CustomPainter {
         stroke
           ..color = color
           ..shader = SweepGradient(
-            endAngle: length,
+            endAngle: length + 2 * capMargin,
             colors: [startColor, color],
-            transform: GradientRotation(start),
+            transform: GradientRotation(start - capMargin),
           ).createShader(rect),
       );
       stroke.shader = null;
-      canvas.drawCircle(
-        center + Offset(cos(start), sin(start)) * radius,
-        strokeWidth / 2,
-        Paint()..color = startColor,
-      );
     }
 
     final labelRadius = radius - strokeWidth / 2 - size.width * 0.085;

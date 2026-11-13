@@ -182,7 +182,13 @@ InlineSpan riskNoteMessage(BuildContext context, IpRisk risk) {
     final label = level.label(context);
     spans.add(
       TextSpan(
-        text: ' · $label',
+        text: ' · ',
+        style: TextStyle(color: context.colorScheme.onSurface),
+      ),
+    );
+    spans.add(
+      TextSpan(
+        text: label,
         style: TextStyle(
           color: riskScoreColor(switch (level) {
             IpRiskLevel.low => 0,

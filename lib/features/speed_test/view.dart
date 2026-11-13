@@ -428,52 +428,12 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView> {
                 actual.sponsor,
                 actual.city,
               ].where((s) => s.isNotEmpty).join(' \u00b7 '));
-    Widget row(Glyph glyph, String title, Widget value) => ListItem(
-      leading: GlyphIcon(glyph),
-      title: Row(
-        children: [
-          Expanded(
-            flex: 4,
-            child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
-          ),
-          const SizedBox(width: 8),
-          Expanded(flex: 6, child: value),
-        ],
-      ),
+    return SpeedTestConnectionCard(
+      outbound: selected,
+      server: serverText.isEmpty ? l.auto : serverText,
+      selectable: true,
+      onSelect: _testing || !running ? null : _chooseOutbound,
     );
-    return generateGroup([
-      row(
-        AppGlyphs.connections,
-        l.speedTestExitNode,
-        TextButton(
-          onPressed: _testing || !running ? null : _chooseOutbound,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Expanded(child: PopupValueText(selected)),
-              const SizedBox(width: 4),
-              const GlyphIcon(Glyphs.picker, size: 16),
-            ],
-          ),
-        ),
-      ),
-      row(
-        AppGlyphs.dns,
-        l.speedTestServer,
-        Tooltip(
-          message: serverText,
-          child: Text(
-            serverText.isEmpty ? l.auto : serverText,
-            textAlign: TextAlign.end,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppTextStyle.body
-                .of(context)
-                .copyWith(color: context.colorScheme.onSurfaceVariant),
-          ),
-        ),
-      ),
-    ]);
   }
 
   Widget _errorBanner(BuildContext context) {

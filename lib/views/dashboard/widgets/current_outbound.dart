@@ -650,18 +650,20 @@ class _Cells extends StatelessWidget {
         ? FittedBox(
             fit: BoxFit.scaleDown,
             alignment: AlignmentDirectional.centerStart,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  '${risk.displayScore}',
-                  style: _cellStyle(
-                    context,
-                  ).copyWith(color: context.colorScheme.onSurface),
-                ),
-                const SizedBox(width: 6),
-                RiskLevelBadge(risk: risk),
-              ],
+            child: Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(text: '${risk.displayScore} \u00b7 '),
+                  TextSpan(
+                    text: risk.levelLabel(context),
+                    style: TextStyle(color: riskScoreColor(risk.displayScore)),
+                  ),
+                ],
+              ),
+              maxLines: 1,
+              style: _cellStyle(
+                context,
+              ).copyWith(color: context.colorScheme.onSurface),
             ),
           )
         : loading
@@ -673,11 +675,7 @@ class _Cells extends StatelessWidget {
         _RunTimeCell(active: active),
         SizedBox(width: gap),
         Expanded(
-          child: _Cell(
-            label: appLocalizations.ipRiskScore,
-            value: scoreValue,
-            valueHeight: 28,
-          ),
+          child: _Cell(label: appLocalizations.ipRiskScore, value: scoreValue),
         ),
       ],
     );
@@ -685,19 +683,14 @@ class _Cells extends StatelessWidget {
 }
 
 class _Cell extends StatelessWidget {
-  const _Cell({
-    required this.label,
-    required this.value,
-    this.valueHeight = 20,
-  });
-  final double valueHeight;
+  const _Cell({required this.label, required this.value});
 
   final String label;
   final Widget value;
 
   @override
   Widget build(BuildContext context) {
-    final cellHeight = MediaQuery.textScalerOf(context).scale(valueHeight);
+    final cellHeight = MediaQuery.textScalerOf(context).scale(20.0);
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,

@@ -192,6 +192,128 @@ class SpeedTestMetrics extends StatelessWidget {
   }
 }
 
+class SpeedTestConnectionCard extends StatelessWidget {
+  const SpeedTestConnectionCard({
+    super.key,
+    required this.outbound,
+    required this.server,
+    this.onSelect,
+    this.selectable = false,
+  });
+  final String outbound;
+  final String server;
+  final VoidCallback? onSelect;
+  final bool selectable;
+
+  Widget _section(
+    BuildContext context,
+    Glyph glyph,
+    String label,
+    String value, {
+    bool picker = false,
+  }) {
+    final text = AppTextStyle.body.of(context);
+    final content = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Flexible(child: EmojiText(value, style: text)),
+        if (picker) ...[
+          const SizedBox(width: 6),
+          GlyphIcon(
+            Glyphs.picker,
+            size: 16,
+            color: context.colorScheme.primary,
+          ),
+        ],
+      ],
+    );
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          spacing: 6,
+          children: [
+            GlyphIcon(
+              glyph,
+              size: 16,
+              color: context.colorScheme.onSurfaceVariant,
+            ),
+            Expanded(
+              child: Text(
+                label,
+                style: AppTextStyle.footnote
+                    .of(context)
+                    .copyWith(color: context.colorScheme.onSurfaceVariant),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        ConstrainedBox(
+          constraints: BoxConstraints(
+            minHeight: 42 * MediaQuery.textScalerOf(context).scale(1),
+          ),
+          child: Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: picker
+                ? FocusRing(
+                    shape: AppShape.sm,
+                    standsOff: true,
+                    child: PressRegion(
+                      key: const ValueKey('speed-test-outbound-picker'),
+                      shape: AppShape.sm,
+                      onTap: onSelect,
+                      child: content,
+                    ),
+                  )
+                : content,
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.appLocalizations;
+    final node = _section(
+      context,
+      AppGlyphs.connections,
+      l.speedTestExitNode,
+      outbound,
+      picker: selectable,
+    );
+    final target = _section(context, AppGlyphs.dns, l.speedTestServer, server);
+    return Card(
+      radius: AppCorner.xl,
+      padding: const EdgeInsets.all(16),
+      child: LayoutBuilder(
+        builder: (context, constraints) => constraints.maxWidth >= 600
+            ? Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: node),
+                  const SizedBox(width: 24),
+                  Expanded(child: target),
+                ],
+              )
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  node,
+                  const SizedBox(height: 12),
+                  const Divider(),
+                  const SizedBox(height: 12),
+                  target,
+                ],
+              ),
+      ),
+    );
+  }
+}
+
 class SpeedTestStatGrid extends StatelessWidget {
   const SpeedTestStatGrid({super.key, this.state, this.testing = false});
   final SpeedTestState? state;
@@ -211,14 +333,31 @@ class SpeedTestStatGrid extends StatelessWidget {
     final items = [
       (l.delay, number(s?.latency), 'ms', latencyActive),
       (l.speedTestJitter, number(s?.jitter), 'ms', latencyActive),
-      (
-        l.speedTestLoadedLatency,
-        _loadedLatency(s).replaceAll(' ms', ''),
-        'ms',
-        loadActive,
-      ),
+      (l.speedTestLoadedLatency, '', 'ms', loadActive),
       (l.speedTestResponsiveness, number(s?.rpm.toDouble()), 'RPM', loadActive),
     ];
+    Widget loaded(bool up) => Row(
+      children: [
+        GlyphIcon(
+          up ? AppGlyphs.arrowUp : AppGlyphs.arrowDown,
+          size: 12,
+          color: context.colorScheme.onSurfaceVariant,
+        ),
+        const SizedBox(width: 6),
+        Flexible(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: AlignmentDirectional.centerStart,
+            child: Text(
+              number(up ? s?.uploadLatency : s?.downloadLatency),
+              style: AppTextStyle.headline
+                  .of(context, emphasized: true)
+                  .toTabular,
+            ),
+          ),
+        ),
+      ],
+    );
     return LayoutBuilder(
       builder: (context, constraints) {
         final columns = constraints.maxWidth >= 640 ? 4 : 2;
@@ -227,27 +366,31 @@ class SpeedTestStatGrid extends StatelessWidget {
           spacing: 12,
           runSpacing: 12,
           children: [
-            for (final item in items)
+            for (var index = 0; index < items.length; index++)
               SizedBox(
                 width: width,
                 child: Card(
-                  radius: AppCorner.xl,
+                  radius: AppCorner.lg,
                   padding: const EdgeInsets.all(16),
-                  isSelected: item.$4,
-                  selectionTint: item.$4
-                      ? Color.alphaBlend(
-                          context.colorScheme.primary.withValues(alpha: .1),
-                          context.colorScheme.surface,
+                  isSelected: items[index].$4,
+                  side: items[index].$4
+                      ? BorderSide(
+                          color: context.colorScheme.primary,
+                          width: 1.5,
                         )
+                      : BorderSide.none,
+                  selectionTint: items[index].$4
+                      ? context.colorScheme.primary.opacity15
                       : null,
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
                           Expanded(
                             child: Text(
-                              item.$1,
+                              items[index].$1,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: AppTextStyle.footnote
@@ -260,28 +403,40 @@ class SpeedTestStatGrid extends StatelessWidget {
                           SizedBox(
                             width: 16,
                             height: 16,
-                            child: item.$4
+                            child: items[index].$4
                                 ? const ActivityIndicator(size: 12)
                                 : null,
                           ),
                         ],
                       ),
-                      const SizedBox(height: 18),
+                      const SizedBox(height: 8),
                       SizedBox(
-                        height: 38,
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            item.$2,
-                            style: AppTextStyle.largeTitle
-                                .of(context, emphasized: true)
-                                .toTabular,
-                          ),
+                        height: 48 * MediaQuery.textScalerOf(context).scale(1),
+                        child: Align(
+                          alignment: AlignmentDirectional.centerStart,
+                          child: index == 2
+                              ? Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    loaded(false),
+                                    const SizedBox(height: 2),
+                                    loaded(true),
+                                  ],
+                                )
+                              : FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: AlignmentDirectional.centerStart,
+                                  child: Text(
+                                    items[index].$2,
+                                    style: AppTextStyle.title2
+                                        .of(context, emphasized: true)
+                                        .toTabular,
+                                  ),
+                                ),
                         ),
                       ),
                       Text(
-                        item.$3,
+                        items[index].$3,
                         style: AppTextStyle.caption1
                             .of(context)
                             .copyWith(
@@ -314,13 +469,26 @@ class SpeedTestWaveform extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            upload == null
-                ? l.speedTestRealtime
-                : upload
-                ? l.upload
-                : l.download,
-            style: AppTextStyle.headline.of(context, emphasized: true),
+          Row(
+            spacing: 8,
+            children: [
+              if (upload != null)
+                GlyphIcon(
+                  upload ? AppGlyphs.arrowUp : AppGlyphs.arrowDown,
+                  color: upload ? up : down,
+                  size: 20,
+                ),
+              Expanded(
+                child: Text(
+                  upload == null
+                      ? l.speedTestRealtime
+                      : upload
+                      ? l.upload
+                      : l.download,
+                  style: AppTextStyle.headline.of(context, emphasized: true),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 20),
           RepaintBoundary(

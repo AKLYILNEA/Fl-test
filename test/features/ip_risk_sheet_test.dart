@@ -185,7 +185,7 @@ void main() {
     expect(find.text('External blacklists'), findsNothing);
     expect(find.text('Example ISP'), findsOneWidget);
     expect(find.text('—'), findsNothing);
-    final note = riskNoteMessage(
+    final noteSpan = riskNoteMessage(
       tester.element(find.byType(IpRiskSheet)),
       const IpRisk(
         ip: '1.2.3.4',
@@ -204,7 +204,18 @@ void main() {
           warning: IpRiskLevel.high,
         ),
       ),
-    ).toPlainText();
+    );
+    final note = noteSpan.toPlainText();
+    final separators = (noteSpan as TextSpan).children!
+        .whereType<TextSpan>()
+        .where((span) => span.text == ' · ');
+    expect(separators, hasLength(2));
+    for (final separator in separators) {
+      expect(
+        separator.style!.color,
+        tester.element(find.byType(IpRiskSheet)).colorScheme.onSurface,
+      );
+    }
     expect(note, contains('Source Network'));
     expect(note, contains('Owner Network'));
     expect(note, contains('12'));
