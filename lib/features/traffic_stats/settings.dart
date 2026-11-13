@@ -91,6 +91,7 @@ class TrafficStatsSettingsView extends ConsumerWidget {
                 ],
               ),
               generateSection(
+                title: l.action,
                 items: [
                   ListItem(
                     leading: GlyphIcon(AppGlyphs.delete, color: cs.error),

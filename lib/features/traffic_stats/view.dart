@@ -29,8 +29,10 @@ class _TrafficStatsViewState extends ConsumerState<TrafficStatsView> {
   TrafficStatsRankTab _rankTab = TrafficStatsRankTab.domain;
   TrafficStatsResult? _result;
   bool _loading = true;
+  bool _refreshing = false;
   Timer? _timer;
   int _requestId = 0;
+  int _manualRefreshId = 0;
 
   @override
   void initState() {
@@ -51,10 +53,15 @@ class _TrafficStatsViewState extends ConsumerState<TrafficStatsView> {
     super.dispose();
   }
 
-  Future<void> _refresh({bool initial = false}) async {
+  Future<void> _refresh({bool initial = false, bool manual = false}) async {
     final id = ++_requestId;
+    final manualId = manual ? ++_manualRefreshId : 0;
+    final startedAt = manual ? DateTime.now() : null;
     if (initial && _result == null && mounted) {
       setState(() => _loading = true);
+    }
+    if (manual && mounted) {
+      setState(() => _refreshing = true);
     }
     try {
       final (start, end) = trafficStatsDateRange(_period, _anchor);
@@ -69,6 +76,19 @@ class _TrafficStatsViewState extends ConsumerState<TrafficStatsView> {
     } catch (_) {
       if (!mounted || id != _requestId) return;
       setState(() => _loading = false);
+    } finally {
+      if (manual) {
+        if (startedAt != null && mounted) {
+          final elapsed = DateTime.now().difference(startedAt);
+          const minSpin = Duration(milliseconds: 350);
+          if (elapsed < minSpin) {
+            await Future<void>.delayed(minSpin - elapsed);
+          }
+        }
+        if (mounted && manualId == _manualRefreshId) {
+          setState(() => _refreshing = false);
+        }
+      }
     }
   }
 
@@ -141,7 +161,8 @@ class _TrafficStatsViewState extends ConsumerState<TrafficStatsView> {
           IconButtonData(
             glyph: AppGlyphs.refresh,
             tooltip: l.trafficStatsRefresh,
-            onPressed: _loading ? null : () => unawaited(_refresh()),
+            isLoading: _refreshing,
+            onPressed: _refreshing ? null : () => unawaited(_refresh(manual: true)),
           ),
           IconButtonData(
             glyph: AppGlyphs.sliders,
@@ -160,16 +181,18 @@ class _TrafficStatsViewState extends ConsumerState<TrafficStatsView> {
                   16.0,
                   (constraints.maxWidth - 928) / 2,
                 );
+                final horizontalInsets = EdgeInsets.symmetric(
+                  horizontal: sidePadding,
+                );
                 final isWide = constraints.maxWidth >= 760;
-                final listPadding = EdgeInsets.symmetric(horizontal: sidePadding)
-                    .copyWith(
-                      top: context.contentTopPadding + 12,
-                      bottom: 24 + context.bottomInset,
-                    );
+                final verticalPadding = EdgeInsets.only(
+                  top: context.contentTopPadding,
+                  bottom: 24 + context.bottomInset,
+                );
 
                 if (showEmptyDisabled) {
                   return ListView(
-                    padding: listPadding,
+                    padding: verticalPadding.add(horizontalInsets),
                     children: [
                       Center(
                         child: ConstrainedBox(
@@ -181,65 +204,77 @@ class _TrafficStatsViewState extends ConsumerState<TrafficStatsView> {
                   );
                 }
 
+                Widget padded(Widget child) =>
+                    Padding(padding: horizontalInsets, child: child);
+
                 return ListView(
-                  padding: listPadding,
+                  padding: verticalPadding,
                   children: [
-                    TrafficStatsPeriodBar(
-                      period: _period,
-                      anchor: _anchor,
-                      onPeriodChanged: _changePeriod,
-                      onStep: _stepAnchor,
+                    padded(
+                      TrafficStatsPeriodBar(
+                        period: _period,
+                        anchor: _anchor,
+                        onPeriodChanged: _changePeriod,
+                        onStep: _stepAnchor,
+                      ),
                     ),
                     if (!settings.enable) ...[
                       const SizedBox(height: 12),
-                      TrafficStatsDisabledBanner(onEnable: _enable),
+                      padded(TrafficStatsDisabledBanner(onEnable: _enable)),
                     ],
                     const SizedBox(height: 12),
                     if (isWide)
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            flex: 5,
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(minHeight: 238),
-                              child: TrafficStatsOverviewCard(result: result),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            flex: 6,
-                            child: ConstrainedBox(
-                              constraints: const BoxConstraints(minHeight: 238),
-                              child: TrafficStatsTrendCard(
-                                points: result.series,
-                                period: _period,
+                      padded(
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              flex: 5,
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(minHeight: 238),
+                                child: TrafficStatsOverviewCard(result: result),
                               ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 12),
+                            Expanded(
+                              flex: 6,
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(minHeight: 238),
+                                child: TrafficStatsTrendCard(
+                                  points: result.series,
+                                  period: _period,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       )
                     else ...[
-                      TrafficStatsOverviewCard(result: result),
+                      padded(TrafficStatsOverviewCard(result: result)),
                       const SizedBox(height: 12),
-                      TrafficStatsTrendCard(
-                        points: result.series,
-                        period: _period,
+                      padded(
+                        TrafficStatsTrendCard(
+                          points: result.series,
+                          period: _period,
+                        ),
                       ),
                     ],
                     if (result.rules.isNotEmpty)
                       TrafficStatsRuleHitsSection(
                         rules: result.rules,
                         totalHits: result.ruleHits,
+                        horizontalPadding: sidePadding,
                       ),
-                    TrafficStatsRankingSection(
-                      result: result,
-                      settings: settings,
-                      tab: _rankTab,
-                      onTabChanged: (tab) => setState(() => _rankTab = tab),
+                    padded(
+                      TrafficStatsRankingSection(
+                        result: result,
+                        settings: settings,
+                        tab: _rankTab,
+                        onTabChanged: (tab) => setState(() => _rankTab = tab),
+                      ),
                     ),
                     if (result.since.isNotEmpty)
-                      ListFooter(text: l.trafficStatsSince(result.since)),
+                      padded(ListFooter(text: l.trafficStatsSince(result.since))),
                   ],
                 );
               },

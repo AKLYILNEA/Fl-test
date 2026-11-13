@@ -26,22 +26,30 @@ class SpeedTestSettingsView extends StatefulWidget {
 
 class _SpeedTestSettingsViewState extends State<SpeedTestSettingsView> {
   late SpeedTestSettings _settings = widget.settings;
+  bool _pickingServer = false;
+
   void _change(SpeedTestSettings settings) {
     setState(() => _settings = settings);
     widget.onChanged?.call(settings);
   }
 
   Future<void> _pickServer() async {
-    final node = await Navigator.of(context).push<SpeedTestNode>(
-      PagedSheetRoute(
-        builder: (_) => SpeedTestServerPicker(
-          proxy: widget.proxy,
-          selected: _settings.server,
+    if (_pickingServer) return;
+    _pickingServer = true;
+    try {
+      final node = await Navigator.of(context).push<SpeedTestNode>(
+        PagedSheetRoute(
+          builder: (_) => SpeedTestServerPicker(
+            proxy: widget.proxy,
+            selected: _settings.server,
+          ),
         ),
-      ),
-    );
-    if (!mounted || node == null) return;
-    _change(_settings.copyWith(server: node, automatic: node.host.isEmpty));
+      );
+      if (!mounted || node == null) return;
+      _change(_settings.copyWith(server: node, automatic: node.host.isEmpty));
+    } finally {
+      _pickingServer = false;
+    }
   }
 
   @override
@@ -148,6 +156,7 @@ class _SpeedTestServerPickerState extends ConsumerState<SpeedTestServerPicker> {
   }
 
   void _search(String query) {
+    if (query == _query) return;
     _debounce?.cancel();
     setState(() {
       _query = query;
@@ -202,12 +211,16 @@ class _SpeedTestServerPickerState extends ConsumerState<SpeedTestServerPicker> {
     return SpeedTestScope(
       child: Scaffold(
         title: l.speedTestServer,
-        searchState: AppBarSearchState(query: _query, onSearch: _search),
+        searchState: _failed
+            ? null
+            : AppBarSearchState(query: _query, onSearch: _search),
         body: Builder(
           builder: (context) => NullStatusSwitcher(
             isLoading: _loading,
             loadingStatus: const Center(child: ActivityIndicator.page()),
-            child: _failed
+            child: _loading
+                ? const Center(child: ActivityIndicator.page())
+                : _failed
                 ? Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,

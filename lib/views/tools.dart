@@ -80,7 +80,7 @@ class _ToolViewState extends ConsumerState<ToolsView> {
             (item) => item.label == PageLabel.logs,
           );
           final speedTestIndex = resources >= 0
-              ? resources + 1
+              ? resources
               : logs >= 0
               ? logs
               : 0;

@@ -130,9 +130,9 @@ String trafficStatsFormatBytes(int bytes) {
 }
 
 String trafficStatsFormatAxisBytes(int bytes) {
-  if (bytes <= 0) return '0';
+  if (bytes <= 0) return '0 B';
   final show = bytes.traffic;
-  return '${show.value}${show.unit}';
+  return '${show.value} ${show.unit}';
 }
 
 class _GlyphBadge extends StatelessWidget {
@@ -394,17 +394,74 @@ class TrafficStatsOverviewCard extends StatelessWidget {
                             .toTabular,
                       ),
                     ),
-                    const SizedBox(height: 14),
-                    _DirectionalMetric(
-                      glyph: AppGlyphs.arrowDown,
-                      color: downColor,
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              RingChart(
+                size: 84,
+                strokeWidth: 7.5,
+                trackColor: cs.surfaceContainerHighest,
+                total: splitTotal > 0 ? splitTotal.toDouble() : null,
+                segments: [
+                  RingSegment(
+                    value: proxyTotal.toDouble(),
+                    color: cs.primary,
+                  ),
+                  RingSegment(
+                    value: directTotal.toDouble(),
+                    color: directColor,
+                  ),
+                ],
+                centerChild: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '$proxyPct%',
+                      style: AppTextStyle.subheadline
+                          .of(context, emphasized: true)
+                          .toTabular,
+                    ),
+                    Text(
+                      l.proxies,
+                      style: AppTextStyle.caption2
+                          .of(context)
+                          .copyWith(color: cs.onSurfaceVariant),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Container(
+            height: 0.5,
+            color: cs.outlineVariant.withValues(alpha: 0.45),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _OverviewMetricTile(
+                      leading: GlyphIcon(
+                        AppGlyphs.arrowDown,
+                        size: 13,
+                        color: downColor,
+                      ),
                       label: l.download,
                       value: trafficStatsFormatBytes(result.down),
                     ),
                     const SizedBox(height: 8),
-                    _DirectionalMetric(
-                      glyph: AppGlyphs.arrowUp,
-                      color: upColor,
+                    _OverviewMetricTile(
+                      leading: GlyphIcon(
+                        AppGlyphs.arrowUp,
+                        size: 13,
+                        color: upColor,
+                      ),
                       label: l.upload,
                       value: trafficStatsFormatBytes(result.up),
                     ),
@@ -412,55 +469,23 @@ class TrafficStatsOverviewCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 16),
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  RingChart(
-                    size: 92,
-                    strokeWidth: 7.5,
-                    trackColor: cs.surfaceContainerHighest,
-                    total: splitTotal > 0 ? splitTotal.toDouble() : null,
-                    segments: [
-                      RingSegment(
-                        value: proxyTotal.toDouble(),
-                        color: cs.primary,
-                      ),
-                      RingSegment(
-                        value: directTotal.toDouble(),
-                        color: directColor,
-                      ),
-                    ],
-                    centerChild: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          '$proxyPct%',
-                          style: AppTextStyle.subheadline
-                              .of(context, emphasized: true)
-                              .toTabular,
-                        ),
-                        Text(
-                          l.proxies,
-                          style: AppTextStyle.caption2
-                              .of(context)
-                              .copyWith(color: cs.onSurfaceVariant),
-                        ),
-                      ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _OverviewMetricTile(
+                      leading: _OverviewDot(color: cs.primary),
+                      label: l.proxies,
+                      value: trafficStatsFormatBytes(proxyTotal),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  _SplitLegendRow(
-                    color: cs.primary,
-                    label: l.proxies,
-                    value: trafficStatsFormatBytes(proxyTotal),
-                  ),
-                  const SizedBox(height: 4),
-                  _SplitLegendRow(
-                    color: directColor,
-                    label: l.direct,
-                    value: trafficStatsFormatBytes(directTotal),
-                  ),
-                ],
+                    const SizedBox(height: 8),
+                    _OverviewMetricTile(
+                      leading: _OverviewDot(color: directColor),
+                      label: l.direct,
+                      value: trafficStatsFormatBytes(directTotal),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -470,72 +495,29 @@ class TrafficStatsOverviewCard extends StatelessWidget {
   }
 }
 
-class _DirectionalMetric extends StatelessWidget {
-  const _DirectionalMetric({
-    required this.glyph,
-    required this.color,
-    required this.label,
-    required this.value,
-  });
+class _OverviewDot extends StatelessWidget {
+  const _OverviewDot({required this.color});
 
-  final Glyph glyph;
   final Color color;
-  final String label;
-  final String value;
 
   @override
   Widget build(BuildContext context) {
-    final cs = context.colorScheme;
-    final caption = Text(
-      label,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: AppTextStyle.footnote
-          .of(context)
-          .copyWith(color: cs.onSurfaceVariant),
-    );
-    final figure = FittedBox(
-      fit: BoxFit.scaleDown,
-      alignment: AlignmentDirectional.centerStart,
-      child: Text(
-        value,
-        maxLines: 1,
-        style: AppTextStyle.subheadline.of(context, emphasized: true).toTabular,
-      ),
-    );
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final narrow =
-            constraints.maxWidth <
-            160 * MediaQuery.textScalerOf(context).scale(1);
-        final heading = Row(
-          children: [
-            GlyphIcon(glyph, size: 14, color: color),
-            const SizedBox(width: 6),
-            Flexible(child: caption),
-            if (!narrow) ...[const SizedBox(width: 8), Flexible(child: figure)],
-          ],
-        );
-        return narrow
-            ? Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [heading, const SizedBox(height: 2), figure],
-              )
-            : heading;
-      },
+    return Container(
+      width: 7,
+      height: 7,
+      decoration: ShapeDecoration(color: color, shape: AppShape.full),
     );
   }
 }
 
-class _SplitLegendRow extends StatelessWidget {
-  const _SplitLegendRow({
-    required this.color,
+class _OverviewMetricTile extends StatelessWidget {
+  const _OverviewMetricTile({
+    required this.leading,
     required this.label,
     required this.value,
   });
 
-  final Color color;
+  final Widget leading;
   final String label;
   final String value;
 
@@ -543,23 +525,32 @@ class _SplitLegendRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = context.colorScheme;
     return Row(
-      mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          width: 7,
-          height: 7,
-          decoration: ShapeDecoration(color: color, shape: AppShape.full),
+        SizedBox(width: 14, height: 18, child: Center(child: leading)),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTextStyle.footnote
+                .of(context)
+                .copyWith(color: cs.onSurfaceVariant),
+          ),
         ),
-        const SizedBox(width: 5),
-        Text(
-          '$label ',
-          style: AppTextStyle.caption2
-              .of(context)
-              .copyWith(color: cs.onSurfaceVariant),
-        ),
-        Text(
-          value,
-          style: AppTextStyle.caption2.of(context, emphasized: true).toTabular,
+        const SizedBox(width: 6),
+        Flexible(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: AlignmentDirectional.centerEnd,
+            child: Text(
+              value,
+              maxLines: 1,
+              style: AppTextStyle.subheadline
+                  .of(context, emphasized: true)
+                  .toTabular,
+            ),
+          ),
         ),
       ],
     );
@@ -593,11 +584,10 @@ class _TrafficStatsTrendCardState extends State<TrafficStatsTrendCard> {
     }
   }
 
-  void _updateIndexFromDx(double dx, double width) {
+  void _updateIndexFromDx(double dx, double width, double leftPad) {
     final count = widget.points.length;
     if (count == 0) return;
-    const leftPad = 44.0;
-    const rightPad = 6.0;
+    const rightPad = _TrendBarPainter._rightPad;
     final chartWidth = width - leftPad - rightPad;
     if (chartWidth <= 0) return;
     final rel = ((dx - leftPad) / chartWidth).clamp(0.0, 0.9999);
@@ -630,6 +620,15 @@ class _TrafficStatsTrendCardState extends State<TrafficStatsTrendCard> {
         _selectedIndex != null && _selectedIndex! < widget.points.length
         ? widget.points[_selectedIndex!]
         : null;
+
+    final labelStyle = AppTextStyle.caption2
+        .of(context)
+        .toTabular
+        .copyWith(color: cs.onSurfaceVariant);
+    final leftPad = _TrendBarPainter.measureLeftPad(
+      widget.points,
+      labelStyle,
+    );
 
     return Card(
       radius: AppCorner.xl,
@@ -693,6 +692,7 @@ class _TrafficStatsTrendCardState extends State<TrafficStatsTrendCard> {
                       onHover: (e) => _updateIndexFromDx(
                         e.localPosition.dx,
                         constraints.maxWidth,
+                        leftPad,
                       ),
                       onExit: (_) {
                         if (_selectedIndex != null) {
@@ -704,10 +704,12 @@ class _TrafficStatsTrendCardState extends State<TrafficStatsTrendCard> {
                         onTapDown: (d) => _updateIndexFromDx(
                           d.localPosition.dx,
                           constraints.maxWidth,
+                          leftPad,
                         ),
                         onHorizontalDragUpdate: (d) => _updateIndexFromDx(
                           d.localPosition.dx,
                           constraints.maxWidth,
+                          leftPad,
                         ),
                         child: CustomPaint(
                           size: Size(constraints.maxWidth, 158),
@@ -715,14 +717,12 @@ class _TrafficStatsTrendCardState extends State<TrafficStatsTrendCard> {
                             points: widget.points,
                             period: widget.period,
                             selectedIndex: _selectedIndex,
+                            leftPad: leftPad,
                             downloadColor: downColor,
                             uploadColor: upColor,
                             gridColor: cs.outlineVariant.withValues(alpha: 0.4),
                             highlightColor: cs.primary.withValues(alpha: 0.08),
-                            labelStyle: AppTextStyle.caption2
-                                .of(context)
-                                .toTabular
-                                .copyWith(color: cs.onSurfaceVariant),
+                            labelStyle: labelStyle,
                             activeLabelStyle: AppTextStyle.caption2
                                 .of(context, emphasized: true)
                                 .toTabular
@@ -772,6 +772,7 @@ class _TrendBarPainter extends CustomPainter {
     required this.points,
     required this.period,
     required this.selectedIndex,
+    required this.leftPad,
     required this.downloadColor,
     required this.uploadColor,
     required this.gridColor,
@@ -783,6 +784,7 @@ class _TrendBarPainter extends CustomPainter {
   final List<TrafficStatsPoint> points;
   final TrafficStatsPeriod period;
   final int? selectedIndex;
+  final double leftPad;
   final Color downloadColor;
   final Color uploadColor;
   final Color gridColor;
@@ -790,16 +792,47 @@ class _TrendBarPainter extends CustomPainter {
   final TextStyle labelStyle;
   final TextStyle activeLabelStyle;
 
-  static const _leftPad = 44.0;
+  static const _minLeftPad = 48.0;
   static const _rightPad = 6.0;
-  static const _topPad = 8.0;
-  static const _bottomPad = 22.0;
+  static const _topPad = 10.0;
+  static const _bottomPad = 26.0;
+  static const _axisGap = 8.0;
+
+  static int _maxTotalOf(List<TrafficStatsPoint> points) {
+    var maxTotal = 0;
+    for (final p in points) {
+      if (p.total > maxTotal) maxTotal = p.total;
+    }
+    return maxTotal <= 0 ? 1 : maxTotal;
+  }
+
+  static double measureLeftPad(
+    List<TrafficStatsPoint> points,
+    TextStyle labelStyle,
+  ) {
+    final maxTotal = _maxTotalOf(points);
+    var maxWidth = 0.0;
+    const steps = 2;
+    for (var s = 0; s <= steps; s++) {
+      final val = (maxTotal * (s / steps)).round();
+      final tp = TextPainter(
+        text: TextSpan(
+          text: trafficStatsFormatAxisBytes(val),
+          style: labelStyle,
+        ),
+        maxLines: 1,
+        textDirection: TextDirection.ltr,
+      )..layout();
+      if (tp.width > maxWidth) maxWidth = tp.width;
+    }
+    return math.max(_minLeftPad, maxWidth + _axisGap);
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
     if (points.isEmpty) return;
 
-    const chartLeft = _leftPad;
+    final chartLeft = leftPad;
     final chartRight = size.width - _rightPad;
     const chartTop = _topPad;
     final chartBottom = size.height - _bottomPad;
@@ -807,11 +840,7 @@ class _TrendBarPainter extends CustomPainter {
     final chartHeight = chartBottom - chartTop;
     if (chartWidth <= 0 || chartHeight <= 0) return;
 
-    var maxTotal = 0;
-    for (final p in points) {
-      if (p.total > maxTotal) maxTotal = p.total;
-    }
-    if (maxTotal <= 0) maxTotal = 1;
+    final maxTotal = _maxTotalOf(points);
 
     final gridPaint = Paint()
       ..color = gridColor
@@ -829,13 +858,14 @@ class _TrendBarPainter extends CustomPainter {
           text: trafficStatsFormatAxisBytes(val),
           style: labelStyle,
         ),
+        maxLines: 1,
         textDirection: TextDirection.ltr,
-      )..layout(maxWidth: _leftPad - 6);
+      )..layout();
       tp.paint(
         canvas,
         Offset(
-          _leftPad - 6 - tp.width,
-          (y - tp.height / 2).clamp(0.0, chartBottom - tp.height),
+          chartLeft - _axisGap - tp.width,
+          math.max(0.0, y - tp.height / 2),
         ),
       );
     }
@@ -924,7 +954,7 @@ class _TrendBarPainter extends CustomPainter {
         final x = (cx - tp.width / 2)
             .clamp(chartLeft, math.max(chartLeft, chartRight - tp.width))
             .toDouble();
-        tp.paint(canvas, Offset(x, chartBottom + 6));
+        tp.paint(canvas, Offset(x, chartBottom + 10));
       }
     }
   }
@@ -968,6 +998,7 @@ class _TrendBarPainter extends CustomPainter {
       oldDelegate.points != points ||
       oldDelegate.period != period ||
       oldDelegate.selectedIndex != selectedIndex ||
+      oldDelegate.leftPad != leftPad ||
       oldDelegate.downloadColor != downloadColor ||
       oldDelegate.uploadColor != uploadColor ||
       oldDelegate.gridColor != gridColor;
@@ -978,10 +1009,12 @@ class TrafficStatsRuleHitsSection extends StatelessWidget {
     super.key,
     required this.rules,
     required this.totalHits,
+    this.horizontalPadding = 16,
   });
 
   final List<TrafficStatsItem> rules;
   final int totalHits;
+  final double horizontalPadding;
 
   static const _ringPalette = [
     Color(0xFF4C8DFF),
@@ -997,12 +1030,17 @@ class TrafficStatsRuleHitsSection extends StatelessWidget {
     if (rules.isEmpty) return const SizedBox.shrink();
     final l = context.appLocalizations;
     final cs = context.colorScheme;
+    final sideInsets = EdgeInsets.symmetric(horizontal: horizontalPadding);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        ListHeader(title: l.trafficStatsRuleHits),
+        Padding(
+          padding: sideInsets,
+          child: ListHeader(title: l.trafficStatsRuleHits),
+        ),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
+          padding: sideInsets,
           child: IntrinsicHeight(
             child: Row(
               spacing: 10,
@@ -1254,10 +1292,18 @@ class TrafficStatsRankingSection extends StatelessWidget {
                           child: Align(
                             alignment: AlignmentDirectional.centerStart,
                             child: FractionallySizedBox(
-                              widthFactor: maxItemTotal > 0
-                                  ? (item.total / maxItemTotal).clamp(0.02, 1.0)
+                              heightFactor: 1,
+                              widthFactor: maxItemTotal > 0 && item.total > 0
+                                  ? (item.total / maxItemTotal)
+                                        .clamp(0.02, 1.0)
+                                        .toDouble()
                                   : 0,
-                              child: ColoredBox(color: cs.primary),
+                              child: DecoratedBox(
+                                decoration: ShapeDecoration(
+                                  color: cs.primary,
+                                  shape: AppShape.full,
+                                ),
+                              ),
                             ),
                           ),
                         ),

@@ -493,7 +493,7 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView> {
         body: Builder(
           builder: (context) => ListView(
             padding: const EdgeInsets.symmetric(horizontal: 16).copyWith(
-              top: context.appBarInset,
+              top: context.contentTopPadding,
               bottom: 20 + context.bottomInset,
             ),
             children: [

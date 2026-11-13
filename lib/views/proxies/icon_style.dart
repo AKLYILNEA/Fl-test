@@ -324,7 +324,7 @@ class _ProxiesIconStyleViewState extends ConsumerState<ProxiesIconStyleView> {
               SliverPadding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
-                ).copyWith(top: context.contentTopPadding + 8),
+                ).copyWith(top: context.contentTopPadding),
                 sliver: SliverToBoxAdapter(
                   child: SegmentedControl<ProxiesIconStyle>(
                     segments: [
