@@ -1871,6 +1871,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "trafficStatsNode": MessageLookupByLibrary.simpleMessage("节点"),
     "trafficStatsOverview": MessageLookupByLibrary.simpleMessage("流量概览"),
     "trafficStatsRanking": MessageLookupByLibrary.simpleMessage("流量排行"),
+    "trafficStatsRefresh": MessageLookupByLibrary.simpleMessage("刷新"),
     "trafficStatsRetention": MessageLookupByLibrary.simpleMessage("数据保留天数"),
     "trafficStatsRuleHits": MessageLookupByLibrary.simpleMessage("规则命中"),
     "trafficStatsSettings": MessageLookupByLibrary.simpleMessage("统计设置"),

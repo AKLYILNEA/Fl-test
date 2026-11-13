@@ -2072,6 +2072,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "trafficStatsNode": MessageLookupByLibrary.simpleMessage("ノード"),
     "trafficStatsOverview": MessageLookupByLibrary.simpleMessage("概要"),
     "trafficStatsRanking": MessageLookupByLibrary.simpleMessage("トラフィックランキング"),
+    "trafficStatsRefresh": MessageLookupByLibrary.simpleMessage("更新"),
     "trafficStatsRetention": MessageLookupByLibrary.simpleMessage("データ保持期間"),
     "trafficStatsRuleHits": MessageLookupByLibrary.simpleMessage("ルール一致"),
     "trafficStatsSettings": MessageLookupByLibrary.simpleMessage("統計設定"),

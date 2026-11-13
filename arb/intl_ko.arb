@@ -1251,5 +1251,6 @@
   "trafficStatsSettings": "통계 설정",
   "trafficStatsClearTip": "저장된 모든 트래픽 통계 데이터를 지우시겠습니까?",
   "trafficStatsSince": "{date}부터",
-  "trafficStatsDetailOffTip": "세부 통계가 꺼져 있어 총량과 시간별 추이만 기록됩니다."
+  "trafficStatsDetailOffTip": "세부 통계가 꺼져 있어 총량과 시간별 추이만 기록됩니다.",
+  "trafficStatsRefresh": "새로고침"
 }

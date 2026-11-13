@@ -2540,6 +2540,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "trafficStatsNode": MessageLookupByLibrary.simpleMessage("Узел"),
     "trafficStatsOverview": MessageLookupByLibrary.simpleMessage("Обзор"),
     "trafficStatsRanking": MessageLookupByLibrary.simpleMessage("Рейтинг трафика"),
+    "trafficStatsRefresh": MessageLookupByLibrary.simpleMessage("Обновить"),
     "trafficStatsRetention": MessageLookupByLibrary.simpleMessage("Срок хранения"),
     "trafficStatsRuleHits": MessageLookupByLibrary.simpleMessage(
       "Срабатывания правил",

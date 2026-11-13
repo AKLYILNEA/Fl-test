@@ -1251,5 +1251,6 @@
   "trafficStatsSettings": "Настройки статистики",
   "trafficStatsClearTip": "Очистить все сохранённые данные статистики трафика?",
   "trafficStatsSince": "С {date}",
-  "trafficStatsDetailOffTip": "Подробный учёт выключен. Записывается только общий трафик и динамика."
+  "trafficStatsDetailOffTip": "Подробный учёт выключен. Записывается только общий трафик и динамика.",
+  "trafficStatsRefresh": "Обновить"
 }

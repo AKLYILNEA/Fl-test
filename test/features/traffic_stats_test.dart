@@ -302,13 +302,13 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(TrafficStatsSettingsView), findsOneWidget);
-    expect(find.text('Detailed Stats'), findsOneWidget);
-    expect(find.text('Clear Data'), findsOneWidget);
+    expect(find.text('Detailed Breakdown'), findsOneWidget);
+    expect(find.text('Clear data'), findsOneWidget);
 
-    await tester.tap(find.text('Clear Data'));
+    await tester.tap(find.text('Clear data'));
     await tester.pumpAndSettle();
     // Confirm destructive dialog button.
-    await tester.tap(find.text('Clear Data').last);
+    await tester.tap(find.text('Clear data').last);
     await tester.pumpAndSettle();
 
     expect(client.clearCalls, 1);

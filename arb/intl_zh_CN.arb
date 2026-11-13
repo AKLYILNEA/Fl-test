@@ -1251,5 +1251,6 @@
   "trafficStatsSettings": "统计设置",
   "trafficStatsClearTip": "确定要清除所有已保存的流量统计数据吗？",
   "trafficStatsSince": "统计自 {date}",
-  "trafficStatsDetailOffTip": "当前未开启详细统计，仅记录总流量与时段趋势。"
+  "trafficStatsDetailOffTip": "当前未开启详细统计，仅记录总流量与时段趋势。",
+  "trafficStatsRefresh": "刷新"
 }

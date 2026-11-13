@@ -2417,6 +2417,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "trafficStatsRanking": MessageLookupByLibrary.simpleMessage(
       "Traffic Ranking",
     ),
+    "trafficStatsRefresh": MessageLookupByLibrary.simpleMessage("Refresh"),
     "trafficStatsRetention": MessageLookupByLibrary.simpleMessage(
       "Data Retention",
     ),

@@ -10656,6 +10656,16 @@ class AppLocalizations {
       args: [],
     );
   }
+
+  /// `Refresh`
+  String get trafficStatsRefresh {
+    return Intl.message(
+      'Refresh',
+      name: 'trafficStatsRefresh',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {

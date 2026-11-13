@@ -140,7 +140,7 @@ class _TrafficStatsViewState extends ConsumerState<TrafficStatsView> {
         iconActions: [
           IconButtonData(
             glyph: AppGlyphs.refresh,
-            tooltip: l.refresh,
+            tooltip: l.trafficStatsRefresh,
             onPressed: _loading ? null : () => unawaited(_refresh()),
           ),
           IconButtonData(
