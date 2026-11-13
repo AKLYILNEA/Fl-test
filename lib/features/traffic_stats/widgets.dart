@@ -914,7 +914,8 @@ class _TrendBarPainter extends CustomPainter {
     final upPaint = Paint()..color = uploadColor;
     final capRadius = math.min(4.0, barWidth / 2);
     final radius = Radius.circular(capRadius);
-    final minCapH = math.max(2.5, capRadius);
+    final minBaseH = math.max(3.0, capRadius);
+    final minUpH = math.max(7.0, capRadius + 3.0);
 
     for (var i = 0; i < count; i++) {
       final point = points[i];
@@ -933,19 +934,20 @@ class _TrendBarPainter extends CustomPainter {
       }
 
       if (point.total > 0) {
-        var totalH = math.max(minCapH, (point.total / maxTotal) * chartHeight);
+        var totalH = math.max(minBaseH, (point.total / maxTotal) * chartHeight);
         var downH = 0.0;
         var upH = 0.0;
         if (point.up > 0 && point.down > 0) {
-          totalH = math.max(totalH, minCapH + 2.0);
+          totalH = math.max(totalH, minUpH + 2.5);
           upH = (totalH * (point.up / point.total))
-              .clamp(minCapH, totalH - 1.5)
+              .clamp(minUpH, totalH - 2.0)
               .toDouble();
           downH = totalH - upH;
         } else if (point.down > 0) {
           downH = totalH;
         } else if (point.up > 0) {
-          upH = totalH;
+          upH = math.max(totalH, minUpH);
+          totalH = upH;
         }
         final barLeft = cx - barWidth / 2;
         final barRight = cx + barWidth / 2;
@@ -1123,12 +1125,21 @@ class _RuleHitCard extends StatelessWidget {
   final String hitCountText;
   final Color trackColor;
 
+  static (String title, String? ruleType) _splitRuleName(String raw) {
+    final sep = raw.indexOf(',');
+    if (sep > 0 && sep + 1 < raw.length) {
+      return (raw.substring(sep + 1).trim(), raw.substring(0, sep).trim());
+    }
+    return (raw, null);
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = context.colorScheme;
     final pct = totalHits > 0 ? (item.hits * 100 / totalHits).round() : 0;
+    final (ruleTitle, ruleType) = _splitRuleName(item.name);
     return ConstrainedBox(
-      constraints: const BoxConstraints(minWidth: 176, maxWidth: 220),
+      constraints: const BoxConstraints(minWidth: 184, maxWidth: 236),
       child: Card(
         radius: AppCorner.xl,
         padding: const EdgeInsets.all(14),
@@ -1156,7 +1167,7 @@ class _RuleHitCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    item.name,
+                    ruleTitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppTextStyle.subheadline.of(
@@ -1164,24 +1175,26 @@ class _RuleHitCard extends StatelessWidget {
                       emphasized: true,
                     ),
                   ),
+                  if (ruleType != null) ...[
+                    const SizedBox(height: 1),
+                    Text(
+                      ruleType,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyle.caption1
+                          .of(context)
+                          .copyWith(color: cs.onSurfaceVariant),
+                    ),
+                  ],
                   const SizedBox(height: 2),
                   Text(
-                    hitCountText,
+                    '$hitCountText \u00b7 ${trafficStatsFormatBytes(item.total)}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppTextStyle.caption1
                         .of(context)
                         .toTabular
                         .copyWith(color: cs.onSurfaceVariant),
-                  ),
-                  Text(
-                    trafficStatsFormatBytes(item.total),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTextStyle.caption1
-                        .of(context, emphasized: true)
-                        .toTabular
-                        .copyWith(color: cs.primary),
                   ),
                 ],
               ),

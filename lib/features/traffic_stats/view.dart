@@ -181,7 +181,7 @@ class _TrafficStatsViewState extends ConsumerState<TrafficStatsView>
             holdsArrival: false,
             isLoading: (_loading && _result == null) || store.isLoading,
             isEmpty: false,
-            loadingStatus: const ActivityIndicator.page(),
+            loadingStatus: const Center(child: ActivityIndicator.page()),
             child: LayoutBuilder(
               builder: (context, constraints) {
                 const sidePadding = 16.0;
