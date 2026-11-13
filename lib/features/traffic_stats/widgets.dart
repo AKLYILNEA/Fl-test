@@ -1099,6 +1099,8 @@ class TrafficStatsRuleHitsSection extends StatelessWidget {
                     totalHits: totalHits,
                     accent: _ringPalette[i % _ringPalette.length],
                     hitCountText: l.trafficStatsHitCount(rules[i].hits),
+                    defaultBadge: l.defaultText,
+                    fallbackRuleBadge: l.rule,
                     trackColor: cs.surfaceContainerHighest,
                   ),
               ],
@@ -1116,6 +1118,8 @@ class _RuleHitCard extends StatelessWidget {
     required this.totalHits,
     required this.accent,
     required this.hitCountText,
+    required this.defaultBadge,
+    required this.fallbackRuleBadge,
     required this.trackColor,
   });
 
@@ -1123,83 +1127,145 @@ class _RuleHitCard extends StatelessWidget {
   final int totalHits;
   final Color accent;
   final String hitCountText;
+  final String defaultBadge;
+  final String fallbackRuleBadge;
   final Color trackColor;
 
-  static (String title, String? ruleType) _splitRuleName(String raw) {
+  ({String body, String badge}) _splitRuleName(String raw) {
     final sep = raw.indexOf(',');
     if (sep > 0 && sep + 1 < raw.length) {
-      return (raw.substring(sep + 1).trim(), raw.substring(0, sep).trim());
+      return (
+        body: raw.substring(sep + 1).trim(),
+        badge: raw.substring(0, sep).trim(),
+      );
     }
-    return (raw, null);
+    final upper = raw.trim().toUpperCase();
+    return (
+      body: raw,
+      badge: (upper == 'MATCH' || upper == 'FINAL')
+          ? defaultBadge
+          : fallbackRuleBadge,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final cs = context.colorScheme;
     final pct = totalHits > 0 ? (item.hits * 100 / totalHits).round() : 0;
-    final (ruleTitle, ruleType) = _splitRuleName(item.name);
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minWidth: 184, maxWidth: 236),
-      child: Card(
-        radius: AppCorner.xl,
-        padding: const EdgeInsets.all(14),
-        child: Row(
-          children: [
-            RingChart(
-              size: 46,
-              strokeWidth: 4.5,
-              trackColor: trackColor,
-              total: totalHits > 0 ? totalHits.toDouble() : null,
-              segments: [
-                RingSegment(value: item.hits.toDouble(), color: accent),
-              ],
-              centerChild: Text(
-                '$pct%',
-                style: AppTextStyle.caption2
-                    .of(context, emphasized: true)
-                    .toTabular,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
+    final rule = _splitRuleName(item.name);
+    final captionMuted = AppTextStyle.caption1
+        .of(context)
+        .toTabular
+        .copyWith(color: cs.onSurfaceVariant);
+    final captionStrong = AppTextStyle.caption1
+        .of(context, emphasized: true)
+        .toTabular
+        .copyWith(color: cs.onSurface);
+    return HoverTooltip(
+      message: item.name,
+      child: SizedBox(
+        width: 244,
+        child: Card(
+          radius: AppCorner.xl,
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text(
-                    ruleTitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTextStyle.subheadline.of(
-                      context,
-                      emphasized: true,
+                  RingChart(
+                    size: 44,
+                    strokeWidth: 4.5,
+                    trackColor: trackColor,
+                    total: totalHits > 0 ? totalHits.toDouble() : null,
+                    segments: [
+                      RingSegment(value: item.hits.toDouble(), color: accent),
+                    ],
+                    centerChild: Text(
+                      '$pct%',
+                      style: AppTextStyle.caption2
+                          .of(context, emphasized: true)
+                          .toTabular
+                          .copyWith(color: cs.onSurface),
                     ),
                   ),
-                  if (ruleType != null) ...[
-                    const SizedBox(height: 1),
-                    Text(
-                      ruleType,
-                      maxLines: 1,
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      rule.body,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: AppTextStyle.caption1
-                          .of(context)
-                          .copyWith(color: cs.onSurfaceVariant),
+                      style: AppTextStyle.subheadline
+                          .of(context, emphasized: true)
+                          .copyWith(color: cs.onSurface, height: 1.25),
                     ),
-                  ],
-                  const SizedBox(height: 2),
-                  Text(
-                    '$hitCountText \u00b7 ${trafficStatsFormatBytes(item.total)}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTextStyle.caption1
-                        .of(context)
-                        .toTabular
-                        .copyWith(color: cs.onSurfaceVariant),
                   ),
                 ],
               ),
-            ),
-          ],
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 10),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: cs.outlineVariant.withValues(alpha: 0.45),
+                    ),
+                    child: const SizedBox(height: 0.5),
+                  ),
+                  const SizedBox(height: 9),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Flexible(
+                        child: DecoratedBox(
+                          decoration: ShapeDecoration(
+                            color: accent.withValues(alpha: 0.12),
+                            shape: AppShape.xs,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 2.5,
+                            ),
+                            child: Text(
+                              rule.badge,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTextStyle.caption2
+                                  .of(context, emphasized: true)
+                                  .copyWith(color: accent),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsetsDirectional.only(start: 8),
+                        child: Text.rich(
+                          TextSpan(
+                            children: [
+                              TextSpan(
+                                text: '$hitCountText \u00b7 ',
+                                style: captionMuted,
+                              ),
+                              TextSpan(
+                                text: trafficStatsFormatBytes(item.total),
+                                style: captionStrong,
+                              ),
+                            ],
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
