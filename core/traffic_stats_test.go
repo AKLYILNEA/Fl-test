@@ -12,6 +12,7 @@ import (
 
 	"github.com/gofrs/uuid/v5"
 	"github.com/metacubex/mihomo/constant"
+	"github.com/metacubex/mihomo/tunnel"
 	"github.com/metacubex/mihomo/tunnel/statistic"
 )
 
@@ -138,16 +139,25 @@ func TestTrafficStatsCountsDeltasOnceAndSettlesClosed(t *testing.T) {
 }
 
 func TestTrafficStatsDirectChainSplit(t *testing.T) {
-	useTrafficNow(t, time.Date(2026, 10, 24, 3, 0, 0, 0, time.UTC))
-	collector := newTestTrafficCollector(t, 0)
-	collector.observe("p", newTrafficInfo("proxy.example.com", "", []string{"HK 01", "Proxy"}, 10, 90), false)
-	collector.observe("d", newTrafficInfo("direct.example.com", "", []string{"DIRECT"}, 5, 45), false)
-	result := collector.query(TrafficStatsQuery{Start: "2026-10-24", End: "2026-10-24"})
-	if result.Up != 15 || result.Down != 135 {
-		t.Fatalf("unexpected total: %+v", result)
-	}
-	if result.ProxyUp != 10 || result.ProxyDown != 90 {
-		t.Fatalf("unexpected proxy split: %+v", result)
+	keepTunnel(t)
+	tunnel.UpdateProxies(map[string]constant.Proxy{
+		"DIRECT": namedProxy("DIRECT"),
+		"local":  namedProxy("local"),
+	}, nil)
+	for _, name := range []string{"DIRECT", "local"} {
+		t.Run(name, func(t *testing.T) {
+			useTrafficNow(t, time.Date(2026, 10, 24, 3, 0, 0, 0, time.UTC))
+			collector := newTestTrafficCollector(t, 0)
+			collector.observe("p", newTrafficInfo("proxy.example.com", "", []string{"HK 01", "Proxy"}, 10, 90), false)
+			collector.observe("d", newTrafficInfo("direct.example.com", "", []string{name, "Select"}, 5, 45), false)
+			result := collector.query(TrafficStatsQuery{Start: "2026-10-24", End: "2026-10-24"})
+			if result.Up != 15 || result.Down != 135 {
+				t.Fatalf("unexpected total: %+v", result)
+			}
+			if result.ProxyUp != 10 || result.ProxyDown != 90 {
+				t.Fatalf("unexpected proxy split: %+v", result)
+			}
+		})
 	}
 }
 

@@ -29,8 +29,7 @@ enum TrafficStatsRankTab { domain, process, node, profile }
 Color trafficUploadColor(BuildContext context) =>
     DashboardColors.of(context).complement;
 
-Color trafficDownloadColor(BuildContext context) =>
-    context.colorScheme.primary;
+Color trafficDownloadColor(BuildContext context) => context.colorScheme.primary;
 
 Color trafficDirectColor(BuildContext context) =>
     DashboardColors.of(context).complement;
@@ -356,7 +355,9 @@ class TrafficStatsOverviewCard extends StatelessWidget {
     final proxyTotal = result.proxyTotal;
     final directTotal = (result.total - proxyTotal).clamp(0, result.total);
     final splitTotal = proxyTotal + directTotal;
-    final proxyPct = splitTotal > 0 ? (proxyTotal * 100 / splitTotal).round() : 0;
+    final proxyPct = splitTotal > 0
+        ? (proxyTotal * 100 / splitTotal).round()
+        : 0;
 
     return Card(
       radius: AppCorner.xl,
@@ -485,28 +486,44 @@ class _DirectionalMetric extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = context.colorScheme;
-    return Row(
-      children: [
-        GlyphIcon(glyph, size: 14, color: color),
-        const SizedBox(width: 6),
-        Flexible(
-          child: Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppTextStyle.footnote
-                .of(context)
-                .copyWith(color: cs.onSurfaceVariant),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          value,
-          style: AppTextStyle.subheadline
-              .of(context, emphasized: true)
-              .toTabular,
-        ),
-      ],
+    final caption = Text(
+      label,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: AppTextStyle.footnote
+          .of(context)
+          .copyWith(color: cs.onSurfaceVariant),
+    );
+    final figure = FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: AlignmentDirectional.centerStart,
+      child: Text(
+        value,
+        maxLines: 1,
+        style: AppTextStyle.subheadline.of(context, emphasized: true).toTabular,
+      ),
+    );
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final narrow =
+            constraints.maxWidth <
+            160 * MediaQuery.textScalerOf(context).scale(1);
+        final heading = Row(
+          children: [
+            GlyphIcon(glyph, size: 14, color: color),
+            const SizedBox(width: 6),
+            Flexible(child: caption),
+            if (!narrow) ...[const SizedBox(width: 8), Flexible(child: figure)],
+          ],
+        );
+        return narrow
+            ? Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [heading, const SizedBox(height: 2), figure],
+              )
+            : heading;
+      },
     );
   }
 }
@@ -782,9 +799,9 @@ class _TrendBarPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (points.isEmpty) return;
 
-    final chartLeft = _leftPad;
+    const chartLeft = _leftPad;
     final chartRight = size.width - _rightPad;
-    final chartTop = _topPad;
+    const chartTop = _topPad;
     final chartBottom = size.height - _bottomPad;
     final chartWidth = chartRight - chartLeft;
     final chartHeight = chartBottom - chartTop;
@@ -940,7 +957,9 @@ class _TrendBarPainter extends CustomPainter {
         return parts.length == 3 ? '${parts[1]}/${parts[2]}' : raw;
       case TrafficStatsPeriod.month:
         final parts = raw.split('-');
-        return parts.length == 3 ? '${int.tryParse(parts[2]) ?? parts[2]}' : raw;
+        return parts.length == 3
+            ? '${int.tryParse(parts[2]) ?? parts[2]}'
+            : raw;
     }
   }
 
@@ -1208,7 +1227,8 @@ class TrafficStatsRankingSection extends StatelessWidget {
             for (final item in items)
               DecorationListItem(
                 leading: _leadingForItem(context, item),
-                title: tab == TrafficStatsRankTab.node ||
+                title:
+                    tab == TrafficStatsRankTab.node ||
                         tab == TrafficStatsRankTab.profile
                     ? EmojiText(
                         item.name,

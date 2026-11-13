@@ -15,9 +15,7 @@ import 'package:flutter_test/flutter_test.dart';
 import '../helpers/test_app.dart';
 
 class _MemoryTrafficStatsStore extends TrafficStatsSettingsStore {
-  _MemoryTrafficStatsStore([
-    this._initial = const TrafficStatsSettings(),
-  ]);
+  _MemoryTrafficStatsStore([this._initial = const TrafficStatsSettings()]);
 
   final TrafficStatsSettings _initial;
 
@@ -161,41 +159,44 @@ void _setScreen(WidgetTester tester, double width, double height) {
 }
 
 void main() {
-  test('date range and stepping helpers compute day, week, and month cleanly', () {
-    final anchor = DateTime(2026, 11, 11); // Wednesday
-    expect(
-      trafficStatsDateRange(TrafficStatsPeriod.day, anchor),
-      ('2026-11-11', '2026-11-11'),
-    );
-    expect(
-      trafficStatsDateRange(TrafficStatsPeriod.week, anchor),
-      ('2026-11-09', '2026-11-15'),
-    );
-    expect(
-      trafficStatsDateRange(TrafficStatsPeriod.month, anchor),
-      ('2026-11-01', '2026-11-30'),
-    );
-    expect(
-      trafficStatsStepAnchor(TrafficStatsPeriod.month, anchor, -1),
-      DateTime(2026, 10, 1),
-    );
-    expect(
-      trafficStatsCanStepForward(
-        TrafficStatsPeriod.day,
-        DateTime(2026, 11, 10),
-        DateTime(2026, 11, 11),
-      ),
-      isTrue,
-    );
-    expect(
-      trafficStatsCanStepForward(
-        TrafficStatsPeriod.day,
-        DateTime(2026, 11, 11),
-        DateTime(2026, 11, 11),
-      ),
-      isFalse,
-    );
-  });
+  test(
+    'date range and stepping helpers compute day, week, and month cleanly',
+    () {
+      final anchor = DateTime(2026, 11, 11); // Wednesday
+      expect(trafficStatsDateRange(TrafficStatsPeriod.day, anchor), (
+        '2026-11-11',
+        '2026-11-11',
+      ));
+      expect(trafficStatsDateRange(TrafficStatsPeriod.week, anchor), (
+        '2026-11-09',
+        '2026-11-15',
+      ));
+      expect(trafficStatsDateRange(TrafficStatsPeriod.month, anchor), (
+        '2026-11-01',
+        '2026-11-30',
+      ));
+      expect(
+        trafficStatsStepAnchor(TrafficStatsPeriod.month, anchor, -1),
+        DateTime(2026, 10, 1),
+      );
+      expect(
+        trafficStatsCanStepForward(
+          TrafficStatsPeriod.day,
+          DateTime(2026, 11, 10),
+          DateTime(2026, 11, 11),
+        ),
+        isTrue,
+      );
+      expect(
+        trafficStatsCanStepForward(
+          TrafficStatsPeriod.day,
+          DateTime(2026, 11, 11),
+          DateTime(2026, 11, 11),
+        ),
+        isFalse,
+      );
+    },
+  );
 
   testWidgets('ToolsView includes Traffic Statistics entry', (tester) async {
     _setScreen(tester, 430, 840);
@@ -251,19 +252,39 @@ void main() {
         expect(find.byType(TrafficStatsOverviewCard), findsOneWidget);
         expect(find.byType(TrafficStatsTrendCard), findsOneWidget);
         expect(find.byType(TrafficStatsRuleHitsSection), findsOneWidget);
+        expect(find.text('GEOSITE:google'), findsOneWidget);
+        await tester.scrollUntilVisible(
+          find.byType(TrafficStatsRankingSection),
+          200,
+          scrollable: find
+              .descendant(
+                of: find.byType(TrafficStatsView),
+                matching: find.byType(Scrollable),
+              )
+              .first,
+        );
         expect(find.byType(TrafficStatsRankingSection), findsOneWidget);
         expect(find.text('example.com'), findsOneWidget);
-        expect(find.text('GEOSITE:google'), findsOneWidget);
 
         // Domain tap must NOT open a detail sheet or route.
-        await tester.ensureVisible(find.text('example.com'));
-        await tester.tap(find.text('example.com'));
+        await Scrollable.ensureVisible(
+          tester.element(find.text('example.com')),
+          alignment: .5,
+        );
+        await tester.pumpAndSettle();
+        final domainCenter = tester.getCenter(find.text('example.com'));
+        expect((Offset.zero & size).contains(domainCenter), isTrue);
+        await tester.tapAt(domainCenter);
         await tester.pumpAndSettle();
         expect(find.byType(TrafficStatsView), findsOneWidget);
         expect(tester.takeException(), isNull);
 
         // Switch ranking tabs: Process -> Node -> Profile -> Domain.
-        await tester.ensureVisible(find.text('Process'));
+        await Scrollable.ensureVisible(
+          tester.element(find.text('Process')),
+          alignment: .5,
+        );
+        await tester.pumpAndSettle();
         await tester.tap(find.text('Process'));
         await tester.pumpAndSettle();
         expect(find.text('chrome.exe'), findsOneWidget);
@@ -296,19 +317,49 @@ void main() {
     await tester.pumpAndSettle();
 
     final settingsBtn = find.byWidgetPredicate(
-      (w) => w is app_ui.GlyphIcon && w.glyph == AppGlyphs.sliders,
+      (w) => w is GlyphIcon && w.glyph == AppGlyphs.sliders,
     );
     await tester.tap(settingsBtn);
     await tester.pumpAndSettle();
 
     expect(find.byType(TrafficStatsSettingsView), findsOneWidget);
     expect(find.text('Detailed Breakdown'), findsOneWidget);
+    await tester.tap(find.text('Detailed Breakdown').hitTestable());
+    await tester.pumpAndSettle();
+    expect(
+      ProviderScope.containerOf(
+        tester.element(find.byType(TrafficStatsSettingsView)),
+      ).read(trafficStatsStoreProvider).value!.detail,
+      isFalse,
+    );
+    await tester.scrollUntilVisible(
+      find.text('Clear data'),
+      200,
+      scrollable: find
+          .descendant(
+            of: find.byType(TrafficStatsSettingsView),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
+    await Scrollable.ensureVisible(
+      tester.element(find.text('Clear data')),
+      alignment: .5,
+    );
+    await tester.pumpAndSettle();
     expect(find.text('Clear data'), findsOneWidget);
 
-    await tester.tap(find.text('Clear data'));
+    await tester.tap(find.text('Clear data').hitTestable());
     await tester.pumpAndSettle();
-    // Confirm destructive dialog button.
-    await tester.tap(find.text('Clear data').last);
+    expect(find.byType(app_ui.AlertDialog), findsOneWidget);
+    await tester.tap(
+      find
+          .descendant(
+            of: find.byType(app_ui.AlertDialog),
+            matching: find.text('Clear data'),
+          )
+          .hitTestable(),
+    );
     await tester.pumpAndSettle();
 
     expect(client.clearCalls, 1);
