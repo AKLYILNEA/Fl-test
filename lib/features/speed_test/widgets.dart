@@ -246,27 +246,25 @@ class SpeedTestConnectionCard extends StatelessWidget {
           Expanded(
             child: Align(
               alignment: AlignmentDirectional.centerEnd,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Flexible(
-                    child: EmojiText(
-                      value,
-                      textAlign: TextAlign.end,
-                      style: valueStyle,
-                    ),
-                  ),
-                  if (picker) ...[
-                    const SizedBox(width: 6),
-                    GlyphIcon(
-                      Glyphs.picker,
-                      size: 16,
-                      color: onPressed != null
-                          ? context.colorScheme.primary
-                          : context.colorScheme.onSurfaceVariant,
-                    ),
+              child: DefaultTextStyle.merge(
+                textAlign: TextAlign.end,
+                style: valueStyle,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(child: EmojiText(value, style: valueStyle)),
+                    if (picker) ...[
+                      const SizedBox(width: 6),
+                      GlyphIcon(
+                        Glyphs.picker,
+                        size: 16,
+                        color: onPressed != null
+                            ? context.colorScheme.primary
+                            : context.colorScheme.onSurfaceVariant,
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
           ),
