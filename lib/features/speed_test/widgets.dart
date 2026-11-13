@@ -11,6 +11,17 @@ import 'gauge.dart';
 Color speedUploadColor(BuildContext context) =>
     DashboardColors.of(context).complement;
 
+class SpeedTestScope extends StatelessWidget {
+  const SpeedTestScope({super.key, required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Theme(
+    data: Theme.of(context).copyWith(visualDensity: VisualDensity.standard),
+    child: child,
+  );
+}
+
 String speedTestBytes(int bytes) => bytes >= 1000000000
     ? '${(bytes / 1000000000).toStringAsFixed(2)} GB'
     : '${(bytes / 1000000).toStringAsFixed(1)} MB';
@@ -21,12 +32,18 @@ String speedProtocolLabel(String value) => switch (value) {
   _ => 'HTTP/1.1',
 };
 
-String _loadedLatency(SpeedTestState? state) {
+String _loadedLatencyValue(SpeedTestState? state) {
   if (state == null || state.downloadLatency <= 0 && state.uploadLatency <= 0) {
-    return '— ms';
+    return '—';
   }
-  return '${[if (state.downloadLatency > 0) '↓${state.downloadLatency.round()}', if (state.uploadLatency > 0) '↑${state.uploadLatency.round()}'].join(' ')} ms';
+  return [
+    if (state.downloadLatency > 0) '↓${state.downloadLatency.round()}',
+    if (state.uploadLatency > 0) '↑${state.uploadLatency.round()}',
+  ].join(' ');
 }
+
+String _loadedLatency(SpeedTestState? state) =>
+    '${_loadedLatencyValue(state)} ms';
 
 class SpeedTestMetrics extends StatelessWidget {
   const SpeedTestMetrics({super.key, this.state, this.speedsOnly = false});
@@ -205,111 +222,80 @@ class SpeedTestConnectionCard extends StatelessWidget {
   final VoidCallback? onSelect;
   final bool selectable;
 
-  Widget _section(
-    BuildContext context,
-    Glyph glyph,
-    String label,
-    String value, {
+  Widget _row(
+    BuildContext context, {
+    Key? itemKey,
+    required Glyph glyph,
+    required String label,
+    required String value,
     bool picker = false,
+    VoidCallback? onPressed,
   }) {
-    final text = AppTextStyle.body.of(context);
-    final content = Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Flexible(child: EmojiText(value, style: text)),
-        if (picker) ...[
-          const SizedBox(width: 6),
-          GlyphIcon(
-            Glyphs.picker,
-            size: 16,
-            color: context.colorScheme.primary,
-          ),
-        ],
-      ],
-    );
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          spacing: 6,
-          children: [
-            GlyphIcon(
-              glyph,
-              size: 16,
-              color: context.colorScheme.onSurfaceVariant,
-            ),
-            Expanded(
-              child: Text(
-                label,
-                style: AppTextStyle.footnote
-                    .of(context)
-                    .copyWith(color: context.colorScheme.onSurfaceVariant),
+    final valueStyle = AppTextStyle.subheadline
+        .of(context)
+        .copyWith(color: context.colorScheme.onSurfaceVariant);
+    return DecorationListItem(
+      key: itemKey,
+      leading: GlyphIcon(glyph),
+      onPressed: onPressed,
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        spacing: 16,
+        children: [
+          Text(label),
+          Expanded(
+            child: Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: EmojiText(
+                      value,
+                      textAlign: TextAlign.end,
+                      style: valueStyle,
+                    ),
+                  ),
+                  if (picker) ...[
+                    const SizedBox(width: 6),
+                    GlyphIcon(
+                      Glyphs.picker,
+                      size: 16,
+                      color: onPressed != null
+                          ? context.colorScheme.primary
+                          : context.colorScheme.onSurfaceVariant,
+                    ),
+                  ],
+                ],
               ),
             ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        ConstrainedBox(
-          constraints: BoxConstraints(
-            minHeight: 42 * MediaQuery.textScalerOf(context).scale(1),
           ),
-          child: Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: picker
-                ? FocusRing(
-                    shape: AppShape.sm,
-                    standsOff: true,
-                    child: PressRegion(
-                      key: const ValueKey('speed-test-outbound-picker'),
-                      shape: AppShape.sm,
-                      onTap: onSelect,
-                      child: content,
-                    ),
-                  )
-                : content,
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final l = context.appLocalizations;
-    final node = _section(
-      context,
-      AppGlyphs.connections,
-      l.speedTestExitNode,
-      outbound,
-      picker: selectable,
-    );
-    final target = _section(context, AppGlyphs.dns, l.speedTestServer, server);
-    return Card(
-      radius: AppCorner.xl,
-      padding: const EdgeInsets.all(16),
-      child: LayoutBuilder(
-        builder: (context, constraints) => constraints.maxWidth >= 600
-            ? Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(child: node),
-                  const SizedBox(width: 24),
-                  Expanded(child: target),
-                ],
-              )
-            : Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  node,
-                  const SizedBox(height: 12),
-                  const Divider(),
-                  const SizedBox(height: 12),
-                  target,
-                ],
-              ),
-      ),
+    return SpeedTestScope(
+      child: generateGroup([
+        _row(
+          context,
+          itemKey: const ValueKey('speed-test-outbound-picker'),
+          glyph: AppGlyphs.connections,
+          label: l.speedTestExitNode,
+          value: outbound,
+          picker: selectable,
+          onPressed: onSelect,
+        ),
+        _row(
+          context,
+          glyph: AppGlyphs.dns,
+          label: l.speedTestServer,
+          value: server,
+        ),
+      ]),
     );
   }
 }
@@ -333,123 +319,96 @@ class SpeedTestStatGrid extends StatelessWidget {
     final items = [
       (l.delay, number(s?.latency), 'ms', latencyActive),
       (l.speedTestJitter, number(s?.jitter), 'ms', latencyActive),
-      (l.speedTestLoadedLatency, '', 'ms', loadActive),
+      (l.speedTestLoadedLatency, _loadedLatencyValue(s), 'ms', loadActive),
       (l.speedTestResponsiveness, number(s?.rpm.toDouble()), 'RPM', loadActive),
     ];
-    Widget loaded(bool up) => Row(
-      children: [
-        GlyphIcon(
-          up ? AppGlyphs.arrowUp : AppGlyphs.arrowDown,
-          size: 12,
-          color: context.colorScheme.onSurfaceVariant,
-        ),
-        const SizedBox(width: 6),
-        Flexible(
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: AlignmentDirectional.centerStart,
-            child: Text(
-              number(up ? s?.uploadLatency : s?.downloadLatency),
-              style: AppTextStyle.headline
-                  .of(context, emphasized: true)
-                  .toTabular,
-            ),
-          ),
-        ),
-      ],
-    );
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final columns = constraints.maxWidth >= 640 ? 4 : 2;
-        final width = (constraints.maxWidth - (columns - 1) * 12) / columns;
-        return Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: [
-            for (var index = 0; index < items.length; index++)
-              SizedBox(
-                width: width,
-                child: Card(
-                  radius: AppCorner.lg,
-                  padding: const EdgeInsets.all(16),
-                  isSelected: items[index].$4,
-                  side: items[index].$4
-                      ? BorderSide(
-                          color: context.colorScheme.primary,
-                          width: 1.5,
-                        )
-                      : BorderSide.none,
-                  selectionTint: items[index].$4
-                      ? context.colorScheme.primary.opacity15
-                      : null,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              items[index].$1,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppTextStyle.footnote
-                                  .of(context)
-                                  .copyWith(
-                                    color: context.colorScheme.onSurfaceVariant,
-                                  ),
+    return SpeedTestScope(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final columns = constraints.maxWidth >= 640 ? 4 : 2;
+          final width = (constraints.maxWidth - (columns - 1) * 12) / columns;
+          return Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              for (final (label, value, unit, active) in items)
+                SizedBox(
+                  width: width,
+                  child: Card(
+                    radius: AppCorner.lg,
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                label,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTextStyle.footnote
+                                    .of(context)
+                                    .copyWith(
+                                      color: context
+                                          .colorScheme
+                                          .onSurfaceVariant,
+                                    ),
+                              ),
                             ),
-                          ),
-                          SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: items[index].$4
-                                ? const ActivityIndicator(size: 12)
-                                : null,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        height: 48 * MediaQuery.textScalerOf(context).scale(1),
-                        child: Align(
-                          alignment: AlignmentDirectional.centerStart,
-                          child: index == 2
-                              ? Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    loaded(false),
-                                    const SizedBox(height: 2),
-                                    loaded(true),
-                                  ],
-                                )
-                              : FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  alignment: AlignmentDirectional.centerStart,
-                                  child: Text(
-                                    items[index].$2,
+                            SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: active
+                                  ? const ActivityIndicator(size: 12)
+                                  : null,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        SizedBox(
+                          height: 28 * MediaQuery.textScalerOf(context).scale(1),
+                          width: double.infinity,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: AlignmentDirectional.centerStart,
+                            child: Text.rich(
+                              TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: value,
                                     style: AppTextStyle.title2
                                         .of(context, emphasized: true)
-                                        .toTabular,
+                                        .toTabular
+                                        .copyWith(
+                                          color: context.colorScheme.onSurface,
+                                        ),
                                   ),
-                                ),
-                        ),
-                      ),
-                      Text(
-                        items[index].$3,
-                        style: AppTextStyle.caption1
-                            .of(context)
-                            .copyWith(
-                              color: context.colorScheme.onSurfaceVariant,
+                                  TextSpan(
+                                    text: ' $unit',
+                                    style: AppTextStyle.caption1
+                                        .of(context)
+                                        .copyWith(
+                                          color: context
+                                              .colorScheme
+                                              .onSurfaceVariant,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                              maxLines: 1,
                             ),
-                      ),
-                    ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-          ],
-        );
-      },
+            ],
+          );
+        },
+      ),
     );
   }
 }
@@ -535,16 +494,18 @@ class SpeedTestWaveform extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) => LayoutBuilder(
-    builder: (context, constraints) => constraints.maxWidth >= 640
-        ? Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: _chart(context, upload: false)),
-              const SizedBox(width: 12),
-              Expanded(child: _chart(context, upload: true)),
-            ],
-          )
-        : _chart(context),
+  Widget build(BuildContext context) => SpeedTestScope(
+    child: LayoutBuilder(
+      builder: (context, constraints) => constraints.maxWidth >= 640
+          ? Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: _chart(context, upload: false)),
+                const SizedBox(width: 12),
+                Expanded(child: _chart(context, upload: true)),
+              ],
+            )
+          : _chart(context),
+    ),
   );
 }

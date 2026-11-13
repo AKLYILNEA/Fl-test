@@ -13,6 +13,7 @@ import 'package:fl_clash/features/speed_test/view.dart';
 import 'package:fl_clash/features/speed_test/widgets.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
+import 'package:fl_clash/widgets/record.dart';
 import 'package:fl_clash/widgets/traffic_chart.dart';
 import 'package:fl_clash/ui/ui.dart' as app_ui;
 import 'package:fl_clash/ui/icons/icons.dart';
@@ -577,21 +578,21 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
       expect(tester.getSize(hero).height, heroHeight);
       expect(tester.getSize(route).height, routeHeight);
-      final active = tester
-          .widgetList<app_ui.Card>(
-            find.descendant(
-              of: find.byType(SpeedTestStatGrid),
-              matching: find.byType(app_ui.Card),
-            ),
-          )
-          .where((card) => card.isSelected);
-      expect(active, hasLength(2));
-      for (final card in active) {
-        expect(card.side.width, 1.5);
-        expect(
-          card.side.color,
-          tester.element(find.byType(SpeedTestStatGrid)).colorScheme.primary,
-        );
+      final indicators = find.descendant(
+        of: find.byType(SpeedTestStatGrid),
+        matching: find.byType(app_ui.ActivityIndicator),
+      );
+      expect(indicators, findsNWidgets(2));
+      final statCards = tester.widgetList<app_ui.Card>(
+        find.descendant(
+          of: find.byType(SpeedTestStatGrid),
+          matching: find.byType(app_ui.Card),
+        ),
+      );
+      for (final card in statCards) {
+        expect(card.isSelected, isFalse);
+        expect(card.side, BorderSide.none);
+        expect(card.selectionTint, isNull);
       }
       expect(tester.takeException(), isNull);
     }
@@ -742,4 +743,80 @@ void main() {
     await _snapshot(tester, '.dart_tool/speed-test-probe-arc.png');
     await tester.pumpWidget(const SizedBox.shrink());
   });
+
+  testWidgets(
+    'stat cards keep standard padding, compact single-line height, and native details',
+    (tester) async {
+      _size(tester, 960, 1400);
+      final client = _Client();
+      addTearDown(client.dispose);
+      await tester.pumpWidget(
+        _app(
+          client,
+          locale: const Locale('zh', 'CN'),
+          page: const SpeedTestView(),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final l = tester.element(find.byType(SpeedTestView)).appLocalizations;
+      await tester.tap(find.text(l.speedTestStart));
+      await tester.pump();
+      client.finish();
+      await tester.pumpAndSettle();
+
+      // Verify VisualDensity.standard preserves symmetrical card padding on desktop.
+      final heroCard = find
+          .ancestor(
+            of: find.byType(SpeedTestGauge),
+            matching: find.byType(app_ui.Card),
+          )
+          .first;
+      final heroTitle = find.text('Speedtest');
+      expect(
+        tester.getTopLeft(heroTitle).dy - tester.getTopLeft(heroCard).dy,
+        greaterThanOrEqualTo(20),
+      );
+
+      final statCards = find.descendant(
+        of: find.byType(SpeedTestStatGrid),
+        matching: find.byType(app_ui.Card),
+      );
+      expect(statCards, findsNWidgets(4));
+      final heights = [
+        for (var i = 0; i < 4; i++) tester.getSize(statCards.at(i)).height,
+      ];
+      expect(heights.toSet(), hasLength(1));
+      expect(heights.first, lessThan(100));
+      expect(
+        tester.getTopLeft(find.text(l.delay)).dy -
+            tester.getTopLeft(statCards.at(0)).dy,
+        closeTo(
+          tester.getTopLeft(find.text(l.delay)).dx -
+              tester.getTopLeft(statCards.at(0)).dx,
+          .01,
+        ),
+      );
+      expect(find.textContaining('↓40 ↑60'), findsOneWidget);
+
+      await tester.tap(find.byTooltip(l.speedTestHistory));
+      await tester.pumpAndSettle();
+      expect(
+        find.descendant(
+          of: find.byType(SpeedTestHistoryView),
+          matching: find.byType(app_ui.DecorationListItem),
+        ),
+        findsOneWidget,
+      );
+      await tester.tap(find.textContaining('240.0').last);
+      await tester.pumpAndSettle();
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('speed-record-details')),
+          matching: find.byType(DetailRow),
+        ),
+        findsNWidgets(4),
+      );
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
 }

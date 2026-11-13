@@ -472,43 +472,47 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView> {
         unawaited(_detect());
       }
     });
-    return Scaffold(
-      title: l.speedTest,
-      groupIconActions: false,
-      iconActions: [
-        IconButtonData(
-          glyph: AppGlyphs.clock,
-          tooltip: l.speedTestHistory,
-          onPressed: _openHistory,
-        ),
-        IconButtonData(
-          glyph: AppGlyphs.sliders,
-          tooltip: l.speedTestSettings,
-          onPressed: _testing || _confirming || !_loaded ? null : _openSettings,
-        ),
-      ],
-      body: Builder(
-        builder: (context) => ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 16).copyWith(
-            top: context.appBarInset,
-            bottom: 20 + context.bottomInset,
+    return SpeedTestScope(
+      child: Scaffold(
+        title: l.speedTest,
+        groupIconActions: false,
+        iconActions: [
+          IconButtonData(
+            glyph: AppGlyphs.clock,
+            tooltip: l.speedTestHistory,
+            onPressed: _openHistory,
           ),
-          children: [
-            if (_error != null) ...[
-              _errorBanner(context),
+          IconButtonData(
+            glyph: AppGlyphs.sliders,
+            tooltip: l.speedTestSettings,
+            onPressed: _testing || _confirming || !_loaded
+                ? null
+                : _openSettings,
+          ),
+        ],
+        body: Builder(
+          builder: (context) => ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 16).copyWith(
+              top: context.appBarInset,
+              bottom: 20 + context.bottomInset,
+            ),
+            children: [
+              if (_error != null) ...[
+                _errorBanner(context),
+                const SizedBox(height: 12),
+              ],
+              _hero(context),
               const SizedBox(height: 12),
+              SpeedTestStatGrid(state: _state, testing: _testing),
+              const SizedBox(height: 12),
+              _routeCard(context, running),
+              if (_downIndex >= 0 || _upIndex >= 0) ...[
+                const SizedBox(height: 16),
+                SpeedTestWaveform(samples: _samples),
+              ],
+              ListFooter(text: l.speedTestCredit),
             ],
-            _hero(context),
-            const SizedBox(height: 12),
-            SpeedTestStatGrid(state: _state, testing: _testing),
-            const SizedBox(height: 12),
-            _routeCard(context, running),
-            if (_downIndex >= 0 || _upIndex >= 0) ...[
-              const SizedBox(height: 16),
-              SpeedTestWaveform(samples: _samples),
-            ],
-            ListFooter(text: l.speedTestCredit),
-          ],
+          ),
         ),
       ),
     );

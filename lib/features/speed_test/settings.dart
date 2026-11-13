@@ -8,6 +8,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'client.dart';
+import 'widgets.dart';
 
 class SpeedTestSettingsView extends StatefulWidget {
   const SpeedTestSettingsView({
@@ -46,66 +47,68 @@ class _SpeedTestSettingsViewState extends State<SpeedTestSettingsView> {
   @override
   Widget build(BuildContext context) {
     final l = context.appLocalizations;
-    return Scaffold(
-      title: l.speedTestSettings,
-      confirmationAction: IconButtonData(
-        glyph: AppGlyphs.check,
-        tooltip: l.save,
-        onPressed: () => context.safeNestedPop(_settings),
-      ),
-      body: Builder(
-        builder: (context) => ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 16).copyWith(
-            top: context.sectionsTopPadding,
-            bottom: 20 + context.bottomInset,
-          ),
-          children: [
-            generateSection(
-              items: [
-                ListItem(
-                  title: Text(l.speedTestServer),
-                  subtitle: Text(
-                    _settings.server?.title ?? l.speedTestServerAutoDesc,
+    return SpeedTestScope(
+      child: Scaffold(
+        title: l.speedTestSettings,
+        confirmationAction: IconButtonData(
+          glyph: AppGlyphs.check,
+          tooltip: l.save,
+          onPressed: () => context.safeNestedPop(_settings),
+        ),
+        body: Builder(
+          builder: (context) => ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 16).copyWith(
+              top: context.sectionsTopPadding,
+              bottom: 20 + context.bottomInset,
+            ),
+            children: [
+              generateSection(
+                items: [
+                  ListItem(
+                    title: Text(l.speedTestServer),
+                    subtitle: Text(
+                      _settings.server?.title ?? l.speedTestServerAutoDesc,
+                    ),
+                    trailing: const DisclosureIndicator(),
+                    onTap: _pickServer,
                   ),
-                  trailing: const GlyphIcon(AppGlyphs.chevronForward, size: 16),
-                  onTap: _pickServer,
-                ),
-              ],
-            ),
-            generateSection(
-              title: l.general,
-              footer:
-                  '${l.speedTestConnectionsDesc(8)}\n${l.speedTestProtocolDesc}',
-              items: [
-                ListItem<int>.options(
-                  title: Text(l.speedTestDuration),
-                  options: const [5, 10, 15, 20],
-                  value: _settings.duration,
-                  textBuilder: (value) => '${value}s',
-                  onChanged: (value) =>
-                      _change(_settings.copyWith(duration: value)),
-                ),
-                ListItem<bool>.options(
-                  title: Text(l.speedTestConnections),
-                  options: const [false, true],
-                  value: _settings.multiThread,
-                  textBuilder: (value) =>
-                      value ? l.speedTestMultiThread : l.speedTestSingleThread,
-                  onChanged: (value) =>
-                      _change(_settings.copyWith(multiThread: value)),
-                ),
-                ListItem<String>.options(
-                  title: Text(l.speedTestProtocol),
-                  options: const ['h2', 'h3'],
-                  value: _settings.protocol,
-                  textBuilder: (value) =>
-                      value == 'h3' ? 'HTTP/3 · QUIC' : 'HTTP/2',
-                  onChanged: (value) =>
-                      _change(_settings.copyWith(protocol: value)),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+              generateSection(
+                title: l.general,
+                footer:
+                    '${l.speedTestConnectionsDesc(8)}\n${l.speedTestProtocolDesc}',
+                items: [
+                  ListItem<int>.options(
+                    title: Text(l.speedTestDuration),
+                    options: const [5, 10, 15, 20],
+                    value: _settings.duration,
+                    textBuilder: (value) => '${value}s',
+                    onChanged: (value) =>
+                        _change(_settings.copyWith(duration: value)),
+                  ),
+                  ListItem<bool>.options(
+                    title: Text(l.speedTestConnections),
+                    options: const [false, true],
+                    value: _settings.multiThread,
+                    textBuilder: (value) =>
+                        value ? l.speedTestMultiThread : l.speedTestSingleThread,
+                    onChanged: (value) =>
+                        _change(_settings.copyWith(multiThread: value)),
+                  ),
+                  ListItem<String>.options(
+                    title: Text(l.speedTestProtocol),
+                    options: const ['h2', 'h3'],
+                    value: _settings.protocol,
+                    textBuilder: (value) =>
+                        value == 'h3' ? 'HTTP/3 · QUIC' : 'HTTP/2',
+                    onChanged: (value) =>
+                        _change(_settings.copyWith(protocol: value)),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -196,39 +199,38 @@ class _SpeedTestServerPickerState extends ConsumerState<SpeedTestServerPicker> {
     ref.watch(speedTestClientProvider);
     final l = context.appLocalizations;
     final nodes = _nodes ?? const <SpeedTestNode>[];
-    return Scaffold(
-      title: l.speedTestServer,
-      searchState: AppBarSearchState(query: _query, onSearch: _search),
-      body: Builder(
-        builder: (context) => NullStatusSwitcher(
-          isLoading: _loading,
-          loadingStatus: const Center(child: ActivityIndicator.page()),
-          child: _failed
-              ? Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(l.speedTestErrorUnavailable),
-                      TextButton(onPressed: _load, child: Text(l.retry)),
-                    ],
-                  ),
-                )
-              : PrismListView(
-                  padding: const EdgeInsets.symmetric(horizontal: 16).copyWith(
-                    top: context.contentTopPadding + 12,
-                    bottom: 20 + context.bottomInset,
-                  ),
-                  itemCount: nodes.length + 1,
-                  itemBuilder: (context, index) {
-                    final node = index == 0 ? null : nodes[index - 1];
-                    final selected = node == null
-                        ? widget.selected == null
-                        : node.host == widget.selected?.host;
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Card(
-                        radius: AppCorner.xl,
-                        child: ListItem(
+    return SpeedTestScope(
+      child: Scaffold(
+        title: l.speedTestServer,
+        searchState: AppBarSearchState(query: _query, onSearch: _search),
+        body: Builder(
+          builder: (context) => NullStatusSwitcher(
+            isLoading: _loading,
+            loadingStatus: const Center(child: ActivityIndicator.page()),
+            child: _failed
+                ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(l.speedTestErrorUnavailable),
+                        TextButton(onPressed: _load, child: Text(l.retry)),
+                      ],
+                    ),
+                  )
+                : PrismListView(
+                    padding: const EdgeInsets.symmetric(horizontal: 16).copyWith(
+                      top: context.contentTopPadding + 12,
+                      bottom: 20 + context.bottomInset,
+                    ),
+                    itemCount: nodes.length + 1,
+                    itemBuilder: (context, index) {
+                      final node = index == 0 ? null : nodes[index - 1];
+                      final selected = node == null
+                          ? widget.selected == null
+                          : node.host == widget.selected?.host;
+                      return ItemPositionProvider(
+                        position: ItemPosition.get(index, nodes.length + 1),
+                        child: DecorationListItem(
                           title: node == null
                               ? Text(l.auto)
                               : EmojiText(
@@ -249,12 +251,13 @@ class _SpeedTestServerPickerState extends ConsumerState<SpeedTestServerPicker> {
                                   ].where((s) => s.isNotEmpty).join(' · '),
                           ),
                           trailing: selected ? const SelectionCheck() : null,
-                          onTap: () => _select(node ?? const SpeedTestNode()),
+                          onPressed: () =>
+                              _select(node ?? const SpeedTestNode()),
                         ),
-                      ),
-                    );
-                  },
-                ),
+                      );
+                    },
+                  ),
+          ),
         ),
       ),
     );
