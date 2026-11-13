@@ -143,7 +143,7 @@ class _SpeedTestGaugeState extends State<SpeedTestGauge>
         ? switch (phase) {
             SpeedTestPhase.connecting => l.speedTestConnecting,
             SpeedTestPhase.latency => l.delay,
-            _ => l.speedTestProbing,
+            _ => l.speedTestReady,
           }
         : switch (phase) {
             SpeedTestPhase.download || SpeedTestPhase.done => l.download,
@@ -193,13 +193,21 @@ class _SpeedTestGaugeState extends State<SpeedTestGauge>
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(
-                            label,
-                            style: AppTextStyle.footnote
-                                .of(context)
-                                .copyWith(
-                                  color: context.colorScheme.onSurfaceVariant,
-                                ),
+                          ConstrainedBox(
+                            constraints: BoxConstraints(maxWidth: width * .62),
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                label,
+                                maxLines: 1,
+                                style: AppTextStyle.footnote
+                                    .of(context)
+                                    .copyWith(
+                                      color:
+                                          context.colorScheme.onSurfaceVariant,
+                                    ),
+                              ),
+                            ),
                           ),
                           Text(
                             !waiting && measured

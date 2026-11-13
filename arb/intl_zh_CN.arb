@@ -1217,7 +1217,7 @@
   "speedTestConnectionsDesc": "多线程会并发 {count} 条连接以跑满带宽",
   "speedTestProtocolDesc": "HTTP/3 基于 QUIC (UDP)，不可用时依次回退到 HTTP/2、（HTTP/2 不可用时）HTTP/1.1",
   "speedTestProtocolFallback": "{protocol} 不可用，已回退到 {fallback}",
-  "speedTestProbing": "正在探测出站…",
+  "speedTestProbing": "正在探测出站",
   "speedTestRealtime": "实时速率",
   "speedTestQuality": "网络质量",
   "speedTestStreams": "{count} 条连接",

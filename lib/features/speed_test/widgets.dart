@@ -63,59 +63,72 @@ class SpeedTestMetrics extends StatelessWidget {
         ? s.speed
         : s.download;
     final color = up ? speedUploadColor(context) : context.colorScheme.primary;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          spacing: 6,
+    return DecoratedBox(
+      decoration: ShapeDecoration(
+        color: context.colorScheme.onSurface.withValues(alpha: 0.04),
+        shape: AppShape.lg,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            GlyphIcon(
-              up ? AppGlyphs.arrowUp : AppGlyphs.arrowDown,
-              color: color,
-              size: 16,
+            Row(
+              spacing: 6,
+              children: [
+                GlyphIcon(
+                  up ? AppGlyphs.arrowUp : AppGlyphs.arrowDown,
+                  color: color,
+                  size: 16,
+                ),
+                Flexible(
+                  child: Text(
+                    up ? l.upload : l.download,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyle.footnote
+                        .of(context)
+                        .copyWith(color: context.colorScheme.onSurfaceVariant),
+                  ),
+                ),
+              ],
             ),
-            Flexible(
-              child: Text(
-                up ? l.upload : l.download,
-                style: AppTextStyle.footnote
-                    .of(context)
-                    .copyWith(color: context.colorScheme.onSurfaceVariant),
+            const SizedBox(height: 6),
+            SizedBox(
+              height: 32 * MediaQuery.textScalerOf(context).scale(1),
+              width: double.infinity,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: AlignmentDirectional.centerStart,
+                child: Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: value == null || value < 0
+                            ? '—'
+                            : speedTestValue(value),
+                        style: AppTextStyle.title2
+                            .of(context, emphasized: true)
+                            .toTabular
+                            .copyWith(color: color),
+                      ),
+                      TextSpan(
+                        text: ' ${speedTestUnit(value ?? 0)}',
+                        style: AppTextStyle.caption1
+                            .of(context)
+                            .copyWith(
+                              color: context.colorScheme.onSurfaceVariant,
+                            ),
+                      ),
+                    ],
+                  ),
+                  maxLines: 1,
+                ),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 6),
-        SizedBox(
-          height: 32 * MediaQuery.textScalerOf(context).scale(1),
-          width: double.infinity,
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: AlignmentDirectional.centerStart,
-            child: Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: value == null || value < 0
-                        ? '—'
-                        : speedTestValue(value),
-                    style: AppTextStyle.title2
-                        .of(context, emphasized: true)
-                        .toTabular
-                        .copyWith(color: color),
-                  ),
-                  TextSpan(
-                    text: ' ${speedTestUnit(value ?? 0)}',
-                    style: AppTextStyle.caption1
-                        .of(context)
-                        .copyWith(color: context.colorScheme.onSurfaceVariant),
-                  ),
-                ],
-              ),
-              maxLines: 1,
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 
@@ -150,7 +163,7 @@ class SpeedTestMetrics extends StatelessWidget {
       return Row(
         children: [
           Expanded(child: _speed(context, false)),
-          const SizedBox(width: 16),
+          const SizedBox(width: 10),
           Expanded(child: _speed(context, true)),
         ],
       );
@@ -161,7 +174,7 @@ class SpeedTestMetrics extends StatelessWidget {
         Row(
           children: [
             Expanded(child: _speed(context, false)),
-            const SizedBox(width: 16),
+            const SizedBox(width: 10),
             Expanded(child: _speed(context, true)),
           ],
         ),
@@ -214,11 +227,17 @@ class SpeedTestConnectionCard extends StatelessWidget {
     super.key,
     required this.outbound,
     required this.server,
+    this.outboundDetail,
+    this.serverDetail,
+    this.probing = false,
     this.onSelect,
     this.selectable = false,
   });
   final String outbound;
   final String server;
+  final String? outboundDetail;
+  final String? serverDetail;
+  final bool probing;
   final VoidCallback? onSelect;
   final bool selectable;
 
@@ -228,9 +247,12 @@ class SpeedTestConnectionCard extends StatelessWidget {
     required Glyph glyph,
     required String label,
     required String value,
+    String? detail,
+    bool loading = false,
     Widget? trailing,
     VoidCallback? onPressed,
   }) {
+    final cs = context.colorScheme;
     return ItemPositionProvider(
       position: ItemPosition.startAndEnd,
       child: DecorationListItem(
@@ -242,26 +264,47 @@ class SpeedTestConnectionCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTextStyle.footnote
-                  .of(context)
-                  .copyWith(color: context.colorScheme.onSurfaceVariant),
+            Row(
+              spacing: 6,
+              children: [
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyle.footnote
+                        .of(context)
+                        .copyWith(color: cs.onSurfaceVariant),
+                  ),
+                ),
+                if (loading) const ActivityIndicator(size: 11),
+              ],
             ),
             const SizedBox(height: 4),
             HoverTooltip(
-              message: value,
+              message: detail != null && detail.isNotEmpty
+                  ? '$value\n$detail'
+                  : value,
               child: EmojiText(
                 value,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppTextStyle.headline
                     .of(context, emphasized: true)
-                    .copyWith(color: context.colorScheme.onSurface),
+                    .copyWith(color: cs.onSurface),
               ),
             ),
+            if (detail != null && detail.isNotEmpty) ...[
+              const SizedBox(height: 3),
+              EmojiText(
+                detail,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyle.footnote
+                    .of(context)
+                    .copyWith(color: cs.onSurfaceVariant),
+              ),
+            ],
           ],
         ),
       ),
@@ -277,6 +320,8 @@ class SpeedTestConnectionCard extends StatelessWidget {
       glyph: AppGlyphs.connections,
       label: l.speedTestExitNode,
       value: outbound,
+      detail: outboundDetail,
+      loading: probing,
       trailing: selectable
           ? GlyphIcon(
               Glyphs.picker,
@@ -293,11 +338,13 @@ class SpeedTestConnectionCard extends StatelessWidget {
       glyph: AppGlyphs.dns,
       label: l.speedTestServer,
       value: server,
+      detail: serverDetail,
     );
     return SpeedTestScope(
       child: LayoutBuilder(
         builder: (context, constraints) => constraints.maxWidth >= 640
             ? Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(child: outboundCard),
                   const SizedBox(width: 12),

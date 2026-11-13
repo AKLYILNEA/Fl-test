@@ -366,8 +366,17 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
         children: [
           Row(
             children: [
-              GlyphIcon(AppGlyphs.speed, size: 20, color: color),
-              const SizedBox(width: 8),
+              DecoratedBox(
+                decoration: ShapeDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  shape: AppShape.sm,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(6),
+                  child: GlyphIcon(AppGlyphs.speed, size: 18, color: color),
+                ),
+              ),
+              const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   'Speedtest',
@@ -379,18 +388,32 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
               const SizedBox(width: 12),
               Flexible(
                 child: SizedBox(
-                  height: 40 * MediaQuery.textScalerOf(context).scale(1),
+                  height: 44 * MediaQuery.textScalerOf(context).scale(1),
                   child: Align(
                     alignment: Alignment.centerRight,
-                    child: Text(
-                      protocol,
-                      textAlign: TextAlign.end,
-                      maxLines: 2,
-                      style: AppTextStyle.footnote
-                          .of(context)
-                          .copyWith(
-                            color: context.colorScheme.onSurfaceVariant,
-                          ),
+                    child: DecoratedBox(
+                      decoration: ShapeDecoration(
+                        color: context.colorScheme.onSurface.withValues(
+                          alpha: 0.055,
+                        ),
+                        shape: AppShape.full,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        child: Text(
+                          protocol,
+                          textAlign: TextAlign.end,
+                          maxLines: 2,
+                          style: AppTextStyle.footnote
+                              .of(context)
+                              .copyWith(
+                                color: context.colorScheme.onSurfaceVariant,
+                              ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -413,12 +436,38 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
                   ),
           ),
           const SizedBox(height: 16),
-          Text(
-            '${l.speedTestDataUsed} \u00b7 ${speedTestBytes(_state?.bytes ?? 0)}',
-            maxLines: 1,
-            style: AppTextStyle.caption1
-                .of(context)
-                .copyWith(color: context.colorScheme.onSurfaceVariant),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: context.colorScheme.outlineVariant.withValues(alpha: 0.4),
+            ),
+            child: const SizedBox(height: 0.5),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '${l.speedTestDataUsed} \u00b7 ${speedTestBytes(_state?.bytes ?? 0)}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyle.caption1
+                      .of(context)
+                      .toTabular
+                      .copyWith(color: context.colorScheme.onSurfaceVariant),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsetsDirectional.only(start: 12),
+                child: Text(
+                  '${_settings.multiThread ? l.speedTestMultiThread : l.speedTestSingleThread} \u00b7 ${_settings.duration}s',
+                  maxLines: 1,
+                  style: AppTextStyle.caption1
+                      .of(context)
+                      .toTabular
+                      .copyWith(color: context.colorScheme.onSurfaceVariant),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -432,6 +481,26 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
         : _proxy.isEmpty
         ? l.speedTestFollowRules
         : _proxy;
+    final outboundInfo =
+        (_testing ? _state?.outbound : null) ??
+        _probe?.outbound ??
+        _state?.outbound;
+    final chains = outboundInfo?.chains ?? const <String>[];
+    final rule = [
+      outboundInfo?.rule ?? '',
+      outboundInfo?.rulePayload ?? '',
+    ].where((s) => s.isNotEmpty).join(',');
+    final chainText = chains.join(' \u203a ');
+    String? outboundDetail;
+    if (_probing) {
+      outboundDetail = l.speedTestProbing;
+    } else if (outboundInfo != null) {
+      final parts = <String>[
+        if (chainText.isNotEmpty && chainText != selected) chainText,
+        if (rule.isNotEmpty) rule,
+      ];
+      if (parts.isNotEmpty) outboundDetail = parts.join(' \u00b7 ');
+    }
     final actual =
         (_testing ? _state?.server : null) ?? _probe?.server ?? _state?.server;
     final serverText =
@@ -442,9 +511,23 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
                 actual.sponsor,
                 actual.city,
               ].where((s) => s.isNotEmpty).join(' \u00b7 '));
+    String? serverDetail;
+    if (_probing && _settings.server == null && actual == null) {
+      serverDetail = l.speedTestServerAutoDesc;
+    } else if (actual != null) {
+      final host = actual.host.isNotEmpty ? actual.host : actual.ip;
+      final parts = <String>[
+        if (actual.country.isNotEmpty) actual.country,
+        if (host.isNotEmpty) host,
+      ];
+      if (parts.isNotEmpty) serverDetail = parts.join(' \u00b7 ');
+    }
     return SpeedTestConnectionCard(
       outbound: selected,
       server: serverText.isEmpty ? l.auto : serverText,
+      outboundDetail: outboundDetail,
+      serverDetail: serverDetail,
+      probing: _probing,
       selectable: true,
       onSelect: _testing || !running ? null : _chooseOutbound,
     );
