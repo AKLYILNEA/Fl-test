@@ -904,10 +904,9 @@ class _TrendBarPainter extends CustomPainter {
           ),
           textDirection: TextDirection.ltr,
         )..layout();
-        final x = (cx - tp.width / 2).clamp(
-          chartLeft,
-          math.max(chartLeft, chartRight - tp.width),
-        );
+        final x = (cx - tp.width / 2)
+            .clamp(chartLeft, math.max(chartLeft, chartRight - tp.width))
+            .toDouble();
         tp.paint(canvas, Offset(x, chartBottom + 6));
       }
     }
