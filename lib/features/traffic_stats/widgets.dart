@@ -584,10 +584,10 @@ class _TrafficStatsTrendCardState extends State<TrafficStatsTrendCard> {
     }
   }
 
-  void _updateIndexFromDx(double dx, double width, double leftPad) {
+  void _updateIndexFromDx(double dx, double width, double rightPad) {
     final count = widget.points.length;
     if (count == 0) return;
-    const rightPad = _TrendBarPainter._rightPad;
+    const leftPad = _TrendBarPainter._leftPad;
     final chartWidth = width - leftPad - rightPad;
     if (chartWidth <= 0) return;
     final rel = ((dx - leftPad) / chartWidth).clamp(0.0, 0.9999);
@@ -625,7 +625,7 @@ class _TrafficStatsTrendCardState extends State<TrafficStatsTrendCard> {
         .of(context)
         .toTabular
         .copyWith(color: cs.onSurfaceVariant);
-    final leftPad = _TrendBarPainter.measureLeftPad(
+    final rightPad = _TrendBarPainter.measureRightPad(
       widget.points,
       labelStyle,
     );
@@ -692,7 +692,7 @@ class _TrafficStatsTrendCardState extends State<TrafficStatsTrendCard> {
                       onHover: (e) => _updateIndexFromDx(
                         e.localPosition.dx,
                         constraints.maxWidth,
-                        leftPad,
+                        rightPad,
                       ),
                       onExit: (_) {
                         if (_selectedIndex != null) {
@@ -704,12 +704,12 @@ class _TrafficStatsTrendCardState extends State<TrafficStatsTrendCard> {
                         onTapDown: (d) => _updateIndexFromDx(
                           d.localPosition.dx,
                           constraints.maxWidth,
-                          leftPad,
+                          rightPad,
                         ),
                         onHorizontalDragUpdate: (d) => _updateIndexFromDx(
                           d.localPosition.dx,
                           constraints.maxWidth,
-                          leftPad,
+                          rightPad,
                         ),
                         child: CustomPaint(
                           size: Size(constraints.maxWidth, 158),
@@ -717,7 +717,7 @@ class _TrafficStatsTrendCardState extends State<TrafficStatsTrendCard> {
                             points: widget.points,
                             period: widget.period,
                             selectedIndex: _selectedIndex,
-                            leftPad: leftPad,
+                            rightPad: rightPad,
                             downloadColor: downColor,
                             uploadColor: upColor,
                             gridColor: cs.outlineVariant.withValues(alpha: 0.4),
@@ -772,7 +772,7 @@ class _TrendBarPainter extends CustomPainter {
     required this.points,
     required this.period,
     required this.selectedIndex,
-    required this.leftPad,
+    required this.rightPad,
     required this.downloadColor,
     required this.uploadColor,
     required this.gridColor,
@@ -784,7 +784,7 @@ class _TrendBarPainter extends CustomPainter {
   final List<TrafficStatsPoint> points;
   final TrafficStatsPeriod period;
   final int? selectedIndex;
-  final double leftPad;
+  final double rightPad;
   final Color downloadColor;
   final Color uploadColor;
   final Color gridColor;
@@ -792,55 +792,97 @@ class _TrendBarPainter extends CustomPainter {
   final TextStyle labelStyle;
   final TextStyle activeLabelStyle;
 
-  static const _minLeftPad = 48.0;
-  static const _rightPad = 6.0;
+  static const _leftPad = 4.0;
+  static const _minRightPad = 46.0;
   static const _topPad = 10.0;
   static const _bottomPad = 26.0;
   static const _axisGap = 8.0;
+  static const _unitNames = ['B', 'KB', 'MB', 'GB', 'TB'];
+  static const _niceSteps = [
+    1.0,
+    1.2,
+    1.6,
+    2.0,
+    2.4,
+    3.0,
+    4.0,
+    5.0,
+    6.0,
+    8.0,
+    10.0,
+  ];
 
-  static int _maxTotalOf(List<TrafficStatsPoint> points) {
-    var maxTotal = 0;
+  static ({int maxBytes, String topLabel, String midLabel}) _scaleOf(
+    List<TrafficStatsPoint> points,
+  ) {
+    var rawMax = 0;
     for (final p in points) {
-      if (p.total > maxTotal) maxTotal = p.total;
+      if (p.total > rawMax) rawMax = p.total;
     }
-    return maxTotal <= 0 ? 1 : maxTotal;
+    if (rawMax <= 0) {
+      return (maxBytes: 1, topLabel: '1 B', midLabel: '0.5 B');
+    }
+    var factor = 1.0;
+    var unitIdx = 0;
+    while (rawMax / factor >= 1024 && unitIdx < _unitNames.length - 1) {
+      factor *= 1024;
+      unitIdx++;
+    }
+    final val = rawMax / factor;
+    final mag = math
+        .pow(10, (math.log(val) / math.ln10).floor())
+        .toDouble();
+    final norm = val / mag;
+    var step = 10.0;
+    for (final candidate in _niceSteps) {
+      if (norm <= candidate + 1e-9) {
+        step = candidate;
+        break;
+      }
+    }
+    final topVal = step * mag;
+    final midVal = topVal / 2;
+    final maxBytes = math.max(rawMax, (topVal * factor).round());
+    final decimals = unitIdx == 0 ? 0 : 1;
+    final unit = _unitNames[unitIdx];
+    return (
+      maxBytes: maxBytes,
+      topLabel: '${topVal.fixed(decimals: decimals)} $unit',
+      midLabel: '${midVal.fixed(decimals: decimals)} $unit',
+    );
   }
 
-  static double measureLeftPad(
+  static double measureRightPad(
     List<TrafficStatsPoint> points,
     TextStyle labelStyle,
   ) {
-    final maxTotal = _maxTotalOf(points);
+    final scale = _scaleOf(points);
     var maxWidth = 0.0;
-    const steps = 2;
-    for (var s = 0; s <= steps; s++) {
-      final val = (maxTotal * (s / steps)).round();
+    for (final text in [scale.topLabel, scale.midLabel]) {
       final tp = TextPainter(
-        text: TextSpan(
-          text: trafficStatsFormatAxisBytes(val),
-          style: labelStyle,
-        ),
+        text: TextSpan(text: text, style: labelStyle),
         maxLines: 1,
         textDirection: TextDirection.ltr,
       )..layout();
       if (tp.width > maxWidth) maxWidth = tp.width;
     }
-    return math.max(_minLeftPad, maxWidth + _axisGap);
+    return math.max(_minRightPad, maxWidth + _axisGap);
   }
 
   @override
   void paint(Canvas canvas, Size size) {
     if (points.isEmpty) return;
 
-    final chartLeft = leftPad;
-    final chartRight = size.width - _rightPad;
+    const chartLeft = _leftPad;
+    final chartRight = size.width - rightPad;
     const chartTop = _topPad;
     final chartBottom = size.height - _bottomPad;
     final chartWidth = chartRight - chartLeft;
     final chartHeight = chartBottom - chartTop;
     if (chartWidth <= 0 || chartHeight <= 0) return;
 
-    final maxTotal = _maxTotalOf(points);
+    final scale = _scaleOf(points);
+    final maxTotal = scale.maxBytes;
 
     final gridPaint = Paint()
       ..color = gridColor
@@ -851,22 +893,17 @@ class _TrendBarPainter extends CustomPainter {
       final frac = s / steps;
       final y = chartBottom - chartHeight * frac;
       canvas.drawLine(Offset(chartLeft, y), Offset(chartRight, y), gridPaint);
+      if (s == 0) continue;
 
-      final val = (maxTotal * frac).round();
+      final label = s == steps ? scale.topLabel : scale.midLabel;
       final tp = TextPainter(
-        text: TextSpan(
-          text: trafficStatsFormatAxisBytes(val),
-          style: labelStyle,
-        ),
+        text: TextSpan(text: label, style: labelStyle),
         maxLines: 1,
         textDirection: TextDirection.ltr,
       )..layout();
       tp.paint(
         canvas,
-        Offset(
-          chartLeft - _axisGap - tp.width,
-          math.max(0.0, y - tp.height / 2),
-        ),
+        Offset(chartRight + _axisGap, math.max(0.0, y - tp.height / 2)),
       );
     }
 
@@ -998,7 +1035,7 @@ class _TrendBarPainter extends CustomPainter {
       oldDelegate.points != points ||
       oldDelegate.period != period ||
       oldDelegate.selectedIndex != selectedIndex ||
-      oldDelegate.leftPad != leftPad ||
+      oldDelegate.rightPad != rightPad ||
       oldDelegate.downloadColor != downloadColor ||
       oldDelegate.uploadColor != uploadColor ||
       oldDelegate.gridColor != gridColor;
@@ -1193,7 +1230,7 @@ class TrafficStatsRankingSection extends StatelessWidget {
         }
         return _GlyphBadge(glyph: AppGlyphs.appsList, color: cs.primary);
       case TrafficStatsRankTab.node:
-        return _GlyphBadge(glyph: AppGlyphs.proxies, color: cs.primary);
+        return _GlyphBadge(glyph: AppGlyphs.connections, color: cs.primary);
       case TrafficStatsRankTab.profile:
         return _GlyphBadge(glyph: AppGlyphs.profiles, color: cs.primary);
     }
