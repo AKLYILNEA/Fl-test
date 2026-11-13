@@ -222,53 +222,48 @@ class SpeedTestConnectionCard extends StatelessWidget {
   final VoidCallback? onSelect;
   final bool selectable;
 
-  Widget _row(
+  Widget _card(
     BuildContext context, {
     Key? itemKey,
     required Glyph glyph,
     required String label,
     required String value,
-    bool picker = false,
+    Widget? trailing,
     VoidCallback? onPressed,
   }) {
-    final valueStyle = AppTextStyle.subheadline
-        .of(context)
-        .copyWith(color: context.colorScheme.onSurfaceVariant);
-    return DecorationListItem(
-      key: itemKey,
-      leading: GlyphIcon(glyph),
-      onPressed: onPressed,
-      title: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        spacing: 16,
-        children: [
-          Text(label),
-          Expanded(
-            child: Align(
-              alignment: AlignmentDirectional.centerEnd,
-              child: DefaultTextStyle.merge(
-                textAlign: TextAlign.end,
-                style: valueStyle,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Flexible(child: EmojiText(value, style: valueStyle)),
-                    if (picker) ...[
-                      const SizedBox(width: 6),
-                      GlyphIcon(
-                        Glyphs.picker,
-                        size: 16,
-                        color: onPressed != null
-                            ? context.colorScheme.primary
-                            : context.colorScheme.onSurfaceVariant,
-                      ),
-                    ],
-                  ],
-                ),
+    return ItemPositionProvider(
+      position: ItemPosition.startAndEnd,
+      child: DecorationListItem(
+        key: itemKey,
+        leading: GlyphIcon(glyph),
+        onPressed: onPressed,
+        trailing: trailing,
+        title: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyle.footnote
+                  .of(context)
+                  .copyWith(color: context.colorScheme.onSurfaceVariant),
+            ),
+            const SizedBox(height: 4),
+            HoverTooltip(
+              message: value,
+              child: EmojiText(
+                value,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyle.headline
+                    .of(context, emphasized: true)
+                    .copyWith(color: context.colorScheme.onSurface),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -276,24 +271,49 @@ class SpeedTestConnectionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = context.appLocalizations;
+    final outboundCard = _card(
+      context,
+      itemKey: const ValueKey('speed-test-outbound-picker'),
+      glyph: AppGlyphs.connections,
+      label: l.speedTestExitNode,
+      value: outbound,
+      trailing: selectable
+          ? GlyphIcon(
+              Glyphs.picker,
+              size: 16,
+              color: onSelect != null
+                  ? context.colorScheme.primary
+                  : context.colorScheme.onSurfaceVariant,
+            )
+          : null,
+      onPressed: onSelect,
+    );
+    final serverCard = _card(
+      context,
+      glyph: AppGlyphs.dns,
+      label: l.speedTestServer,
+      value: server,
+    );
     return SpeedTestScope(
-      child: generateGroup([
-        _row(
-          context,
-          itemKey: const ValueKey('speed-test-outbound-picker'),
-          glyph: AppGlyphs.connections,
-          label: l.speedTestExitNode,
-          value: outbound,
-          picker: selectable,
-          onPressed: onSelect,
-        ),
-        _row(
-          context,
-          glyph: AppGlyphs.dns,
-          label: l.speedTestServer,
-          value: server,
-        ),
-      ]),
+      child: LayoutBuilder(
+        builder: (context, constraints) => constraints.maxWidth >= 640
+            ? Row(
+                children: [
+                  Expanded(child: outboundCard),
+                  const SizedBox(width: 12),
+                  Expanded(child: serverCard),
+                ],
+              )
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  outboundCard,
+                  const SizedBox(height: 12),
+                  serverCard,
+                ],
+              ),
+      ),
     );
   }
 }

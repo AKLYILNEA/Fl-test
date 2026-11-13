@@ -69,7 +69,7 @@ class _SpeedTestSettingsViewState extends State<SpeedTestSettingsView> {
                     subtitle: Text(
                       _settings.server?.title ?? l.speedTestServerAutoDesc,
                     ),
-                    trailing: const DisclosureIndicator(),
+                    trailing: const GlyphIcon(AppGlyphs.chevronForward),
                     onTap: _pickServer,
                   ),
                 ],

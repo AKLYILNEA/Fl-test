@@ -670,7 +670,7 @@ void main() {
   });
 
   testWidgets(
-    'connection values use their full width and the picker follows short text',
+    'connection cards separate outbound and server and keep single-line overflow',
     (tester) async {
       _size(tester, 360, 900);
       final client = _Client();
@@ -697,16 +697,19 @@ void main() {
       );
       await tester.pumpAndSettle();
       final value = tester.widget<Text>(find.text(target));
-      expect(value.maxLines, isNull);
-      expect(value.overflow, isNot(TextOverflow.ellipsis));
+      expect(value.maxLines, 1);
+      expect(value.overflow, TextOverflow.ellipsis);
+      expect(
+        find.descendant(
+          of: find.byType(SpeedTestConnectionCard),
+          matching: find.byType(app_ui.DecorationListItem),
+        ),
+        findsNWidgets(2),
+      );
       final picker = find.byWidgetPredicate(
         (widget) => widget is GlyphIcon && widget.glyph == Glyphs.picker,
       );
-      expect(
-        tester.getTopLeft(picker).dx -
-            tester.getTopRight(find.text('Direct')).dx,
-        closeTo(6, .01),
-      );
+      expect(picker, findsOneWidget);
       expect(tester.takeException(), isNull);
       await _snapshot(tester, '.dart_tool/speed-test-connection-card.png');
       await tester.pumpWidget(const SizedBox.shrink());
@@ -806,6 +809,26 @@ void main() {
           matching: find.byType(app_ui.DecorationListItem),
         ),
         findsOneWidget,
+      );
+      expect(
+        tester
+            .widget<app_ui.ItemPositionProvider>(
+              find
+                  .descendant(
+                    of: find.byType(SpeedTestHistoryView),
+                    matching: find.byType(app_ui.ItemPositionProvider),
+                  )
+                  .first,
+            )
+            .position,
+        app_ui.ItemPosition.startAndEnd,
+      );
+      expect(
+        find.descendant(
+          of: find.byType(SpeedTestHistoryView),
+          matching: find.byType(app_ui.DisclosureIndicator),
+        ),
+        findsNothing,
       );
       await tester.tap(find.textContaining('240.0').last);
       await tester.pumpAndSettle();

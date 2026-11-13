@@ -60,18 +60,21 @@ class SpeedTestHistoryView extends ConsumerWidget {
                 }
                 final record = records[index];
                 final s = record.result;
-                return ItemPositionProvider(
-                  position: ItemPosition.get(index, records.length),
-                  child: DecorationListItem(
-                    leading: const GlyphIcon(AppGlyphs.speed),
-                    title: Text(_date(record)),
-                    subtitle: Text(
-                      '↓ ${speedTestValue(s.download)} ${speedTestUnit(s.download)}   ↑ ${speedTestValue(s.upload)} ${speedTestUnit(s.upload)}',
-                    ),
-                    trailing: const DisclosureIndicator(),
-                    onPressed: () => Navigator.of(context).push(
-                      PagedSheetRoute(
-                        builder: (_) => SpeedTestRecordView(record: record),
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: ItemPositionProvider(
+                    position: ItemPosition.startAndEnd,
+                    child: DecorationListItem(
+                      leading: const GlyphIcon(AppGlyphs.speed),
+                      title: Text(_date(record)),
+                      subtitle: Text(
+                        '↓ ${speedTestValue(s.download)} ${speedTestUnit(s.download)}   ↑ ${speedTestValue(s.upload)} ${speedTestUnit(s.upload)}',
+                      ),
+                      trailing: const GlyphIcon(AppGlyphs.chevronForward),
+                      onPressed: () => Navigator.of(context).push(
+                        PagedSheetRoute(
+                          builder: (_) => SpeedTestRecordView(record: record),
+                        ),
                       ),
                     ),
                   ),
