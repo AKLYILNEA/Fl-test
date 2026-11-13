@@ -123,7 +123,9 @@ jobs:
           flutter pub get
 
       - name: Generate localizations
-        run: dart run intl_utils:generate
+        run: |
+          dart run intl_utils:generate
+          git diff --exit-code -- lib/l10n
 
       - name: Check group icon refresh
         if: matrix.platform == 'android'
