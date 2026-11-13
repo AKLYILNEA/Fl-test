@@ -842,4 +842,65 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     },
   );
+
+  testWidgets(
+    'gauge zeros before probing, restores download progress, and clears needle',
+    (tester) async {
+      _size(tester, 430, 700);
+      final client = _Client();
+      addTearDown(client.dispose);
+      const done = SpeedTestState(
+        phase: SpeedTestPhase.done,
+        download: 240e6,
+        upload: 60e6,
+      );
+      Widget buildGauge({required bool waiting}) => _app(
+        client,
+        page: app_ui.Scaffold(
+          title: 'Gauge',
+          body: Builder(
+            builder: (context) => Center(
+              child: SpeedTestGauge(
+                state: done,
+                waiting: waiting,
+                color: context.colorScheme.primary,
+                otherColor: Color.lerp(
+                  context.colorScheme.surface,
+                  context.colorScheme.primary,
+                  .28,
+                )!,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(buildGauge(waiting: false));
+      await tester.pumpAndSettle();
+      expect(find.text('240.0'), findsOneWidget);
+
+      final gaugeRect = tester.getRect(find.byType(SpeedTestGauge));
+      final readoutRect = tester.getRect(
+        find.descendant(
+          of: find.byType(SpeedTestGauge),
+          matching: find.byType(Column),
+        ),
+      );
+      final pivotY = gaugeRect.top + gaugeRect.width / 2;
+      expect(readoutRect.top - pivotY, greaterThan(20));
+
+      await tester.pumpWidget(buildGauge(waiting: true));
+      await tester.pump(const Duration(milliseconds: 150));
+      expect(find.text('0.0'), findsOneWidget);
+      await tester.pump(const Duration(milliseconds: 250));
+      await tester.pump(const Duration(milliseconds: 700));
+      expect(find.text('0.0'), findsOneWidget);
+
+      await tester.pumpWidget(buildGauge(waiting: false));
+      await tester.pumpAndSettle();
+      expect(find.text('240.0'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
 }

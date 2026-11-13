@@ -270,7 +270,6 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView> {
             if (!mounted) return;
             setState(() {
               _settings = settings;
-              _state = null;
             });
             unawaited(
               ref.read(speedTestStoreProvider.notifier).settings(settings),
@@ -419,7 +418,8 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView> {
         : _proxy.isEmpty
         ? l.speedTestFollowRules
         : _proxy;
-    final actual = _state?.server ?? _probe?.server;
+    final actual =
+        (_testing ? _state?.server : null) ?? _probe?.server ?? _state?.server;
     final serverText =
         _settings.server?.title ??
         (actual == null

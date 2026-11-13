@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'dart:ui' as ui;
 import 'package:fl_clash/common/common.dart';
@@ -40,13 +41,37 @@ class SpeedTestGauge extends StatefulWidget {
 }
 
 class _SpeedTestGaugeState extends State<SpeedTestGauge>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
+  late final _fraction = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 350),
+  );
   late final _spinner = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 1600),
   );
-  void _sync() {
-    if (widget.waiting && !MediaQuery.disableAnimationsOf(context)) {
+  bool _initialized = false;
+  double? _targetFraction;
+
+  SpeedTestPhase? get _phase {
+    final state = widget.state;
+    return state?.error.isNotEmpty == true ? null : state?.phase;
+  }
+
+  double get _desiredFraction {
+    if (widget.waiting) return 0;
+    final state = widget.state;
+    final phase = _phase;
+    final value = phase == SpeedTestPhase.done
+        ? state!.download
+        : state?.speed ?? 0;
+    return speedGaugeFraction(value);
+  }
+
+  void _syncSpinner({required bool disableAnimations}) {
+    final canSpin =
+        widget.waiting && !disableAnimations && _fraction.value <= 0.002;
+    if (canSpin) {
       if (!_spinner.isAnimating) {
         _spinner.repeat(reverse: true);
       }
@@ -55,10 +80,39 @@ class _SpeedTestGaugeState extends State<SpeedTestGauge>
     }
   }
 
+  void _sync({bool initial = false}) {
+    final disableAnimations = MediaQuery.disableAnimationsOf(context);
+    final target = _desiredFraction;
+    if (initial || disableAnimations) {
+      _targetFraction = target;
+      _fraction.value = target;
+      _syncSpinner(disableAnimations: disableAnimations);
+      return;
+    }
+    if (_targetFraction == null || (_targetFraction! - target).abs() > 0.0001) {
+      _targetFraction = target;
+      // Clear the probing arc before returning to 0 or restoring progress so
+      // the two arcs never overlap.
+      _spinner.reset();
+      unawaited(
+        _fraction.animateTo(target, curve: Curves.easeOutCubic).whenComplete(() {
+          if (!mounted) return;
+          _syncSpinner(
+            disableAnimations: MediaQuery.disableAnimationsOf(context),
+          );
+        }),
+      );
+    } else {
+      _syncSpinner(disableAnimations: disableAnimations);
+    }
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _sync();
+    final initial = !_initialized;
+    _initialized = true;
+    _sync(initial: initial);
   }
 
   @override
@@ -69,6 +123,7 @@ class _SpeedTestGaugeState extends State<SpeedTestGauge>
 
   @override
   void dispose() {
+    _fraction.dispose();
     _spinner.dispose();
     super.dispose();
   }
@@ -77,17 +132,26 @@ class _SpeedTestGaugeState extends State<SpeedTestGauge>
   Widget build(BuildContext context) {
     final l = context.appLocalizations;
     final state = widget.state;
-    final phase = state?.error.isNotEmpty == true ? null : state?.phase;
-    final value = phase == SpeedTestPhase.done
+    final phase = _phase;
+    final waiting = widget.waiting;
+    final value = waiting
+        ? 0.0
+        : phase == SpeedTestPhase.done
         ? state!.download
         : state?.speed ?? 0;
-    final label = switch (phase) {
-      SpeedTestPhase.download || SpeedTestPhase.done => l.download,
-      SpeedTestPhase.upload => l.upload,
-      SpeedTestPhase.latency => l.delay,
-      SpeedTestPhase.connecting => l.speedTestConnecting,
-      _ => widget.waiting ? l.speedTestProbing : l.speedTestReady,
-    };
+    final label = waiting
+        ? switch (phase) {
+            SpeedTestPhase.connecting => l.speedTestConnecting,
+            SpeedTestPhase.latency => l.delay,
+            _ => l.speedTestProbing,
+          }
+        : switch (phase) {
+            SpeedTestPhase.download || SpeedTestPhase.done => l.download,
+            SpeedTestPhase.upload => l.upload,
+            SpeedTestPhase.latency => l.delay,
+            SpeedTestPhase.connecting => l.speedTestConnecting,
+            _ => l.speedTestReady,
+          };
     final measured =
         phase == SpeedTestPhase.download ||
         phase == SpeedTestPhase.upload ||
@@ -98,15 +162,13 @@ class _SpeedTestGaugeState extends State<SpeedTestGauge>
         return Center(
           child: SizedBox(
             width: width,
-            height: width * .94,
+            height: width * .96,
             child: RepaintBoundary(
-              child: TweenAnimationBuilder<double>(
-                tween: Tween(end: speedGaugeFraction(value)),
-                duration: const Duration(milliseconds: 350),
-                curve: Curves.easeOutCubic,
-                builder: (context, fraction, _) => AnimatedBuilder(
-                  animation: _spinner,
-                  builder: (context, _) => CustomPaint(
+              child: AnimatedBuilder(
+                animation: Listenable.merge([_fraction, _spinner]),
+                builder: (context, _) {
+                  final fraction = _fraction.value;
+                  return CustomPaint(
                     painter: _GaugePainter(
                       fraction: fraction,
                       color: widget.color,
@@ -124,10 +186,10 @@ class _SpeedTestGaugeState extends State<SpeedTestGauge>
                       spin: _spinner.isAnimating
                           ? Curves.easeInOut.transform(_spinner.value)
                           : null,
-                      showNeedle: measured,
+                      showNeedle: measured && (!waiting || fraction > 0.002),
                     ),
                     child: Align(
-                      alignment: const Alignment(0, .48),
+                      alignment: const Alignment(0, .94),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -140,7 +202,9 @@ class _SpeedTestGaugeState extends State<SpeedTestGauge>
                                 ),
                           ),
                           Text(
-                            measured ? speedTestValue(value) : '0.0',
+                            !waiting && measured
+                                ? speedTestValue(value)
+                                : '0.0',
                             style: AppTextStyle.display
                                 .of(context, emphasized: true)
                                 .toTabular,
@@ -156,8 +220,8 @@ class _SpeedTestGaugeState extends State<SpeedTestGauge>
                         ],
                       ),
                     ),
-                  ),
-                ),
+                  );
+                },
               ),
             ),
           ),
