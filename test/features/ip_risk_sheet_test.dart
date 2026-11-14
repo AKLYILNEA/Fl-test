@@ -346,6 +346,30 @@ void main() {
             .first,
       );
       expect(col.crossAxisAlignment, CrossAxisAlignment.stretch);
+      if (scale == 1.0) {
+        final badgeFinder = find.byType(RiskLevelBadge);
+        final badgeTextFinder = find.descendant(
+          of: badgeFinder,
+          matching: find.byType(Text),
+        );
+        expect(
+          (tester.getCenter(badgeTextFinder).dy -
+                  tester.getCenter(badgeFinder).dy)
+              .abs(),
+          lessThanOrEqualTo(0.5),
+        );
+        final datacenterText = find.text('数据中心');
+        final datacenterBox = find.ancestor(
+          of: datacenterText,
+          matching: find.byType(Container),
+        );
+        expect(
+          (tester.getCenter(datacenterText).dy -
+                  tester.getCenter(datacenterBox.first).dy)
+              .abs(),
+          lessThanOrEqualTo(0.5),
+        );
+      }
       final checkTopLeft = tester.getTopLeft(find.text('机房或代理'));
       final cardTopLeft = tester.getTopLeft(find.byType(RiskChecksCard));
       expect(checkTopLeft.dx, cardTopLeft.dx + 20);

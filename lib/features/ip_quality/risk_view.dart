@@ -56,17 +56,50 @@ class RiskLevelBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = riskScoreColor(risk.displayScore);
+    return _RiskPill(
+      label: risk.levelLabel(context),
+      background: color.withValues(alpha: .12),
+      foreground: color,
+      emphasized: true,
+    );
+  }
+}
+
+class _RiskPill extends StatelessWidget {
+  const _RiskPill({
+    required this.label,
+    required this.background,
+    required this.foreground,
+    this.emphasized = false,
+    this.leading,
+  });
+
+  final String label;
+  final Color background;
+  final Color foreground;
+  final bool emphasized;
+  final Widget? leading;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: ShapeDecoration(
-        color: color.withValues(alpha: .12),
-        shape: AppShape.sm,
-      ),
-      child: Text(
-        risk.levelLabel(context),
-        style: AppTextStyle.footnote
-            .of(context, emphasized: true)
-            .copyWith(color: color),
+      constraints: const BoxConstraints(minHeight: 28),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: ShapeDecoration(color: background, shape: AppShape.sm),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        spacing: 6,
+        children: [
+          ?leading,
+          Flexible(
+            child: Text(
+              label,
+              style: AppTextStyle.caption1
+                  .of(context, emphasized: emphasized)
+                  .copyWith(color: foreground),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -370,45 +403,30 @@ class _RiskFlag extends StatelessWidget {
         : hit
         ? context.colorScheme.error
         : context.colorScheme.onSurfaceVariant;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-      decoration: ShapeDecoration(
-        color: hit || home
-            ? color.withValues(alpha: .1)
-            : context.colorScheme.onSurface.withValues(alpha: .045),
-        shape: AppShape.sm,
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (home)
-            GlyphIcon(AppGlyphs.checkCircle, size: 14, color: color)
-          else if (hit)
-            GlyphIcon(AppGlyphs.error, size: 14, color: color)
-          else if (check.hit == null)
-            GlyphIcon(AppGlyphs.helpCircle, size: 14, color: color)
-          else
-            DecoratedBox(
-              decoration: ShapeDecoration(
-                shape: AppShape.circle.copyWith(
-                  side: BorderSide(color: color, width: 1.4),
-                ),
+    final leading = home
+        ? GlyphIcon(AppGlyphs.checkCircle, size: 14, color: color)
+        : hit
+        ? GlyphIcon(AppGlyphs.error, size: 14, color: color)
+        : check.hit == null
+        ? GlyphIcon(AppGlyphs.helpCircle, size: 14, color: color)
+        : DecoratedBox(
+            decoration: ShapeDecoration(
+              shape: AppShape.circle.copyWith(
+                side: BorderSide(color: color, width: 1.4),
               ),
-              child: const SizedBox.square(dimension: 12),
             ),
-          const SizedBox(width: 6),
-          Flexible(
-            child: Text(
-              home
-                  ? context.appLocalizations.ipRiskHomeBroadband
-                  : riskCheckLabel(context, check.name),
-              style: AppTextStyle.footnote
-                  .of(context, emphasized: hit || home)
-                  .copyWith(color: color),
-            ),
-          ),
-        ],
-      ),
+            child: const SizedBox.square(dimension: 12),
+          );
+    return _RiskPill(
+      label: home
+          ? context.appLocalizations.ipRiskHomeBroadband
+          : riskCheckLabel(context, check.name),
+      background: hit || home
+          ? color.withValues(alpha: .1)
+          : context.colorScheme.onSurface.withValues(alpha: .045),
+      foreground: color,
+      emphasized: hit || home,
+      leading: leading,
     );
   }
 }
