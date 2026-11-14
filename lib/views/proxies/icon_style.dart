@@ -52,27 +52,34 @@ class _ProxiesIconStyleViewState extends ConsumerState<ProxiesIconStyleView> {
       await refreshTargetIcons(
         const [],
         reloadSources: () async {
-          final sets = await container.read(iconSetsProvider.future);
-          final actions = container.read(iconSetsActionProvider.notifier);
-          final updatedSets = await Future.wait([
-            for (final set in sets)
-              if (set.isRemote)
-                actions.sync(set, fresh: true).catchError((e) {
-                  commonPrint.log('Failed to sync icon set ${set.name}: $e');
-                  return set;
-                })
-              else
-                Future.value(set),
-          ]);
-          final List<IconSet> allSets =
-              container.read(iconSetsProvider).value ?? updatedSets;
-          return [
-            for (final group in container.read(groupsProvider))
-              container.read(proxyGroupIconProvider(group.name)),
-            for (final rule in container.read(iconRulesProvider)) rule.icon,
-            for (final IconSet set in allSets)
-              if (set.cover.isNotEmpty) set.cover,
-          ];
+          // Keep the StreamNotifier subscription unpaused across .future in
+          // Riverpod 3 when no widget is currently watching iconSetsProvider.
+          final iconSetsSub = container.listen(iconSetsProvider, (_, _) {});
+          try {
+            final sets = await container.read(iconSetsProvider.future);
+            final actions = container.read(iconSetsActionProvider.notifier);
+            final updatedSets = await Future.wait([
+              for (final set in sets)
+                if (set.isRemote)
+                  actions.sync(set, fresh: true).catchError((e) {
+                    commonPrint.log('Failed to sync icon set ${set.name}: $e');
+                    return set;
+                  })
+                else
+                  Future.value(set),
+            ]);
+            final List<IconSet> allSets =
+                container.read(iconSetsProvider).value ?? updatedSets;
+            return [
+              for (final group in container.read(groupsProvider))
+                container.read(proxyGroupIconProvider(group.name)),
+              for (final rule in container.read(iconRulesProvider)) rule.icon,
+              for (final IconSet set in allSets)
+                if (set.cover.isNotEmpty) set.cover,
+            ];
+          } finally {
+            iconSetsSub.close();
+          }
         },
       );
       succeeded = true;
