@@ -165,7 +165,7 @@ class _TrafficStatsViewState extends ConsumerState<TrafficStatsView>
         groupIconActions: false,
         iconActions: [
           IconButtonData(
-            glyph: AppGlyphs.refresh,
+            glyph: AppGlyphs.sync,
             tooltip: l.trafficStatsRefresh,
             isLoading: _refreshing,
             onPressed: _refreshing ? null : () => unawaited(_refresh(manual: true)),

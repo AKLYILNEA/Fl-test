@@ -317,6 +317,19 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    expect(
+      find.byWidgetPredicate(
+        (w) => w is GlyphIcon && w.glyph == AppGlyphs.sync,
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.byWidgetPredicate(
+        (w) => w is GlyphIcon && w.glyph == AppGlyphs.refresh,
+      ),
+      findsNothing,
+    );
+
     final settingsBtn = find.byWidgetPredicate(
       (w) => w is GlyphIcon && w.glyph == AppGlyphs.sliders,
     );
