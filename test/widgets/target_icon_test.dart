@@ -150,6 +150,74 @@ void main() {
     verify(manager.emptyCache).called(2);
   });
 
+  testWidgets('icon style refresh button spins like traffic stats instead of '
+      'greying out while refreshing', (tester) async {
+    final container = ProviderContainer(
+      overrides: [iconSetsProvider.overrideWith(TestIconSets.new)],
+    );
+    addTearDown(container.dispose);
+    globalState.container = container;
+
+    final manager = _MockIconCache();
+    final refreshGate = Completer<void>();
+    when(manager.emptyCache).thenAnswer((_) => refreshGate.future);
+    targetIconCacheManager = manager;
+    addTearDown(() => targetIconCacheManager = null);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const TestApp(
+          locale: Locale('en'),
+          child: ProxiesIconStyleView(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final refreshButton = find.byWidgetPredicate(
+      (widget) =>
+          widget is AppBarActionButton &&
+          widget.data.glyph == AppGlyphs.refresh,
+    );
+    expect(refreshButton, findsOneWidget);
+    expect(
+      tester.widget<AppBarActionButton>(refreshButton).data.isLoading,
+      isFalse,
+    );
+    expect(find.byType(ActivityIndicator), findsNothing);
+
+    await tester.tap(refreshButton);
+    await tester.pumpAndSettle();
+
+    final buttonDuringDialog = tester.widget<AppBarActionButton>(refreshButton);
+    expect(buttonDuringDialog.data.isLoading, isFalse);
+    expect(buttonDuringDialog.data.onPressed, isNotNull);
+    expect(find.byType(ActivityIndicator), findsNothing);
+
+    await tester.tap(find.text('Confirm'));
+    await tester.pump();
+    await tester.pump();
+
+    final buttonRefreshing = tester.widget<AppBarActionButton>(refreshButton);
+    expect(buttonRefreshing.data.isLoading, isTrue);
+    expect(buttonRefreshing.data.onPressed, isNull);
+    expect(find.byType(ActivityIndicator), findsOneWidget);
+
+    refreshGate.complete();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    verify(manager.emptyCache).called(1);
+    final buttonDone = tester.widget<AppBarActionButton>(refreshButton);
+    expect(buttonDone.data.isLoading, isFalse);
+    expect(buttonDone.data.onPressed, isNotNull);
+    expect(find.byType(ActivityIndicator), findsNothing);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(const Duration(seconds: 5));
+  });
+
   testWidgets('a group without an icon shows the first letter of its name, '
       'past a leading emoji', (tester) async {
     for (final (name, mark) in [
@@ -496,70 +564,6 @@ void main() {
 
       expect(find.text('P'), findsOne);
     });
-  });
-
-  testWidgets('icon style refresh button spins like traffic stats instead of '
-      'greying out while refreshing', (tester) async {
-    final container = ProviderContainer(
-      overrides: [iconSetsProvider.overrideWith(TestIconSets.new)],
-    );
-    addTearDown(container.dispose);
-    globalState.container = container;
-
-    final manager = _MockIconCache();
-    final refreshGate = Completer<void>();
-    when(manager.emptyCache).thenAnswer((_) => refreshGate.future);
-    targetIconCacheManager = manager;
-    addTearDown(() => targetIconCacheManager = null);
-
-    await tester.pumpWidget(
-      UncontrolledProviderScope(
-        container: container,
-        child: const TestApp(
-          locale: Locale('en'),
-          child: ProxiesIconStyleView(),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-
-    final refreshButton = find.byWidgetPredicate(
-      (widget) =>
-          widget is AppBarActionButton &&
-          widget.data.glyph == AppGlyphs.refresh,
-    );
-    expect(refreshButton, findsOneWidget);
-    expect(tester.widget<AppBarActionButton>(refreshButton).data.isLoading, isFalse);
-    expect(find.byType(ActivityIndicator), findsNothing);
-
-    await tester.tap(refreshButton);
-    await tester.pumpAndSettle();
-
-    final buttonDuringDialog = tester.widget<AppBarActionButton>(refreshButton);
-    expect(buttonDuringDialog.data.isLoading, isFalse);
-    expect(buttonDuringDialog.data.onPressed, isNotNull);
-    expect(find.byType(ActivityIndicator), findsNothing);
-
-    await tester.tap(find.text('Confirm'));
-    await tester.pump();
-    await tester.pump();
-
-    final buttonRefreshing = tester.widget<AppBarActionButton>(refreshButton);
-    expect(buttonRefreshing.data.isLoading, isTrue);
-    expect(buttonRefreshing.data.onPressed, isNull);
-    expect(find.byType(ActivityIndicator), findsOneWidget);
-
-    refreshGate.complete();
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
-
-    final buttonDone = tester.widget<AppBarActionButton>(refreshButton);
-    expect(buttonDone.data.isLoading, isFalse);
-    expect(buttonDone.data.onPressed, isNotNull);
-    expect(find.byType(ActivityIndicator), findsNothing);
-
-    await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump(const Duration(seconds: 5));
   });
 }
 
