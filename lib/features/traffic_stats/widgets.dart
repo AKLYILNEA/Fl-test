@@ -1205,65 +1205,67 @@ class _RuleHitCard extends StatelessWidget {
         .of(context, emphasized: true)
         .toTabular
         .copyWith(color: cs.onSurface);
-    return HoverTooltip(
-      message: item.name,
-      child: SizedBox(
-        width: 244,
-        child: Card(
-          radius: AppCorner.xl,
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  RingChart(
-                    size: 44,
-                    strokeWidth: 4.5,
-                    trackColor: trackColor,
-                    total: totalHits > 0 ? totalHits.toDouble() : null,
-                    segments: [
-                      RingSegment(value: item.hits.toDouble(), color: accent),
-                    ],
-                    centerChild: Text(
-                      '$pct%',
-                      style: AppTextStyle.caption2
-                          .of(context, emphasized: true)
-                          .toTabular
-                          .copyWith(color: cs.onSurface),
-                    ),
+    return SizedBox(
+      width: 244,
+      child: Card(
+        radius: AppCorner.xl,
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                RingChart(
+                  size: 44,
+                  strokeWidth: 4.5,
+                  trackColor: trackColor,
+                  total: totalHits > 0 ? totalHits.toDouble() : null,
+                  segments: [
+                    RingSegment(value: item.hits.toDouble(), color: accent),
+                  ],
+                  centerChild: Text(
+                    '$pct%',
+                    style: AppTextStyle.caption2
+                        .of(context, emphasized: true)
+                        .toTabular
+                        .copyWith(color: cs.onSurface),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      rule.body,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTextStyle.subheadline
-                          .of(context, emphasized: true)
-                          .copyWith(color: cs.onSurface, height: 1.25),
-                    ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    rule.body,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyle.subheadline
+                        .of(context, emphasized: true)
+                        .copyWith(color: cs.onSurface, height: 1.25),
                   ),
-                ],
-              ),
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 10),
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: cs.outlineVariant.withValues(alpha: 0.45),
-                    ),
-                    child: const SizedBox(height: 0.5),
+                ),
+              ],
+            ),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 10),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: cs.outlineVariant.withValues(alpha: 0.45),
                   ),
-                  const SizedBox(height: 9),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Flexible(
+                  child: const SizedBox(height: 0.5),
+                ),
+                const SizedBox(height: 9),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Flexible(
+                      child: Tooltip(
+                        message: item.name,
+                        preferBelow: false,
+                        triggerMode: TooltipTriggerMode.longPress,
                         child: DecoratedBox(
                           decoration: ShapeDecoration(
                             color: accent.withValues(alpha: 0.12),
@@ -1285,31 +1287,31 @@ class _RuleHitCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsetsDirectional.only(start: 8),
-                        child: Text.rich(
-                          TextSpan(
-                            children: [
-                              TextSpan(
-                                text: '$hitCountText \u00b7 ',
-                                style: captionMuted,
-                              ),
-                              TextSpan(
-                                text: trafficStatsFormatBytes(item.total),
-                                style: captionStrong,
-                              ),
-                            ],
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                    ),
+                    Padding(
+                      padding: const EdgeInsetsDirectional.only(start: 8),
+                      child: Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(
+                              text: '$hitCountText \u00b7 ',
+                              style: captionMuted,
+                            ),
+                            TextSpan(
+                              text: trafficStatsFormatBytes(item.total),
+                              style: captionStrong,
+                            ),
+                          ],
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
-          ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
