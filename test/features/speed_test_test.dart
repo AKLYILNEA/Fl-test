@@ -582,6 +582,7 @@ void main() {
         ),
       );
       await tester.pump();
+      await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
       expect(tester.getSize(hero).height, heroHeight);
       expect(tester.getSize(route).height, routeHeight);
@@ -1142,6 +1143,7 @@ void main() {
       client.events.add(
         SpeedTestState(id: client.runId, phase: SpeedTestPhase.connecting),
       );
+      await tester.pump();
       await tester.pump(const Duration(milliseconds: 50));
 
       expect(
