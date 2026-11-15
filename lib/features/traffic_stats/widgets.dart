@@ -1153,7 +1153,6 @@ class TrafficStatsRuleHitsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     if (rules.isEmpty) return const SizedBox.shrink();
     final l = context.appLocalizations;
-    final cs = context.colorScheme;
     final sideInsets = EdgeInsets.symmetric(horizontal: horizontalPadding);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
