@@ -99,6 +99,7 @@ class _SpeedTestGaugeState extends State<SpeedTestGauge>
   }
 
   bool get _measured {
+    if (widget.standby) return false;
     final phase = _phase;
     return phase == SpeedTestPhase.download ||
         phase == SpeedTestPhase.upload ||
@@ -106,7 +107,7 @@ class _SpeedTestGaugeState extends State<SpeedTestGauge>
   }
 
   double get _desiredSpeed {
-    if (widget.waiting) return 0;
+    if (widget.waiting || widget.standby) return 0;
     final state = widget.state;
     final phase = _phase;
     final raw = phase == SpeedTestPhase.done

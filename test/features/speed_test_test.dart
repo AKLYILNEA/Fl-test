@@ -68,6 +68,7 @@ class _Client implements SpeedTestClient {
   Completer<SpeedTestState>? run;
   String runId = '';
   bool fail = false;
+  bool probeFail = false;
   @override
   Stream<SpeedTestState> get updates => events.stream;
   @override
@@ -80,6 +81,9 @@ class _Client implements SpeedTestClient {
     lastSettings = settings;
     if (probeCompleter != null && !probeCompleter!.isCompleted) {
       return probeCompleter!.future;
+    }
+    if (probeFail) {
+      return SpeedTestState(id: id, error: 'unavailable');
     }
     return SpeedTestState(
       id: id,
@@ -356,7 +360,9 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
-  testWidgets('a Core failure releases the start action', (tester) async {
+  testWidgets('a Core failure disables start and shows gauge placeholder', (
+    tester,
+  ) async {
     _size(tester, 430);
     final client = _Client()..fail = true;
     addTearDown(client.dispose);
@@ -366,6 +372,24 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Start Test'), findsOneWidget);
     expect(find.text('Stop Test'), findsNothing);
+    expect(
+      tester.widget<app_ui.FilledButton>(find.byType(app_ui.FilledButton)).onPressed,
+      isNull,
+    );
+    expect(
+      find.descendant(
+        of: find.byType(SpeedTestGauge),
+        matching: find.text('\u2014'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byType(SpeedTestGauge),
+        matching: find.text('Ready'),
+      ),
+      findsNothing,
+    );
     final banner = tester
         .widgetList<app_ui.Card>(find.byType(app_ui.Card))
         .where((card) => card.isError);
@@ -1166,6 +1190,48 @@ void main() {
 
       client.finish();
       await tester.pumpAndSettle();
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
+  testWidgets(
+    'unavailable probe disables start button, keeps placeholder, and prevents card bounce',
+    (tester) async {
+      _size(tester, 430, 800);
+      final client = _Client()..probeFail = true;
+      addTearDown(client.dispose);
+      await tester.pumpWidget(_app(client));
+      await tester.pumpAndSettle();
+
+      final l = tester.element(find.byType(SpeedTestView)).appLocalizations;
+      expect(find.text(l.speedTestErrorUnavailable), findsOneWidget);
+      final button = tester.widget<app_ui.FilledButton>(
+        find.byType(app_ui.FilledButton),
+      );
+      expect(button.onPressed, isNull);
+      expect(
+        find.descendant(
+          of: find.byType(SpeedTestGauge),
+          matching: find.text('\u2014'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.byType(SpeedTestGauge),
+          matching: find.text(l.speedTestReady),
+        ),
+        findsNothing,
+      );
+
+      final beforeDy = tester.getTopLeft(find.byType(SpeedTestGauge)).dy;
+      await tester.tap(
+        find.byType(app_ui.FilledButton),
+        warnIfMissed: false,
+      );
+      await tester.pump();
+      expect(tester.getTopLeft(find.byType(SpeedTestGauge)).dy, beforeDy);
+      expect(find.text(l.speedTestErrorUnavailable), findsOneWidget);
       await tester.pumpWidget(const SizedBox.shrink());
     },
   );

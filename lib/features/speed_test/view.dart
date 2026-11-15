@@ -322,7 +322,7 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
         : context.colorScheme.primary;
     final gauge = SpeedTestGauge(
       state: _state,
-      standby: _pendingInitialProbe && !_probing && !_testing,
+      standby: (_pendingInitialProbe || _error != null) && !_probing && !_testing,
       waiting:
           _probing ||
           (_testing &&
@@ -347,7 +347,11 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
         FilledButton(
           onPressed: _testing
               ? _stop
-              : !_loaded || _pendingInitialProbe || _probing || _confirming
+              : !_loaded ||
+                    _pendingInitialProbe ||
+                    _probing ||
+                    _confirming ||
+                    _error != null
               ? null
               : _start,
           child: Padding(
@@ -355,7 +359,7 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
             child: Text(
               _testing
                   ? l.speedTestStop
-                  : _state?.completed == true
+                  : _error == null && _state?.completed == true
                   ? l.speedTestAgain
                   : l.speedTestStart,
             ),
