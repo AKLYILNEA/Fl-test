@@ -1,10 +1,8 @@
 name: build
 
-# Test branch pushes produce artifacts; only tagged builds publish a release.
+# Only tagged builds (or manual dispatches) run CI; only tagged builds publish a release.
 on:
   push:
-    branches:
-      - dev
     tags:
       - 'v*'
   workflow_dispatch:
