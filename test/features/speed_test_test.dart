@@ -627,6 +627,24 @@ void main() {
         expect(card.side, BorderSide.none);
         expect(card.selectionTint, isNull);
       }
+      if (phase == SpeedTestPhase.download) {
+        final viewCtx = tester.element(find.byType(SpeedTestView));
+        final idlePhaseDecorations = tester
+            .widgetList<DecoratedBox>(
+              find.descendant(
+                of: find.byType(SpeedTestPhaseBar),
+                matching: find.byWidgetPredicate(
+                  (w) =>
+                      w is DecoratedBox &&
+                      w.decoration is BoxDecoration &&
+                      (w.decoration as BoxDecoration).color ==
+                          DashboardColors.of(viewCtx).track,
+                ),
+              ),
+            )
+            .toList();
+        expect(idlePhaseDecorations, hasLength(2));
+      }
       expect(tester.takeException(), isNull);
     }
     final phaseBar = find.byType(SpeedTestPhaseBar);
@@ -672,21 +690,6 @@ void main() {
         DashboardColors.of(viewCtx).tone,
       );
     }
-    final idlePhaseDecorations = tester
-        .widgetList<DecoratedBox>(
-          find.descendant(
-            of: phaseBar,
-            matching: find.byWidgetPredicate(
-              (w) =>
-                  w is DecoratedBox &&
-                  w.decoration is BoxDecoration &&
-                  (w.decoration as BoxDecoration).color ==
-                      DashboardColors.of(viewCtx).track,
-            ),
-          ),
-        )
-        .toList();
-    expect(idlePhaseDecorations, hasLength(2));
     final heroDivider = tester.widget<app_ui.Divider>(
       find.descendant(of: hero, matching: find.byType(app_ui.Divider)),
     );
