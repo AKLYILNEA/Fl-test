@@ -864,7 +864,6 @@ void main() {
         ),
         findsNWidgets(5),
       );
-      final l = tester.element(details).appLocalizations;
       final connectionsLabel = find.descendant(
         of: details,
         matching: find.text(l.speedTestConnections),
