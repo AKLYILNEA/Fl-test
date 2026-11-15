@@ -471,12 +471,7 @@ class TrafficStatsOverviewCard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           if (fillHeight) const Spacer(),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              color: cs.outlineVariant.withValues(alpha: 0.4),
-            ),
-            child: const SizedBox(height: 0.5),
-          ),
+          const Divider(height: 1),
           const SizedBox(height: 12),
           Align(
             alignment: AlignmentDirectional.centerStart,
@@ -692,7 +687,7 @@ class _TrafficStatsTrendCardState extends State<TrafficStatsTrendCard> {
                         rightPad: rightPad,
                         downloadColor: downColor,
                         uploadColor: upColor,
-                        gridColor: cs.outlineVariant.withValues(alpha: 0.4),
+                        gridColor: Divider.colorOf(context),
                         highlightColor: cs.primary.withValues(alpha: 0.08),
                         labelStyle: labelStyle,
                         activeLabelStyle: AppTextStyle.caption2
@@ -908,10 +903,10 @@ class _TrendBarPainter extends CustomPainter {
 
     final gridPaint = Paint()
       ..color = gridColor
-      ..strokeWidth = 0.7;
+      ..strokeWidth = 0;
     final dashPaint = Paint()
       ..color = gridColor
-      ..strokeWidth = 0.7;
+      ..strokeWidth = 0;
 
     const steps = 2;
     for (var s = 0; s <= steps; s++) {
@@ -1285,12 +1280,7 @@ class _RuleHitCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 10),
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: cs.outlineVariant.withValues(alpha: 0.45),
-                  ),
-                  child: const SizedBox(height: 0.5),
-                ),
+                const Divider(height: 1),
                 const SizedBox(height: 9),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,

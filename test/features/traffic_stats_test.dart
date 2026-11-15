@@ -536,6 +536,10 @@ void main() {
         find.descendant(of: overview, matching: find.byType(RingChart)),
       );
       expect(overviewRing.trackColor, DashboardColors.of(overviewCtx).track);
+      final overviewDivider = tester.widget<app_ui.Divider>(
+        find.descendant(of: overview, matching: find.byType(app_ui.Divider)),
+      );
+      expect(overviewDivider.thickness, 0);
       expect(
         find.descendant(
           of: overview,

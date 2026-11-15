@@ -445,12 +445,7 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
                   ),
           ),
           const SizedBox(height: 16),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              color: context.colorScheme.outlineVariant.withValues(alpha: 0.4),
-            ),
-            child: const SizedBox(height: 0.5),
-          ),
+          const Divider(height: 1),
           const SizedBox(height: 12),
           Row(
             children: [

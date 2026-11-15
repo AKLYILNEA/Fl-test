@@ -11,6 +11,7 @@ import 'package:fl_clash/features/ip_quality/risk_view.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/ui/ui.dart' as app_ui;
 import 'package:fl_clash/ui/icons/icons.dart';
+import 'package:fl_clash/views/dashboard/style.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
@@ -335,6 +336,19 @@ void main() {
       expect(find.byType(app_ui.NullStatusSwitcher), findsOneWidget);
       expect(find.text('28'), findsOneWidget);
       expect(find.text('数据中心'), findsOneWidget);
+      final sheetCtx = tester.element(find.byType(RiskChecksCard));
+      final fireholPill = tester.widget<Container>(
+        find
+            .ancestor(
+              of: find.text('Firehol'),
+              matching: find.byType(Container),
+            )
+            .first,
+      );
+      expect(
+        (fireholPill.decoration as ShapeDecoration).color,
+        DashboardColors.of(sheetCtx).tone,
+      );
       expect(tester.widget<Text>(find.text('服务器')).style!.color, isNotNull);
       expect(find.byType(RiskScoreCard), findsOneWidget);
       final col = tester.widget<Column>(
