@@ -1893,9 +1893,19 @@ abstract final class AppGlyphs {
   ]);
 
   static const ranking = Glyph([
-    GlyphBox(3.5, 10.2, 7.9, 20.0, 1.4),
-    GlyphBox(9.8, 4.5, 14.2, 20.0, 1.4),
-    GlyphBox(16.1, 13.8, 20.5, 20.0, 1.4),
+    GlyphPath(
+      'M3.5 11.4 Q3.5 10 4.9 10 H9 V5.9 Q9 4.5 10.4 4.5 H13.6 '
+      'Q15 4.5 15 5.9 V13.5 H19.1 Q20.5 13.5 20.5 14.9 V18.1 '
+      'Q20.5 19.5 19.1 19.5 H4.9 Q3.5 19.5 3.5 18.1 Z',
+    ),
+    GlyphPolyline([
+      GlyphVertex(9, 10),
+      GlyphVertex(9, 19.5),
+    ], role: GlyphRole.detail),
+    GlyphPolyline([
+      GlyphVertex(15, 13.5),
+      GlyphVertex(15, 19.5),
+    ], role: GlyphRole.detail),
   ]);
 
   static Glyph sidebar(double progress) => Glyphs.sidebar(progress);
