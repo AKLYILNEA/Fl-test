@@ -381,7 +381,7 @@ class TrafficStatsOverviewCard extends StatelessWidget {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.only(top: 20),
+                  padding: const EdgeInsets.only(top: 12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
@@ -429,53 +429,58 @@ class TrafficStatsOverviewCard extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 14),
-          AspectRatio(
-            aspectRatio: 1,
-            child: FittedBox(
-              fit: BoxFit.contain,
-              child: MediaQuery.withNoTextScaling(
-                child: RingChart(
-                  size: 104,
-                  strokeWidth: 8.8,
-                  trackColor: DashboardColors.of(context).track,
-                  total: dirTotal > 0 ? dirTotal.toDouble() : null,
-                  segments: [
-                    RingSegment(
-                      value: result.down.toDouble(),
-                      color: downColor,
-                    ),
-                    RingSegment(
-                      value: result.up.toDouble(),
-                      color: upColor,
-                    ),
-                  ],
-                  centerChild: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            '$centerPct%',
-                            style: AppTextStyle.headline
-                                .of(context, emphasized: true)
-                                .toTabular
-                                .copyWith(fontSize: 15, height: 1.15),
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 86, maxHeight: 86),
+              child: AspectRatio(
+                aspectRatio: 1,
+                child: FittedBox(
+                  fit: BoxFit.contain,
+                  child: MediaQuery.withNoTextScaling(
+                    child: RingChart(
+                      size: 86,
+                      strokeWidth: 7.5,
+                      trackColor: DashboardColors.of(context).track,
+                      total: dirTotal > 0 ? dirTotal.toDouble() : null,
+                      segments: [
+                        RingSegment(
+                          value: result.down.toDouble(),
+                          color: downColor,
+                        ),
+                        RingSegment(
+                          value: result.up.toDouble(),
+                          color: upColor,
+                        ),
+                      ],
+                      centerChild: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 11),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                '$centerPct%',
+                                style: AppTextStyle.headline
+                                    .of(context, emphasized: true)
+                                    .toTabular
+                                    .copyWith(fontSize: 14, height: 1.15),
+                              ),
+                              Text(
+                                centerLabel,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTextStyle.caption2
+                                    .of(context)
+                                    .copyWith(
+                                      fontSize: 10.5,
+                                      height: 1.2,
+                                      color: cs.onSurfaceVariant,
+                                    ),
+                              ),
+                            ],
                           ),
-                          Text(
-                            centerLabel,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTextStyle.caption2
-                                .of(context)
-                                .copyWith(
-                                  fontSize: 11,
-                                  height: 1.2,
-                                  color: cs.onSurfaceVariant,
-                                ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
@@ -495,12 +500,14 @@ class TrafficStatsOverviewCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (fillHeight) Expanded(child: topRow) else topRow,
-          const SizedBox(height: 20),
+          const SizedBox(height: 12),
+          Divider(height: 1, thickness: Divider.separatorThicknessOf(context)),
+          const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              spacing: 4,
+              spacing: 6,
               children: [
                 for (final part in [
                   (label: l.download, color: downColor, bytes: result.down),
@@ -513,14 +520,19 @@ class TrafficStatsOverviewCard extends StatelessWidget {
                           color: part.color,
                           shape: AppShape.circle,
                         ),
-                        child: const SizedBox.square(dimension: 8),
+                        child: const SizedBox.square(dimension: 9),
                       ),
-                      const SizedBox(width: 6),
-                      Text(part.label, style: DashboardText.label(context)),
+                      const SizedBox(width: 8),
+                      Text(
+                        part.label,
+                        style: AppTextStyle.subheadline
+                            .of(context)
+                            .copyWith(color: cs.onSurfaceVariant),
+                      ),
                       const Spacer(),
                       Text(
                         trafficStatsFormatBytes(part.bytes),
-                        style: AppTextStyle.footnote
+                        style: AppTextStyle.subheadline
                             .of(context, emphasized: true)
                             .toTabular,
                       ),

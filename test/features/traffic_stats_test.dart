@@ -285,6 +285,13 @@ void main() {
               .first;
           final statsTop = tester.getTopLeft(statsGroup).dy;
           final statsBottom = tester.getBottomLeft(statsGroup).dy;
+          final dividerFinder = find.descendant(
+            of: overview,
+            matching: find.byType(app_ui.Divider),
+          );
+          expect(dividerFinder, findsOneWidget);
+          final dividerTop = tester.getTopLeft(dividerFinder).dy;
+          final dividerBottom = tester.getBottomLeft(dividerFinder).dy;
           final legendTop = tester
               .getTopLeft(
                 find
@@ -300,7 +307,8 @@ void main() {
                     .first,
               )
               .dy;
-          expect(statsTop - titleBottom, closeTo(legendTop - statsBottom, 1.0));
+          expect(statsTop - titleBottom, closeTo(dividerTop - statsBottom, 1.0));
+          expect(legendTop, greaterThan(dividerBottom));
         }
         final scrollable = find
             .descendant(
@@ -611,9 +619,27 @@ void main() {
         find.descendant(of: overview, matching: find.byType(RingChart)),
       );
       expect(overviewRing.trackColor, DashboardColors.of(overviewCtx).track);
+      expect(overviewRing.size, lessThanOrEqualTo(86));
+      final overviewDividerFinder = find.descendant(
+        of: overview,
+        matching: find.byType(app_ui.Divider),
+      );
+      expect(overviewDividerFinder, findsOneWidget);
       expect(
-        find.descendant(of: overview, matching: find.byType(app_ui.Divider)),
-        findsNothing,
+        tester.widget<app_ui.Divider>(overviewDividerFinder).thickness,
+        app_ui.Divider.separatorThicknessOf(overviewCtx),
+      );
+      expect(
+        tester.getBottomLeft(overviewDividerFinder).dy,
+        lessThanOrEqualTo(tester.getTopLeft(downRowFinder).dy),
+      );
+      expect(
+        tester.widget<Text>(downLabelFinder).style?.fontSize,
+        app_ui.AppTextStyle.subheadline.size,
+      );
+      expect(
+        tester.widget<Text>(downValueFinder).style?.fontSize,
+        app_ui.AppTextStyle.subheadline.size,
       );
       expect(
         find.descendant(
