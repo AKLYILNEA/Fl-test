@@ -181,7 +181,7 @@ class SpeedTestMetrics extends StatelessWidget {
     final color = up ? speedUploadColor(context) : context.colorScheme.primary;
     return DecoratedBox(
       decoration: ShapeDecoration(
-        color: context.colorScheme.onSurface.withValues(alpha: 0.04),
+        color: DashboardColors.of(context).tone,
         shape: AppShape.lg,
       ),
       child: Padding(

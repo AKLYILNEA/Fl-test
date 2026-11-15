@@ -9,6 +9,7 @@ import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/ui/icons/icons.dart';
 import 'package:fl_clash/ui/ui.dart' as app_ui;
+import 'package:fl_clash/views/dashboard/style.dart';
 import 'package:fl_clash/views/tools.dart';
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/widgets.dart';
@@ -513,6 +514,24 @@ void main() {
         find.descendant(of: overview, matching: find.byType(GlyphIcon)),
         findsNWidgets(2),
       );
+      final insetTiles = tester.widgetList<Container>(
+        find.descendant(
+          of: overview,
+          matching: find.byWidgetPredicate(
+            (w) =>
+                w is Container &&
+                w.decoration is ShapeDecoration &&
+                (w.decoration as ShapeDecoration).shape == app_ui.AppShape.lg,
+          ),
+        ),
+      );
+      expect(insetTiles, hasLength(2));
+      for (final tile in insetTiles) {
+        expect(
+          (tile.decoration as ShapeDecoration).color,
+          DashboardColors.of(overviewCtx).tone,
+        );
+      }
       expect(
         find.descendant(
           of: overview,

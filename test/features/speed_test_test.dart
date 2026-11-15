@@ -17,6 +17,7 @@ import 'package:fl_clash/widgets/record.dart';
 import 'package:fl_clash/widgets/traffic_chart.dart';
 import 'package:fl_clash/ui/ui.dart' as app_ui;
 import 'package:fl_clash/ui/icons/icons.dart';
+import 'package:fl_clash/views/dashboard/style.dart';
 import 'package:fl_clash/views/tools.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -621,6 +622,25 @@ void main() {
     final protocol = tester.widget<Text>(find.text('HTTP/2 → HTTP/1.1'));
     expect(protocol.maxLines, 2);
     expect(protocol.overflow, isNot(TextOverflow.ellipsis));
+    final speedTiles = tester.widgetList<DecoratedBox>(
+      find.descendant(
+        of: find.byType(SpeedTestMetrics),
+        matching: find.byWidgetPredicate(
+          (w) =>
+              w is DecoratedBox &&
+              w.decoration is ShapeDecoration &&
+              (w.decoration as ShapeDecoration).shape == app_ui.AppShape.lg,
+        ),
+      ),
+    );
+    expect(speedTiles, hasLength(2));
+    final viewCtx = tester.element(find.byType(SpeedTestView));
+    for (final tile in speedTiles) {
+      expect(
+        (tile.decoration as ShapeDecoration).color,
+        DashboardColors.of(viewCtx).tone,
+      );
+    }
     client.finish();
     await tester.pumpAndSettle();
     expect(tester.getSize(hero).height, heroHeight);

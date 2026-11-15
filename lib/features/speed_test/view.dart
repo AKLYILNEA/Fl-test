@@ -7,6 +7,7 @@ import 'package:fl_clash/features/form/selection_sheet.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/ui/icons/icons.dart';
+import 'package:fl_clash/views/dashboard/style.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -403,9 +404,7 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
                     alignment: Alignment.centerRight,
                     child: DecoratedBox(
                       decoration: ShapeDecoration(
-                        color: context.colorScheme.onSurface.withValues(
-                          alpha: 0.055,
-                        ),
+                        color: DashboardColors.of(context).tone,
                         shape: AppShape.full,
                       ),
                       child: Padding(

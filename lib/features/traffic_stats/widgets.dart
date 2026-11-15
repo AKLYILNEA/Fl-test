@@ -520,7 +520,7 @@ class _OverviewDirectionTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: ShapeDecoration(
-        color: cs.onSurface.withValues(alpha: 0.04),
+        color: DashboardColors.of(context).tone,
         shape: AppShape.lg,
       ),
       child: Column(
