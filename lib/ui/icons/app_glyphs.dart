@@ -1892,6 +1892,41 @@ abstract final class AppGlyphs {
     GlyphCircle(15.2, 8.8, 1.5, role: GlyphRole.detail, solid: true),
   ]);
 
+  static const ruleHits = Glyph([
+    GlyphArc(
+      10.8,
+      13.2,
+      7.8,
+      math.pi * -0.072,
+      math.pi * 1.644,
+      role: GlyphRole.line,
+    ),
+    GlyphArc(
+      10.8,
+      13.2,
+      4.2,
+      math.pi * 0.028,
+      math.pi * 1.445,
+      role: GlyphRole.line,
+    ),
+    GlyphCircle(10.8, 13.2, 1.45, role: GlyphRole.line, solid: true),
+    GlyphPolyline([
+      GlyphVertex(19.8, 4.2),
+      GlyphVertex(12.0, 12.0),
+    ], role: GlyphRole.line),
+    GlyphPolyline([
+      GlyphVertex(16.8, 4.0),
+      GlyphVertex(16.8, 7.2),
+      GlyphVertex(20.0, 7.2),
+    ], role: GlyphRole.line),
+  ], matchTextDirection: true);
+
+  static const ranking = Glyph([
+    GlyphBox(3.5, 10.2, 7.9, 20.0, 1.4),
+    GlyphBox(9.8, 4.5, 14.2, 20.0, 1.4),
+    GlyphBox(16.1, 13.8, 20.5, 20.0, 1.4),
+  ]);
+
   static Glyph sidebar(double progress) => Glyphs.sidebar(progress);
 
   /// Play at 0, pause at 1; past either end it keeps turning, so it bounces.

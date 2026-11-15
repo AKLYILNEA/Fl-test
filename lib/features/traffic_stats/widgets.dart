@@ -1142,7 +1142,13 @@ class TrafficStatsRuleHitsSection extends StatelessWidget {
       children: [
         Padding(
           padding: sideInsets,
-          child: ListHeader(title: l.trafficStatsRuleHits),
+          child: InfoHeader(
+            info: Info(label: l.trafficStatsRuleHits, glyph: AppGlyphs.ruleHits),
+            padding: EdgeInsets.only(
+              top: 20.mAp(context),
+              bottom: 10.mAp(context),
+            ),
+          ),
         ),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -1393,7 +1399,13 @@ class TrafficStatsRankingSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        ListHeader(title: l.trafficStatsRanking),
+        InfoHeader(
+          info: Info(label: l.trafficStatsRanking, glyph: AppGlyphs.ranking),
+          padding: EdgeInsets.only(
+            top: 20.mAp(context),
+            bottom: 10.mAp(context),
+          ),
+        ),
         if (!settings.detail) ...[
           Card(
             radius: AppCorner.lg,

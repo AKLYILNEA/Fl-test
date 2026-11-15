@@ -322,6 +322,16 @@ void main() {
           scrollable: scrollable,
         );
         expect(find.byType(TrafficStatsRuleHitsSection), findsOneWidget);
+        expect(
+          find.descendant(
+            of: find.byType(TrafficStatsRuleHitsSection),
+            matching: find.byWidgetPredicate(
+              (w) =>
+                  w is app_ui.InfoHeader && w.info.glyph == AppGlyphs.ruleHits,
+            ),
+          ),
+          findsOneWidget,
+        );
         expect(find.text('GEOSITE:google'), findsOneWidget);
         await tester.scrollUntilVisible(
           find.byType(TrafficStatsRankingSection),
@@ -329,6 +339,16 @@ void main() {
           scrollable: scrollable,
         );
         expect(find.byType(TrafficStatsRankingSection), findsOneWidget);
+        expect(
+          find.descendant(
+            of: find.byType(TrafficStatsRankingSection),
+            matching: find.byWidgetPredicate(
+              (w) =>
+                  w is app_ui.InfoHeader && w.info.glyph == AppGlyphs.ranking,
+            ),
+          ),
+          findsOneWidget,
+        );
         expect(find.text('example.com'), findsOneWidget);
 
         // Domain tap must NOT open a detail sheet or route.
