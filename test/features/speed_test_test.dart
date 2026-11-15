@@ -581,6 +581,7 @@ void main() {
           protocol: 'h1',
         ),
       );
+      await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));
       expect(tester.getSize(hero).height, heroHeight);
       expect(tester.getSize(route).height, routeHeight);
