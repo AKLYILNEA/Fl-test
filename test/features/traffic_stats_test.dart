@@ -263,17 +263,23 @@ void main() {
             ),
           );
         }
+        final scrollable = find
+            .descendant(
+              of: find.byType(TrafficStatsView),
+              matching: find.byType(Scrollable),
+            )
+            .first;
+        await tester.scrollUntilVisible(
+          find.byType(TrafficStatsRuleHitsSection),
+          200,
+          scrollable: scrollable,
+        );
         expect(find.byType(TrafficStatsRuleHitsSection), findsOneWidget);
         expect(find.text('GEOSITE:google'), findsOneWidget);
         await tester.scrollUntilVisible(
           find.byType(TrafficStatsRankingSection),
           200,
-          scrollable: find
-              .descendant(
-                of: find.byType(TrafficStatsView),
-                matching: find.byType(Scrollable),
-              )
-              .first,
+          scrollable: scrollable,
         );
         expect(find.byType(TrafficStatsRankingSection), findsOneWidget);
         expect(find.text('example.com'), findsOneWidget);
