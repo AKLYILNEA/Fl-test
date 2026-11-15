@@ -539,7 +539,10 @@ void main() {
       final overviewDivider = tester.widget<app_ui.Divider>(
         find.descendant(of: overview, matching: find.byType(app_ui.Divider)),
       );
-      expect(overviewDivider.thickness, 0);
+      expect(
+        overviewDivider.thickness,
+        app_ui.Divider.separatorThicknessOf(overviewCtx),
+      );
       expect(
         find.descendant(
           of: overview,

@@ -445,7 +445,7 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
                   ),
           ),
           const SizedBox(height: 16),
-          const Divider(height: 1),
+          Divider(height: 1, thickness: Divider.separatorThicknessOf(context)),
           const SizedBox(height: 12),
           Row(
             children: [

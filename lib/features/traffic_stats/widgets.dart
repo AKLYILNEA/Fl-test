@@ -471,7 +471,7 @@ class TrafficStatsOverviewCard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           if (fillHeight) const Spacer(),
-          const Divider(height: 1),
+          Divider(height: 1, thickness: Divider.separatorThicknessOf(context)),
           const SizedBox(height: 12),
           Align(
             alignment: AlignmentDirectional.centerStart,
@@ -688,6 +688,7 @@ class _TrafficStatsTrendCardState extends State<TrafficStatsTrendCard> {
                         downloadColor: downColor,
                         uploadColor: upColor,
                         gridColor: Divider.colorOf(context),
+                        gridThickness: Divider.separatorThicknessOf(context),
                         highlightColor: cs.primary.withValues(alpha: 0.08),
                         labelStyle: labelStyle,
                         activeLabelStyle: AppTextStyle.caption2
@@ -793,6 +794,7 @@ class _TrendBarPainter extends CustomPainter {
     required this.downloadColor,
     required this.uploadColor,
     required this.gridColor,
+    required this.gridThickness,
     required this.highlightColor,
     required this.labelStyle,
     required this.activeLabelStyle,
@@ -805,6 +807,7 @@ class _TrendBarPainter extends CustomPainter {
   final Color downloadColor;
   final Color uploadColor;
   final Color gridColor;
+  final double gridThickness;
   final Color highlightColor;
   final TextStyle labelStyle;
   final TextStyle activeLabelStyle;
@@ -903,10 +906,10 @@ class _TrendBarPainter extends CustomPainter {
 
     final gridPaint = Paint()
       ..color = gridColor
-      ..strokeWidth = 0;
+      ..strokeWidth = gridThickness;
     final dashPaint = Paint()
       ..color = gridColor
-      ..strokeWidth = 0;
+      ..strokeWidth = gridThickness;
 
     const steps = 2;
     for (var s = 0; s <= steps; s++) {
@@ -1121,7 +1124,8 @@ class _TrendBarPainter extends CustomPainter {
       oldDelegate.rightPad != rightPad ||
       oldDelegate.downloadColor != downloadColor ||
       oldDelegate.uploadColor != uploadColor ||
-      oldDelegate.gridColor != gridColor;
+      oldDelegate.gridColor != gridColor ||
+      oldDelegate.gridThickness != gridThickness;
 }
 
 class TrafficStatsRuleHitsSection extends StatelessWidget {
@@ -1280,7 +1284,10 @@ class _RuleHitCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 10),
-                const Divider(height: 1),
+                Divider(
+                  height: 1,
+                  thickness: Divider.separatorThicknessOf(context),
+                ),
                 const SizedBox(height: 9),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,

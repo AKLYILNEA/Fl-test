@@ -659,7 +659,10 @@ void main() {
     final heroDivider = tester.widget<app_ui.Divider>(
       find.descendant(of: hero, matching: find.byType(app_ui.Divider)),
     );
-    expect(heroDivider.thickness, 0);
+    expect(
+      heroDivider.thickness,
+      app_ui.Divider.separatorThicknessOf(viewCtx),
+    );
     client.finish();
     await tester.pumpAndSettle();
     expect(tester.getSize(hero).height, heroHeight);
