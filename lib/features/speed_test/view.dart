@@ -38,6 +38,7 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
   String _proxy = '';
   String? _request;
   bool _loaded = false;
+  bool _pendingInitialProbe = true;
   bool _probing = false;
   bool _testing = false;
   bool _confirming = false;
@@ -77,6 +78,7 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
       if (!mounted) return;
       setState(() {
         _loaded = true;
+        _pendingInitialProbe = false;
         _error = 'unavailable';
       });
     }
@@ -90,6 +92,7 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
     final id = _id();
     _request = id;
     setState(() {
+      _pendingInitialProbe = false;
       _probing = true;
       _error = null;
     });
@@ -319,8 +322,8 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
         : context.colorScheme.primary;
     final gauge = SpeedTestGauge(
       state: _state,
+      standby: _pendingInitialProbe && !_probing && !_testing,
       waiting:
-          !_loaded ||
           _probing ||
           (_testing &&
               (phase == SpeedTestPhase.connecting ||
@@ -344,7 +347,7 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
         FilledButton(
           onPressed: _testing
               ? _stop
-              : !_loaded || _probing || _confirming
+              : !_loaded || _pendingInitialProbe || _probing || _confirming
               ? null
               : _start,
           child: Padding(
@@ -535,7 +538,7 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
             if (mounted) unawaited(_detect());
           }),
         );
-      } else if (_loaded) {
+      } else if (_loaded && routeSettled) {
         unawaited(_detect());
       }
     });

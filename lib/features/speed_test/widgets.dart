@@ -489,64 +489,60 @@ class SpeedTestStatGrid extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                label,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: AppTextStyle.footnote
-                                    .of(context)
-                                    .copyWith(
-                                      color: context
-                                          .colorScheme
-                                          .onSurfaceVariant,
-                                    ),
+                        Text(
+                          label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyle.footnote
+                              .of(context)
+                              .copyWith(
+                                color: context.colorScheme.onSurfaceVariant,
                               ),
-                            ),
-                            SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: active
-                                  ? const ActivityIndicator(size: 12)
-                                  : null,
-                            ),
-                          ],
                         ),
                         const SizedBox(height: 6),
                         SizedBox(
                           height: 28 * MediaQuery.textScalerOf(context).scale(1),
                           width: double.infinity,
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
+                          child: FadeBox(
                             alignment: AlignmentDirectional.centerStart,
-                            child: Text.rich(
-                              TextSpan(
-                                children: [
-                                  TextSpan(
-                                    text: value,
-                                    style: AppTextStyle.title2
-                                        .of(context, emphasized: true)
-                                        .toTabular
-                                        .copyWith(
-                                          color: context.colorScheme.onSurface,
-                                        ),
+                            child: active
+                                ? const ActivityIndicator(
+                                    key: ValueKey('loading'),
+                                    size: 18,
+                                  )
+                                : FittedBox(
+                                    key: const ValueKey('value'),
+                                    fit: BoxFit.scaleDown,
+                                    alignment: AlignmentDirectional.centerStart,
+                                    child: Text.rich(
+                                      TextSpan(
+                                        children: [
+                                          TextSpan(
+                                            text: value,
+                                            style: AppTextStyle.title2
+                                                .of(context, emphasized: true)
+                                                .toTabular
+                                                .copyWith(
+                                                  color: context
+                                                      .colorScheme
+                                                      .onSurface,
+                                                ),
+                                          ),
+                                          TextSpan(
+                                            text: ' $unit',
+                                            style: AppTextStyle.caption1
+                                                .of(context)
+                                                .copyWith(
+                                                  color: context
+                                                      .colorScheme
+                                                      .onSurfaceVariant,
+                                                ),
+                                          ),
+                                        ],
+                                      ),
+                                      maxLines: 1,
+                                    ),
                                   ),
-                                  TextSpan(
-                                    text: ' $unit',
-                                    style: AppTextStyle.caption1
-                                        .of(context)
-                                        .copyWith(
-                                          color: context
-                                              .colorScheme
-                                              .onSurfaceVariant,
-                                        ),
-                                  ),
-                                ],
-                              ),
-                              maxLines: 1,
-                            ),
                           ),
                         ),
                       ],

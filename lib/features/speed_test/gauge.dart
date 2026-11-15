@@ -30,11 +30,13 @@ class SpeedTestGauge extends StatefulWidget {
     super.key,
     this.state,
     required this.waiting,
+    this.standby = false,
     required this.color,
     required this.otherColor,
   });
   final SpeedTestState? state;
   final bool waiting;
+  final bool standby;
   final Color color;
   final Color otherColor;
   @override
@@ -257,6 +259,7 @@ class _SpeedTestGaugeState extends State<SpeedTestGauge>
     final l = context.appLocalizations;
     final phase = _phase;
     final waiting = widget.waiting;
+    final standby = widget.standby && !waiting;
     final showSpinner =
         waiting && phase != SpeedTestPhase.latency;
     final label = waiting
@@ -265,6 +268,8 @@ class _SpeedTestGaugeState extends State<SpeedTestGauge>
             SpeedTestPhase.latency => l.delay,
             _ => l.speedTestProbing,
           }
+        : standby
+        ? '\u2014'
         : switch (phase) {
             SpeedTestPhase.download || SpeedTestPhase.done => l.download,
             SpeedTestPhase.upload => l.upload,
@@ -323,25 +328,31 @@ class _SpeedTestGaugeState extends State<SpeedTestGauge>
                         children: [
                           ConstrainedBox(
                             constraints: BoxConstraints(maxWidth: width * .62),
-                            child: FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                spacing: 5,
-                                children: [
-                                  if (showSpinner) const ActivityIndicator(size: 12),
-                                  Text(
-                                    label,
-                                    maxLines: 1,
-                                    style: AppTextStyle.footnote
-                                        .of(context)
-                                        .copyWith(
-                                          color: context
-                                              .colorScheme
-                                              .onSurfaceVariant,
-                                        ),
+                            child: FadeBox(
+                              child: KeyedSubtree(
+                                key: ValueKey((standby, showSpinner, label)),
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    spacing: 5,
+                                    children: [
+                                      if (showSpinner)
+                                        const ActivityIndicator(size: 12),
+                                      Text(
+                                        label,
+                                        maxLines: 1,
+                                        style: AppTextStyle.footnote
+                                            .of(context)
+                                            .copyWith(
+                                              color: context
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
+                                            ),
+                                      ),
+                                    ],
                                   ),
-                                ],
+                                ),
                               ),
                             ),
                           ),

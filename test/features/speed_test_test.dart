@@ -589,6 +589,31 @@ void main() {
         matching: find.byType(app_ui.ActivityIndicator),
       );
       expect(indicators, findsNWidgets(2));
+      if (phase == SpeedTestPhase.latency) {
+        final delayCard = find
+            .descendant(
+              of: find.byType(SpeedTestStatGrid),
+              matching: find.byType(app_ui.Card),
+            )
+            .first;
+        final delayTitle = find.descendant(
+          of: delayCard,
+          matching: find.text(tester.element(find.byType(SpeedTestView)).appLocalizations.delay),
+        );
+        final cardSpinner = find.descendant(
+          of: delayCard,
+          matching: find.byType(app_ui.ActivityIndicator),
+        );
+        expect(cardSpinner, findsOneWidget);
+        expect(
+          tester.getTopLeft(cardSpinner).dy,
+          greaterThan(tester.getBottomLeft(delayTitle).dy),
+        );
+        expect(
+          tester.getTopLeft(cardSpinner).dx,
+          closeTo(tester.getTopLeft(delayTitle).dx, 1.0),
+        );
+      }
       final statCards = tester.widgetList<app_ui.Card>(
         find.descendant(
           of: find.byType(SpeedTestStatGrid),
@@ -1027,21 +1052,67 @@ void main() {
   );
 
   testWidgets(
-    'start button stays disabled while probing and gauge shows spinner while connecting',
+    'start button stays disabled while settling or probing and gauge shows placeholder before probing',
     (tester) async {
       _size(tester, 430, 800);
       final client = _Client()..probeCompleter = Completer<SpeedTestState>();
       addTearDown(client.dispose);
-      await tester.pumpWidget(_app(client));
+      final showView = ValueNotifier(false);
+      addTearDown(showView.dispose);
+      await tester.pumpWidget(
+        _app(
+          client,
+          page: Consumer(
+            builder: (context, ref, _) {
+              ref.watch(speedTestStoreProvider);
+              return ValueListenableBuilder<bool>(
+                valueListenable: showView,
+                builder: (_, visible, _) =>
+                    visible ? const SpeedTestView() : const SizedBox.shrink(),
+              );
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Store is already cached when entering SpeedTestView.
+      showView.value = true;
       await tester.pump();
+      final l = tester.element(find.byType(SpeedTestView)).appLocalizations;
+      final initialButton = tester.widget<app_ui.FilledButton>(
+        find.byType(app_ui.FilledButton),
+      );
+      expect(initialButton.onPressed, isNull);
+      expect(
+        find.descendant(
+          of: find.byType(SpeedTestGauge),
+          matching: find.text('\u2014'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.byType(SpeedTestGauge),
+          matching: find.text(l.speedTestReady),
+        ),
+        findsNothing,
+      );
+
       await tester.pump(const Duration(milliseconds: 50));
       await tester.pump(const Duration(milliseconds: 50));
 
-      final l = tester.element(find.byType(SpeedTestView)).appLocalizations;
-      final startButton = tester.widget<app_ui.FilledButton>(
+      final probingButton = tester.widget<app_ui.FilledButton>(
         find.byType(app_ui.FilledButton),
       );
-      expect(startButton.onPressed, isNull);
+      expect(probingButton.onPressed, isNull);
+      expect(
+        find.descendant(
+          of: find.byType(SpeedTestGauge),
+          matching: find.text(l.speedTestProbing),
+        ),
+        findsOneWidget,
+      );
       expect(
         find.descendant(
           of: find.byType(SpeedTestGauge),
@@ -1056,6 +1127,13 @@ void main() {
       expect(
         tester.widget<app_ui.FilledButton>(find.byType(app_ui.FilledButton)).onPressed,
         isNotNull,
+      );
+      expect(
+        find.descendant(
+          of: find.byType(SpeedTestGauge),
+          matching: find.text(l.speedTestReady),
+        ),
+        findsOneWidget,
       );
 
       await tester.tap(find.text(l.speedTestStart));
