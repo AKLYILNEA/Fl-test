@@ -1035,10 +1035,11 @@ void main() {
       await tester.pumpWidget(_app(client));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 50));
+      await tester.pump(const Duration(milliseconds: 50));
 
       final l = tester.element(find.byType(SpeedTestView)).appLocalizations;
-      final startButton = tester.widget<FilledButton>(
-        find.byType(FilledButton),
+      final startButton = tester.widget<app_ui.FilledButton>(
+        find.byType(app_ui.FilledButton),
       );
       expect(startButton.onPressed, isNull);
       expect(
@@ -1053,7 +1054,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
+        tester.widget<app_ui.FilledButton>(find.byType(app_ui.FilledButton)).onPressed,
         isNotNull,
       );
 
