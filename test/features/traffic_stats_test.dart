@@ -285,23 +285,22 @@ void main() {
               .first;
           final statsTop = tester.getTopLeft(statsGroup).dy;
           final statsBottom = tester.getBottomLeft(statsGroup).dy;
-          final tileTop = tester
+          final legendTop = tester
               .getTopLeft(
                 find
-                    .descendant(
-                      of: overview,
-                      matching: find.byWidgetPredicate(
-                        (w) =>
-                            w is Container &&
-                            w.decoration is ShapeDecoration &&
-                            (w.decoration as ShapeDecoration).shape ==
-                                app_ui.AppShape.lg,
+                    .ancestor(
+                      of: find.descendant(
+                        of: overview,
+                        matching: find.text(
+                          trafficStatsFormatBytes(_sampleResult().down),
+                        ),
                       ),
+                      matching: find.byType(Row),
                     )
                     .first,
               )
               .dy;
-          expect(statsTop - titleBottom, closeTo(tileTop - statsBottom, 1.0));
+          expect(statsTop - titleBottom, closeTo(legendTop - statsBottom, 1.0));
         }
         final scrollable = find
             .descendant(
@@ -549,42 +548,65 @@ void main() {
         find.descendant(of: overview, matching: find.text('20%')),
         findsNothing,
       );
-      expect(
-        find.descendant(
-          of: overview,
-          matching: find.text(trafficStatsFormatBytes(sample.down)),
-        ),
-        findsOneWidget,
+      final downValueFinder = find.descendant(
+        of: overview,
+        matching: find.text(trafficStatsFormatBytes(sample.down)),
       );
+      final upValueFinder = find.descendant(
+        of: overview,
+        matching: find.text(trafficStatsFormatBytes(sample.up)),
+      );
+      expect(downValueFinder, findsOneWidget);
+      expect(upValueFinder, findsOneWidget);
+      final downRowFinder = find
+          .ancestor(of: downValueFinder, matching: find.byType(Row))
+          .first;
+      final downLabelFinder = find.descendant(
+        of: downRowFinder,
+        matching: find.text(l.download),
+      );
+      expect(downLabelFinder, findsOneWidget);
       expect(
-        find.descendant(
-          of: overview,
-          matching: find.text(trafficStatsFormatBytes(sample.up)),
-        ),
-        findsOneWidget,
+        tester.getTopLeft(downValueFinder).dx,
+        greaterThan(tester.getTopRight(downLabelFinder).dx),
       );
       expect(
         find.descendant(of: overview, matching: find.byType(GlyphIcon)),
-        findsNWidgets(2),
+        findsNothing,
       );
-      final insetTiles = tester.widgetList<Container>(
-        find.descendant(
-          of: overview,
-          matching: find.byWidgetPredicate(
-            (w) =>
-                w is Container &&
-                w.decoration is ShapeDecoration &&
-                (w.decoration as ShapeDecoration).shape == app_ui.AppShape.lg,
-          ),
+      final insetTiles = find.descendant(
+        of: overview,
+        matching: find.byWidgetPredicate(
+          (w) =>
+              w is Container &&
+              w.decoration is ShapeDecoration &&
+              (w.decoration as ShapeDecoration).shape == app_ui.AppShape.lg,
         ),
       );
-      expect(insetTiles, hasLength(2));
-      for (final tile in insetTiles) {
-        expect(
-          (tile.decoration as ShapeDecoration).color,
-          DashboardColors.of(overviewCtx).tone,
-        );
-      }
+      expect(insetTiles, findsNothing);
+      final legendDots = tester
+          .widgetList<DecoratedBox>(
+            find.descendant(
+              of: overview,
+              matching: find.byWidgetPredicate(
+                (w) =>
+                    w is DecoratedBox &&
+                    w.decoration is ShapeDecoration &&
+                    (w.decoration as ShapeDecoration).shape ==
+                        app_ui.AppShape.circle,
+              ),
+            ),
+          )
+          .toList();
+      expect(legendDots, hasLength(2));
+      expect(
+        (legendDots[0].decoration as ShapeDecoration).color,
+        trafficDownloadColor(overviewCtx),
+      );
+      expect(
+        (legendDots[1].decoration as ShapeDecoration).color,
+        trafficUploadColor(overviewCtx),
+      );
       final overviewRing = tester.widget<RingChart>(
         find.descendant(of: overview, matching: find.byType(RingChart)),
       );

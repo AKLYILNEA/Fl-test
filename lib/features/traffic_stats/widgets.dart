@@ -496,84 +496,37 @@ class TrafficStatsOverviewCard extends StatelessWidget {
         children: [
           if (fillHeight) Expanded(child: topRow) else topRow,
           const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: _OverviewDirectionTile(
-                  icon: AppGlyphs.arrowDown,
-                  color: downColor,
-                  label: l.download,
-                  value: trafficStatsFormatBytes(result.down),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _OverviewDirectionTile(
-                  icon: AppGlyphs.arrowUp,
-                  color: upColor,
-                  label: l.upload,
-                  value: trafficStatsFormatBytes(result.up),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _OverviewDirectionTile extends StatelessWidget {
-  const _OverviewDirectionTile({
-    required this.icon,
-    required this.color,
-    required this.label,
-    required this.value,
-  });
-
-  final Glyph icon;
-  final Color color;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = context.colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: ShapeDecoration(
-        color: DashboardColors.of(context).tone,
-        shape: AppShape.lg,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              GlyphIcon(icon, size: 12, color: color),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTextStyle.footnote
-                      .of(context)
-                      .copyWith(color: cs.onSurfaceVariant),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: AlignmentDirectional.centerStart,
-            child: Text(
-              value,
-              maxLines: 1,
-              style: AppTextStyle.headline
-                  .of(context, emphasized: true)
-                  .toTabular,
+          SizedBox(
+            width: double.infinity,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              spacing: 4,
+              children: [
+                for (final part in [
+                  (label: l.download, color: downColor, bytes: result.down),
+                  (label: l.upload, color: upColor, bytes: result.up),
+                ])
+                  Row(
+                    children: [
+                      DecoratedBox(
+                        decoration: ShapeDecoration(
+                          color: part.color,
+                          shape: AppShape.circle,
+                        ),
+                        child: const SizedBox.square(dimension: 8),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(part.label, style: DashboardText.label(context)),
+                      const Spacer(),
+                      Text(
+                        trafficStatsFormatBytes(part.bytes),
+                        style: AppTextStyle.footnote
+                            .of(context, emphasized: true)
+                            .toTabular,
+                      ),
+                    ],
+                  ),
+              ],
             ),
           ),
         ],
