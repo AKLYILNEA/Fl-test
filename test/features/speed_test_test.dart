@@ -814,11 +814,15 @@ void main() {
       ];
       expect(heights.toSet(), hasLength(1));
       expect(heights.first, lessThan(100));
+      final delayLabel = find.descendant(
+        of: statCards.at(0),
+        matching: find.text(l.delay),
+      );
       expect(
-        tester.getTopLeft(find.text(l.delay)).dy -
+        tester.getTopLeft(delayLabel).dy -
             tester.getTopLeft(statCards.at(0)).dy,
         closeTo(
-          tester.getTopLeft(find.text(l.delay)).dx -
+          tester.getTopLeft(delayLabel).dx -
               tester.getTopLeft(statCards.at(0)).dx,
           .01,
         ),
