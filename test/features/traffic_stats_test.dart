@@ -266,12 +266,17 @@ void main() {
           );
           final ovCtx = tester.element(overview);
           final l = ovCtx.appLocalizations;
-          final titleBottom = tester
+          final headerBottom = tester
               .getBottomLeft(
-                find.descendant(
-                  of: overview,
-                  matching: find.text(l.trafficStatsOverview),
-                ),
+                find
+                    .ancestor(
+                      of: find.descendant(
+                        of: overview,
+                        matching: find.text(l.trafficStatsOverview),
+                      ),
+                      matching: find.byType(Row),
+                    )
+                    .first,
               )
               .dy;
           final statsGroup = find
@@ -307,9 +312,24 @@ void main() {
                     .first,
               )
               .dy;
-          expect(statsTop - titleBottom, closeTo(dividerTop - statsBottom, 1.0));
+          expect(
+            statsTop - headerBottom,
+            closeTo(dividerTop - statsBottom, 1.0),
+          );
           expect(legendTop, greaterThan(dividerBottom));
         }
+        expect(
+          find.descendant(
+            of: find.byType(TrafficStatsTrendCard),
+            matching: find.byWidgetPredicate(
+              (w) =>
+                  w is GlyphIcon &&
+                  w.glyph == AppGlyphs.ranking &&
+                  w.size == 18,
+            ),
+          ),
+          findsOneWidget,
+        );
         final scrollable = find
             .descendant(
               of: find.byType(TrafficStatsView),
@@ -322,16 +342,6 @@ void main() {
           scrollable: scrollable,
         );
         expect(find.byType(TrafficStatsRuleHitsSection), findsOneWidget);
-        expect(
-          find.descendant(
-            of: find.byType(TrafficStatsRuleHitsSection),
-            matching: find.byWidgetPredicate(
-              (w) =>
-                  w is app_ui.InfoHeader && w.info.glyph == AppGlyphs.ruleHits,
-            ),
-          ),
-          findsOneWidget,
-        );
         expect(find.text('GEOSITE:google'), findsOneWidget);
         await tester.scrollUntilVisible(
           find.byType(TrafficStatsRankingSection),
@@ -339,16 +349,6 @@ void main() {
           scrollable: scrollable,
         );
         expect(find.byType(TrafficStatsRankingSection), findsOneWidget);
-        expect(
-          find.descendant(
-            of: find.byType(TrafficStatsRankingSection),
-            matching: find.byWidgetPredicate(
-              (w) =>
-                  w is app_ui.InfoHeader && w.info.glyph == AppGlyphs.ranking,
-            ),
-          ),
-          findsOneWidget,
-        );
         expect(find.text('example.com'), findsOneWidget);
 
         // Domain tap must NOT open a detail sheet or route.
@@ -599,8 +599,16 @@ void main() {
         greaterThan(tester.getTopRight(downLabelFinder).dx),
       );
       expect(
-        find.descendant(of: overview, matching: find.byType(GlyphIcon)),
-        findsNothing,
+        find.descendant(
+          of: overview,
+          matching: find.byWidgetPredicate(
+            (w) =>
+                w is GlyphIcon &&
+                w.glyph == AppGlyphs.dataUsage &&
+                w.size == 18,
+          ),
+        ),
+        findsOneWidget,
       );
       final insetTiles = find.descendant(
         of: overview,

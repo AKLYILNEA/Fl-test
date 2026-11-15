@@ -132,6 +132,27 @@ String trafficStatsFormatAxisBytes(int bytes) {
   return '${show.value} ${show.unit}';
 }
 
+class _HeaderIconBadge extends StatelessWidget {
+  const _HeaderIconBadge({required this.glyph, required this.color});
+
+  final Glyph glyph;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: ShapeDecoration(
+        color: color.withValues(alpha: 0.12),
+        shape: AppShape.sm,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(6),
+        child: GlyphIcon(glyph, size: 18, color: color),
+      ),
+    );
+  }
+}
+
 class _GlyphBadge extends StatelessWidget {
   const _GlyphBadge({
     required this.glyph,
@@ -371,14 +392,28 @@ class TrafficStatsOverviewCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: AlignmentDirectional.centerStart,
-                  child: Text(
-                    l.trafficStatsOverview,
-                    maxLines: 1,
-                    style: AppTextStyle.headline.of(context, emphasized: true),
-                  ),
+                Row(
+                  children: [
+                    _HeaderIconBadge(
+                      glyph: AppGlyphs.dataUsage,
+                      color: downColor,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: AlignmentDirectional.centerStart,
+                        child: Text(
+                          l.trafficStatsOverview,
+                          maxLines: 1,
+                          style: AppTextStyle.headline.of(
+                            context,
+                            emphasized: true,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 Padding(
                   padding: const EdgeInsets.only(top: 12),
@@ -695,6 +730,8 @@ class _TrafficStatsTrendCardState extends State<TrafficStatsTrendCard> {
         children: [
           Row(
             children: [
+              _HeaderIconBadge(glyph: AppGlyphs.ranking, color: downColor),
+              const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   l.trafficStatsTrend,
@@ -1142,13 +1179,7 @@ class TrafficStatsRuleHitsSection extends StatelessWidget {
       children: [
         Padding(
           padding: sideInsets,
-          child: InfoHeader(
-            info: Info(label: l.trafficStatsRuleHits, glyph: AppGlyphs.ruleHits),
-            padding: EdgeInsets.only(
-              top: 20.mAp(context),
-              bottom: 10.mAp(context),
-            ),
-          ),
+          child: ListHeader(title: l.trafficStatsRuleHits),
         ),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -1399,13 +1430,7 @@ class TrafficStatsRankingSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        InfoHeader(
-          info: Info(label: l.trafficStatsRanking, glyph: AppGlyphs.ranking),
-          padding: EdgeInsets.only(
-            top: 20.mAp(context),
-            bottom: 10.mAp(context),
-          ),
-        ),
+        ListHeader(title: l.trafficStatsRanking),
         if (!settings.detail) ...[
           Card(
             radius: AppCorner.lg,
