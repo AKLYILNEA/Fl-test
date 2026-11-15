@@ -66,12 +66,15 @@ jobs:
           flutter analyze --no-fatal-infos lib/features/speed_test lib/models/speed_test.dart lib/widgets/traffic_chart.dart test/features/speed_test_test.dart test/features/speed_test_store_test.dart
           set -o pipefail
           if ! flutter test test/features/speed_test_test.dart test/features/speed_test_store_test.dart test/core/protocol_contract_test.dart 2>&1 | tee /tmp/speedtest.log; then
-            {
-              echo "### Check Speedtest Failure"
-              echo '```'
-              tail -n 120 /tmp/speedtest.log
-              echo '```'
-            } >> "$GITHUB_STEP_SUMMARY"
+            python3 -c '
+          import re
+          text = open("/tmp/speedtest.log", errors="replace").read()
+          lines = [l.strip() for l in text.splitlines() if l.strip()]
+          err_idx = next((i for i, l in enumerate(lines) if "[E]" in l or "EXCEPTION CAUGHT" in l), max(0, len(lines) - 30))
+          kept = [l for l in lines[err_idx:] if not l.startswith("package:") and not l.startswith("dart:")][:10]
+          for l in kept:
+              print("::error::" + l[:300])
+          '
             exit 1
           fi
           cd core
@@ -82,12 +85,14 @@ jobs:
           flutter analyze --no-fatal-infos lib/features/traffic_stats lib/models/traffic_stats.dart test/features/traffic_stats_test.dart test/features/traffic_stats_store_test.dart
           set -o pipefail
           if ! flutter test test/features/traffic_stats_test.dart test/features/traffic_stats_store_test.dart test/core/protocol_contract_test.dart test/l10n/localization_contract_test.dart 2>&1 | tee /tmp/traffic_stats.log; then
-            {
-              echo "### Check Traffic Stats Failure"
-              echo '```'
-              tail -n 120 /tmp/traffic_stats.log
-              echo '```'
-            } >> "$GITHUB_STEP_SUMMARY"
+            python3 -c '
+          text = open("/tmp/traffic_stats.log", errors="replace").read()
+          lines = [l.strip() for l in text.splitlines() if l.strip()]
+          err_idx = next((i for i, l in enumerate(lines) if "[E]" in l or "EXCEPTION CAUGHT" in l), max(0, len(lines) - 30))
+          kept = [l for l in lines[err_idx:] if not l.startswith("package:") and not l.startswith("dart:")][:10]
+          for l in kept:
+              print("::error::" + l[:300])
+          '
             exit 1
           fi
           cd core
