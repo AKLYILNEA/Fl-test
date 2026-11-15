@@ -254,6 +254,15 @@ void main() {
 
         expect(find.byType(TrafficStatsOverviewCard), findsOneWidget);
         expect(find.byType(TrafficStatsTrendCard), findsOneWidget);
+        if (size.width >= 760) {
+          expect(
+            tester.getSize(find.byType(TrafficStatsOverviewCard)).height,
+            closeTo(
+              tester.getSize(find.byType(TrafficStatsTrendCard)).height,
+              0.01,
+            ),
+          );
+        }
         expect(find.byType(TrafficStatsRuleHitsSection), findsOneWidget);
         expect(find.text('GEOSITE:google'), findsOneWidget);
         await tester.scrollUntilVisible(
@@ -499,11 +508,12 @@ void main() {
         findsNWidgets(2),
       );
       expect(
-        find.descendant(of: overview, matching: find.text(l.proxies)),
-        findsOneWidget,
-      );
-      expect(
-        find.descendant(of: overview, matching: find.text(l.direct)),
+        find.descendant(
+          of: overview,
+          matching: find.text(
+            '${l.proxies} ${trafficStatsFormatBytes(sample.proxyTotal)} \u00b7 ${l.direct} ${trafficStatsFormatBytes(sample.total - sample.proxyTotal)}',
+          ),
+        ),
         findsOneWidget,
       );
       expect(tester.takeException(), isNull);

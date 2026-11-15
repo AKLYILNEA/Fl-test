@@ -338,9 +338,14 @@ class TrafficStatsDisabledBanner extends StatelessWidget {
 }
 
 class TrafficStatsOverviewCard extends StatelessWidget {
-  const TrafficStatsOverviewCard({super.key, required this.result});
+  const TrafficStatsOverviewCard({
+    super.key,
+    required this.result,
+    this.fillHeight = false,
+  });
 
   final TrafficStatsResult result;
+  final bool fillHeight;
 
   @override
   Widget build(BuildContext context) {
@@ -361,6 +366,7 @@ class TrafficStatsOverviewCard extends StatelessWidget {
       radius: AppCorner.xl,
       padding: const EdgeInsets.all(20),
       child: Column(
+        mainAxisSize: fillHeight ? MainAxisSize.max : MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
@@ -463,36 +469,28 @@ class TrafficStatsOverviewCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 14),
-          Container(
-            height: 0.5,
-            color: cs.outlineVariant.withValues(alpha: 0.45),
+          const SizedBox(height: 16),
+          if (fillHeight) const Spacer(),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: cs.outlineVariant.withValues(alpha: 0.4),
+            ),
+            child: const SizedBox(height: 0.5),
           ),
           const SizedBox(height: 12),
-          IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: _PlainTrafficMeta(
-                    label: l.proxies,
-                    value: trafficStatsFormatBytes(proxyTotal),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                  child: Container(
-                    width: 0.5,
-                    color: cs.outlineVariant.withValues(alpha: 0.45),
-                  ),
-                ),
-                Expanded(
-                  child: _PlainTrafficMeta(
-                    label: l.direct,
-                    value: trafficStatsFormatBytes(directTotal),
-                  ),
-                ),
-              ],
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: AlignmentDirectional.centerStart,
+              child: Text(
+                '${l.proxies} ${trafficStatsFormatBytes(proxyTotal)} \u00b7 ${l.direct} ${trafficStatsFormatBytes(directTotal)}',
+                maxLines: 1,
+                style: AppTextStyle.caption1
+                    .of(context)
+                    .toTabular
+                    .copyWith(color: cs.onSurfaceVariant),
+              ),
             ),
           ),
         ],
@@ -571,56 +569,17 @@ class _OverviewDirectionTile extends StatelessWidget {
   }
 }
 
-class _PlainTrafficMeta extends StatelessWidget {
-  const _PlainTrafficMeta({
-    required this.label,
-    required this.value,
-  });
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = context.colorScheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: AppTextStyle.caption1
-              .of(context)
-              .copyWith(color: cs.onSurfaceVariant),
-        ),
-        const SizedBox(height: 2),
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          alignment: AlignmentDirectional.centerStart,
-          child: Text(
-            value,
-            maxLines: 1,
-            style: AppTextStyle.subheadline
-                .of(context, emphasized: true)
-                .toTabular,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 class TrafficStatsTrendCard extends StatefulWidget {
   const TrafficStatsTrendCard({
     super.key,
     required this.points,
     required this.period,
+    this.fillHeight = false,
   });
 
   final List<TrafficStatsPoint> points;
   final TrafficStatsPeriod period;
+  final bool fillHeight;
 
   @override
   State<TrafficStatsTrendCard> createState() => _TrafficStatsTrendCardState();
@@ -685,10 +644,74 @@ class _TrafficStatsTrendCardState extends State<TrafficStatsTrendCard> {
       labelStyle,
     );
 
+    final chartArea = ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 158),
+      child: !hasAnyTraffic
+          ? Center(
+              child: Text(
+                l.noData,
+                style: AppTextStyle.subheadline
+                    .of(context)
+                    .copyWith(color: cs.onSurfaceVariant),
+              ),
+            )
+          : Builder(
+              builder: (chartCtx) {
+                double chartWidth() =>
+                    (chartCtx.findRenderObject() as RenderBox?)?.size.width ?? 0;
+
+                return MouseRegion(
+                  onHover: (e) => _updateIndexFromDx(
+                    e.localPosition.dx,
+                    chartWidth(),
+                    rightPad,
+                  ),
+                  onExit: (_) {
+                    if (_selectedIndex != null) {
+                      setState(() => _selectedIndex = null);
+                    }
+                  },
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTapDown: (d) => _updateIndexFromDx(
+                      d.localPosition.dx,
+                      chartWidth(),
+                      rightPad,
+                    ),
+                    onHorizontalDragUpdate: (d) => _updateIndexFromDx(
+                      d.localPosition.dx,
+                      chartWidth(),
+                      rightPad,
+                    ),
+                    child: CustomPaint(
+                      size: const Size(double.infinity, 158),
+                      painter: _TrendBarPainter(
+                        points: widget.points,
+                        period: widget.period,
+                        selectedIndex: _selectedIndex,
+                        rightPad: rightPad,
+                        downloadColor: downColor,
+                        uploadColor: upColor,
+                        gridColor: cs.outlineVariant.withValues(alpha: 0.4),
+                        highlightColor: cs.primary.withValues(alpha: 0.08),
+                        labelStyle: labelStyle,
+                        activeLabelStyle: AppTextStyle.caption2
+                            .of(context, emphasized: true)
+                            .toTabular
+                            .copyWith(color: cs.primary),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+    );
+
     return Card(
       radius: AppCorner.xl,
       padding: const EdgeInsets.all(20),
       child: Column(
+        mainAxisSize: widget.fillHeight ? MainAxisSize.max : MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
@@ -731,63 +754,7 @@ class _TrafficStatsTrendCardState extends State<TrafficStatsTrendCard> {
             ],
           ),
           const SizedBox(height: 16),
-          SizedBox(
-            height: 158,
-            child: !hasAnyTraffic
-                ? Center(
-                    child: Text(
-                      l.noData,
-                      style: AppTextStyle.subheadline
-                          .of(context)
-                          .copyWith(color: cs.onSurfaceVariant),
-                    ),
-                  )
-                : LayoutBuilder(
-                    builder: (context, constraints) => MouseRegion(
-                      onHover: (e) => _updateIndexFromDx(
-                        e.localPosition.dx,
-                        constraints.maxWidth,
-                        rightPad,
-                      ),
-                      onExit: (_) {
-                        if (_selectedIndex != null) {
-                          setState(() => _selectedIndex = null);
-                        }
-                      },
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onTapDown: (d) => _updateIndexFromDx(
-                          d.localPosition.dx,
-                          constraints.maxWidth,
-                          rightPad,
-                        ),
-                        onHorizontalDragUpdate: (d) => _updateIndexFromDx(
-                          d.localPosition.dx,
-                          constraints.maxWidth,
-                          rightPad,
-                        ),
-                        child: CustomPaint(
-                          size: Size(constraints.maxWidth, 158),
-                          painter: _TrendBarPainter(
-                            points: widget.points,
-                            period: widget.period,
-                            selectedIndex: _selectedIndex,
-                            rightPad: rightPad,
-                            downloadColor: downColor,
-                            uploadColor: upColor,
-                            gridColor: cs.outlineVariant.withValues(alpha: 0.4),
-                            highlightColor: cs.primary.withValues(alpha: 0.08),
-                            labelStyle: labelStyle,
-                            activeLabelStyle: AppTextStyle.caption2
-                                .of(context, emphasized: true)
-                                .toTabular
-                                .copyWith(color: cs.primary),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-          ),
+          if (widget.fillHeight) Expanded(child: chartArea) else chartArea,
         ],
       ),
     );

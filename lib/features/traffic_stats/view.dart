@@ -229,28 +229,34 @@ class _TrafficStatsViewState extends ConsumerState<TrafficStatsView>
                     const SizedBox(height: 12),
                     if (isWide)
                       padded(
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              flex: 5,
-                              child: ConstrainedBox(
-                                constraints: const BoxConstraints(minHeight: 238),
-                                child: TrafficStatsOverviewCard(result: result),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              flex: 6,
-                              child: ConstrainedBox(
-                                constraints: const BoxConstraints(minHeight: 238),
-                                child: TrafficStatsTrendCard(
-                                  points: result.series,
-                                  period: _period,
+                        IntrinsicHeight(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Expanded(
+                                flex: 5,
+                                child: ConstrainedBox(
+                                  constraints: const BoxConstraints(minHeight: 238),
+                                  child: TrafficStatsOverviewCard(
+                                    result: result,
+                                    fillHeight: true,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                              const SizedBox(width: 12),
+                              Expanded(
+                                flex: 6,
+                                child: ConstrainedBox(
+                                  constraints: const BoxConstraints(minHeight: 238),
+                                  child: TrafficStatsTrendCard(
+                                    points: result.series,
+                                    period: _period,
+                                    fillHeight: true,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       )
                     else ...[
