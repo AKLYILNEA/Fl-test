@@ -1,4 +1,6 @@
+import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/features/traffic_stats/client.dart';
+import 'package:fl_clash/features/traffic_stats/ring_chart.dart';
 import 'package:fl_clash/features/traffic_stats/settings.dart';
 import 'package:fl_clash/features/traffic_stats/store.dart';
 import 'package:fl_clash/features/traffic_stats/view.dart';
@@ -436,6 +438,106 @@ void main() {
       expect(find.text('GEOSITE:google'), findsNWidgets(2));
       await touch.up();
       await tester.pumpAndSettle(const Duration(seconds: 2));
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'overview card pairs ring percentages with download/upload and keeps proxy/direct plain text',
+    (tester) async {
+      _setScreen(tester, 360, 720);
+      final sample = _sampleResult();
+      final client = _FakeTrafficStatsClient(result: sample);
+      await tester.pumpWidget(
+        _app(
+          client,
+          page: TrafficStatsScope(
+            child: app_ui.Scaffold(
+              title: 'Overview',
+              body: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: TrafficStatsOverviewCard(result: sample),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final overview = find.byType(TrafficStatsOverviewCard);
+      final overviewCtx = tester.element(overview);
+      final l = overviewCtx.appLocalizations;
+      final ringFinder = find.descendant(
+        of: overview,
+        matching: find.byType(RingChart),
+      );
+      final ring = tester.widget<RingChart>(ringFinder);
+
+      expect(ring.segments.length, 2);
+      expect(ring.segments[0].value, sample.down.toDouble());
+      expect(ring.segments[0].color, trafficDownloadColor(overviewCtx));
+      expect(ring.segments[1].value, sample.up.toDouble());
+      expect(ring.segments[1].color, trafficUploadColor(overviewCtx));
+      expect(
+        find.descendant(of: ringFinder, matching: find.text('80%')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: ringFinder, matching: find.text(l.download)),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: overview, matching: find.text('80%')),
+        findsNWidgets(2),
+      );
+      expect(
+        find.descendant(of: overview, matching: find.text('20%')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: overview, matching: find.byType(GlyphIcon)),
+        findsNWidgets(2),
+      );
+      expect(
+        find.descendant(of: overview, matching: find.text(l.proxies)),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: overview, matching: find.text(l.direct)),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
+
+      const uploadHeavy = TrafficStatsResult(
+        up: 750 * 1024 * 1024,
+        down: 250 * 1024 * 1024,
+        proxyUp: 600 * 1024 * 1024,
+        proxyDown: 200 * 1024 * 1024,
+      );
+      await tester.pumpWidget(
+        _app(
+          client,
+          page: const TrafficStatsScope(
+            child: app_ui.Scaffold(
+              title: 'Overview',
+              body: SingleChildScrollView(
+                padding: EdgeInsets.all(16),
+                child: TrafficStatsOverviewCard(result: uploadHeavy),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.descendant(of: ringFinder, matching: find.text('75%')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: ringFinder, matching: find.text(l.upload)),
+        findsOneWidget,
+      );
       expect(tester.takeException(), isNull);
     },
   );

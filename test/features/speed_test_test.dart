@@ -125,10 +125,11 @@ class _Client implements SpeedTestClient {
     ];
   }
 
-  void finish() => run!.complete(
+  void finish({int streams = 8}) => run!.complete(
     SpeedTestState(
       id: runId,
       phase: SpeedTestPhase.done,
+      streams: streams,
       download: 240e6,
       upload: 80e6,
       latency: 12,
@@ -596,11 +597,26 @@ void main() {
       }
       expect(tester.takeException(), isNull);
     }
+    final phaseBar = find.byType(SpeedTestPhaseBar);
+    expect(phaseBar, findsOneWidget);
+    final l = tester.element(find.byType(SpeedTestView)).appLocalizations;
+    for (final step in [
+      l.delay,
+      l.download,
+      l.upload,
+    ]) {
+      expect(
+        find.descendant(of: phaseBar, matching: find.text(step)),
+        findsOneWidget,
+      );
+    }
     final protocol = tester.widget<Text>(find.text('HTTP/2 → HTTP/1.1'));
     expect(protocol.maxLines, 2);
     expect(protocol.overflow, isNot(TextOverflow.ellipsis));
     client.finish();
     await tester.pumpAndSettle();
+    expect(tester.getSize(hero).height, heroHeight);
+    expect(tester.takeException(), isNull);
     await _snapshot(tester, '.dart_tool/speed-test-long-node.png');
     await tester.pumpWidget(const SizedBox.shrink());
   });
@@ -832,16 +848,65 @@ void main() {
       );
       await tester.tap(find.textContaining('240.0').last);
       await tester.pumpAndSettle();
+      final details = find.byKey(const ValueKey('speed-record-details'));
       expect(
         find.descendant(
-          of: find.byKey(const ValueKey('speed-record-details')),
+          of: details,
           matching: find.byType(DetailRow),
         ),
-        findsNWidgets(4),
+        findsNWidgets(5),
+      );
+      final l = tester.element(details).appLocalizations;
+      final connectionsLabel = find.descendant(
+        of: details,
+        matching: find.text(l.speedTestConnections),
+      );
+      final protocolLabel = find.descendant(
+        of: details,
+        matching: find.text(l.speedTestProtocol),
+      );
+      expect(connectionsLabel, findsOneWidget);
+      expect(
+        find.descendant(
+          of: details,
+          matching: find.text(l.speedTestMultiThread),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        tester.getTopLeft(connectionsLabel).dy,
+        lessThan(tester.getTopLeft(protocolLabel).dy),
       );
       await tester.pumpWidget(const SizedBox.shrink());
     },
   );
+
+  testWidgets('record details distinguish single-thread runs', (tester) async {
+    _size(tester, 430, 1500);
+    final client = _Client();
+    addTearDown(client.dispose);
+    await tester.pumpWidget(_app(client, running: true));
+    await tester.pumpAndSettle();
+    final l = tester.element(find.byType(SpeedTestView)).appLocalizations;
+    await tester.tap(find.text(l.speedTestStart));
+    await tester.pump();
+    client.finish(streams: 1);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip(l.speedTestHistory));
+    await tester.pumpAndSettle();
+    await tester.tap(find.textContaining('240.0').last);
+    await tester.pumpAndSettle();
+    final details = find.byKey(const ValueKey('speed-record-details'));
+    expect(
+      find.descendant(
+        of: details,
+        matching: find.text(l.speedTestSingleThread),
+      ),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
 
   testWidgets(
     'gauge zeros before probing, restores download progress, and clears needle',

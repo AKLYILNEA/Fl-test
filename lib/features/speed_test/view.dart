@@ -420,7 +420,16 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
+          SpeedTestPhaseBar(
+            phase:
+                _state != null &&
+                    _state!.error.isEmpty &&
+                    (_testing || _state!.completed)
+                ? _state!.phase
+                : null,
+          ),
+          const SizedBox(height: 10),
           LayoutBuilder(
             builder: (context, constraints) => constraints.maxWidth >= 640
                 ? Row(

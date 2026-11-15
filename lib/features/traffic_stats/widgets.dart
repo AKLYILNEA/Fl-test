@@ -31,9 +31,6 @@ Color trafficUploadColor(BuildContext context) =>
 
 Color trafficDownloadColor(BuildContext context) => context.colorScheme.primary;
 
-Color trafficDirectColor(BuildContext context) =>
-    DashboardColors.of(context).complement;
-
 String trafficStatsDayKey(DateTime date) {
   final y = date.year.toString().padLeft(4, '0');
   final m = date.month.toString().padLeft(2, '0');
@@ -351,13 +348,14 @@ class TrafficStatsOverviewCard extends StatelessWidget {
     final cs = context.colorScheme;
     final upColor = trafficUploadColor(context);
     final downColor = trafficDownloadColor(context);
-    final directColor = trafficDirectColor(context);
+    final dirTotal = result.down + result.up;
+    final downPct = dirTotal > 0 ? (result.down * 100 / dirTotal).round() : 0;
+    final upPct = dirTotal > 0 ? 100 - downPct : 0;
+    final showUploadCenter = result.up > result.down;
+    final centerPct = showUploadCenter ? upPct : downPct;
+    final centerLabel = showUploadCenter ? l.upload : l.download;
     final proxyTotal = result.proxyTotal;
     final directTotal = (result.total - proxyTotal).clamp(0, result.total);
-    final splitTotal = proxyTotal + directTotal;
-    final proxyPct = splitTotal > 0
-        ? (proxyTotal * 100 / splitTotal).round()
-        : 0;
 
     return Card(
       radius: AppCorner.xl,
@@ -399,95 +397,103 @@ class TrafficStatsOverviewCard extends StatelessWidget {
               ),
               const SizedBox(width: 16),
               RingChart(
-                size: 84,
-                strokeWidth: 7.5,
-                trackColor: cs.surfaceContainerHighest,
-                total: splitTotal > 0 ? splitTotal.toDouble() : null,
+                size: 88,
+                strokeWidth: 8.5,
+                trackColor: cs.onSurface.withValues(alpha: 0.08),
+                total: dirTotal > 0 ? dirTotal.toDouble() : null,
                 segments: [
                   RingSegment(
-                    value: proxyTotal.toDouble(),
-                    color: cs.primary,
+                    value: result.down.toDouble(),
+                    color: downColor,
                   ),
                   RingSegment(
-                    value: directTotal.toDouble(),
-                    color: directColor,
+                    value: result.up.toDouble(),
+                    color: upColor,
                   ),
                 ],
-                centerChild: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '$proxyPct%',
-                      style: AppTextStyle.subheadline
-                          .of(context, emphasized: true)
-                          .toTabular,
+                centerChild: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '$centerPct%',
+                          style: AppTextStyle.subheadline
+                              .of(context, emphasized: true)
+                              .toTabular,
+                        ),
+                        Text(
+                          centerLabel,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyle.caption2
+                              .of(context)
+                              .copyWith(color: cs.onSurfaceVariant),
+                        ),
+                      ],
                     ),
-                    Text(
-                      l.proxies,
-                      style: AppTextStyle.caption2
-                          .of(context)
-                          .copyWith(color: cs.onSurfaceVariant),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _OverviewDirectionTile(
+                  icon: AppGlyphs.arrowDown,
+                  color: downColor,
+                  label: l.download,
+                  value: trafficStatsFormatBytes(result.down),
+                  percentage: '$downPct%',
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _OverviewDirectionTile(
+                  icon: AppGlyphs.arrowUp,
+                  color: upColor,
+                  label: l.upload,
+                  value: trafficStatsFormatBytes(result.up),
+                  percentage: '$upPct%',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
           Container(
             height: 0.5,
             color: cs.outlineVariant.withValues(alpha: 0.45),
           ),
-          const SizedBox(height: 14),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _OverviewMetricTile(
-                      leading: GlyphIcon(
-                        AppGlyphs.arrowDown,
-                        size: 13,
-                        color: downColor,
-                      ),
-                      label: l.download,
-                      value: trafficStatsFormatBytes(result.down),
-                    ),
-                    const SizedBox(height: 8),
-                    _OverviewMetricTile(
-                      leading: GlyphIcon(
-                        AppGlyphs.arrowUp,
-                        size: 13,
-                        color: upColor,
-                      ),
-                      label: l.upload,
-                      value: trafficStatsFormatBytes(result.up),
-                    ),
-                  ],
+          const SizedBox(height: 12),
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: _PlainTrafficMeta(
+                    label: l.proxies,
+                    value: trafficStatsFormatBytes(proxyTotal),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _OverviewMetricTile(
-                      leading: _OverviewDot(color: cs.primary),
-                      label: l.proxies,
-                      value: trafficStatsFormatBytes(proxyTotal),
-                    ),
-                    const SizedBox(height: 8),
-                    _OverviewMetricTile(
-                      leading: _OverviewDot(color: directColor),
-                      label: l.direct,
-                      value: trafficStatsFormatBytes(directTotal),
-                    ),
-                  ],
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  child: Container(
+                    width: 0.5,
+                    color: cs.outlineVariant.withValues(alpha: 0.45),
+                  ),
                 ),
-              ),
-            ],
+                Expanded(
+                  child: _PlainTrafficMeta(
+                    label: l.direct,
+                    value: trafficStatsFormatBytes(directTotal),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -495,56 +501,111 @@ class TrafficStatsOverviewCard extends StatelessWidget {
   }
 }
 
-class _OverviewDot extends StatelessWidget {
-  const _OverviewDot({required this.color});
+class _OverviewDirectionTile extends StatelessWidget {
+  const _OverviewDirectionTile({
+    required this.icon,
+    required this.color,
+    required this.label,
+    required this.value,
+    required this.percentage,
+  });
 
+  final Glyph icon;
   final Color color;
+  final String label;
+  final String value;
+  final String percentage;
 
   @override
   Widget build(BuildContext context) {
+    final cs = context.colorScheme;
     return Container(
-      width: 7,
-      height: 7,
-      decoration: ShapeDecoration(color: color, shape: AppShape.full),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: ShapeDecoration(
+        color: cs.onSurface.withValues(alpha: 0.04),
+        shape: AppShape.lg,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              GlyphIcon(icon, size: 12, color: color),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyle.footnote
+                      .of(context)
+                      .copyWith(color: cs.onSurfaceVariant),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                percentage,
+                maxLines: 1,
+                style: AppTextStyle.caption1
+                    .of(context, emphasized: true)
+                    .toTabular
+                    .copyWith(color: color),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: AlignmentDirectional.centerStart,
+            child: Text(
+              value,
+              maxLines: 1,
+              style: AppTextStyle.headline
+                  .of(context, emphasized: true)
+                  .toTabular,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
 
-class _OverviewMetricTile extends StatelessWidget {
-  const _OverviewMetricTile({
-    required this.leading,
+class _PlainTrafficMeta extends StatelessWidget {
+  const _PlainTrafficMeta({
     required this.label,
     required this.value,
   });
 
-  final Widget leading;
   final String label;
   final String value;
 
   @override
   Widget build(BuildContext context) {
     final cs = context.colorScheme;
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        SizedBox(width: 14, height: 18, child: Center(child: leading)),
-        const SizedBox(width: 6),
-        Expanded(
-          child: Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppTextStyle.footnote
-                .of(context)
-                .copyWith(color: cs.onSurfaceVariant),
-          ),
-        ),
-        const SizedBox(width: 6),
         Text(
-          value,
+          label,
           maxLines: 1,
-          style: AppTextStyle.subheadline
-              .of(context, emphasized: true)
-              .toTabular,
+          overflow: TextOverflow.ellipsis,
+          style: AppTextStyle.caption1
+              .of(context)
+              .copyWith(color: cs.onSurfaceVariant),
+        ),
+        const SizedBox(height: 2),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: AlignmentDirectional.centerStart,
+          child: Text(
+            value,
+            maxLines: 1,
+            style: AppTextStyle.subheadline
+                .of(context, emphasized: true)
+                .toTabular,
+          ),
         ),
       ],
     );

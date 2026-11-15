@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/ui/icons/icons.dart';
@@ -10,6 +12,122 @@ import 'gauge.dart';
 
 Color speedUploadColor(BuildContext context) =>
     DashboardColors.of(context).complement;
+
+class SpeedTestPhaseBar extends StatelessWidget {
+  const SpeedTestPhaseBar({super.key, this.phase});
+
+  final SpeedTestPhase? phase;
+
+  int get _currentStep => switch (phase) {
+    SpeedTestPhase.latency => 0,
+    SpeedTestPhase.download => 1,
+    SpeedTestPhase.upload => 2,
+    SpeedTestPhase.done => 3,
+    SpeedTestPhase.connecting || null => -1,
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.appLocalizations;
+    final cs = context.colorScheme;
+    final downColor = cs.primary;
+    final upColor = speedUploadColor(context);
+    final current = _currentStep;
+    final steps = [
+      (l.delay, downColor),
+      (l.download, downColor),
+      (l.upload, upColor),
+    ];
+    final idleDot = cs.onSurface.withValues(alpha: 0.22);
+    final idleLine = cs.onSurface.withValues(alpha: 0.14);
+    final idleText = cs.onSurfaceVariant.withValues(alpha: 0.72);
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final lineWidth = ((constraints.maxWidth - 210) / 2).clamp(20.0, 56.0);
+        final height = 22 * MediaQuery.textScalerOf(context).scale(1);
+        return SizedBox(
+          height: height,
+          width: double.infinity,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.center,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (var i = 0; i < steps.length; i++) ...[
+                  if (i > 0)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 220),
+                        curve: Curves.easeOutCubic,
+                        width: lineWidth,
+                        height: 2,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(1),
+                          color: current > i - 1 && i - 1 == 0
+                              ? downColor.withValues(alpha: 0.65)
+                              : current <= i - 1
+                              ? idleLine
+                              : null,
+                          gradient: current > i - 1 && i - 1 == 1
+                              ? LinearGradient(
+                                  colors: [
+                                    downColor.withValues(alpha: 0.65),
+                                    upColor.withValues(alpha: 0.65),
+                                  ],
+                                )
+                              : null,
+                        ),
+                      ),
+                    ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 220),
+                        curve: Curves.easeOutCubic,
+                        width: 7,
+                        height: 7,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: current >= i ? steps[i].$2 : idleDot,
+                          boxShadow: current == i
+                              ? [
+                                  BoxShadow(
+                                    color: steps[i].$2.withValues(alpha: 0.24),
+                                    spreadRadius: 3,
+                                  ),
+                                ]
+                              : null,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        steps[i].$1,
+                        maxLines: 1,
+                        style: AppTextStyle.footnote
+                            .of(context, emphasized: current == i)
+                            .copyWith(
+                              color: current == i
+                                  ? cs.onSurface
+                                  : current > i
+                                  ? cs.onSurface.withValues(alpha: 0.78)
+                                  : idleText,
+                            ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
 
 class SpeedTestScope extends StatelessWidget {
   const SpeedTestScope({super.key, required this.child});
