@@ -648,7 +648,7 @@ class _TrafficStatsTrendCardState extends State<TrafficStatsTrendCard> {
     );
 
     final chartArea = ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: 158),
+      constraints: const BoxConstraints(minHeight: 136),
       child: !hasAnyTraffic
           ? Center(
               child: Text(
@@ -687,7 +687,7 @@ class _TrafficStatsTrendCardState extends State<TrafficStatsTrendCard> {
                       rightPad,
                     ),
                     child: CustomPaint(
-                      size: const Size(double.infinity, 158),
+                      size: const Size(double.infinity, 136),
                       painter: _TrendBarPainter(
                         points: widget.points,
                         period: widget.period,

@@ -235,24 +235,18 @@ class _TrafficStatsViewState extends ConsumerState<TrafficStatsView>
                             children: [
                               Expanded(
                                 flex: 5,
-                                child: ConstrainedBox(
-                                  constraints: const BoxConstraints(minHeight: 238),
-                                  child: TrafficStatsOverviewCard(
-                                    result: result,
-                                    fillHeight: true,
-                                  ),
+                                child: TrafficStatsOverviewCard(
+                                  result: result,
+                                  fillHeight: true,
                                 ),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
                                 flex: 6,
-                                child: ConstrainedBox(
-                                  constraints: const BoxConstraints(minHeight: 238),
-                                  child: TrafficStatsTrendCard(
-                                    points: result.series,
-                                    period: _period,
-                                    fillHeight: true,
-                                  ),
+                                child: TrafficStatsTrendCard(
+                                  points: result.series,
+                                  period: _period,
+                                  fillHeight: true,
                                 ),
                               ),
                             ],
