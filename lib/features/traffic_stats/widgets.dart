@@ -368,53 +368,52 @@ class TrafficStatsOverviewCard extends StatelessWidget {
         children: [
           Expanded(
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   l.trafficStatsOverview,
                   style: AppTextStyle.headline.of(context, emphasized: true),
                 ),
-                const SizedBox(height: 20),
-                Expanded(
-                  child: Align(
-                    alignment: AlignmentDirectional.centerStart,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          l.trafficStatsTotal,
-                          style: AppTextStyle.footnote
+                Padding(
+                  padding: const EdgeInsets.only(top: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        l.trafficStatsTotal,
+                        style: AppTextStyle.footnote
+                            .of(context)
+                            .copyWith(color: cs.onSurfaceVariant),
+                      ),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: AlignmentDirectional.centerStart,
+                        child: Text(
+                          trafficStatsFormatBytes(result.total),
+                          style: AppTextStyle.title1
+                              .of(context, emphasized: true)
+                              .toTabular,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: AlignmentDirectional.centerStart,
+                        child: Text(
+                          '${l.proxies} ${trafficStatsFormatBytes(proxyTotal)} \u00b7 ${l.direct} ${trafficStatsFormatBytes(directTotal)}',
+                          maxLines: 1,
+                          style: AppTextStyle.caption1
                               .of(context)
+                              .toTabular
                               .copyWith(color: cs.onSurfaceVariant),
                         ),
-                        FittedBox(
-                          fit: BoxFit.scaleDown,
-                          alignment: AlignmentDirectional.centerStart,
-                          child: Text(
-                            trafficStatsFormatBytes(result.total),
-                            style: AppTextStyle.title1
-                                .of(context, emphasized: true)
-                                .toTabular,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        FittedBox(
-                          fit: BoxFit.scaleDown,
-                          alignment: AlignmentDirectional.centerStart,
-                          child: Text(
-                            '${l.proxies} ${trafficStatsFormatBytes(proxyTotal)} \u00b7 ${l.direct} ${trafficStatsFormatBytes(directTotal)}',
-                            maxLines: 1,
-                            style: AppTextStyle.caption1
-                                .of(context)
-                                .toTabular
-                                .copyWith(color: cs.onSurfaceVariant),
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
+                const SizedBox.shrink(),
               ],
             ),
           ),

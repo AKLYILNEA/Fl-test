@@ -274,24 +274,17 @@ void main() {
                 ),
               )
               .dy;
-          final statsTop = tester
-              .getTopLeft(
-                find.descendant(
+          final statsGroup = find
+              .ancestor(
+                of: find.descendant(
                   of: overview,
                   matching: find.text(l.trafficStatsTotal),
                 ),
+                matching: find.byType(Column),
               )
-              .dy;
-          final statsBottom = tester
-              .getBottomLeft(
-                find.descendant(
-                  of: overview,
-                  matching: find.byWidgetPredicate(
-                    (w) => w is Text && (w.data ?? '').contains(l.proxies),
-                  ),
-                ),
-              )
-              .dy;
+              .first;
+          final statsTop = tester.getTopLeft(statsGroup).dy;
+          final statsBottom = tester.getBottomLeft(statsGroup).dy;
           final tileTop = tester
               .getTopLeft(
                 find
