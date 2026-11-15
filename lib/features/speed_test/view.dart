@@ -327,9 +327,19 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
       color: Color.lerp(color, const Color(0xffffffff), .14)!,
       otherColor: Color.lerp(context.colorScheme.surface, color, .28)!,
     );
+    final phaseBar = SpeedTestPhaseBar(
+      phase:
+          _state != null &&
+              _state!.error.isEmpty &&
+              (_testing || _state!.completed)
+          ? _state!.phase
+          : null,
+    );
     final panel = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        phaseBar,
+        const SizedBox(height: 14),
         FilledButton(
           onPressed: !_loaded || _confirming
               ? null
@@ -420,16 +430,7 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
               ),
             ],
           ),
-          const SizedBox(height: 14),
-          SpeedTestPhaseBar(
-            phase:
-                _state != null &&
-                    _state!.error.isEmpty &&
-                    (_testing || _state!.completed)
-                ? _state!.phase
-                : null,
-          ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 18),
           LayoutBuilder(
             builder: (context, constraints) => constraints.maxWidth >= 640
                 ? Row(
@@ -441,7 +442,7 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
                   )
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [gauge, const SizedBox(height: 12), panel],
+                    children: [gauge, const SizedBox(height: 10), panel],
                   ),
           ),
           const SizedBox(height: 16),

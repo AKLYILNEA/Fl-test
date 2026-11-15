@@ -600,6 +600,14 @@ void main() {
     final phaseBar = find.byType(SpeedTestPhaseBar);
     expect(phaseBar, findsOneWidget);
     final l = tester.element(find.byType(SpeedTestView)).appLocalizations;
+    expect(
+      tester.getTopLeft(phaseBar).dy,
+      greaterThan(tester.getBottomLeft(find.byType(SpeedTestGauge)).dy),
+    );
+    expect(
+      tester.getBottomLeft(phaseBar).dy,
+      lessThan(tester.getTopLeft(find.text(l.speedTestStop)).dy),
+    );
     for (final step in [
       l.delay,
       l.download,
