@@ -257,10 +257,8 @@ class _SpeedTestGaugeState extends State<SpeedTestGauge>
     final l = context.appLocalizations;
     final phase = _phase;
     final waiting = widget.waiting;
-    final probing =
-        waiting &&
-        phase != SpeedTestPhase.connecting &&
-        phase != SpeedTestPhase.latency;
+    final showSpinner =
+        waiting && phase != SpeedTestPhase.latency;
     final label = waiting
         ? switch (phase) {
             SpeedTestPhase.connecting => l.speedTestConnecting,
@@ -331,7 +329,7 @@ class _SpeedTestGaugeState extends State<SpeedTestGauge>
                                 mainAxisSize: MainAxisSize.min,
                                 spacing: 5,
                                 children: [
-                                  if (probing) const ActivityIndicator(size: 12),
+                                  if (showSpinner) const ActivityIndicator(size: 12),
                                   Text(
                                     label,
                                     maxLines: 1,

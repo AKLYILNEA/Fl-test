@@ -368,49 +368,51 @@ class TrafficStatsOverviewCard extends StatelessWidget {
         children: [
           Expanded(
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   l.trafficStatsOverview,
                   style: AppTextStyle.headline.of(context, emphasized: true),
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        l.trafficStatsTotal,
-                        style: AppTextStyle.footnote
-                            .of(context)
-                            .copyWith(color: cs.onSurfaceVariant),
-                      ),
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: AlignmentDirectional.centerStart,
-                        child: Text(
-                          trafficStatsFormatBytes(result.total),
-                          style: AppTextStyle.title1
-                              .of(context, emphasized: true)
-                              .toTabular,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: AlignmentDirectional.centerStart,
-                        child: Text(
-                          '${l.proxies} ${trafficStatsFormatBytes(proxyTotal)} \u00b7 ${l.direct} ${trafficStatsFormatBytes(directTotal)}',
-                          maxLines: 1,
-                          style: AppTextStyle.caption1
+                const SizedBox(height: 20),
+                Expanded(
+                  child: Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          l.trafficStatsTotal,
+                          style: AppTextStyle.footnote
                               .of(context)
-                              .toTabular
                               .copyWith(color: cs.onSurfaceVariant),
                         ),
-                      ),
-                    ],
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: AlignmentDirectional.centerStart,
+                          child: Text(
+                            trafficStatsFormatBytes(result.total),
+                            style: AppTextStyle.title1
+                                .of(context, emphasized: true)
+                                .toTabular,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: AlignmentDirectional.centerStart,
+                          child: Text(
+                            '${l.proxies} ${trafficStatsFormatBytes(proxyTotal)} \u00b7 ${l.direct} ${trafficStatsFormatBytes(directTotal)}',
+                            maxLines: 1,
+                            style: AppTextStyle.caption1
+                                .of(context)
+                                .toTabular
+                                .copyWith(color: cs.onSurfaceVariant),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -423,8 +425,8 @@ class TrafficStatsOverviewCard extends StatelessWidget {
               fit: BoxFit.contain,
               child: MediaQuery.withNoTextScaling(
                 child: RingChart(
-                  size: 112,
-                  strokeWidth: 9.5,
+                  size: 104,
+                  strokeWidth: 8.8,
                   trackColor: DashboardColors.of(context).track,
                   total: dirTotal > 0 ? dirTotal.toDouble() : null,
                   segments: [
@@ -449,7 +451,7 @@ class TrafficStatsOverviewCard extends StatelessWidget {
                             style: AppTextStyle.headline
                                 .of(context, emphasized: true)
                                 .toTabular
-                                .copyWith(fontSize: 16, height: 1.15),
+                                .copyWith(fontSize: 15, height: 1.15),
                           ),
                           Text(
                             centerLabel,
@@ -458,7 +460,7 @@ class TrafficStatsOverviewCard extends StatelessWidget {
                             style: AppTextStyle.caption2
                                 .of(context)
                                 .copyWith(
-                                  fontSize: 11.5,
+                                  fontSize: 11,
                                   height: 1.2,
                                   color: cs.onSurfaceVariant,
                                 ),

@@ -64,6 +64,7 @@ class _Client implements SpeedTestClient {
   final queries = <String>[];
   final probed = <String>[];
   SpeedTestSettings? lastSettings;
+  Completer<SpeedTestState>? probeCompleter;
   Completer<SpeedTestState>? run;
   String runId = '';
   bool fail = false;
@@ -77,6 +78,9 @@ class _Client implements SpeedTestClient {
   ) async {
     probed.add(proxy);
     lastSettings = settings;
+    if (probeCompleter != null && !probeCompleter!.isCompleted) {
+      return probeCompleter!.future;
+    }
     return SpeedTestState(
       id: id,
       server: const SpeedTestServer(
@@ -1018,6 +1022,65 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('240.0'), findsOneWidget);
       expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
+  testWidgets(
+    'start button stays disabled while probing and gauge shows spinner while connecting',
+    (tester) async {
+      _size(tester, 430, 800);
+      final client = _Client()..probeCompleter = Completer<SpeedTestState>();
+      addTearDown(client.dispose);
+      await tester.pumpWidget(_app(client));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      final l = tester.element(find.byType(SpeedTestView)).appLocalizations;
+      final startButton = tester.widget<FilledButton>(
+        find.byType(FilledButton),
+      );
+      expect(startButton.onPressed, isNull);
+      expect(
+        find.descendant(
+          of: find.byType(SpeedTestGauge),
+          matching: find.byType(app_ui.ActivityIndicator),
+        ),
+        findsOneWidget,
+      );
+
+      client.probeCompleter!.complete(const SpeedTestState(id: 'probe'));
+      await tester.pumpAndSettle();
+
+      expect(
+        tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
+        isNotNull,
+      );
+
+      await tester.tap(find.text(l.speedTestStart));
+      await tester.pump();
+      client.events.add(
+        SpeedTestState(id: client.runId, phase: SpeedTestPhase.connecting),
+      );
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(
+        find.descendant(
+          of: find.byType(SpeedTestGauge),
+          matching: find.text(l.speedTestConnecting),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.byType(SpeedTestGauge),
+          matching: find.byType(app_ui.ActivityIndicator),
+        ),
+        findsOneWidget,
+      );
+
+      client.finish();
+      await tester.pumpAndSettle();
       await tester.pumpWidget(const SizedBox.shrink());
     },
   );

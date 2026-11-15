@@ -342,10 +342,10 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
         phaseBar,
         const SizedBox(height: 14),
         FilledButton(
-          onPressed: !_loaded || _confirming
-              ? null
-              : _testing
+          onPressed: _testing
               ? _stop
+              : !_loaded || _probing || _confirming
+              ? null
               : _start,
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),

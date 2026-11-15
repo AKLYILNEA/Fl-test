@@ -256,13 +256,59 @@ void main() {
         expect(find.byType(TrafficStatsOverviewCard), findsOneWidget);
         expect(find.byType(TrafficStatsTrendCard), findsOneWidget);
         if (size.width >= 760) {
+          final overview = find.byType(TrafficStatsOverviewCard);
           expect(
-            tester.getSize(find.byType(TrafficStatsOverviewCard)).height,
+            tester.getSize(overview).height,
             closeTo(
               tester.getSize(find.byType(TrafficStatsTrendCard)).height,
               0.01,
             ),
           );
+          final ovCtx = tester.element(overview);
+          final l = ovCtx.appLocalizations;
+          final titleBottom = tester
+              .getBottomLeft(
+                find.descendant(
+                  of: overview,
+                  matching: find.text(l.trafficStatsOverview),
+                ),
+              )
+              .dy;
+          final statsTop = tester
+              .getTopLeft(
+                find.descendant(
+                  of: overview,
+                  matching: find.text(l.trafficStatsTotal),
+                ),
+              )
+              .dy;
+          final statsBottom = tester
+              .getBottomLeft(
+                find.descendant(
+                  of: overview,
+                  matching: find.byWidgetPredicate(
+                    (w) => w is Text && (w.data ?? '').contains(l.proxies),
+                  ),
+                ),
+              )
+              .dy;
+          final tileTop = tester
+              .getTopLeft(
+                find
+                    .descendant(
+                      of: overview,
+                      matching: find.byWidgetPredicate(
+                        (w) =>
+                            w is Container &&
+                            w.decoration is ShapeDecoration &&
+                            (w.decoration as ShapeDecoration).shape ==
+                                app_ui.AppShape.lg,
+                      ),
+                    )
+                    .first,
+              )
+              .dy;
+          expect(statsTop - titleBottom, closeTo(tileTop - statsBottom, 1.0));
         }
         final scrollable = find
             .descendant(
