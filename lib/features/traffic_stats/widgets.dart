@@ -405,7 +405,7 @@ class TrafficStatsOverviewCard extends StatelessWidget {
               RingChart(
                 size: 88,
                 strokeWidth: 8.5,
-                trackColor: cs.onSurface.withValues(alpha: 0.08),
+                trackColor: DashboardColors.of(context).track,
                 total: dirTotal > 0 ? dirTotal.toDouble() : null,
                 segments: [
                   RingSegment(
@@ -732,7 +732,7 @@ class _TrafficStatsTrendCardState extends State<TrafficStatsTrendCard> {
                     vertical: 3,
                   ),
                   decoration: ShapeDecoration(
-                    color: cs.surfaceContainerHighest,
+                    color: DashboardColors.of(context).tone,
                     shape: AppShape.full,
                   ),
                   child: Text(
@@ -1179,7 +1179,7 @@ class TrafficStatsRuleHitsSection extends StatelessWidget {
                     hitCountText: l.trafficStatsHitCount(rules[i].hits),
                     defaultBadge: l.defaultText,
                     fallbackRuleBadge: l.rule,
-                    trackColor: cs.surfaceContainerHighest,
+                    trackColor: DashboardColors.of(context).track,
                   ),
               ],
             ),
@@ -1501,7 +1501,7 @@ class TrafficStatsRankingSection extends StatelessWidget {
                         height: 4,
                         width: double.infinity,
                         child: ColoredBox(
-                          color: cs.surfaceContainerHighest,
+                          color: DashboardColors.of(context).track,
                           child: Align(
                             alignment: AlignmentDirectional.centerStart,
                             child: FractionallySizedBox(

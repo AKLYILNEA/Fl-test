@@ -36,8 +36,9 @@ class SpeedTestPhaseBar extends StatelessWidget {
       (l.download, downColor),
       (l.upload, upColor),
     ];
-    final idleDot = cs.onSurface.withValues(alpha: 0.22);
-    final idleLine = cs.onSurface.withValues(alpha: 0.14);
+    final track = DashboardColors.of(context).track;
+    final idleDot = track;
+    final idleLine = track;
     final idleText = cs.onSurfaceVariant.withValues(alpha: 0.72);
 
     return LayoutBuilder(

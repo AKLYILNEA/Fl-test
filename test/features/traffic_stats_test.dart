@@ -532,6 +532,10 @@ void main() {
           DashboardColors.of(overviewCtx).tone,
         );
       }
+      final overviewRing = tester.widget<RingChart>(
+        find.descendant(of: overview, matching: find.byType(RingChart)),
+      );
+      expect(overviewRing.trackColor, DashboardColors.of(overviewCtx).track);
       expect(
         find.descendant(
           of: overview,

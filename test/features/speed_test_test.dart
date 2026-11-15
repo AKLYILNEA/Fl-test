@@ -641,6 +641,21 @@ void main() {
         DashboardColors.of(viewCtx).tone,
       );
     }
+    final idlePhaseDecorations = tester
+        .widgetList<DecoratedBox>(
+          find.descendant(
+            of: phaseBar,
+            matching: find.byWidgetPredicate(
+              (w) =>
+                  w is DecoratedBox &&
+                  w.decoration is BoxDecoration &&
+                  (w.decoration as BoxDecoration).color ==
+                      DashboardColors.of(viewCtx).track,
+            ),
+          ),
+        )
+        .toList();
+    expect(idlePhaseDecorations, hasLength(2));
     client.finish();
     await tester.pumpAndSettle();
     expect(tester.getSize(hero).height, heroHeight);

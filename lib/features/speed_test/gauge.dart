@@ -3,6 +3,7 @@ import 'dart:math';
 import 'dart:ui' as ui;
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/models/models.dart';
+import 'package:fl_clash/views/dashboard/style.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/widgets.dart';
 
@@ -303,9 +304,7 @@ class _SpeedTestGaugeState extends State<SpeedTestGauge>
                       fraction: fraction,
                       color: widget.color,
                       startColor: widget.otherColor,
-                      trackColor: context.colorScheme.onSurface.withValues(
-                        alpha: .06,
-                      ),
+                      trackColor: DashboardColors.of(context).track,
                       needleColor: const Color(0xff8e8e93),
                       labelStyle: AppTextStyle.body
                           .of(context)
