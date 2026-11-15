@@ -504,10 +504,24 @@ void main() {
       );
       expect(
         find.descendant(of: overview, matching: find.text('80%')),
-        findsNWidgets(2),
+        findsOneWidget,
       );
       expect(
         find.descendant(of: overview, matching: find.text('20%')),
+        findsNothing,
+      );
+      expect(
+        find.descendant(
+          of: overview,
+          matching: find.text(trafficStatsFormatBytes(sample.down)),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: overview,
+          matching: find.text(trafficStatsFormatBytes(sample.up)),
+        ),
         findsOneWidget,
       );
       expect(
@@ -536,12 +550,9 @@ void main() {
         find.descendant(of: overview, matching: find.byType(RingChart)),
       );
       expect(overviewRing.trackColor, DashboardColors.of(overviewCtx).track);
-      final overviewDivider = tester.widget<app_ui.Divider>(
-        find.descendant(of: overview, matching: find.byType(app_ui.Divider)),
-      );
       expect(
-        overviewDivider.thickness,
-        app_ui.Divider.separatorThicknessOf(overviewCtx),
+        find.descendant(of: overview, matching: find.byType(app_ui.Divider)),
+        findsNothing,
       );
       expect(
         find.descendant(

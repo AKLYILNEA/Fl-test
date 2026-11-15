@@ -362,6 +362,119 @@ class TrafficStatsOverviewCard extends StatelessWidget {
     final proxyTotal = result.proxyTotal;
     final directTotal = (result.total - proxyTotal).clamp(0, result.total);
 
+    final topRow = IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l.trafficStatsOverview,
+                  style: AppTextStyle.headline.of(context, emphasized: true),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        l.trafficStatsTotal,
+                        style: AppTextStyle.footnote
+                            .of(context)
+                            .copyWith(color: cs.onSurfaceVariant),
+                      ),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: AlignmentDirectional.centerStart,
+                        child: Text(
+                          trafficStatsFormatBytes(result.total),
+                          style: AppTextStyle.title1
+                              .of(context, emphasized: true)
+                              .toTabular,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: AlignmentDirectional.centerStart,
+                        child: Text(
+                          '${l.proxies} ${trafficStatsFormatBytes(proxyTotal)} \u00b7 ${l.direct} ${trafficStatsFormatBytes(directTotal)}',
+                          maxLines: 1,
+                          style: AppTextStyle.caption1
+                              .of(context)
+                              .toTabular
+                              .copyWith(color: cs.onSurfaceVariant),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 14),
+          AspectRatio(
+            aspectRatio: 1,
+            child: FittedBox(
+              fit: BoxFit.contain,
+              child: MediaQuery.withNoTextScaling(
+                child: RingChart(
+                  size: 112,
+                  strokeWidth: 9.5,
+                  trackColor: DashboardColors.of(context).track,
+                  total: dirTotal > 0 ? dirTotal.toDouble() : null,
+                  segments: [
+                    RingSegment(
+                      value: result.down.toDouble(),
+                      color: downColor,
+                    ),
+                    RingSegment(
+                      value: result.up.toDouble(),
+                      color: upColor,
+                    ),
+                  ],
+                  centerChild: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '$centerPct%',
+                            style: AppTextStyle.headline
+                                .of(context, emphasized: true)
+                                .toTabular
+                                .copyWith(fontSize: 16, height: 1.15),
+                          ),
+                          Text(
+                            centerLabel,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyle.caption2
+                                .of(context)
+                                .copyWith(
+                                  fontSize: 11.5,
+                                  height: 1.2,
+                                  color: cs.onSurfaceVariant,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
     return Card(
       radius: AppCorner.xl,
       padding: const EdgeInsets.all(20),
@@ -369,83 +482,8 @@ class TrafficStatsOverviewCard extends StatelessWidget {
         mainAxisSize: fillHeight ? MainAxisSize.max : MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            l.trafficStatsOverview,
-            style: AppTextStyle.headline.of(context, emphasized: true),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l.trafficStatsTotal,
-                      style: AppTextStyle.footnote
-                          .of(context)
-                          .copyWith(color: cs.onSurfaceVariant),
-                    ),
-                    const SizedBox(height: 4),
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: AlignmentDirectional.centerStart,
-                      child: Text(
-                        trafficStatsFormatBytes(result.total),
-                        style: AppTextStyle.title1
-                            .of(context, emphasized: true)
-                            .toTabular,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 16),
-              RingChart(
-                size: 88,
-                strokeWidth: 8.5,
-                trackColor: DashboardColors.of(context).track,
-                total: dirTotal > 0 ? dirTotal.toDouble() : null,
-                segments: [
-                  RingSegment(
-                    value: result.down.toDouble(),
-                    color: downColor,
-                  ),
-                  RingSegment(
-                    value: result.up.toDouble(),
-                    color: upColor,
-                  ),
-                ],
-                centerChild: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          '$centerPct%',
-                          style: AppTextStyle.subheadline
-                              .of(context, emphasized: true)
-                              .toTabular,
-                        ),
-                        Text(
-                          centerLabel,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTextStyle.caption2
-                              .of(context)
-                              .copyWith(color: cs.onSurfaceVariant),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
+          if (fillHeight) Expanded(child: topRow) else topRow,
+          const SizedBox(height: 20),
           Row(
             children: [
               Expanded(
@@ -454,7 +492,6 @@ class TrafficStatsOverviewCard extends StatelessWidget {
                   color: downColor,
                   label: l.download,
                   value: trafficStatsFormatBytes(result.down),
-                  percentage: '$downPct%',
                 ),
               ),
               const SizedBox(width: 10),
@@ -464,29 +501,9 @@ class TrafficStatsOverviewCard extends StatelessWidget {
                   color: upColor,
                   label: l.upload,
                   value: trafficStatsFormatBytes(result.up),
-                  percentage: '$upPct%',
                 ),
               ),
             ],
-          ),
-          const SizedBox(height: 16),
-          if (fillHeight) const Spacer(),
-          Divider(height: 1, thickness: Divider.separatorThicknessOf(context)),
-          const SizedBox(height: 12),
-          Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: AlignmentDirectional.centerStart,
-              child: Text(
-                '${l.proxies} ${trafficStatsFormatBytes(proxyTotal)} \u00b7 ${l.direct} ${trafficStatsFormatBytes(directTotal)}',
-                maxLines: 1,
-                style: AppTextStyle.caption1
-                    .of(context)
-                    .toTabular
-                    .copyWith(color: cs.onSurfaceVariant),
-              ),
-            ),
           ),
         ],
       ),
@@ -500,14 +517,12 @@ class _OverviewDirectionTile extends StatelessWidget {
     required this.color,
     required this.label,
     required this.value,
-    required this.percentage,
   });
 
   final Glyph icon;
   final Color color;
   final String label;
   final String value;
-  final String percentage;
 
   @override
   Widget build(BuildContext context) {
@@ -534,15 +549,6 @@ class _OverviewDirectionTile extends StatelessWidget {
                       .of(context)
                       .copyWith(color: cs.onSurfaceVariant),
                 ),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                percentage,
-                maxLines: 1,
-                style: AppTextStyle.caption1
-                    .of(context, emphasized: true)
-                    .toTabular
-                    .copyWith(color: color),
               ),
             ],
           ),
