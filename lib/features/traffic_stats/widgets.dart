@@ -371,9 +371,14 @@ class TrafficStatsOverviewCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  l.trafficStatsOverview,
-                  style: AppTextStyle.headline.of(context, emphasized: true),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: AlignmentDirectional.centerStart,
+                  child: Text(
+                    l.trafficStatsOverview,
+                    maxLines: 1,
+                    style: AppTextStyle.headline.of(context, emphasized: true),
+                  ),
                 ),
                 Padding(
                   padding: const EdgeInsets.only(top: 20),
@@ -381,17 +386,23 @@ class TrafficStatsOverviewCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        l.trafficStatsTotal,
-                        style: AppTextStyle.footnote
-                            .of(context)
-                            .copyWith(color: cs.onSurfaceVariant),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: AlignmentDirectional.centerStart,
+                        child: Text(
+                          l.trafficStatsTotal,
+                          maxLines: 1,
+                          style: AppTextStyle.footnote
+                              .of(context)
+                              .copyWith(color: cs.onSurfaceVariant),
+                        ),
                       ),
                       FittedBox(
                         fit: BoxFit.scaleDown,
                         alignment: AlignmentDirectional.centerStart,
                         child: Text(
                           trafficStatsFormatBytes(result.total),
+                          maxLines: 1,
                           style: AppTextStyle.title1
                               .of(context, emphasized: true)
                               .toTabular,
