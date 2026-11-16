@@ -1256,6 +1256,8 @@ void main() {
 
       await tester.tap(find.text('Open'));
       await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pumpAndSettle();
 
       expect(find.byType(app_ui.NestedPagedSheet), findsOneWidget);
       expect(find.byType(SpeedTestView), findsOneWidget);
