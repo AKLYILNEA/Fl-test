@@ -176,6 +176,10 @@ class _AboutViewState extends ConsumerState<AboutView>
     );
     _measureHero();
 
+    final barBackgroundColor = SurfaceLevel.page
+        .colorOf(colorScheme)
+        .withValues(alpha: barTitleAlpha);
+
     return Scaffold(
       isLoading: isLoading,
       title: appLocalizations.about,
@@ -183,7 +187,7 @@ class _AboutViewState extends ConsumerState<AboutView>
         opacity: barTitleAlpha,
         child: Text(appLocalizations.about),
       ),
-      backgroundColor: collapsed ? null : Colors.transparent,
+      backgroundColor: collapsed ? null : barBackgroundColor,
       body: Stack(
         children: [
           Positioned.fill(

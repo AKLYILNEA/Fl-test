@@ -170,7 +170,7 @@ class MiuixBgEffectController extends ChangeNotifier {
   ui.FragmentShader? _titleShader;
 
   bool _disposed = false;
-  bool _playing = true;
+  bool _playing = false;
   double _animTime = 0.0;
   double _lastTickSeconds = 0.0;
   double _lastEmitSeconds = -1.0;
@@ -239,11 +239,11 @@ class MiuixBgEffectController extends ChangeNotifier {
     if (_lastTickSeconds == 0.0) {
       _lastTickSeconds = nowSeconds;
     }
-    final dt = nowSeconds - _lastTickSeconds;
-    _lastTickSeconds = nowSeconds;
     if (nowSeconds - _lastEmitSeconds < _minFrameDelta && _lastEmitSeconds >= 0) {
       return;
     }
+    final dt = nowSeconds - _lastTickSeconds;
+    _lastTickSeconds = nowSeconds;
     _lastEmitSeconds = nowSeconds;
 
     _animTime += dt;

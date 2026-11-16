@@ -181,22 +181,12 @@ vec3 xyz2rgb(vec3 xyz) {
     return clamp(vec3(r, g, b), 0.0, 1.0);
 }
 
-vec3 labNormalized(vec3 lab) {
-    return vec3(lab.r / 100.0, (lab.g + 128.0) / 255.0, (lab.b + 128.0) / 255.0);
-}
-vec3 labDenormalized(vec3 lab) {
-    return vec3(lab.r * 100.0, lab.g * 255.0 - 128.0, lab.b * 255.0 - 128.0);
-}
-
-vec3 blendLinearLightLab(vec3 src, vec3 dst) {
-    vec3 labSrc = labNormalized(xyz2lab(rgb2xyz(src)));
-    vec3 labDst = labNormalized(xyz2lab(rgb2xyz(dst)));
-    vec3 blended = vec3(
-        blendLinearLightCh(labDst.r, labSrc.r),
-        blendLinearLightCh(labDst.g, labSrc.g),
-        blendLinearLightCh(labDst.b, labSrc.b)
-    );
-    return xyz2rgb(lab2xyz(labDenormalized(blended)));
+// Color mapping in Lab space matching BlurBlendMode.Lab (mode 106 in Miuix Shaders.kt):
+// rescales L* into [m*100, n*100] while preserving chromatic hue & saturation.
+vec3 labColor(vec3 c, float m, float n) {
+    vec3 lab = xyz2lab(rgb2xyz(clamp(c, 0.0, 1.0)));
+    lab.r = (n - m) * lab.r + m * 100.0;
+    return xyz2rgb(lab2xyz(lab));
 }
 
 void main() {
@@ -211,11 +201,11 @@ void main() {
     if (uIsDark > 0.5) {
         bg = blendColorDodge(bg, vec3(0.63137), 0.90196);
         bg = blendLinearLight(bg, vec3(0.90196), 0.30196);
-        bg = blendLinearLightLab(vec3(0.10196, 0.96078, 0.0), bg);
+        bg = labColor(bg, 0.10196, 0.96078);
     } else {
         bg = blendColorBurn(bg, vec3(0.29020), 0.80000);
         bg = blendLinearLight(bg, vec3(0.30980), 1.00000);
-        bg = blendLinearLightLab(vec3(0.10196, 0.94902, 0.0), bg);
+        bg = labColor(bg, 0.10196, 0.94902);
     }
 
     float a = clamp(uAlphaMulti, 0.0, 1.0);
