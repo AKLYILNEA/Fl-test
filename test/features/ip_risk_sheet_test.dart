@@ -525,4 +525,63 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     },
   );
+
+  testWidgets(
+    'location card stacks country and region cleanly with standalone ASN pill',
+    (tester) async {
+      const longRisk = IpRisk(
+        ip: '58.247.1.2',
+        score: 10,
+        level: IpRiskLevel.low,
+        country: 'China',
+        countryCode: 'CN',
+        region: 'Shanghai',
+        city: 'Hongkou (Hongkou Qu)',
+        organization: 'Shanghai Information Network Co., Ltd.',
+        asn: 'AS4811',
+        isp: 'China Unicom CHINA169 Zhejiang Province network',
+      );
+      await tester.pumpWidget(
+        TestApp(
+          locale: const Locale('en'),
+          overrides: [
+            ipRiskProvider(longRisk.ip).overrideWith((_) async => longRisk),
+          ],
+          child: const IpRiskSheet(ip: '58.247.1.2'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final sheetCtx = tester.element(find.byType(IpRiskSheet));
+      expect(find.text('Shanghai · Hongkou (Hongkou Qu)'), findsOneWidget);
+      expect(find.text('AS4811'), findsOneWidget);
+      expect(
+        find.text('Shanghai Information Network Co., Ltd.'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('· AS4811'), findsNothing);
+      final asnBox = tester.widget<DecoratedBox>(
+        find
+            .ancestor(
+              of: find.text('AS4811'),
+              matching: find.byType(DecoratedBox),
+            )
+            .first,
+      );
+      expect(
+        (asnBox.decoration as ShapeDecoration).color,
+        DashboardColors.of(sheetCtx).tone,
+      );
+      final countryFinder = find.byWidgetPredicate(
+        (w) => w is app_ui.EmojiText && w.text == '🇨🇳 China',
+      );
+      expect(countryFinder, findsOneWidget);
+      expect(find.byType(app_ui.Divider), findsNWidgets(2));
+      expect(
+        tester.getTopLeft(find.text('Shanghai · Hongkou (Hongkou Qu)')).dy,
+        greaterThan(tester.getTopLeft(countryFinder).dy),
+      );
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
 }

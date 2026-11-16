@@ -449,18 +449,36 @@ class TrafficStatsOverviewCard extends StatelessWidget {
                               .toTabular,
                         ),
                       ),
-                      const SizedBox(height: 2),
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: AlignmentDirectional.centerStart,
-                        child: Text(
-                          '${l.download} ${trafficStatsFormatBytes(result.down)} \u00b7 ${l.upload} ${trafficStatsFormatBytes(result.up)}',
-                          maxLines: 1,
-                          style: AppTextStyle.caption1
-                              .of(context)
-                              .toTabular
-                              .copyWith(color: cs.onSurfaceVariant),
-                        ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: [
+                          for (final dir in [
+                            (arrow: '\u2193', bytes: result.down),
+                            (arrow: '\u2191', bytes: result.up),
+                          ])
+                            DecoratedBox(
+                              decoration: ShapeDecoration(
+                                color: DashboardColors.of(context).tone,
+                                shape: AppShape.full,
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
+                                child: Text(
+                                  '${dir.arrow} ${trafficStatsFormatBytes(dir.bytes)}',
+                                  maxLines: 1,
+                                  style: AppTextStyle.caption1
+                                      .of(context)
+                                      .toTabular
+                                      .copyWith(color: cs.onSurfaceVariant),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ],
                   ),

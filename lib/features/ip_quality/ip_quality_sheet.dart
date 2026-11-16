@@ -4,6 +4,7 @@ import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/common/ip.dart';
 import 'package:fl_clash/providers/config.dart';
 import 'package:fl_clash/ui/icons/icons.dart';
+import 'package:fl_clash/views/dashboard/style.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -300,6 +301,7 @@ class _LocationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = context.appLocalizations;
+    final cs = context.colorScheme;
     final country = [
       if (risk.countryCode.isNotEmpty) risk.countryCode.countryFlagEmoji,
       risk.country.isNotEmpty ? risk.country : risk.countryCode,
@@ -307,35 +309,77 @@ class _LocationCard extends StatelessWidget {
     final place = [
       risk.region,
       risk.city,
-    ].where((s) => s.isNotEmpty).toSet().join(' · ');
-    final owner = [
-      risk.organization,
-      risk.asn,
-    ].where((s) => s.isNotEmpty).join(' · ');
+    ].where((s) => s.isNotEmpty).toSet().join(' \u00b7 ');
+    final hasLocation = country.isNotEmpty || place.isNotEmpty;
+    final showAsnPill = hasLocation && risk.asn.isNotEmpty;
+    final owner = showAsnPill
+        ? risk.organization
+        : [
+            risk.organization,
+            risk.asn,
+          ].where((s) => s.isNotEmpty).join(' \u00b7 ');
     final rows = <Widget>[
-      if (country.isNotEmpty || place.isNotEmpty)
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final a = _value(context, l.ipRiskLocation, country, emoji: true);
-            final b = _value(context, l.ipRiskCity, place);
-            if (country.isEmpty) return b;
-            if (place.isEmpty) return a;
-            if (constraints.maxWidth < 320 ||
-                MediaQuery.textScalerOf(context).scale(16) > 22) {
-              return Column(
+      if (hasLocation)
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [a, const SizedBox(height: 18), b],
-              );
-            }
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(child: a),
-                const SizedBox(width: 20),
-                Expanded(child: b),
-              ],
-            );
-          },
+                children: [
+                  Text(
+                    country.isNotEmpty ? l.ipRiskLocation : l.ipRiskCity,
+                    style: AppTextStyle.footnote
+                        .of(context)
+                        .copyWith(color: cs.onSurfaceVariant),
+                  ),
+                  if (country.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    EmojiText(
+                      country,
+                      style: AppTextStyle.headline.of(
+                        context,
+                        emphasized: true,
+                      ),
+                    ),
+                  ],
+                  if (place.isNotEmpty) ...[
+                    SizedBox(height: country.isNotEmpty ? 4 : 6),
+                    SelectableText(
+                      place,
+                      style: country.isNotEmpty
+                          ? AppTextStyle.subheadline
+                                .of(context)
+                                .copyWith(color: cs.onSurfaceVariant)
+                          : AppTextStyle.body.of(context, emphasized: true),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            if (showAsnPill) ...[
+              const SizedBox(width: 12),
+              DecoratedBox(
+                decoration: ShapeDecoration(
+                  color: DashboardColors.of(context).tone,
+                  shape: AppShape.full,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 3,
+                  ),
+                  child: Text(
+                    risk.asn,
+                    style: AppTextStyle.footnote
+                        .of(context, emphasized: true)
+                        .toTabular
+                        .copyWith(color: cs.onSurfaceVariant),
+                  ),
+                ),
+              ),
+            ],
+          ],
         ),
       if (owner.isNotEmpty) _value(context, l.operatorOrAsn, owner),
       if (risk.isp.isNotEmpty && risk.isp != risk.organization)
@@ -351,7 +395,14 @@ class _LocationCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           for (final (index, row) in rows.indexed) ...[
-            if (index > 0) const SizedBox(height: 20),
+            if (index > 0) ...[
+              const SizedBox(height: 14),
+              Divider(
+                height: 1,
+                thickness: Divider.separatorThicknessOf(context),
+              ),
+              const SizedBox(height: 14),
+            ],
             row,
           ],
         ],

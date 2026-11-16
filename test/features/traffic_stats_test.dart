@@ -678,15 +678,25 @@ void main() {
         tester.widget<Text>(proxyValueFinder).style?.fontSize,
         app_ui.AppTextStyle.subheadline.size,
       );
-      expect(
-        find.descendant(
+      for (final pillText in [
+        '\u2193 ${trafficStatsFormatBytes(sample.down)}',
+        '\u2191 ${trafficStatsFormatBytes(sample.up)}',
+      ]) {
+        final pillTextFinder = find.descendant(
           of: overview,
-          matching: find.text(
-            '${l.download} ${trafficStatsFormatBytes(sample.down)} \u00b7 ${l.upload} ${trafficStatsFormatBytes(sample.up)}',
-          ),
-        ),
-        findsOneWidget,
-      );
+          matching: find.text(pillText),
+        );
+        expect(pillTextFinder, findsOneWidget);
+        final pillBox = tester.widget<DecoratedBox>(
+          find
+              .ancestor(of: pillTextFinder, matching: find.byType(DecoratedBox))
+              .first,
+        );
+        expect(
+          (pillBox.decoration as ShapeDecoration).color,
+          DashboardColors.of(overviewCtx).tone,
+        );
+      }
       expect(tester.takeException(), isNull);
 
       const directHeavy = TrafficStatsResult(
