@@ -232,69 +232,73 @@ class _AboutViewState extends ConsumerState<AboutView>
                     ),
                   ),
                 ),
-                SliverPadding(
-                  padding: EdgeInsets.fromLTRB(
-                    16,
-                    12,
-                    16,
-                    32 + context.bottomInset,
-                  ),
-                  sliver: SliverList.list(
-                    children: [
-                      MiuixFrostedSection(
-                        title: appLocalizations.more,
-                        items: [
-                          _buildLinkItem(
-                            glyph: AppGlyphs.code,
-                            title: appLocalizations.project,
-                            url: 'https://github.com/aaANDkk/FlClash-Myui',
-                            label: 'github.com/aaANDkk/FlClash-Myui',
-                          ),
-                          _buildLinkItem(
-                            glyph: AppGlyphs.cpu,
-                            title: appLocalizations.core,
-                            url:
-                                'https://github.com/chen08209/Clash.Meta/tree/FlClash',
-                            label: 'github.com/chen08209/Clash.Meta',
-                          ),
-                          _buildLinkItem(
-                            glyph: AppGlyphs.send,
-                            title: 'Telegram',
-                            url: 'https://t.me/FlClash',
-                            label: 't.me/FlClash',
-                          ),
-                        ],
-                      ),
-                      MiuixFrostedSection(
-                        title: appLocalizations.otherContributors,
-                        items: [
-                          for (final contributor in _contributors)
-                            ListItem(
-                              leading: Container(
-                                width: 40,
-                                height: 40,
-                                foregroundDecoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  image: DecorationImage(
-                                    image: AssetImage(contributor.avatar),
-                                    fit: BoxFit.cover,
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      16,
+                      12,
+                      16,
+                      32 + context.bottomInset,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        MiuixFrostedSection(
+                          title: appLocalizations.more,
+                          items: [
+                            _buildLinkItem(
+                              glyph: AppGlyphs.code,
+                              title: appLocalizations.project,
+                              url: 'https://github.com/aaANDkk/FlClash-Myui',
+                              label: 'github.com/aaANDkk/FlClash-Myui',
+                            ),
+                            _buildLinkItem(
+                              glyph: AppGlyphs.cpu,
+                              title: appLocalizations.core,
+                              url:
+                                  'https://github.com/chen08209/Clash.Meta/tree/FlClash',
+                              label: 'github.com/chen08209/Clash.Meta',
+                            ),
+                            _buildLinkItem(
+                              glyph: AppGlyphs.send,
+                              title: 'Telegram',
+                              url: 'https://t.me/FlClash',
+                              label: 't.me/FlClash',
+                            ),
+                          ],
+                        ),
+                        MiuixFrostedSection(
+                          title: appLocalizations.otherContributors,
+                          items: [
+                            for (final contributor in _contributors)
+                              ListItem(
+                                leading: Container(
+                                  width: 40,
+                                  height: 40,
+                                  foregroundDecoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    image: DecorationImage(
+                                      image: AssetImage(contributor.avatar),
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: colorScheme.primaryContainer,
                                   ),
                                 ),
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: colorScheme.primaryContainer,
+                                title: Text(contributor.name),
+                                subtitle: Text(
+                                  contributor.secondaryDevelopment
+                                      ? appLocalizations
+                                          .secondaryDevelopmentBuild
+                                      : appLocalizations.appIconDesign,
                                 ),
                               ),
-                              title: Text(contributor.name),
-                              subtitle: Text(
-                                contributor.secondaryDevelopment
-                                    ? appLocalizations.secondaryDevelopmentBuild
-                                    : appLocalizations.appIconDesign,
-                              ),
-                            ),
-                        ],
-                      ),
-                    ],
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],

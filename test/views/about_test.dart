@@ -32,6 +32,7 @@ void main() {
     );
     addTearDown(container.dispose);
     globalState.container = container;
+    container.listen(appSettingProvider, (_, _) {}, fireImmediately: true);
     container.read(viewSizeProvider.notifier).update((_) => size);
     return container;
   }
@@ -39,7 +40,7 @@ void main() {
   testWidgets(
     'miuix about page renders flowing backdrop, chromatic title, frosted cards, and scroll collapse',
     (tester) async {
-      final container = containerFor(tester, const Size(430, 480));
+      final container = containerFor(tester, const Size(430, 560));
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,
@@ -57,9 +58,6 @@ void main() {
       expect(find.text(appName), findsOneWidget);
       expect(find.text('v0.9.3'), findsOneWidget);
       expect(find.text('GPL-3.0'), findsOneWidget);
-      expect(find.byType(MiuixFrostedSection), findsNWidgets(2));
-      expect(find.text('aaANDkk'), findsOneWidget);
-      expect(find.text('Telegram'), findsOneWidget);
 
       final barOpacityBefore = tester.widget<Opacity>(
         find
@@ -71,8 +69,14 @@ void main() {
       );
       expect(barOpacityBefore.opacity, 0.0);
 
-      await tester.drag(find.byType(CustomScrollView), const Offset(0, -500));
-      await tester.pumpAndSettle();
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -450));
+      for (var i = 0; i < 6; i++) {
+        await tester.pump(const Duration(milliseconds: 50));
+      }
+
+      expect(find.byType(MiuixFrostedSection), findsNWidgets(2));
+      expect(find.text('Telegram'), findsOneWidget);
+      expect(find.text('aaANDkk'), findsOneWidget);
 
       final barOpacityAfter = tester.widget<Opacity>(
         find
