@@ -553,8 +553,11 @@ void main() {
       await tester.pumpAndSettle();
 
       final sheetCtx = tester.element(find.byType(IpRiskSheet));
+      final l = sheetCtx.appLocalizations;
       expect(find.text('Shanghai · Hongkou (Hongkou Qu)'), findsOneWidget);
       expect(find.text('AS4811'), findsOneWidget);
+      expect(find.text(l.ipOrganization), findsOneWidget);
+      expect(find.text(l.operatorOrAsn), findsNothing);
       expect(
         find.text('Shanghai Information Network Co., Ltd.'),
         findsOneWidget,

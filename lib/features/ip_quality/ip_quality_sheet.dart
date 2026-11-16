@@ -381,7 +381,12 @@ class _LocationCard extends StatelessWidget {
             ],
           ],
         ),
-      if (owner.isNotEmpty) _value(context, l.operatorOrAsn, owner),
+      if (owner.isNotEmpty)
+        _value(
+          context,
+          showAsnPill ? l.ipOrganization : l.operatorOrAsn,
+          owner,
+        ),
       if (risk.isp.isNotEmpty && risk.isp != risk.organization)
         _value(context, l.isp, risk.isp),
       if (!hidden && risk.hostname.isNotEmpty)
