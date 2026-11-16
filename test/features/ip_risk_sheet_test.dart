@@ -483,4 +483,46 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     },
   );
+
+  testWidgets(
+    'instant retry failure holds spinner briefly without flashing or bouncing card',
+    (tester) async {
+      var attempts = 0;
+      await tester.pumpWidget(
+        TestApp(
+          locale: const Locale('en'),
+          overrides: [
+            ipRiskProvider(sampleRisk.ip).overrideWith((_) async {
+              attempts++;
+              throw const FormatException('offline');
+            }),
+          ],
+          child: const IpRiskSheet(ip: '158.247.202.50'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final l = tester.element(find.byType(IpRiskSheet)).appLocalizations;
+      final errorCardFinder = find.ancestor(
+        of: find.text(l.ipRiskFailed),
+        matching: find.byType(app_ui.Card),
+      );
+      final beforeCardRect = tester.getRect(errorCardFinder);
+
+      await tester.tap(find.widgetWithText(app_ui.FilledButton, l.retry));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(attempts, 2);
+      expect(tester.getRect(errorCardFinder), beforeCardRect);
+      expect(find.byType(app_ui.ActivityIndicator), findsOneWidget);
+
+      await tester.pump(const Duration(milliseconds: 350));
+      await tester.pumpAndSettle();
+
+      expect(tester.getRect(errorCardFinder), beforeCardRect);
+      expect(find.widgetWithText(app_ui.FilledButton, l.retry), findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
 }

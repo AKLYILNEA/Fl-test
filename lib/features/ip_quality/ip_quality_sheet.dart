@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/common/ip.dart';
 import 'package:fl_clash/providers/config.dart';
@@ -34,6 +36,14 @@ class IpRiskSheet extends ConsumerStatefulWidget {
 class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
   late String _ip = widget.ip;
   bool _retrying = false;
+  bool _retryHold = false;
+  Timer? _retryTimer;
+
+  @override
+  void dispose() {
+    _retryTimer?.cancel();
+    super.dispose();
+  }
 
   Future<void> _editIp() async {
     final l = context.appLocalizations;
@@ -48,15 +58,26 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
     if (!mounted || value == null) return;
     final ip = publicIpOf(value);
     if (ip != null && ip != _ip) {
+      _retryTimer?.cancel();
       setState(() {
         _ip = ip;
         _retrying = false;
+        _retryHold = false;
       });
     }
   }
 
   void _retry() {
-    setState(() => _retrying = true);
+    if (_retryHold) return;
+    _retryTimer?.cancel();
+    setState(() {
+      _retrying = true;
+      _retryHold = true;
+    });
+    _retryTimer = Timer(const Duration(milliseconds: 350), () {
+      if (!mounted) return;
+      setState(() => _retryHold = false);
+    });
     ref.invalidate(ipRiskProvider(_ip));
   }
 
@@ -223,7 +244,7 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
             ConstrainedBox(
               constraints: const BoxConstraints(minHeight: 48),
               child: FadeBox(
-                child: isLoading
+                child: isLoading || _retryHold
                     ? const SizedBox(
                         key: ValueKey('spinner'),
                         height: 48,
