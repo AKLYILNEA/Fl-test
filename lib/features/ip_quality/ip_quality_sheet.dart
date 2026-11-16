@@ -33,6 +33,7 @@ class IpRiskSheet extends ConsumerStatefulWidget {
 
 class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
   late String _ip = widget.ip;
+  bool _retrying = false;
 
   Future<void> _editIp() async {
     final l = context.appLocalizations;
@@ -47,14 +48,23 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
     if (!mounted || value == null) return;
     final ip = publicIpOf(value);
     if (ip != null && ip != _ip) {
-      setState(() => _ip = ip);
+      setState(() {
+        _ip = ip;
+        _retrying = false;
+      });
     }
+  }
+
+  void _retry() {
+    setState(() => _retrying = true);
+    ref.invalidate(ipRiskProvider(_ip));
   }
 
   @override
   Widget build(BuildContext context) {
     final l = context.appLocalizations;
     final state = ref.watch(ipRiskProvider(_ip));
+    final isLoading = state.isLoading && !state.hasValue;
     final risk = state.hasError ? null : state.value;
     final hidden = ref.watch(appSettingProvider.select((s) => s.hideIp));
     return Theme(
@@ -73,7 +83,7 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
         body: Builder(
           builder: (context) => NullStatusSwitcher(
             key: ValueKey(_ip),
-            isLoading: state.isLoading && !state.hasValue,
+            isLoading: !_retrying && isLoading,
             holdsArrival: false,
             loadingStatus: const Center(child: ActivityIndicator.page()),
             child: ListView(
@@ -124,29 +134,108 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                if (risk != null) ...[
-                  RiskScoreCard(risk: risk),
-                  const SizedBox(height: 12),
-                  if (risk.checks.isNotEmpty) ...[
-                    RiskChecksCard(risk: risk),
-                    const SizedBox(height: 12),
-                  ],
-                  _LocationCard(risk: risk, hidden: hidden),
-                  ListFooter(text: '${l.ipRiskSource} Scamalytics'),
-                ] else
-                  Card(
-                    radius: AppCorner.xl,
-                    padding: const EdgeInsets.all(24),
-                    child: Text(
-                      l.ipRiskFailed,
-                      style: AppTextStyle.body
-                          .of(context)
-                          .copyWith(color: context.colorScheme.error),
+                AnimatedSwitcher(
+                  duration: context.motionDuration(commonDuration),
+                  reverseDuration: context.motionDuration(
+                    const Duration(milliseconds: 150),
+                  ),
+                  switchInCurve: Easing.emphasizedDecelerate,
+                  switchOutCurve: Curves.easeIn,
+                  layoutBuilder: (currentChild, previousChildren) => Align(
+                    alignment: Alignment.topCenter,
+                    child: Stack(
+                      alignment: Alignment.topCenter,
+                      children: <Widget>[...previousChildren, ?currentChild],
                     ),
                   ),
+                  transitionBuilder: (child, animation) => ActivityPresence(
+                    animation: animation,
+                    child: FadeTransition(
+                      opacity: animation,
+                      child: ScaleTransition(
+                        scale: animation.drive(Tween(begin: 0.92, end: 1.0)),
+                        child: child,
+                      ),
+                    ),
+                  ),
+                  child: _buildBody(
+                    context,
+                    isLoading: isLoading,
+                    risk: risk,
+                    hidden: hidden,
+                  ),
+                ),
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBody(
+    BuildContext context, {
+    required bool isLoading,
+    required IpRisk? risk,
+    required bool hidden,
+  }) {
+    final l = context.appLocalizations;
+    if (isLoading) {
+      return const SizedBox(
+        key: ValueKey('loading'),
+        width: double.infinity,
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 48),
+          child: Center(child: ActivityIndicator.page()),
+        ),
+      );
+    }
+    if (risk != null) {
+      return Column(
+        key: const ValueKey('data'),
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          RiskScoreCard(risk: risk),
+          const SizedBox(height: 12),
+          if (risk.checks.isNotEmpty) ...[
+            RiskChecksCard(risk: risk),
+            const SizedBox(height: 12),
+          ],
+          _LocationCard(risk: risk, hidden: hidden),
+          ListFooter(text: '${l.ipRiskSource} Scamalytics'),
+        ],
+      );
+    }
+    return SizedBox(
+      key: const ValueKey('error'),
+      width: double.infinity,
+      child: Card(
+        radius: AppCorner.xl,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            GlyphIcon(
+              AppGlyphs.error,
+              size: 28,
+              color: context.colorScheme.error,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              l.ipRiskFailed,
+              textAlign: TextAlign.center,
+              style: AppTextStyle.body
+                  .of(context)
+                  .copyWith(color: context.colorScheme.error),
+            ),
+            const SizedBox(height: 16),
+            TonalButton(
+              size: TonalButtonSize.section,
+              glyph: AppGlyphs.refresh,
+              label: l.retry,
+              onPressed: _retry,
+            ),
+          ],
         ),
       ),
     );

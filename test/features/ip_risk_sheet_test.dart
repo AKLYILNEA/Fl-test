@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
@@ -419,4 +420,57 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     });
   }
+
+  testWidgets(
+    'failed risk card retries inline with loading and card transition',
+    (tester) async {
+      var attempts = 0;
+      Completer<IpRisk>? retryCompleter;
+      await tester.pumpWidget(
+        TestApp(
+          locale: const Locale('en'),
+          overrides: [
+            ipRiskProvider(sampleRisk.ip).overrideWith((_) async {
+              attempts++;
+              if (attempts == 1) {
+                throw const FormatException('unavailable');
+              }
+              return retryCompleter!.future;
+            }),
+          ],
+          child: const IpRiskSheet(ip: '158.247.202.50'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final l = tester.element(find.byType(IpRiskSheet)).appLocalizations;
+      expect(find.text(l.ipRiskFailed), findsOneWidget);
+      expect(find.byGlyph(AppGlyphs.error), findsOneWidget);
+      expect(find.widgetWithText(app_ui.TonalButton, l.retry), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(app_ui.TonalButton),
+          matching: find.byGlyph(AppGlyphs.refresh),
+        ),
+        findsOneWidget,
+      );
+
+      retryCompleter = Completer<IpRisk>();
+      await tester.tap(find.widgetWithText(app_ui.TonalButton, l.retry));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(find.text('158.247.202.50'), findsOneWidget);
+      expect(find.byType(app_ui.ActivityIndicator), findsOneWidget);
+
+      retryCompleter.complete(sampleRisk);
+      await tester.pumpAndSettle();
+
+      expect(attempts, 2);
+      expect(find.text(l.ipRiskFailed), findsNothing);
+      expect(find.byType(RiskScoreCard), findsOneWidget);
+      expect(find.text('28'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
 }
