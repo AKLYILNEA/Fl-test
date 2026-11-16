@@ -94,6 +94,9 @@ dev_dependencies:
   file: ^7.0.1
 
 flutter:
+  shaders:
+    - shaders/about_bg.frag
+    - shaders/about_title.frag
   assets:
     - assets/data/
     - assets/fonts/
