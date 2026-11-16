@@ -61,7 +61,7 @@ class MiuixFrostedCard extends StatelessWidget {
         ),
       ),
       child: ClipPath(
-        clipper: ShapeBorderClipper(shape: shape),
+        clipper: const ShapeBorderClipper(shape: shape),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
           child: DecoratedBox(
@@ -72,10 +72,12 @@ class MiuixFrostedCard extends StatelessWidget {
               children: [
                 for (var i = 0; i < items.length; i++) ...[
                   if (i > 0)
-                    Divider(
-                      height: 1,
-                      thickness: Divider.separatorThicknessOf(context),
-                      indent: 72,
+                    Padding(
+                      padding: const EdgeInsetsDirectional.only(start: 72),
+                      child: Divider(
+                        height: 1,
+                        thickness: Divider.separatorThicknessOf(context),
+                      ),
                     ),
                   items[i],
                 ],
