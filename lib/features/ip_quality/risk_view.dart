@@ -16,6 +16,27 @@ Color riskScoreColor(int score) {
 }
 
 extension RiskView on IpRisk {
+  String? get countryLabel {
+    final text = [
+      if (countryCode.isNotEmpty) countryCode.countryFlagEmoji,
+      country.isNotEmpty ? country : countryCode,
+    ].where((s) => s.isNotEmpty).join(' ');
+    return text.isEmpty ? null : text;
+  }
+
+  String? get placeLabel {
+    final text = [
+      region,
+      city,
+    ].where((s) => s.isNotEmpty).toSet().join(' \u00b7 ');
+    return text.isEmpty ? null : text;
+  }
+
+  String? get fullLocationLabel {
+    final text = [?countryLabel, ?placeLabel].join(' \u00b7 ');
+    return text.isEmpty ? null : text;
+  }
+
   String? typeLabel(BuildContext context) => isHomeBroadband
       ? context.appLocalizations.ipRiskHomeBroadband
       : isDatacenter

@@ -302,14 +302,8 @@ class _LocationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = context.appLocalizations;
     final cs = context.colorScheme;
-    final country = [
-      if (risk.countryCode.isNotEmpty) risk.countryCode.countryFlagEmoji,
-      risk.country.isNotEmpty ? risk.country : risk.countryCode,
-    ].where((s) => s.isNotEmpty).join(' ');
-    final place = [
-      risk.region,
-      risk.city,
-    ].where((s) => s.isNotEmpty).toSet().join(' \u00b7 ');
+    final country = risk.countryLabel ?? '';
+    final place = risk.placeLabel ?? '';
     final hasLocation = country.isNotEmpty || place.isNotEmpty;
     final showAsnPill = hasLocation && risk.asn.isNotEmpty;
     final owner = showAsnPill
