@@ -446,21 +446,31 @@ void main() {
       final l = tester.element(find.byType(IpRiskSheet)).appLocalizations;
       expect(find.text(l.ipRiskFailed), findsOneWidget);
       expect(find.byGlyph(AppGlyphs.error), findsOneWidget);
-      expect(find.widgetWithText(app_ui.TonalButton, l.retry), findsOneWidget);
+      expect(
+        find.widgetWithText(app_ui.FilledButton, l.retry),
+        findsOneWidget,
+      );
       expect(
         find.descendant(
-          of: find.byType(app_ui.TonalButton),
+          of: find.byType(app_ui.FilledButton),
           matching: find.byGlyph(AppGlyphs.refresh),
         ),
         findsOneWidget,
       );
 
+      final errorCardFinder = find.ancestor(
+        of: find.text(l.ipRiskFailed),
+        matching: find.byType(app_ui.Card),
+      );
+      final beforeCardRect = tester.getRect(errorCardFinder);
+
       retryCompleter = Completer<IpRisk>();
-      await tester.tap(find.widgetWithText(app_ui.TonalButton, l.retry));
+      await tester.tap(find.widgetWithText(app_ui.FilledButton, l.retry));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 50));
 
       expect(find.text('158.247.202.50'), findsOneWidget);
+      expect(tester.getRect(errorCardFinder), beforeCardRect);
       expect(find.byType(app_ui.ActivityIndicator), findsOneWidget);
 
       retryCompleter.complete(sampleRisk);

@@ -148,15 +148,16 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
                       children: <Widget>[...previousChildren, ?currentChild],
                     ),
                   ),
-                  transitionBuilder: (child, animation) => ActivityPresence(
-                    animation: animation,
-                    child: FadeTransition(
-                      opacity: animation,
-                      child: ScaleTransition(
-                        scale: animation.drive(Tween(begin: 0.92, end: 1.0)),
-                        child: child,
-                      ),
-                    ),
+                  transitionBuilder: (child, animation) => FadeTransition(
+                    opacity: animation,
+                    child: child.key == const ValueKey('data')
+                        ? ScaleTransition(
+                            scale: animation.drive(
+                              Tween(begin: 0.92, end: 1.0),
+                            ),
+                            child: child,
+                          )
+                        : child,
                   ),
                   child: _buildBody(
                     context,
@@ -180,17 +181,7 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
     required bool hidden,
   }) {
     final l = context.appLocalizations;
-    if (isLoading) {
-      return const SizedBox(
-        key: ValueKey('loading'),
-        width: double.infinity,
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 48),
-          child: Center(child: ActivityIndicator.page()),
-        ),
-      );
-    }
-    if (risk != null) {
+    if (!isLoading && risk != null) {
       return Column(
         key: const ValueKey('data'),
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -229,11 +220,22 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
                   .copyWith(color: context.colorScheme.error),
             ),
             const SizedBox(height: 16),
-            TonalButton(
-              size: TonalButtonSize.section,
-              glyph: AppGlyphs.refresh,
-              label: l.retry,
-              onPressed: _retry,
+            ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 48),
+              child: FadeBox(
+                child: isLoading
+                    ? const SizedBox(
+                        key: ValueKey('spinner'),
+                        height: 48,
+                        child: Center(child: ActivityIndicator(size: 20)),
+                      )
+                    : FilledButton.icon(
+                        key: const ValueKey('retry'),
+                        onPressed: _retry,
+                        icon: const GlyphIcon(AppGlyphs.refresh, size: 18),
+                        label: Text(l.retry),
+                      ),
+              ),
             ),
           ],
         ),
