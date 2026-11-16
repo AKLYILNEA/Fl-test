@@ -372,16 +372,22 @@ class TrafficStatsOverviewCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = context.appLocalizations;
     final cs = context.colorScheme;
-    final upColor = trafficUploadColor(context);
-    final downColor = trafficDownloadColor(context);
-    final dirTotal = result.down + result.up;
-    final downPct = dirTotal > 0 ? (result.down * 100 / dirTotal).round() : 0;
-    final upPct = dirTotal > 0 ? 100 - downPct : 0;
-    final showUploadCenter = result.up > result.down;
-    final centerPct = showUploadCenter ? upPct : downPct;
-    final centerLabel = showUploadCenter ? l.upload : l.download;
+    final proxyColor = trafficDownloadColor(context);
+    final directColor = trafficUploadColor(context);
     final proxyTotal = result.proxyTotal;
     final directTotal = (result.total - proxyTotal).clamp(0, result.total);
+    final routeTotal = proxyTotal + directTotal;
+    final proxyPct = routeTotal > 0
+        ? (proxyTotal * 100 / routeTotal).round()
+        : 0;
+    final directPct = routeTotal > 0 ? 100 - proxyPct : 0;
+    final showDirectCenter = directTotal > proxyTotal;
+    final centerPct = showDirectCenter ? directPct : proxyPct;
+    final centerLabel = showDirectCenter ? l.direct : l.proxies;
+    final centerColor = routeTotal > 0
+        ? (showDirectCenter ? directColor : proxyColor)
+        : cs.onSurfaceVariant;
+    final trackColor = DashboardColors.of(context).track;
 
     final topRow = IntrinsicHeight(
       child: Row(
@@ -396,7 +402,7 @@ class TrafficStatsOverviewCard extends StatelessWidget {
                   children: [
                     _HeaderIconBadge(
                       glyph: AppGlyphs.dataUsage,
-                      color: downColor,
+                      color: proxyColor,
                     ),
                     const SizedBox(width: 10),
                     Expanded(
@@ -448,7 +454,7 @@ class TrafficStatsOverviewCard extends StatelessWidget {
                         fit: BoxFit.scaleDown,
                         alignment: AlignmentDirectional.centerStart,
                         child: Text(
-                          '${l.proxies} ${trafficStatsFormatBytes(proxyTotal)} \u00b7 ${l.direct} ${trafficStatsFormatBytes(directTotal)}',
+                          '${l.download} ${trafficStatsFormatBytes(result.down)} \u00b7 ${l.upload} ${trafficStatsFormatBytes(result.up)}',
                           maxLines: 1,
                           style: AppTextStyle.caption1
                               .of(context)
@@ -474,21 +480,25 @@ class TrafficStatsOverviewCard extends StatelessWidget {
                   child: MediaQuery.withNoTextScaling(
                     child: RingChart(
                       size: 86,
-                      strokeWidth: 7.5,
-                      trackColor: DashboardColors.of(context).track,
-                      total: dirTotal > 0 ? dirTotal.toDouble() : null,
+                      strokeWidth: 4.0,
+                      tickCount: 20,
+                      trackColor: trackColor,
+                      innerDiscColor: routeTotal > 0
+                          ? centerColor.withValues(alpha: 0.08)
+                          : trackColor.withValues(alpha: 0.35),
+                      total: routeTotal > 0 ? routeTotal.toDouble() : null,
                       segments: [
                         RingSegment(
-                          value: result.down.toDouble(),
-                          color: downColor,
+                          value: proxyTotal.toDouble(),
+                          color: proxyColor,
                         ),
                         RingSegment(
-                          value: result.up.toDouble(),
-                          color: upColor,
+                          value: directTotal.toDouble(),
+                          color: directColor,
                         ),
                       ],
                       centerChild: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 11),
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
                           child: Column(
@@ -499,7 +509,11 @@ class TrafficStatsOverviewCard extends StatelessWidget {
                                 style: AppTextStyle.headline
                                     .of(context, emphasized: true)
                                     .toTabular
-                                    .copyWith(fontSize: 14, height: 1.15),
+                                    .copyWith(
+                                      fontSize: 14.5,
+                                      height: 1.15,
+                                      color: centerColor,
+                                    ),
                               ),
                               Text(
                                 centerLabel,
@@ -545,8 +559,8 @@ class TrafficStatsOverviewCard extends StatelessWidget {
               spacing: 6,
               children: [
                 for (final part in [
-                  (label: l.download, color: downColor, bytes: result.down),
-                  (label: l.upload, color: upColor, bytes: result.up),
+                  (label: l.proxies, color: proxyColor, bytes: proxyTotal),
+                  (label: l.direct, color: directColor, bytes: directTotal),
                 ])
                   Row(
                     children: [

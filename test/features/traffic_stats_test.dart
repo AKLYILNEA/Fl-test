@@ -304,7 +304,7 @@ void main() {
                       of: find.descendant(
                         of: overview,
                         matching: find.text(
-                          trafficStatsFormatBytes(_sampleResult().down),
+                          trafficStatsFormatBytes(_sampleResult().proxyTotal),
                         ),
                       ),
                       matching: find.byType(Row),
@@ -525,7 +525,7 @@ void main() {
   );
 
   testWidgets(
-    'overview card pairs ring percentages with download/upload and keeps proxy/direct plain text',
+    'overview card pairs C+E tick ring with proxy/direct and keeps download/upload plain text',
     (tester) async {
       _setScreen(tester, 360, 720);
       final sample = _sampleResult();
@@ -554,49 +554,58 @@ void main() {
         matching: find.byType(RingChart),
       );
       final ring = tester.widget<RingChart>(ringFinder);
+      final directTotal = (sample.total - sample.proxyTotal).clamp(
+        0,
+        sample.total,
+      );
 
+      expect(ring.tickCount, 20);
+      expect(
+        ring.innerDiscColor,
+        trafficDownloadColor(overviewCtx).withValues(alpha: 0.08),
+      );
       expect(ring.segments.length, 2);
-      expect(ring.segments[0].value, sample.down.toDouble());
+      expect(ring.segments[0].value, sample.proxyTotal.toDouble());
       expect(ring.segments[0].color, trafficDownloadColor(overviewCtx));
-      expect(ring.segments[1].value, sample.up.toDouble());
+      expect(ring.segments[1].value, directTotal.toDouble());
       expect(ring.segments[1].color, trafficUploadColor(overviewCtx));
       expect(
-        find.descendant(of: ringFinder, matching: find.text('80%')),
+        find.descendant(of: ringFinder, matching: find.text('75%')),
         findsOneWidget,
       );
       expect(
-        find.descendant(of: ringFinder, matching: find.text(l.download)),
+        find.descendant(of: ringFinder, matching: find.text(l.proxies)),
         findsOneWidget,
       );
       expect(
-        find.descendant(of: overview, matching: find.text('80%')),
+        find.descendant(of: overview, matching: find.text('75%')),
         findsOneWidget,
       );
       expect(
-        find.descendant(of: overview, matching: find.text('20%')),
+        find.descendant(of: overview, matching: find.text('25%')),
         findsNothing,
       );
-      final downValueFinder = find.descendant(
+      final proxyValueFinder = find.descendant(
         of: overview,
-        matching: find.text(trafficStatsFormatBytes(sample.down)),
+        matching: find.text(trafficStatsFormatBytes(sample.proxyTotal)),
       );
-      final upValueFinder = find.descendant(
+      final directValueFinder = find.descendant(
         of: overview,
-        matching: find.text(trafficStatsFormatBytes(sample.up)),
+        matching: find.text(trafficStatsFormatBytes(directTotal)),
       );
-      expect(downValueFinder, findsOneWidget);
-      expect(upValueFinder, findsOneWidget);
-      final downRowFinder = find
-          .ancestor(of: downValueFinder, matching: find.byType(Row))
+      expect(proxyValueFinder, findsOneWidget);
+      expect(directValueFinder, findsOneWidget);
+      final proxyRowFinder = find
+          .ancestor(of: proxyValueFinder, matching: find.byType(Row))
           .first;
-      final downLabelFinder = find.descendant(
-        of: downRowFinder,
-        matching: find.text(l.download),
+      final proxyLabelFinder = find.descendant(
+        of: proxyRowFinder,
+        matching: find.text(l.proxies),
       );
-      expect(downLabelFinder, findsOneWidget);
+      expect(proxyLabelFinder, findsOneWidget);
       expect(
-        tester.getTopLeft(downValueFinder).dx,
-        greaterThan(tester.getTopRight(downLabelFinder).dx),
+        tester.getTopLeft(proxyValueFinder).dx,
+        greaterThan(tester.getTopRight(proxyLabelFinder).dx),
       );
       expect(
         find.descendant(
@@ -659,31 +668,31 @@ void main() {
       );
       expect(
         tester.getBottomLeft(overviewDividerFinder).dy,
-        lessThanOrEqualTo(tester.getTopLeft(downRowFinder).dy),
+        lessThanOrEqualTo(tester.getTopLeft(proxyRowFinder).dy),
       );
       expect(
-        tester.widget<Text>(downLabelFinder).style?.fontSize,
+        tester.widget<Text>(proxyLabelFinder).style?.fontSize,
         app_ui.AppTextStyle.subheadline.size,
       );
       expect(
-        tester.widget<Text>(downValueFinder).style?.fontSize,
+        tester.widget<Text>(proxyValueFinder).style?.fontSize,
         app_ui.AppTextStyle.subheadline.size,
       );
       expect(
         find.descendant(
           of: overview,
           matching: find.text(
-            '${l.proxies} ${trafficStatsFormatBytes(sample.proxyTotal)} \u00b7 ${l.direct} ${trafficStatsFormatBytes(sample.total - sample.proxyTotal)}',
+            '${l.download} ${trafficStatsFormatBytes(sample.down)} \u00b7 ${l.upload} ${trafficStatsFormatBytes(sample.up)}',
           ),
         ),
         findsOneWidget,
       );
       expect(tester.takeException(), isNull);
 
-      const uploadHeavy = TrafficStatsResult(
-        up: 750 * 1024 * 1024,
-        down: 250 * 1024 * 1024,
-        proxyUp: 600 * 1024 * 1024,
+      const directHeavy = TrafficStatsResult(
+        up: 200 * 1024 * 1024,
+        down: 800 * 1024 * 1024,
+        proxyUp: 50 * 1024 * 1024,
         proxyDown: 200 * 1024 * 1024,
       );
       await tester.pumpWidget(
@@ -694,7 +703,7 @@ void main() {
               title: 'Overview',
               body: SingleChildScrollView(
                 padding: EdgeInsets.all(16),
-                child: TrafficStatsOverviewCard(result: uploadHeavy),
+                child: TrafficStatsOverviewCard(result: directHeavy),
               ),
             ),
           ),
@@ -702,12 +711,18 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      final directHeavyCtx = tester.element(overview);
+      final directHeavyRing = tester.widget<RingChart>(ringFinder);
+      expect(
+        directHeavyRing.innerDiscColor,
+        trafficUploadColor(directHeavyCtx).withValues(alpha: 0.08),
+      );
       expect(
         find.descendant(of: ringFinder, matching: find.text('75%')),
         findsOneWidget,
       );
       expect(
-        find.descendant(of: ringFinder, matching: find.text(l.upload)),
+        find.descendant(of: ringFinder, matching: find.text(l.direct)),
         findsOneWidget,
       );
       expect(tester.takeException(), isNull);
