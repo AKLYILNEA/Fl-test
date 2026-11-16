@@ -587,4 +587,46 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     },
   );
+
+  testWidgets(
+    'proxyName resolves exit IP, displays node name, and retries on failure',
+    (tester) async {
+      var exitAttempts = 0;
+      await tester.pumpWidget(
+        TestApp(
+          locale: const Locale('en'),
+          overrides: [
+            proxyExitIpProvider.overrideWith((_, proxy) async {
+              expect(proxy, 'HK-01');
+              exitAttempts++;
+              if (exitAttempts == 1) {
+                throw Exception('exit probe failed');
+              }
+              return sampleRisk.ip;
+            }),
+            ipRiskProvider(sampleRisk.ip).overrideWith((_) async => sampleRisk),
+          ],
+          child: const IpRiskSheet(proxyName: 'HK-01'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final sheetCtx = tester.element(find.byType(IpRiskSheet));
+      final l = sheetCtx.appLocalizations;
+      expect(exitAttempts, 1);
+      expect(find.text('HK-01'), findsOneWidget);
+      expect(find.text(l.ipRiskFailed), findsOneWidget);
+
+      await tester.tap(find.widgetWithText(app_ui.FilledButton, l.retry));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+      await tester.pumpAndSettle();
+
+      expect(exitAttempts, 2);
+      expect(find.text(sampleRisk.ip), findsOneWidget);
+      expect(find.text('HK-01'), findsOneWidget);
+      expect(find.text('${l.ipRiskScore} ${sampleRisk.displayScore} / 100'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
 }

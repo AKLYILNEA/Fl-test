@@ -1233,4 +1233,35 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     },
   );
+
+  testWidgets(
+    'showSpeedTestSheet opens sheet pre-bound to proxyName even when stopped',
+    (tester) async {
+      _size(tester, 430, 900);
+      final client = _Client();
+      addTearDown(client.dispose);
+      await tester.pumpWidget(
+        _app(
+          client,
+          running: false,
+          page: Builder(
+            builder: (ctx) => app_ui.FilledButton(
+              onPressed: () => showSpeedTestSheet(ctx, proxyName: 'Node A'),
+              child: const Text('Open'),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(app_ui.NestedPagedSheet), findsOneWidget);
+      expect(find.byType(SpeedTestView), findsOneWidget);
+      expect(find.text('Node A'), findsOneWidget);
+      expect(client.probed.last, 'Node A');
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
 }

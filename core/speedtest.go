@@ -207,13 +207,20 @@ func beginSpeedTest(id string) (context.Context, func()) {
 	}
 }
 
+func speedTestIsDirect(proxy string) bool {
+	if proxy == "DIRECT" {
+		return true
+	}
+	return !isRunning.Load() && proxy == ""
+}
+
 func handleStartSpeedTest(params SpeedTestParams) SpeedTestState {
 	ctx, finish := beginSpeedTest(params.ID)
 	defer func() {
 		finish()
 	}()
 
-	direct := !isRunning.Load()
+	direct := speedTestIsDirect(params.Proxy)
 
 	tester := newSpeedTester(params, direct)
 	tester.run(ctx, func(state SpeedTestState) {
@@ -223,7 +230,7 @@ func handleStartSpeedTest(params SpeedTestParams) SpeedTestState {
 }
 
 func handleProbeSpeedTest(params SpeedTestParams) SpeedTestState {
-	direct := !isRunning.Load()
+	direct := speedTestIsDirect(params.Proxy)
 	ctx, finish := beginSpeedTest(params.ID)
 	defer finish()
 	tester := newSpeedTester(params, direct)
@@ -668,7 +675,7 @@ func handleSpeedTestServers(params speedtestNetServersParams) ([]speedtestNetSer
 	defer finish()
 	ctx, cancel := context.WithTimeout(parent, 20*time.Second)
 	defer cancel()
-	tester := newSpeedTester(SpeedTestParams{Provider: "speedtest", Proxy: params.Proxy}, !isRunning.Load())
+	tester := newSpeedTester(SpeedTestParams{Provider: "speedtest", Proxy: params.Proxy}, speedTestIsDirect(params.Proxy))
 	defer tester.release()
 	servers, err := tester.fetchSpeedtestNetServers(ctx, params.Search)
 	if err != nil {

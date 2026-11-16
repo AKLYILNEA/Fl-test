@@ -1,5 +1,9 @@
+import 'dart:async';
+
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
+import 'package:fl_clash/features/ip_quality/ip_quality_sheet.dart';
+import 'package:fl_clash/features/speed_test/view.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
@@ -39,6 +43,10 @@ bool _isAddableToLocal(Proxy proxy, {required bool isCustomProfile}) {
       !reservedCustomProxyNames.contains(proxy.name) &&
       GroupTypeExtension.getGroupType(proxy.type) == null;
 }
+
+bool _isTestableProxy(Proxy proxy) =>
+    !const {'REJECT', 'REJECT-DROP', 'PASS'}.contains(proxy.name) &&
+    !const {'Reject', 'RejectDrop', 'Pass', 'Compatible'}.contains(proxy.type);
 
 class ProxyCard extends ConsumerWidget {
   final String groupName;
@@ -104,6 +112,10 @@ class ProxyCard extends ConsumerWidget {
     required bool addable,
   }) {
     final appLocalizations = context.appLocalizations;
+    final hasPrimaryItems =
+        groupType == GroupType.Selector ||
+        groupType.isComputedSelected ||
+        addable;
     return [
       if (groupType == GroupType.Selector)
         PopupMenuItem(
@@ -125,6 +137,27 @@ class ProxyCard extends ConsumerWidget {
           label: appLocalizations.addToLocalProxies,
           onPressed: () => _handleAddToLocalProxies(ref),
         ),
+      if (_isTestableProxy(proxy)) ...[
+        PopupMenuItem(
+          glyph: AppGlyphs.speed,
+          label: appLocalizations.speedTest,
+          section: hasPrimaryItems ? const PopupMenuSection() : null,
+          onPressed: () {
+            if (context.mounted) {
+              unawaited(showSpeedTestSheet(context, proxyName: proxy.name));
+            }
+          },
+        ),
+        PopupMenuItem(
+          glyph: AppGlyphs.verified,
+          label: appLocalizations.ipRiskCheck,
+          onPressed: () {
+            if (context.mounted) {
+              unawaited(showIpQualitySheet(context, proxyName: proxy.name));
+            }
+          },
+        ),
+      ],
     ];
   }
 

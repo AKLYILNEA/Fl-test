@@ -15,10 +15,12 @@ import 'risk_view.dart';
 
 Future<void> showIpQualitySheet(
   BuildContext context, {
-  required String ip,
+  String ip = '',
+  String? proxyName,
   bool outbound = true,
 }) {
-  Widget page(BuildContext context) => IpRiskSheet(ip: ip, outbound: outbound);
+  Widget page(BuildContext context) =>
+      IpRiskSheet(ip: ip, proxyName: proxyName, outbound: outbound);
   if (isSheetPage(context)) {
     return Navigator.of(context).push(PagedSheetRoute(builder: page));
   }
@@ -26,8 +28,14 @@ Future<void> showIpQualitySheet(
 }
 
 class IpRiskSheet extends ConsumerStatefulWidget {
-  const IpRiskSheet({super.key, required this.ip, this.outbound = true});
+  const IpRiskSheet({
+    super.key,
+    this.ip = '',
+    this.proxyName,
+    this.outbound = true,
+  }) : assert(ip != '' || proxyName != null);
   final String ip;
+  final String? proxyName;
   final bool outbound;
 
   @override
@@ -35,7 +43,7 @@ class IpRiskSheet extends ConsumerStatefulWidget {
 }
 
 class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
-  late String _ip = widget.ip;
+  String? _manualIp;
   bool _retrying = false;
   bool _retryHold = false;
   Timer? _retryTimer;
@@ -46,29 +54,29 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
     super.dispose();
   }
 
-  Future<void> _editIp() async {
+  Future<void> _editIp(String currentIp) async {
     final l = context.appLocalizations;
     final value = await showFloatingDialog<String>(
       context: context,
       child: InputDialog(
         title: l.ipRiskHint,
-        value: ref.read(appSettingProvider).hideIp ? '' : _ip,
+        value: ref.read(appSettingProvider).hideIp ? '' : currentIp,
         validator: (v) => publicIpOf(v ?? '') == null ? l.ipRiskInvalid : null,
       ),
     );
     if (!mounted || value == null) return;
     final ip = publicIpOf(value);
-    if (ip != null && ip != _ip) {
+    if (ip != null && ip != currentIp) {
       _retryTimer?.cancel();
       setState(() {
-        _ip = ip;
+        _manualIp = ip;
         _retrying = false;
         _retryHold = false;
       });
     }
   }
 
-  void _retry() {
+  void _retry(String effectiveIp) {
     if (_retryHold) return;
     _retryTimer?.cancel();
     setState(() {
@@ -79,20 +87,45 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
       if (!mounted) return;
       setState(() => _retryHold = false);
     });
-    ref.invalidate(ipRiskProvider(_ip));
+    if (effectiveIp.isEmpty && widget.proxyName != null && _manualIp == null) {
+      ref.invalidate(proxyExitIpProvider(widget.proxyName!));
+    } else if (effectiveIp.isNotEmpty) {
+      ref.invalidate(ipRiskProvider(effectiveIp));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final l = context.appLocalizations;
-    final state = ref.watch(ipRiskProvider(_ip));
-    final isLoading = state.isLoading && !state.hasValue;
-    final risk = state.hasError ? null : state.value;
+    final proxyIpState =
+        widget.ip.isEmpty && widget.proxyName != null && _manualIp == null
+        ? ref.watch(proxyExitIpProvider(widget.proxyName!))
+        : null;
+    final resolvingIp =
+        proxyIpState != null &&
+        proxyIpState.isLoading &&
+        !proxyIpState.hasValue;
+    final resolvedIp = proxyIpState != null && !proxyIpState.hasError
+        ? (proxyIpState.value ?? '')
+        : '';
+    final effectiveIp =
+        _manualIp ?? (widget.ip.isNotEmpty ? widget.ip : resolvedIp);
+    final state = effectiveIp.isNotEmpty
+        ? ref.watch(ipRiskProvider(effectiveIp))
+        : null;
+    final isLoading =
+        resolvingIp || (state != null && state.isLoading && !state.hasValue);
+    final risk = state == null || state.hasError ? null : state.value;
     final hidden = ref.watch(appSettingProvider.select((s) => s.hideIp));
+    final switchKey = widget.proxyName != null && _manualIp == null
+        ? widget.proxyName!
+        : effectiveIp;
     return Theme(
       data: Theme.of(context).copyWith(visualDensity: VisualDensity.standard),
       child: Scaffold(
-        title: widget.outbound ? l.outboundIp : l.ipDetails,
+        title: widget.proxyName != null
+            ? l.ipRiskCheck
+            : (widget.outbound ? l.outboundIp : l.ipDetails),
         iconActions: [
           IconButtonData(
             glyph: hidden ? AppGlyphs.eyeOff : AppGlyphs.eye,
@@ -104,7 +137,7 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
         ],
         body: Builder(
           builder: (context) => NullStatusSwitcher(
-            key: ValueKey(_ip),
+            key: ValueKey(switchKey),
             isLoading: !_retrying && isLoading,
             holdsArrival: false,
             loadingStatus: const Center(child: ActivityIndicator.page()),
@@ -125,7 +158,7 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          l.ipAddress,
+                          effectiveIp.isEmpty ? l.speedTestExitNode : l.ipAddress,
                           style: AppTextStyle.footnote
                               .of(context)
                               .copyWith(
@@ -133,23 +166,47 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
                               ),
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          hidden ? '*****' : _ip,
-                          style: hidden
-                              ? AppTextStyle.headline
-                                    .of(context, emphasized: true)
-                                    .toJetBrainsMono
-                              : AppTextStyle.headline.of(
-                                  context,
-                                  emphasized: true,
-                                ),
-                        ),
+                        if (effectiveIp.isNotEmpty) ...[
+                          Text(
+                            hidden ? '*****' : effectiveIp,
+                            style: hidden
+                                ? AppTextStyle.headline
+                                      .of(context, emphasized: true)
+                                      .toJetBrainsMono
+                                : AppTextStyle.headline.of(
+                                    context,
+                                    emphasized: true,
+                                  ),
+                          ),
+                          if (widget.proxyName != null) ...[
+                            const SizedBox(height: 2),
+                            EmojiText(
+                              widget.proxyName!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTextStyle.footnote
+                                  .of(context)
+                                  .copyWith(
+                                    color: context.colorScheme.onSurfaceVariant,
+                                  ),
+                            ),
+                          ],
+                        ] else if (widget.proxyName != null)
+                          EmojiText(
+                            widget.proxyName!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyle.headline.of(
+                              context,
+                              emphasized: true,
+                            ),
+                          ),
                       ],
                     ),
                     trailing: MinIconButtonTheme(
                       child: IconButton(
                         tooltip: l.edit,
-                        onPressed: _editIp,
+                        onPressed: () => _editIp(effectiveIp),
                         icon: const GlyphIcon(AppGlyphs.edit, size: 16),
                       ),
                     ),
@@ -186,6 +243,7 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
                     isLoading: isLoading,
                     risk: risk,
                     hidden: hidden,
+                    onRetry: () => _retry(effectiveIp),
                   ),
                 ),
               ],
@@ -201,6 +259,7 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
     required bool isLoading,
     required IpRisk? risk,
     required bool hidden,
+    required VoidCallback onRetry,
   }) {
     final l = context.appLocalizations;
     if (!isLoading && risk != null) {
@@ -253,7 +312,7 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
                       )
                     : FilledButton.icon(
                         key: const ValueKey('retry'),
-                        onPressed: _retry,
+                        onPressed: onRetry,
                         icon: const GlyphIcon(AppGlyphs.refresh, size: 18),
                         label: Text(l.retry),
                       ),

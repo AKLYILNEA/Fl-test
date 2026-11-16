@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/common/service_probe.dart';
+import 'package:fl_clash/providers/core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -46,4 +48,19 @@ final ipRiskProvider = FutureProvider.autoDispose.family<IpRisk, String>((
     ref.onDispose(timer.cancel);
   }
   return result;
+}, retry: (_, _) => null);
+
+final proxyExitIpProvider = FutureProvider.autoDispose.family<String, String>((
+  ref,
+  proxyName,
+) async {
+  final result = await lookupOutboundIp(
+    ref.read(coreHandlerProvider),
+    proxyName,
+  );
+  final info = parseOutboundIp(result);
+  if (info == null || info.ip.isEmpty) {
+    throw const FormatException('Failed to resolve outbound IP');
+  }
+  return info.ip;
 }, retry: (_, _) => null);
