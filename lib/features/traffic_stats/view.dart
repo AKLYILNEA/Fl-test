@@ -162,7 +162,6 @@ class _TrafficStatsViewState extends ConsumerState<TrafficStatsView>
     return TrafficStatsScope(
       child: Scaffold(
         title: l.trafficStats,
-        groupIconActions: false,
         iconActions: [
           IconButtonData(
             glyph: AppGlyphs.sync,

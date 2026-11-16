@@ -565,15 +565,13 @@ void main() {
       _app(client, running: true, nodeName: longName, fontFamily: 'Ahem'),
     );
     await tester.pumpAndSettle();
-    final view = tester.widget<app_ui.Scaffold>(
-      find
-          .descendant(
-            of: find.byType(SpeedTestView),
-            matching: find.byType(app_ui.Scaffold),
-          )
-          .first,
+    expect(
+      find.descendant(
+        of: find.byType(SpeedTestView),
+        matching: find.byType(app_ui.TonalButtonGroup),
+      ),
+      findsNothing,
     );
-    expect(view.groupIconActions, isFalse);
     await tester.tap(find.byKey(const ValueKey('speed-test-outbound-picker')));
     await tester.pumpAndSettle();
     await tester.tap(find.text(longName).hitTestable());

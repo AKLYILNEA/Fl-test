@@ -549,7 +549,6 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
     return SpeedTestScope(
       child: Scaffold(
         title: l.speedTest,
-        groupIconActions: false,
         iconActions: [
           IconButtonData(
             glyph: AppGlyphs.clock,

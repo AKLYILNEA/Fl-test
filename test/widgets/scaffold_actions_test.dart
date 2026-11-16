@@ -100,6 +100,14 @@ void main() {
     await _pumpBar(tester, hasSearch: true, menuItems: ['Settings']);
 
     expect(_barButtons(tester), ['Search', 'More']);
+    expect(_inGroup('Search'), findsNothing);
+    expect(_inGroup('More'), findsNothing);
+
+    await _pumpBar(tester, icons: ['Sync', 'Sort']);
+
+    expect(_barButtons(tester), ['Sync', 'Sort']);
+    expect(_inGroup('Sync'), findsNothing);
+    expect(_inGroup('Sort'), findsNothing);
   });
 
   testWidgets('the menu stands apart from the grouped buttons', (tester) async {

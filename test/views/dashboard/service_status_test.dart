@@ -623,14 +623,18 @@ void main() {
       ),
     );
     expect(list.itemCount, ServiceTarget.values.length);
+    expect(
+      find.descendant(
+        of: find.byType(AppBar),
+        matching: find.byType(TonalButtonGroup),
+      ),
+      findsNothing,
+    );
     for (final tooltip in ['Check all', 'Manage services']) {
       expect(
-        find.ancestor(
-          of: find.byTooltip(tooltip),
-          matching: find.descendant(
-            of: find.byType(AppBar),
-            matching: find.byType(TonalButtonGroup),
-          ),
+        find.descendant(
+          of: find.byType(AppBar),
+          matching: find.byTooltip(tooltip),
         ),
         findsOneWidget,
       );

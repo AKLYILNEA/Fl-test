@@ -589,7 +589,13 @@ class ScaffoldState extends State<Scaffold>
       menuItems: widget.menuItems,
     );
     final shown = [?lead, ...fold.shown];
-    final grouped = widget.groupIconActions && shown.length > 1
+    final totalButtons =
+        shown.length +
+        selection.buttons +
+        widgets.length +
+        (fold.overflow.isEmpty ? 0 : 1);
+    final grouped =
+        widget.groupIconActions && totalButtons >= 3 && shown.length > 1
         ? shown.take(_maxGroupedActions)
         : null;
     final actions = [
