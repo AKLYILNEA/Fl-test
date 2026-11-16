@@ -1282,4 +1282,84 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     },
   );
+
+  testWidgets(
+    'speed test sheet shows concrete leaf node when bound to a strategy group',
+    (tester) async {
+      _size(tester, 430, 1600);
+      final client = _Client()
+        ..probeCompleter = Completer<SpeedTestState>();
+      addTearDown(client.dispose);
+      await tester.pumpWidget(
+        _app(
+          client,
+          running: true,
+          page: const SpeedTestView(initialProxy: 'Group'),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(
+        tester
+            .widget<SpeedTestConnectionCard>(
+              find.byType(SpeedTestConnectionCard),
+            )
+            .outbound,
+        'Node B',
+      );
+
+      client.probeCompleter!.complete(
+        const SpeedTestState(
+          id: '1',
+          server: SpeedTestServer(
+            sponsor: 'Example',
+            city: 'Tokyo',
+            host: 'speed.example',
+          ),
+          outbound: SpeedTestOutbound(chains: ['Group', 'Node A']),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        tester
+            .widget<SpeedTestConnectionCard>(
+              find.byType(SpeedTestConnectionCard),
+            )
+            .outbound,
+        'Node A',
+      );
+
+      await tester.tap(find.text('Start Test'));
+      await tester.pump();
+      client.run!.complete(
+        const SpeedTestState(
+          id: '2',
+          phase: SpeedTestPhase.done,
+          download: 120,
+          upload: 60,
+          latency: 30,
+          jitter: 5,
+          downloadLatency: 40,
+          uploadLatency: 50,
+          rpm: 900,
+          bytes: 1000000,
+          outbound: SpeedTestOutbound(chains: ['Group', 'Node B']),
+          server: SpeedTestServer(sponsor: 'Example', city: 'Tokyo'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        tester
+            .widget<SpeedTestConnectionCard>(
+              find.byType(SpeedTestConnectionCard),
+            )
+            .outbound,
+        'Node B',
+      );
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
 }

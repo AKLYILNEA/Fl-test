@@ -295,6 +295,7 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
     setState(() {
       _proxy = value;
       _state = null;
+      _probe = null;
     });
     await _detect();
   }
@@ -521,13 +522,40 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
     );
   }
 
+  String _resolveConcreteProxy(String proxyName) {
+    if (proxyName.isEmpty || proxyName == 'DIRECT') return proxyName;
+    final outbound =
+        (_testing ? _state?.outbound : null) ??
+        _state?.outbound ??
+        _probe?.outbound;
+    final chains = outbound?.chains ?? const <String>[];
+    if (chains.isNotEmpty) {
+      return chains.last;
+    }
+    final groups = ref.watch(groupsProvider);
+    final selectedMap = ref.watch(selectedMapProvider);
+    var current = proxyName;
+    final visited = <String>{};
+    while (visited.add(current)) {
+      final group = groups.getGroup(current);
+      if (group == null) break;
+      final next = group.getCurrentSelectedName(selectedMap[current] ?? '');
+      if (next.isEmpty) break;
+      current = next;
+    }
+    return current;
+  }
+
   Widget _routeCard(BuildContext context, bool running) {
     final l = context.appLocalizations;
+    final resolvedNode = _resolveConcreteProxy(_proxy);
     final selected = _proxy == 'DIRECT' || (_proxy.isEmpty && !running)
         ? l.direct
         : _proxy.isEmpty
         ? l.speedTestFollowRules
-        : _proxy;
+        : resolvedNode == 'DIRECT'
+        ? l.direct
+        : resolvedNode;
     final actual =
         (_testing ? _state?.server : null) ?? _probe?.server ?? _state?.server;
     final serverText =

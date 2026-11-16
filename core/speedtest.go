@@ -405,7 +405,6 @@ func (t *speedTester) dial(ctx context.Context, network, address string) (net.Co
 	if err := metadata.SetRemoteAddress(address); err != nil {
 		return nil, err
 	}
-	t.firstMeta.CompareAndSwap(nil, metadata)
 	if t.params.Proxy != "" {
 		proxy := lookupProxy(t.params.Proxy)
 		ok := proxy != nil
@@ -416,8 +415,13 @@ func (t *speedTester) dial(ctx context.Context, network, address string) (net.Co
 		if err != nil {
 			return nil, err
 		}
-		return statistic.NewTCPTracker(conn, statistic.DefaultManager, metadata, nil, 0, 0, true), nil
+		tracker := statistic.NewTCPTracker(conn, statistic.DefaultManager, metadata, nil, 0, 0, true)
+		if t.firstMeta.CompareAndSwap(nil, metadata) {
+			t.firstInfo.CompareAndSwap(nil, tracker.Info())
+		}
+		return tracker, nil
 	}
+	t.firstMeta.CompareAndSwap(nil, metadata)
 	conn, peer := N.Pipe()
 	go tunnel.Tunnel.HandleTCPConn(peer, metadata)
 	return conn, nil

@@ -158,7 +158,7 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          effectiveIp.isEmpty ? l.speedTestExitNode : l.ipAddress,
+                          l.ipAddress,
                           style: AppTextStyle.footnote
                               .of(context)
                               .copyWith(
@@ -166,41 +166,19 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
                               ),
                         ),
                         const SizedBox(height: 4),
-                        if (effectiveIp.isNotEmpty) ...[
-                          Text(
-                            hidden ? '*****' : effectiveIp,
-                            style: hidden
-                                ? AppTextStyle.headline
-                                      .of(context, emphasized: true)
-                                      .toJetBrainsMono
-                                : AppTextStyle.headline.of(
-                                    context,
-                                    emphasized: true,
-                                  ),
-                          ),
-                          if (widget.proxyName != null) ...[
-                            const SizedBox(height: 2),
-                            EmojiText(
-                              widget.proxyName!,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppTextStyle.footnote
-                                  .of(context)
-                                  .copyWith(
-                                    color: context.colorScheme.onSurfaceVariant,
-                                  ),
-                            ),
-                          ],
-                        ] else if (widget.proxyName != null)
-                          EmojiText(
-                            widget.proxyName!,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTextStyle.headline.of(
-                              context,
-                              emphasized: true,
-                            ),
-                          ),
+                        Text(
+                          hidden
+                              ? '*****'
+                              : (effectiveIp.isNotEmpty ? effectiveIp : '--'),
+                          style: hidden
+                              ? AppTextStyle.headline
+                                    .of(context, emphasized: true)
+                                    .toJetBrainsMono
+                              : AppTextStyle.headline.of(
+                                  context,
+                                  emphasized: true,
+                                ),
+                        ),
                       ],
                     ),
                     trailing: MinIconButtonTheme(

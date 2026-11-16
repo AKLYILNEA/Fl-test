@@ -589,7 +589,7 @@ void main() {
   );
 
   testWidgets(
-    'proxyName resolves exit IP, displays node name, and retries on failure',
+    'proxyName resolves exit IP without showing node name and retries on failure',
     (tester) async {
       var exitAttempts = 0;
       await tester.pumpWidget(
@@ -614,7 +614,8 @@ void main() {
       final sheetCtx = tester.element(find.byType(IpRiskSheet));
       final l = sheetCtx.appLocalizations;
       expect(exitAttempts, 1);
-      expect(find.text('HK-01'), findsOneWidget);
+      expect(find.text('--'), findsOneWidget);
+      expect(find.text('HK-01'), findsNothing);
       expect(find.text(l.ipRiskFailed), findsOneWidget);
 
       await tester.tap(find.widgetWithText(app_ui.FilledButton, l.retry));
@@ -624,7 +625,7 @@ void main() {
 
       expect(exitAttempts, 2);
       expect(find.text(sampleRisk.ip), findsOneWidget);
-      expect(find.text('HK-01'), findsOneWidget);
+      expect(find.text('HK-01'), findsNothing);
       expect(find.text('${sampleRisk.displayScore}'), findsOneWidget);
       expect(find.text(l.ipRiskMedium), findsOneWidget);
       await tester.pumpWidget(const SizedBox.shrink());
