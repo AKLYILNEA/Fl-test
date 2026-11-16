@@ -12,6 +12,8 @@ const _side = 24 * _scale;
 final _glyphs = {
   'dashboard': AppGlyphs.dashboard,
   'proxies': AppGlyphs.proxies,
+  'compass': AppGlyphs.compass,
+  'location': AppGlyphs.location,
   'profiles': AppGlyphs.profiles,
   'rocket': AppGlyphs.rocket,
   'requests': AppGlyphs.requests,

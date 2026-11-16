@@ -128,8 +128,8 @@ jobs:
       - name: Verify app bar action grouping
         if: matrix.platform == 'android'
         run: |
-          flutter analyze --no-fatal-infos lib/ui/scaffold/scaffold.dart lib/features/speed_test/view.dart lib/features/traffic_stats/view.dart lib/features/ip_quality/risk_provider.dart lib/features/ip_quality/ip_quality_sheet.dart lib/views/proxies/card.dart test/widgets/appbar_actions_test.dart test/widgets/scaffold_actions_test.dart test/views/dashboard/service_status_test.dart test/features/speed_test_test.dart test/features/ip_risk_sheet_test.dart test/widgets/proxy_card_focus_test.dart
-          flutter test test/widgets/appbar_actions_test.dart test/widgets/scaffold_actions_test.dart test/features/speed_test_test.dart test/features/traffic_stats_test.dart test/features/ip_risk_sheet_test.dart test/widgets/proxy_card_focus_test.dart test/features/custom_rule_form_test.dart test/views/access_test.dart test/views/dns_queries_view_test.dart
+          flutter analyze --no-fatal-infos lib/ui/scaffold/scaffold.dart lib/ui/icons/app_glyphs.dart lib/views/navigation.dart lib/features/speed_test/view.dart lib/features/traffic_stats/view.dart lib/features/ip_quality/risk_provider.dart lib/features/ip_quality/ip_quality_sheet.dart lib/views/proxies/card.dart test/widgets/appbar_actions_test.dart test/widgets/scaffold_actions_test.dart test/icons/glyph_painter_test.dart test/views/dashboard/service_status_test.dart test/features/speed_test_test.dart test/features/ip_risk_sheet_test.dart test/widgets/proxy_card_focus_test.dart
+          flutter test test/widgets/appbar_actions_test.dart test/widgets/scaffold_actions_test.dart test/icons/glyph_painter_test.dart test/features/speed_test_test.dart test/features/traffic_stats_test.dart test/features/ip_risk_sheet_test.dart test/widgets/proxy_card_focus_test.dart test/features/custom_rule_form_test.dart test/views/access_test.dart test/views/dns_queries_view_test.dart
           flutter test test/views/dashboard/service_status_test.dart --plain-name "tapping the card lists every service in a sheet"
           cd core
           CGO_ENABLED=0 go test . -run '^TestSpeedTest' -count=1

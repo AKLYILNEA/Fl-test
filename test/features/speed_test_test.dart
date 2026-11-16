@@ -1361,6 +1361,22 @@ void main() {
             .outbound,
         'Node B',
       );
+      await tester.tap(
+        find.byKey(const ValueKey('speed-test-outbound-picker')),
+      );
+      await tester.pumpAndSettle();
+      final nodeBRow = find.ancestor(
+        of: find.text('Node B').last,
+        matching: find.byType(app_ui.DecorationListItem),
+      );
+      expect(tester.widget<app_ui.DecorationListItem>(nodeBRow).isSelected, isTrue);
+      expect(
+        find.descendant(
+          of: nodeBRow,
+          matching: find.byType(app_ui.SelectionCheck),
+        ),
+        findsOneWidget,
+      );
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump();
     },

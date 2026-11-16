@@ -152,7 +152,7 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
                 Card(
                   radius: AppCorner.xl,
                   child: ListItem(
-                    leading: const GlyphIcon(AppGlyphs.proxies),
+                    leading: const GlyphIcon(AppGlyphs.location),
                     title: Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,

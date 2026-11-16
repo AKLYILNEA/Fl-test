@@ -21,6 +21,27 @@ abstract final class AppGlyphs {
     ], role: GlyphRole.detail),
   ]);
 
+  static const compass = Glyph([
+    GlyphCircle(12, 12, 8.8),
+    GlyphPolyline([
+      GlyphVertex(15.7, 8.3, 0.5),
+      GlyphVertex(10.1, 10.1, 0.6),
+      GlyphVertex(8.3, 15.7, 0.5),
+      GlyphVertex(13.9, 13.9, 0.6),
+    ], closed: true, role: GlyphRole.detail),
+  ]);
+
+  static const location = Glyph([
+    GlyphPath(
+      'M12 3C15.65 3 18.6 5.95 18.6 9.6'
+      'C18.6 13.75 14.4 18.45 12.68 20.38'
+      'C12.31 20.8 11.69 20.8 11.32 20.38'
+      'C9.6 18.45 5.4 13.75 5.4 9.6'
+      'C5.4 5.95 8.35 3 12 3Z',
+    ),
+    GlyphCircle(12, 9.6, 2.35, role: GlyphRole.detail),
+  ]);
+
   static const profiles = Glyph([
     GlyphPolyline([
       GlyphVertex(5, 3, 2.5),

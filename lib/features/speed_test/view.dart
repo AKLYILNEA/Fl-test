@@ -270,6 +270,9 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
         }
       }
     }
+    final selected = _proxy.isEmpty
+        ? ''
+        : _resolveConcreteProxy(_proxy, watch: false);
     final selection = SelectionSheet<String>(
       title: l.speedTestChangeOutbound,
       sections: [
@@ -280,7 +283,7 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
           : name == 'DIRECT'
           ? l.direct
           : name,
-      selectedOf: (_) => _proxy,
+      selectedOf: (_) => selected,
       onSelected: (name) => Navigator.of(context).pop(name),
     );
     final value = isSheetPage(context)
@@ -522,7 +525,7 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
     );
   }
 
-  String _resolveConcreteProxy(String proxyName) {
+  String _resolveConcreteProxy(String proxyName, {bool watch = true}) {
     if (proxyName.isEmpty || proxyName == 'DIRECT') return proxyName;
     final outbound =
         (_testing ? _state?.outbound : null) ??
@@ -532,7 +535,8 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
     if (chains.isNotEmpty) {
       return chains.last;
     }
-    final resolved = ref.watch(realSelectedProxyStateProvider(proxyName)).proxyName;
+    final provider = realSelectedProxyStateProvider(proxyName);
+    final resolved = (watch ? ref.watch(provider) : ref.read(provider)).proxyName;
     return resolved.isEmpty ? proxyName : resolved;
   }
 

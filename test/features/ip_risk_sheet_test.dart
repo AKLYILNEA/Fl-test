@@ -624,6 +624,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(exitAttempts, 2);
+      expect(find.byGlyph(AppGlyphs.location), findsOneWidget);
       expect(find.text(sampleRisk.ip), findsOneWidget);
       expect(find.text('HK-01'), findsNothing);
       expect(find.text('${sampleRisk.displayScore}'), findsOneWidget);
