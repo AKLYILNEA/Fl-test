@@ -1237,7 +1237,7 @@ void main() {
   testWidgets(
     'showSpeedTestSheet opens sheet pre-bound to proxyName even when stopped',
     (tester) async {
-      _size(tester, 430, 900);
+      _size(tester, 430, 1600);
       final client = _Client();
       addTearDown(client.dispose);
       await tester.pumpWidget(
@@ -1262,7 +1262,14 @@ void main() {
       expect(find.byType(app_ui.NestedPagedSheet), findsOneWidget);
       expect(find.byType(SpeedTestView), findsOneWidget);
       expect(client.probed.last, 'Node A');
-      await tester.ensureVisible(find.byType(SpeedTestConnectionCard));
+      await tester.dragUntilVisible(
+        find.byType(SpeedTestConnectionCard),
+        find.descendant(
+          of: find.byType(SpeedTestView),
+          matching: find.byType(ListView),
+        ),
+        const Offset(0, -200),
+      );
       await tester.pumpAndSettle();
       expect(
         tester
