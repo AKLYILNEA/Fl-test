@@ -112,10 +112,6 @@ class ProxyCard extends ConsumerWidget {
     required bool addable,
   }) {
     final appLocalizations = context.appLocalizations;
-    final hasPrimaryItems =
-        groupType == GroupType.Selector ||
-        groupType.isComputedSelected ||
-        addable;
     return [
       if (groupType == GroupType.Selector)
         PopupMenuItem(
@@ -141,7 +137,6 @@ class ProxyCard extends ConsumerWidget {
         PopupMenuItem(
           glyph: AppGlyphs.speed,
           label: appLocalizations.speedTest,
-          section: hasPrimaryItems ? const PopupMenuSection() : null,
           onPressed: () {
             if (context.mounted) {
               unawaited(showSpeedTestSheet(context, proxyName: proxy.name));
