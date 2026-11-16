@@ -179,6 +179,7 @@ Widget _app(
         const MoreToolsSelectorState(navigationItems: []),
       ),
       runTimeProvider.overrideWithBuild((_, _) => running ? 1 : null),
+      selectedMapProvider.overrideWith((_) => const {}),
       groupsProvider.overrideWithValue([
         Group(
           type: GroupType.Selector,
@@ -1280,6 +1281,7 @@ void main() {
         'Node A',
       );
       await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
     },
   );
 
@@ -1360,6 +1362,7 @@ void main() {
         'Node B',
       );
       await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
     },
   );
 }

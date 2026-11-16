@@ -532,18 +532,8 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
     if (chains.isNotEmpty) {
       return chains.last;
     }
-    final groups = ref.watch(groupsProvider);
-    final selectedMap = ref.watch(selectedMapProvider);
-    var current = proxyName;
-    final visited = <String>{};
-    while (visited.add(current)) {
-      final group = groups.getGroup(current);
-      if (group == null) break;
-      final next = group.getCurrentSelectedName(selectedMap[current] ?? '');
-      if (next.isEmpty) break;
-      current = next;
-    }
-    return current;
+    final resolved = ref.watch(realSelectedProxyStateProvider(proxyName)).proxyName;
+    return resolved.isEmpty ? proxyName : resolved;
   }
 
   Widget _routeCard(BuildContext context, bool running) {
