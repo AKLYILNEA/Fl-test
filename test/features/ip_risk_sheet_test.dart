@@ -625,7 +625,8 @@ void main() {
       expect(exitAttempts, 2);
       expect(find.text(sampleRisk.ip), findsOneWidget);
       expect(find.text('HK-01'), findsOneWidget);
-      expect(find.text('${l.ipRiskScore} ${sampleRisk.displayScore} / 100'), findsOneWidget);
+      expect(find.text('${sampleRisk.displayScore}'), findsOneWidget);
+      expect(find.text(l.ipRiskMedium), findsOneWidget);
       await tester.pumpWidget(const SizedBox.shrink());
     },
   );

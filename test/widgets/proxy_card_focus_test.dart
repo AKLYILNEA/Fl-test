@@ -331,7 +331,7 @@ void main() {
 
       await pumpCards(tester, ProxyCardType.standard);
 
-      await tester.longPress(find.byKey(const ValueKey('proxy 0')));
+      await tester.longPress(find.byType(ProxyCard).first);
       await tester.pumpAndSettle();
 
       final l = tester.element(find.byType(ProxyCard).first).appLocalizations;

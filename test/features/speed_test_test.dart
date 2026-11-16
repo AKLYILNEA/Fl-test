@@ -1259,8 +1259,17 @@ void main() {
 
       expect(find.byType(app_ui.NestedPagedSheet), findsOneWidget);
       expect(find.byType(SpeedTestView), findsOneWidget);
-      expect(find.text('Node A'), findsOneWidget);
       expect(client.probed.last, 'Node A');
+      await tester.ensureVisible(find.byType(SpeedTestConnectionCard));
+      await tester.pumpAndSettle();
+      expect(
+        tester
+            .widget<SpeedTestConnectionCard>(
+              find.byType(SpeedTestConnectionCard),
+            )
+            .outbound,
+        'Node A',
+      );
       await tester.pumpWidget(const SizedBox.shrink());
     },
   );
