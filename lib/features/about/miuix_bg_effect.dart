@@ -532,8 +532,11 @@ class MiuixChromaticTitle extends StatelessWidget {
           overflow: TextOverflow.visible,
           textAlign: TextAlign.center,
           textHeightBehavior: const TextHeightBehavior(
-            applyHeightToFirstAscent: false,
+            // Keep the title's extra leading above the first line as well:
+            // trimming it can flatten tall glyphs before the shader sees them.
+            applyHeightToFirstAscent: true,
             applyHeightToLastDescent: false,
+            leadingDistribution: TextLeadingDistribution.even,
           ),
           style: textStyle,
         ),
