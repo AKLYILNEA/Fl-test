@@ -532,11 +532,8 @@ class MiuixChromaticTitle extends StatelessWidget {
           overflow: TextOverflow.visible,
           textAlign: TextAlign.center,
           textHeightBehavior: const TextHeightBehavior(
-            // Keep the title's extra leading above the first line as well:
-            // trimming it can flatten tall glyphs before the shader sees them.
-            applyHeightToFirstAscent: true,
+            applyHeightToFirstAscent: false,
             applyHeightToLastDescent: false,
-            leadingDistribution: TextLeadingDistribution.even,
           ),
           style: textStyle,
         ),
@@ -580,10 +577,35 @@ class MiuixChromaticTitle extends StatelessWidget {
             );
             return shader;
           },
-          child: child,
+          child: CustomPaint(
+            painter: const _TitleLayerBoundsPainter(),
+            child: child,
+          ),
         );
       },
       child: buildLabel(style.copyWith(color: const Color(0xFFFFFFFF))),
     );
   }
+}
+
+class _TitleLayerBoundsPainter extends CustomPainter {
+  const _TitleLayerBoundsPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Padding alone does not expand display-list ink bounds. Some hinted fonts
+    // report undersized glyph bounds, clipping ShaderMask/Opacity layers:
+    // https://github.com/flutter/flutter/issues/161721
+    // A transparent src draw clears this fresh mask layer and records its full
+    // padded bounds. srcOver would be a no-op and could be discarded instead.
+    canvas.drawRect(
+      Offset.zero & size,
+      Paint()
+        ..color = const Color(0x00000000)
+        ..blendMode = BlendMode.src,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _TitleLayerBoundsPainter oldDelegate) => false;
 }
