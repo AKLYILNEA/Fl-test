@@ -129,6 +129,7 @@ class TrafficStatsPoint {
 
 @immutable
 class TrafficStatsResult {
+  final int runningSeconds;
   final int up;
   final int down;
   final int proxyUp;
@@ -143,6 +144,7 @@ class TrafficStatsResult {
   final String since;
 
   const TrafficStatsResult({
+    this.runningSeconds = 0,
     this.up = 0,
     this.down = 0,
     this.proxyUp = 0,
@@ -162,6 +164,7 @@ class TrafficStatsResult {
 
   factory TrafficStatsResult.fromJson(Map<String, Object?> json) =>
       TrafficStatsResult(
+        runningSeconds: _intValue(json['running-seconds']).clamp(0, 1 << 53),
         up: _intValue(json['up']),
         down: _intValue(json['down']),
         proxyUp: _intValue(json['proxy-up']),
@@ -199,6 +202,7 @@ class TrafficStatsResult {
     'down': down,
     'proxy-up': proxyUp,
     'proxy-down': proxyDown,
+    'running-seconds': runningSeconds,
     'series': [for (final item in series) item.toJson()],
     'hosts': [for (final item in hosts) item.toJson()],
     'processes': [for (final item in processes) item.toJson()],

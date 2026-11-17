@@ -352,16 +352,17 @@ type TrafficStatsPoint struct {
 }
 
 type TrafficStatsResult struct {
-	Up        int64               `json:"up"`
-	Down      int64               `json:"down"`
-	ProxyUp   int64               `json:"proxy-up"`
-	ProxyDown int64               `json:"proxy-down"`
-	Series    []TrafficStatsPoint `json:"series"`
-	Hosts     []TrafficStatsItem  `json:"hosts"`
-	Processes []TrafficStatsItem  `json:"processes"`
-	Nodes     []TrafficStatsItem  `json:"nodes"`
-	Profiles  []TrafficStatsItem  `json:"profiles"`
-	Rules     []TrafficStatsItem  `json:"rules"`
-	RuleHits  int64               `json:"rule-hits"`
-	Since     string              `json:"since"`
+	RunningSeconds int64               `json:"running-seconds"`
+	Up             int64               `json:"up"`
+	Down           int64               `json:"down"`
+	ProxyUp        int64               `json:"proxy-up"`
+	ProxyDown      int64               `json:"proxy-down"`
+	Series         []TrafficStatsPoint `json:"series"`
+	Hosts          []TrafficStatsItem  `json:"hosts"`
+	Processes      []TrafficStatsItem  `json:"processes"`
+	Nodes          []TrafficStatsItem  `json:"nodes"`
+	Profiles       []TrafficStatsItem  `json:"profiles"`
+	Rules          []TrafficStatsItem  `json:"rules"`
+	RuleHits       int64               `json:"rule-hits"`
+	Since          string              `json:"since"`
 }

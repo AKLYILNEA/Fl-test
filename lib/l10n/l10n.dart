@@ -10472,6 +10472,31 @@ class AppLocalizations {
     );
   }
 
+  /// `Cumulative uptime`
+  String get trafficStatsRunningTime {
+    return Intl.message(
+      'Cumulative uptime',
+      name: 'trafficStatsRunningTime',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `h`
+  String get trafficStatsHourUnit {
+    return Intl.message('h', name: 'trafficStatsHourUnit', desc: '', args: []);
+  }
+
+  /// `min`
+  String get trafficStatsMinuteUnit {
+    return Intl.message(
+      'min',
+      name: 'trafficStatsMinuteUnit',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Traffic Trend`
   String get trafficStatsTrend {
     return Intl.message(

@@ -2537,6 +2537,8 @@ class MessageLookup extends MessageLookupByLibrary {
       "Включить",
     ),
     "trafficStatsHitCount": m103,
+    "trafficStatsHourUnit": MessageLookupByLibrary.simpleMessage("ч"),
+    "trafficStatsMinuteUnit": MessageLookupByLibrary.simpleMessage("мин"),
     "trafficStatsMonth": MessageLookupByLibrary.simpleMessage("Месяц"),
     "trafficStatsNode": MessageLookupByLibrary.simpleMessage("Узел"),
     "trafficStatsOverview": MessageLookupByLibrary.simpleMessage("Обзор"),
@@ -2549,6 +2551,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "trafficStatsRuleHits": MessageLookupByLibrary.simpleMessage(
       "Срабатывания правил",
+    ),
+    "trafficStatsRunningTime": MessageLookupByLibrary.simpleMessage(
+      "Общее время работы",
     ),
     "trafficStatsSettings": MessageLookupByLibrary.simpleMessage(
       "Настройки статистики",

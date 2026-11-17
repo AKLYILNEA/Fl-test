@@ -43,6 +43,7 @@ func handleInitialized() bool {
 
 func setRunning(running bool) {
 	isRunning.Store(running)
+	trafficStats.setRunning(running)
 }
 
 func handleStartListener() {
@@ -58,10 +59,10 @@ func handleStartListener() {
 
 func handleStopListener() {
 	_ = handleCancelSpeedTest(SpeedTestCancelParams{})
-	flushTrafficStats()
 	configMu.Lock()
 	defer configMu.Unlock()
 	setRunning(false)
+	flushTrafficStats()
 	listener.StopListener()
 	resolver.ResetConnection()
 }
@@ -95,10 +96,10 @@ func updateListeners(cfg *config.Config) {
 func handleShutdown() {
 	handleStopLog()
 	stopRouteWatch()
-	flushTrafficStats()
 
 	configMu.Lock()
 	setRunning(false)
+	flushTrafficStats()
 	listener.StopListener()
 	updater.StopGeoUpdater()
 	executor.Shutdown()

@@ -2407,6 +2407,8 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "trafficStatsEnableAction": MessageLookupByLibrary.simpleMessage("Enable"),
     "trafficStatsHitCount": m103,
+    "trafficStatsHourUnit": MessageLookupByLibrary.simpleMessage("h"),
+    "trafficStatsMinuteUnit": MessageLookupByLibrary.simpleMessage("min"),
     "trafficStatsMonth": MessageLookupByLibrary.simpleMessage("Month"),
     "trafficStatsNode": MessageLookupByLibrary.simpleMessage("Node"),
     "trafficStatsOverview": MessageLookupByLibrary.simpleMessage("Overview"),
@@ -2418,6 +2420,9 @@ class MessageLookup extends MessageLookupByLibrary {
       "Data Retention",
     ),
     "trafficStatsRuleHits": MessageLookupByLibrary.simpleMessage("Rule Hits"),
+    "trafficStatsRunningTime": MessageLookupByLibrary.simpleMessage(
+      "Cumulative uptime",
+    ),
     "trafficStatsSettings": MessageLookupByLibrary.simpleMessage(
       "Statistics Settings",
     ),
