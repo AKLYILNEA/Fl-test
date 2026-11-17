@@ -438,7 +438,7 @@ void main() {
   }
 
   testWidgets(
-    'failed risk card retries from toolbar without confirmation or layout changes',
+    'toolbar retry disables its glyph and shows the full page loading animation',
     (tester) async {
       var attempts = 0;
       Completer<IpRisk>? retryCompleter;
@@ -465,20 +465,30 @@ void main() {
       expect(find.widgetWithText(app_ui.FilledButton, l.retry), findsNothing);
       expect(find.byTooltip('Check again'), findsOneWidget);
 
-      final errorCardFinder = find.ancestor(
-        of: find.text(l.ipRiskFailed),
-        matching: find.byType(app_ui.Card),
-      );
-      final beforeCardRect = tester.getRect(errorCardFinder);
-
       retryCompleter = Completer<IpRisk>();
       await tester.tap(find.byTooltip('Check again'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 50));
 
-      expect(find.text('158.247.202.50'), findsOneWidget);
+      expect(find.text('158.247.202.50'), findsNothing);
+      expect(find.text(l.ipRiskFailed), findsNothing);
       expect(find.byType(app_ui.InputDialog), findsNothing);
-      expect(tester.getRect(errorCardFinder), beforeCardRect);
+      expect(find.byGlyph(AppGlyphs.refresh), findsOneWidget);
+      final refreshAction = tester.widget<app_ui.AppBarActionButton>(
+        find.byWidgetPredicate(
+          (w) =>
+              w is app_ui.AppBarActionButton && w.data.tooltip == 'Check again',
+        ),
+      );
+      expect(refreshAction.data.isLoading, isFalse);
+      expect(refreshAction.data.onPressed, isNull);
+      expect(
+        find.descendant(
+          of: find.byType(app_ui.NullStatusSwitcher),
+          matching: find.byType(app_ui.ActivityIndicator),
+        ),
+        findsOneWidget,
+      );
       expect(find.byType(app_ui.ActivityIndicator), findsOneWidget);
 
       retryCompleter.complete(sampleRisk);
@@ -493,7 +503,7 @@ void main() {
   );
 
   testWidgets(
-    'instant retry failure holds toolbar spinner without changing the error card',
+    'instant retry failure briefly shows page loading before restoring the error',
     (tester) async {
       var attempts = 0;
       await tester.pumpWidget(
@@ -511,24 +521,18 @@ void main() {
       await tester.pumpAndSettle();
 
       final l = tester.element(find.byType(IpRiskSheet)).appLocalizations;
-      final errorCardFinder = find.ancestor(
-        of: find.text(l.ipRiskFailed),
-        matching: find.byType(app_ui.Card),
-      );
-      final beforeCardRect = tester.getRect(errorCardFinder);
-
       await tester.tap(find.byTooltip('Check again'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 50));
 
       expect(attempts, 2);
-      expect(tester.getRect(errorCardFinder), beforeCardRect);
+      expect(find.text(l.ipRiskFailed), findsNothing);
       expect(find.byType(app_ui.ActivityIndicator), findsOneWidget);
 
       await tester.pump(const Duration(milliseconds: 350));
       await tester.pumpAndSettle();
 
-      expect(tester.getRect(errorCardFinder), beforeCardRect);
+      expect(find.text(l.ipRiskFailed), findsOneWidget);
       expect(find.widgetWithText(app_ui.FilledButton, l.retry), findsNothing);
       expect(find.byTooltip('Check again'), findsOneWidget);
       await tester.pumpWidget(const SizedBox.shrink());

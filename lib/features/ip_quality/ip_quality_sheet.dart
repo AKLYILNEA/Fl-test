@@ -44,7 +44,7 @@ class IpRiskSheet extends ConsumerStatefulWidget {
 
 class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
   String? _manualIp;
-  bool _retrying = false;
+  int _loadGeneration = 0;
   bool _retryHold = false;
   Timer? _retryTimer;
 
@@ -70,7 +70,6 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
       _retryTimer?.cancel();
       setState(() {
         _manualIp = ip;
-        _retrying = false;
         _retryHold = false;
       });
     }
@@ -80,7 +79,7 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
     if (_retryHold) return;
     _retryTimer?.cancel();
     setState(() {
-      _retrying = true;
+      _loadGeneration++;
       _retryHold = true;
     });
     _retryTimer = Timer(const Duration(milliseconds: 350), () {
@@ -113,10 +112,8 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
     final state = effectiveIp.isNotEmpty
         ? ref.watch(ipRiskProvider(effectiveIp))
         : null;
-    final isLoading =
-        resolvingIp || (state != null && state.isLoading && !state.hasValue);
+    final isLoading = resolvingIp || (state?.isLoading ?? false) || _retryHold;
     final risk = state == null || state.hasError ? null : state.value;
-    final refreshing = resolvingIp || (state?.isLoading ?? false) || _retryHold;
     final hidden = ref.watch(appSettingProvider.select((s) => s.hideIp));
     final switchKey = widget.proxyName != null && _manualIp == null
         ? widget.proxyName!
@@ -131,8 +128,7 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
           IconButtonData(
             glyph: AppGlyphs.refresh,
             tooltip: l.ipQualityRetry,
-            isLoading: refreshing,
-            onPressed: refreshing ? null : () => _retry(effectiveIp),
+            onPressed: isLoading ? null : () => _retry(effectiveIp),
           ),
           IconButtonData(
             glyph: hidden ? AppGlyphs.eyeOff : AppGlyphs.eye,
@@ -144,8 +140,8 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
         ],
         body: Builder(
           builder: (context) => NullStatusSwitcher(
-            key: ValueKey(switchKey),
-            isLoading: !_retrying && isLoading,
+            key: ValueKey((switchKey, _loadGeneration)),
+            isLoading: isLoading,
             holdsArrival: false,
             loadingStatus: const Center(child: ActivityIndicator.page()),
             child: ListView(
