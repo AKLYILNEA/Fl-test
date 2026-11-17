@@ -90,7 +90,7 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
     if (effectiveIp.isEmpty && widget.proxyName != null && _manualIp == null) {
       ref.invalidate(proxyExitIpProvider(widget.proxyName!));
     } else if (effectiveIp.isNotEmpty) {
-      ref.invalidate(ipRiskProvider(effectiveIp));
+      refreshIpRisk(ref, effectiveIp);
     }
   }
 
@@ -116,6 +116,7 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
     final isLoading =
         resolvingIp || (state != null && state.isLoading && !state.hasValue);
     final risk = state == null || state.hasError ? null : state.value;
+    final refreshing = resolvingIp || (state?.isLoading ?? false) || _retryHold;
     final hidden = ref.watch(appSettingProvider.select((s) => s.hideIp));
     final switchKey = widget.proxyName != null && _manualIp == null
         ? widget.proxyName!
@@ -127,6 +128,12 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
             ? l.ipRiskCheck
             : (widget.outbound ? l.outboundIp : l.ipDetails),
         iconActions: [
+          IconButtonData(
+            glyph: AppGlyphs.refresh,
+            tooltip: l.ipQualityRetry,
+            isLoading: refreshing,
+            onPressed: refreshing ? null : () => _retry(effectiveIp),
+          ),
           IconButtonData(
             glyph: hidden ? AppGlyphs.eyeOff : AppGlyphs.eye,
             tooltip: l.hideIp,
@@ -221,7 +228,6 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
                     isLoading: isLoading,
                     risk: risk,
                     hidden: hidden,
-                    onRetry: () => _retry(effectiveIp),
                   ),
                 ),
               ],
@@ -237,7 +243,6 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
     required bool isLoading,
     required IpRisk? risk,
     required bool hidden,
-    required VoidCallback onRetry,
   }) {
     final l = context.appLocalizations;
     if (!isLoading && risk != null) {
@@ -277,24 +282,6 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
               style: AppTextStyle.body
                   .of(context)
                   .copyWith(color: context.colorScheme.error),
-            ),
-            const SizedBox(height: 16),
-            ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 48),
-              child: FadeBox(
-                child: isLoading || _retryHold
-                    ? const SizedBox(
-                        key: ValueKey('spinner'),
-                        height: 48,
-                        child: Center(child: ActivityIndicator(size: 20)),
-                      )
-                    : FilledButton.icon(
-                        key: const ValueKey('retry'),
-                        onPressed: onRetry,
-                        icon: const GlyphIcon(AppGlyphs.refresh, size: 18),
-                        label: Text(l.retry),
-                      ),
-              ),
             ),
           ],
         ),

@@ -121,6 +121,7 @@ class _RecordingCoreHandler extends CoreHandlerInterface {
       CoreMethod.configDecrypt => 'mode: rule',
       CoreMethod.connectionCount => 3,
       CoreMethod.ipCountry => 'US',
+      CoreMethod.ipCacheGet => {'score': 28},
       CoreMethod.proxyValidate || CoreMethod.filterValidate => [
         {'index': 1, 'message': 'missing closing )'},
       ],
@@ -757,6 +758,16 @@ void main() {
     expect(failure.toJson(), isNot(contains('file')));
     expect(spilled.file, '/home/responses/1234.json');
     expect(spilled.toJson(), containsPair('file', '/home/responses/1234.json'));
+  });
+
+  test('IP cache crosses RPC as structured data', () async {
+    final handler = _RecordingCoreHandler();
+    expect(await handler.readIpCache('1.2.3.4'), {'score': 28});
+    expect(handler.calls[CoreMethod.ipCacheGet], {'ip': '1.2.3.4'});
+    await handler.writeIpCache('1.2.3.4', {'score': 12});
+    expect(handler.calls[CoreMethod.ipCacheSet], {
+      'ip': '1.2.3.4', 'data': {'score': 12},
+    });
   });
 
   test('traffic stats configure, get, and clear cross the RPC boundary cleanly', () async {

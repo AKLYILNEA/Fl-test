@@ -80,6 +80,8 @@ const (
 	probeOutboundIPMethod CoreMethod = "probe.outboundIp"
 	probeServicesMethod   CoreMethod = "probe.services"
 	ipCountryMethod       CoreMethod = "ip.country"
+	ipCacheGetMethod CoreMethod = "ip.cacheGet"
+	ipCacheSetMethod CoreMethod = "ip.cacheSet"
 
 	mitmCertificateMethod         CoreMethod = "mitm.certificate"
 	mitmGenerateCertificateMethod CoreMethod = "mitm.generateCertificate"

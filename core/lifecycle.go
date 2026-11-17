@@ -32,6 +32,7 @@ func handleInit(params *InitParams) error {
 	constant.SetHomeDir(params.HomeDir)
 	initOwnership(params.HomeDir)
 	initTrafficStats(params.HomeDir)
+	ipCache.init(params.HomeDir)
 	clearSpilledResponses()
 	isInit.Store(true)
 	return nil

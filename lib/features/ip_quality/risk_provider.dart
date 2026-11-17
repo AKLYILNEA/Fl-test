@@ -35,13 +35,68 @@ Future<IpRisk> fetchIpRisk(Dio dio, String ip, CancelToken cancelToken) async {
   return result;
 }
 
+typedef ReadIpRiskCache = Future<Map<String, dynamic>?> Function(String ip);
+typedef WriteIpRiskCache =
+    Future<void> Function(String ip, Map<String, dynamic> data);
+typedef FetchIpRisk = Future<IpRisk> Function(String ip, CancelToken cancel);
+
+class IpRiskRepository {
+  IpRiskRepository({
+    required this.read,
+    required this.write,
+    required this.fetch,
+  });
+
+  final ReadIpRiskCache read;
+  final WriteIpRiskCache write;
+  final FetchIpRisk fetch;
+  final _refresh = <String>{};
+
+  void forceNextQuery(String ip) => _refresh.add(ip);
+
+  Future<IpRisk> load(String ip, CancelToken cancel) async {
+    if (!_refresh.remove(ip)) {
+      try {
+        final data = await read(ip);
+        if (data != null) {
+          final cached = IpRisk.fromJson(data);
+          if (cached.ip == ip) return cached;
+        }
+      } catch (_) {
+        // A missing Core or an incompatible cache must not block the query.
+      }
+    }
+    if (cancel.isCancelled) throw cancel.cancelError!;
+    final result = await fetch(ip, cancel);
+    try {
+      await write(ip, result.toJson());
+    } catch (_) {
+      // A disk write failure must not discard a successful network response.
+    }
+    return result;
+  }
+}
+
+final ipRiskRepositoryProvider = Provider<IpRiskRepository>((ref) {
+  return IpRiskRepository(
+    read: (ip) => ref.read(coreHandlerProvider).readIpCache(ip),
+    write: (ip, data) => ref.read(coreHandlerProvider).writeIpCache(ip, data),
+    fetch: (ip, cancel) => fetchIpRisk(request.dio, ip, cancel),
+  );
+});
+
+void refreshIpRisk(WidgetRef ref, String ip) {
+  ref.read(ipRiskRepositoryProvider).forceNextQuery(ip);
+  ref.invalidate(ipRiskProvider(ip));
+}
+
 final ipRiskProvider = FutureProvider.autoDispose.family<IpRisk, String>((
   ref,
   ip,
 ) async {
   final cancel = CancelToken();
   ref.onDispose(cancel.cancel);
-  final result = await fetchIpRisk(request.dio, ip, cancel);
+  final result = await ref.read(ipRiskRepositoryProvider).load(ip, cancel);
   if (ref.mounted) {
     final hold = ref.keepAlive();
     final timer = Timer(const Duration(minutes: 30), hold.close);

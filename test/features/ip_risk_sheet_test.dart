@@ -237,22 +237,38 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
-  testWidgets('IP details keeps hiding but has no recheck action', (
+  testWidgets('IP details keeps hiding and supports manual refresh', (
     tester,
   ) async {
+    var queries = 0;
     await tester.pumpWidget(
       TestApp(
         locale: const Locale('en'),
         overrides: [
-          ipRiskProvider(sampleRisk.ip).overrideWith((_) async => sampleRisk),
+          ipRiskRepositoryProvider.overrideWithValue(
+            IpRiskRepository(
+              read: (_) async => sampleRisk.toJson(),
+              write: (_, _) async {},
+              fetch: (_, _) async {
+                queries++;
+                return sampleRisk.copyWith(score: 12);
+              },
+            ),
+          ),
         ],
         child: const IpRiskSheet(ip: '158.247.202.50'),
       ),
     );
     await tester.pumpAndSettle();
     expect(find.byTooltip('Hide IP'), findsOneWidget);
-    expect(find.byTooltip('Check again'), findsNothing);
-    expect(find.byGlyph(AppGlyphs.refresh), findsNothing);
+    expect(find.byTooltip('Check again'), findsOneWidget);
+    expect(find.byGlyph(AppGlyphs.refresh), findsOneWidget);
+    expect(queries, 0);
+    await tester.tap(find.byTooltip('Check again'));
+    await tester.pumpAndSettle();
+    expect(find.byType(RiskScoreCard), findsOneWidget);
+    expect(queries, 1);
+    expect(find.text('12'), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
@@ -422,7 +438,7 @@ void main() {
   }
 
   testWidgets(
-    'failed risk card retries inline with loading and card transition',
+    'failed risk card retries from toolbar without confirmation or layout changes',
     (tester) async {
       var attempts = 0;
       Completer<IpRisk>? retryCompleter;
@@ -446,17 +462,8 @@ void main() {
       final l = tester.element(find.byType(IpRiskSheet)).appLocalizations;
       expect(find.text(l.ipRiskFailed), findsOneWidget);
       expect(find.byGlyph(AppGlyphs.error), findsOneWidget);
-      expect(
-        find.widgetWithText(app_ui.FilledButton, l.retry),
-        findsOneWidget,
-      );
-      expect(
-        find.descendant(
-          of: find.byType(app_ui.FilledButton),
-          matching: find.byGlyph(AppGlyphs.refresh),
-        ),
-        findsOneWidget,
-      );
+      expect(find.widgetWithText(app_ui.FilledButton, l.retry), findsNothing);
+      expect(find.byTooltip('Check again'), findsOneWidget);
 
       final errorCardFinder = find.ancestor(
         of: find.text(l.ipRiskFailed),
@@ -465,11 +472,12 @@ void main() {
       final beforeCardRect = tester.getRect(errorCardFinder);
 
       retryCompleter = Completer<IpRisk>();
-      await tester.tap(find.widgetWithText(app_ui.FilledButton, l.retry));
+      await tester.tap(find.byTooltip('Check again'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 50));
 
       expect(find.text('158.247.202.50'), findsOneWidget);
+      expect(find.byType(app_ui.InputDialog), findsNothing);
       expect(tester.getRect(errorCardFinder), beforeCardRect);
       expect(find.byType(app_ui.ActivityIndicator), findsOneWidget);
 
@@ -485,7 +493,7 @@ void main() {
   );
 
   testWidgets(
-    'instant retry failure holds spinner briefly without flashing or bouncing card',
+    'instant retry failure holds toolbar spinner without changing the error card',
     (tester) async {
       var attempts = 0;
       await tester.pumpWidget(
@@ -509,7 +517,7 @@ void main() {
       );
       final beforeCardRect = tester.getRect(errorCardFinder);
 
-      await tester.tap(find.widgetWithText(app_ui.FilledButton, l.retry));
+      await tester.tap(find.byTooltip('Check again'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 50));
 
@@ -521,7 +529,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(tester.getRect(errorCardFinder), beforeCardRect);
-      expect(find.widgetWithText(app_ui.FilledButton, l.retry), findsOneWidget);
+      expect(find.widgetWithText(app_ui.FilledButton, l.retry), findsNothing);
+      expect(find.byTooltip('Check again'), findsOneWidget);
       await tester.pumpWidget(const SizedBox.shrink());
     },
   );
@@ -618,7 +627,7 @@ void main() {
       expect(find.text('HK-01'), findsNothing);
       expect(find.text(l.ipRiskFailed), findsOneWidget);
 
-      await tester.tap(find.widgetWithText(app_ui.FilledButton, l.retry));
+      await tester.tap(find.byTooltip('Check again'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 350));
       await tester.pumpAndSettle();
