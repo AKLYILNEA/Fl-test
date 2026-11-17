@@ -520,19 +520,25 @@ class MiuixChromaticTitle extends StatelessWidget {
     final colorScheme = context.colorScheme;
     final isDark = colorScheme.brightness == Brightness.dark;
     final surface = SurfaceLevel.page.colorOf(colorScheme);
-    final label = Text(
-      text,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      textAlign: TextAlign.center,
-      style: style,
+    // Keep extra margin inside ShaderMask's offscreen layer so tall custom
+    // font ascenders/descenders and overhangs are never clipped at the edge.
+    const maskPadding = EdgeInsets.symmetric(horizontal: 12, vertical: 10);
+    Widget buildLabel(TextStyle textStyle) => Padding(
+      padding: maskPadding,
+      child: Text(
+        text,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.center,
+        style: textStyle,
+      ),
     );
     return ListenableBuilder(
       listenable: controller,
       builder: (context, child) {
         final shader = controller.titleShader;
         if (shader == null) {
-          return label;
+          return buildLabel(style);
         }
         return ShaderMask(
           blendMode: BlendMode.srcIn,
@@ -568,13 +574,7 @@ class MiuixChromaticTitle extends StatelessWidget {
           child: child,
         );
       },
-      child: Text(
-        text,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        textAlign: TextAlign.center,
-        style: style.copyWith(color: const Color(0xFFFFFFFF)),
-      ),
+      child: buildLabel(style.copyWith(color: const Color(0xFFFFFFFF))),
     );
   }
 }

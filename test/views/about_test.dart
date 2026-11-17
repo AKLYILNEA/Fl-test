@@ -58,16 +58,20 @@ void main() {
       expect(find.text(appName), findsOneWidget);
       expect(find.text('v0.9.3'), findsOneWidget);
       expect(find.text('GPL-3.0'), findsOneWidget);
+      expect(find.text('About'), findsOneWidget);
 
-      final barOpacityBefore = tester.widget<Opacity>(
+      final titlePadding = tester.widget<Padding>(
         find
             .ancestor(
-              of: find.text('About'),
-              matching: find.byType(Opacity),
+              of: find.text(appName),
+              matching: find.byType(Padding),
             )
             .first,
       );
-      expect(barOpacityBefore.opacity, 0.0);
+      expect(
+        titlePadding.padding,
+        const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      );
 
       await tester.drag(find.byType(CustomScrollView), const Offset(0, -450));
       for (var i = 0; i < 6; i++) {
@@ -77,16 +81,7 @@ void main() {
       expect(find.byType(MiuixFrostedSection), findsNWidgets(2));
       expect(find.text('Telegram'), findsOneWidget);
       expect(find.text('aaANDkk'), findsOneWidget);
-
-      final barOpacityAfter = tester.widget<Opacity>(
-        find
-            .ancestor(
-              of: find.text('About'),
-              matching: find.byType(Opacity),
-            )
-            .first,
-      );
-      expect(barOpacityAfter.opacity, greaterThan(0.5));
+      expect(find.text('About'), findsOneWidget);
       expect(tester.takeException(), isNull);
 
       await tester.pumpWidget(const SizedBox.shrink());

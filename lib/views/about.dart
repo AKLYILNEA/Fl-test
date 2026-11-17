@@ -140,12 +140,13 @@ class _AboutViewState extends ConsumerState<AboutView>
 
   Widget _buildLinkItem({
     required Glyph glyph,
+    required Color color,
     required String title,
     required String url,
     required String label,
   }) {
     return ListItem(
-      leading: _LinkBadge(glyph: glyph),
+      leading: _LinkBadge(glyph: glyph, color: color),
       title: Text(title),
       subtitle: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
       trailing: const GlyphIcon(AppGlyphs.openExternal),
@@ -164,7 +165,7 @@ class _AboutViewState extends ConsumerState<AboutView>
     final isWide = !context.isMobileView;
     final preset = MiuixBgConfig.of(isWide: isWide, isDark: isDark);
     final progress = _scrollProgress;
-    final barTitleAlpha = ((progress - 0.35) / 0.65).clamp(0.0, 1.0);
+    final barBgAlpha = ((progress - 0.35) / 0.65).clamp(0.0, 1.0);
     final collapsed = progress >= 1.0;
 
     _bgController.sync(
@@ -178,15 +179,18 @@ class _AboutViewState extends ConsumerState<AboutView>
 
     final barBackgroundColor = SurfaceLevel.page
         .colorOf(colorScheme)
-        .withValues(alpha: barTitleAlpha);
+        .withValues(alpha: barBgAlpha);
+    final projectColor = isDark
+        ? const Color(0xFFA78BFA)
+        : const Color(0xFF6D28D9);
+    final coreColor = colorScheme.warning;
+    final telegramColor = isDark
+        ? const Color(0xFF54C0F5)
+        : const Color(0xFF0088CC);
 
     return Scaffold(
       isLoading: isLoading,
       title: appLocalizations.about,
-      titleWidget: Opacity(
-        opacity: barTitleAlpha,
-        child: Text(appLocalizations.about),
-      ),
       backgroundColor: collapsed ? null : barBackgroundColor,
       body: Stack(
         children: [
@@ -252,12 +256,14 @@ class _AboutViewState extends ConsumerState<AboutView>
                           items: [
                             _buildLinkItem(
                               glyph: AppGlyphs.code,
+                              color: projectColor,
                               title: appLocalizations.project,
                               url: 'https://github.com/aaANDkk/FlClash-Myui',
                               label: 'github.com/aaANDkk/FlClash-Myui',
                             ),
                             _buildLinkItem(
                               glyph: AppGlyphs.cpu,
+                              color: coreColor,
                               title: appLocalizations.core,
                               url:
                                   'https://github.com/chen08209/Clash.Meta/tree/FlClash',
@@ -265,6 +271,7 @@ class _AboutViewState extends ConsumerState<AboutView>
                             ),
                             _buildLinkItem(
                               glyph: AppGlyphs.send,
+                              color: telegramColor,
                               title: 'Telegram',
                               url: 'https://t.me/FlClash',
                               label: 't.me/FlClash',
@@ -353,7 +360,7 @@ class _AboutHero extends StatelessWidget {
     final metaProgress = ((scrollProgress - 0.05) / 0.15).clamp(0.0, 1.0);
     final headlineStyle = AppTextStyle.title1
         .of(context, emphasized: true)
-        .copyWith(fontSize: 35, fontWeight: FontWeight.w700, height: 1.18);
+        .copyWith(fontSize: 35, fontWeight: FontWeight.w700, height: 1.32);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
@@ -386,7 +393,7 @@ class _AboutHero extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 6),
           _fadeScale(
             titleProgress,
             MiuixChromaticTitle(
@@ -397,7 +404,7 @@ class _AboutHero extends StatelessWidget {
               preset: preset,
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 2),
           _fadeScale(
             metaProgress,
             Column(
@@ -481,19 +488,16 @@ class _Pill extends StatelessWidget {
 
 class _LinkBadge extends StatelessWidget {
   final Glyph glyph;
+  final Color color;
 
-  const _LinkBadge({required this.glyph});
+  const _LinkBadge({required this.glyph, required this.color});
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = context.colorScheme;
-    final isDark = colorScheme.brightness == Brightness.dark;
     return DecoratedBox(
       decoration: ShapeDecoration(
-        color: isDark
-            ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.55)
-            : const Color(0x70FFFFFF),
-        shape: AppShape.md,
+        color: color.withValues(alpha: 0.14),
+        shape: AppShape.sm,
       ),
       child: SizedBox.square(
         dimension: 40,
@@ -501,7 +505,7 @@ class _LinkBadge extends StatelessWidget {
           child: GlyphIcon(
             glyph,
             size: 20,
-            color: colorScheme.onSurfaceVariant,
+            color: color,
           ),
         ),
       ),

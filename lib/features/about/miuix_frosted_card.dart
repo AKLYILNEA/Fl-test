@@ -73,7 +73,11 @@ class MiuixFrostedCard extends StatelessWidget {
                 for (var i = 0; i < items.length; i++) ...[
                   if (i > 0)
                     Padding(
-                      padding: const EdgeInsetsDirectional.only(start: 72),
+                      padding: EdgeInsetsDirectional.only(
+                        start:
+                            72 + Theme.of(context).visualDensity.horizontal * 2,
+                        end: 14,
+                      ),
                       child: Divider(
                         height: 1,
                         thickness: Divider.separatorThicknessOf(context),
