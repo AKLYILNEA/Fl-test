@@ -66,26 +66,9 @@ class MiuixFrostedCard extends StatelessWidget {
           filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
           child: DecoratedBox(
             decoration: ShapeDecoration(color: fillColor, shape: shape),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                for (var i = 0; i < items.length; i++) ...[
-                  if (i > 0)
-                    Padding(
-                      padding: EdgeInsetsDirectional.only(
-                        start:
-                            72 + Theme.of(context).visualDensity.horizontal * 2,
-                        end: 14,
-                      ),
-                      child: Divider(
-                        height: 1,
-                        thickness: Divider.separatorThicknessOf(context),
-                      ),
-                    ),
-                  items[i],
-                ],
-              ],
+            child: ListCardFillScope(
+              fill: const Color(0x00000000),
+              child: generateGroup(items),
             ),
           ),
         ),

@@ -3,6 +3,7 @@ import 'package:fl_clash/features/about/miuix_bg_effect.dart';
 import 'package:fl_clash/features/about/miuix_frosted_card.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
+import 'package:fl_clash/ui/ui.dart';
 import 'package:fl_clash/views/about.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -79,6 +80,7 @@ void main() {
       }
 
       expect(find.byType(MiuixFrostedSection), findsNWidgets(2));
+      expect(find.byType(DecorationListItem), findsNWidgets(6));
       expect(find.text('Telegram'), findsOneWidget);
       expect(find.text('aaANDkk'), findsOneWidget);
       expect(find.text('About'), findsOneWidget);
