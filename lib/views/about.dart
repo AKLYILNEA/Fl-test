@@ -12,6 +12,10 @@ import 'package:fl_clash/ui/ui.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+const _aboutShadows = [
+  BoxShadow(color: Color(0x14000000), blurRadius: 20, offset: Offset(0, 8)),
+];
+
 @immutable
 class Contributor {
   final String avatar;
@@ -81,7 +85,9 @@ class _AboutViewState extends ConsumerState<AboutView>
   void _onScroll() {
     if (!_scrollController.hasClients) return;
     final next = math.max(0.0, _scrollController.offset);
-    if ((next - _scrollOffset).abs() < 0.5 && _scrollProgress == 1.0 && next >= _heroExtent) {
+    if ((next - _scrollOffset).abs() < 0.5 &&
+        _scrollProgress == 1.0 &&
+        next >= _heroExtent) {
       return;
     }
     setState(() {
@@ -170,9 +176,7 @@ class _AboutViewState extends ConsumerState<AboutView>
 
     _bgController.sync(
       playing:
-          widget.dynamicBackground &&
-          !context.disableAnimations &&
-          !collapsed,
+          widget.dynamicBackground && !context.disableAnimations && !collapsed,
       colorInterpPeriod: preset.colorInterpPeriod,
     );
     _measureHero();
@@ -180,17 +184,11 @@ class _AboutViewState extends ConsumerState<AboutView>
     final barBackgroundColor = SurfaceLevel.page
         .colorOf(colorScheme)
         .withValues(alpha: barBgAlpha);
-    final projectColor = isDark
-        ? const Color(0xFFA78BFA)
-        : const Color(0xFF6D28D9);
-    final coreColor = colorScheme.warning;
-    final telegramColor = isDark
-        ? const Color(0xFF54C0F5)
-        : const Color(0xFF0088CC);
 
     return Scaffold(
       isLoading: isLoading,
       title: appLocalizations.about,
+      leadingShadows: _aboutShadows,
       backgroundColor: collapsed ? null : barBackgroundColor,
       body: Stack(
         children: [
@@ -256,14 +254,14 @@ class _AboutViewState extends ConsumerState<AboutView>
                           items: [
                             _buildLinkItem(
                               glyph: AppGlyphs.code,
-                              color: projectColor,
+                              color: colorScheme.primary,
                               title: appLocalizations.project,
                               url: 'https://github.com/aaANDkk/FlClash-Myui',
                               label: 'github.com/aaANDkk/FlClash-Myui',
                             ),
                             _buildLinkItem(
                               glyph: AppGlyphs.cpu,
-                              color: coreColor,
+                              color: colorScheme.primary,
                               title: appLocalizations.core,
                               url:
                                   'https://github.com/chen08209/Clash.Meta/tree/FlClash',
@@ -271,7 +269,7 @@ class _AboutViewState extends ConsumerState<AboutView>
                             ),
                             _buildLinkItem(
                               glyph: AppGlyphs.send,
-                              color: telegramColor,
+                              color: colorScheme.primary,
                               title: 'Telegram',
                               url: 'https://t.me/FlClash',
                               label: 't.me/FlClash',
@@ -302,7 +300,7 @@ class _AboutViewState extends ConsumerState<AboutView>
                                 subtitle: Text(
                                   contributor.secondaryDevelopment
                                       ? appLocalizations
-                                          .secondaryDevelopmentBuild
+                                            .secondaryDevelopmentBuild
                                       : appLocalizations.appIconDesign,
                                 ),
                               ),
@@ -374,13 +372,7 @@ class _AboutHero extends StatelessWidget {
                 decoration: ShapeDecoration(
                   color: const Color(0xFFFFFFFF),
                   shape: AppShape.all(24),
-                  shadows: const [
-                    BoxShadow(
-                      color: Color(0x14000000),
-                      blurRadius: 20,
-                      offset: Offset(0, 8),
-                    ),
-                  ],
+                  shadows: _aboutShadows,
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(_logoInset),
@@ -443,11 +435,17 @@ class _AboutHero extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 18),
-                TonalButton(
-                  size: TonalButtonSize.bar,
-                  glyph: AppGlyphs.sync,
-                  label: appLocalizations.checkUpdate,
-                  onPressed: isCheckingUpdate ? null : onCheckUpdate,
+                DecoratedBox(
+                  decoration: ShapeDecoration(
+                    shape: AppShape.full,
+                    shadows: _aboutShadows,
+                  ),
+                  child: TonalButton(
+                    size: TonalButtonSize.bar,
+                    glyph: AppGlyphs.sync,
+                    label: appLocalizations.checkUpdate,
+                    onPressed: isCheckingUpdate ? null : onCheckUpdate,
+                  ),
                 ),
               ],
             ),
@@ -496,18 +494,12 @@ class _LinkBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: ShapeDecoration(
-        color: color.withValues(alpha: 0.14),
+        color: color.withValues(alpha: 0.12),
         shape: AppShape.sm,
       ),
-      child: SizedBox.square(
-        dimension: 40,
-        child: Center(
-          child: GlyphIcon(
-            glyph,
-            size: 20,
-            color: color,
-          ),
-        ),
+      child: Padding(
+        padding: const EdgeInsets.all(6),
+        child: GlyphIcon(glyph, size: 18, color: color),
       ),
     );
   }

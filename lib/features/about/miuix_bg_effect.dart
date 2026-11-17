@@ -520,17 +520,23 @@ class MiuixChromaticTitle extends StatelessWidget {
     final colorScheme = context.colorScheme;
     final isDark = colorScheme.brightness == Brightness.dark;
     final surface = SurfaceLevel.page.colorOf(colorScheme);
-    // Keep extra margin inside ShaderMask's offscreen layer so tall custom
-    // font ascenders/descenders and overhangs are never clipped at the edge.
+    // Paragraph ellipsis clips glyph ink before the mask's padding can help.
     const maskPadding = EdgeInsets.symmetric(horizontal: 12, vertical: 10);
-    Widget buildLabel(TextStyle textStyle) => Padding(
-      padding: maskPadding,
-      child: Text(
-        text,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        textAlign: TextAlign.center,
-        style: textStyle,
+    Widget buildLabel(TextStyle textStyle) => FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Padding(
+        padding: maskPadding,
+        child: Text(
+          text,
+          softWrap: false,
+          overflow: TextOverflow.visible,
+          textAlign: TextAlign.center,
+          textHeightBehavior: const TextHeightBehavior(
+            applyHeightToFirstAscent: false,
+            applyHeightToLastDescent: false,
+          ),
+          style: textStyle,
+        ),
       ),
     );
     return ListenableBuilder(

@@ -79,6 +79,7 @@ class Scaffold extends StatefulWidget {
   final ValueListenable<List<ScaffoldKeyword>>? keywords;
   final bool? resizeToAvoidBottomInset;
   final VoidCallback? backAction;
+  final List<BoxShadow> leadingShadows;
 
   /// Puts the toggle of the sort mode in the bar.
   final bool canSort;
@@ -92,6 +93,7 @@ class Scaffold extends StatefulWidget {
     this.titleMenuItems = const [],
     this.actions,
     this.backAction,
+    this.leadingShadows = const [],
     this.isLoading = false,
     this.searchState,
     this.searchActions = const [],
@@ -484,7 +486,19 @@ class ScaffoldState extends State<Scaffold>
             child: AnimatedOpacity(
               opacity: hidden ? 0 : 1,
               duration: context.motionDuration(kThemeAnimationDuration),
-              child: BarItemPresence(child: ElasticPress(child: button)),
+              child: BarItemPresence(
+                child: ElasticPress(
+                  child: widget.leadingShadows.isEmpty
+                      ? button
+                      : DecoratedBox(
+                          decoration: ShapeDecoration(
+                            shape: AppShape.full,
+                            shadows: widget.leadingShadows,
+                          ),
+                          child: button,
+                        ),
+                ),
+              ),
             ),
           ),
         ),

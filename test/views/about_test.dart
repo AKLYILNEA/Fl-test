@@ -73,6 +73,9 @@ void main() {
         titlePadding.padding,
         const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       );
+      final title = tester.widget<Text>(find.text(appName));
+      expect(title.overflow, TextOverflow.visible);
+      expect(title.softWrap, isFalse);
 
       await tester.drag(find.byType(CustomScrollView), const Offset(0, -450));
       for (var i = 0; i < 6; i++) {
