@@ -1074,6 +1074,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "ipRiskAmountLow": MessageLookupByLibrary.simpleMessage("少ない"),
     "ipRiskAmountMedium": MessageLookupByLibrary.simpleMessage("中程度"),
     "ipRiskAnonymousVpn": MessageLookupByLibrary.simpleMessage("匿名 VPN"),
+    "ipRiskAsn": MessageLookupByLibrary.simpleMessage("ASN"),
     "ipRiskBlacklist": MessageLookupByLibrary.simpleMessage("ブラックリスト登録"),
     "ipRiskCheck": MessageLookupByLibrary.simpleMessage("IP の純度を確認"),
     "ipRiskCity": MessageLookupByLibrary.simpleMessage("地域・都市"),
@@ -1128,6 +1129,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "ipRiskShareLittle": MessageLookupByLibrary.simpleMessage("ごくわずか"),
     "ipRiskShareSome": MessageLookupByLibrary.simpleMessage("一部"),
     "ipRiskSource": MessageLookupByLibrary.simpleMessage("データ提供元"),
+    "ipRiskSources": MessageLookupByLibrary.simpleMessage(
+      "Scamalytics と IPLocate.io",
+    ),
     "ipRiskTorExit": MessageLookupByLibrary.simpleMessage("Tor 出口ノード"),
     "ipRiskVeryHigh": MessageLookupByLibrary.simpleMessage("非常に高いリスク"),
     "ipRiskWebProxy": MessageLookupByLibrary.simpleMessage("Web プロキシ"),

@@ -766,8 +766,18 @@ void main() {
     expect(handler.calls[CoreMethod.ipCacheGet], {'ip': '1.2.3.4'});
     await handler.writeIpCache('1.2.3.4', {'score': 12});
     expect(handler.calls[CoreMethod.ipCacheSet], {
-      'ip': '1.2.3.4', 'data': {'score': 12},
+      'ip': '1.2.3.4',
+      'data': {'score': 12},
     });
+    await handler.readIpCache('1.2.3.4', source: 'iplocate');
+    expect(handler.calls[CoreMethod.ipCacheGet], {
+      'ip': '1.2.3.4',
+      'source': 'iplocate',
+    });
+    await handler.writeIpCache('1.2.3.4', {
+      'company': {'name': 'Example'},
+    }, source: 'iplocate');
+    expect((handler.calls[CoreMethod.ipCacheSet] as Map)['source'], 'iplocate');
   });
 
   test('traffic stats configure, get, and clear cross the RPC boundary cleanly', () async {

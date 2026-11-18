@@ -1154,6 +1154,8 @@
   "ipRiskHint": "输入要查询的 IP",
   "ipRiskInvalid": "请输入有效的公网 IP",
   "ipRiskSource": "数据来源",
+  "ipRiskSources": "Scamalytics 和 IPLocate.io",
+  "ipRiskAsn": "ASN",
   "ipRiskHomeBroadband": "优质原生 IP",
   "ipRiskNoteTitle": "欺诈值说明",
   "ipRiskNoteDirect": "Scamalytics 能直接观测到该 IP 的网页流量，欺诈值 {score} 代表其中疑似欺诈流量所占的比例。",

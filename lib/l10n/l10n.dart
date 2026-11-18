@@ -9747,6 +9747,21 @@ class AppLocalizations {
     return Intl.message('Source', name: 'ipRiskSource', desc: '', args: []);
   }
 
+  /// `Scamalytics and IPLocate.io`
+  String get ipRiskSources {
+    return Intl.message(
+      'Scamalytics and IPLocate.io',
+      name: 'ipRiskSources',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `ASN`
+  String get ipRiskAsn {
+    return Intl.message('ASN', name: 'ipRiskAsn', desc: '', args: []);
+  }
+
   /// `Premium Residential IP`
   String get ipRiskHomeBroadband {
     return Intl.message(

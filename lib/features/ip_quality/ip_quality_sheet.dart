@@ -9,6 +9,7 @@ import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'ip_locate.dart';
 import 'risk_model.dart';
 import 'risk_provider.dart';
 import 'risk_view.dart';
@@ -44,7 +45,7 @@ class IpRiskSheet extends ConsumerStatefulWidget {
 
 class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
   String? _manualIp;
-  int _loadGeneration = 0;
+  bool _retrying = false;
   bool _retryHold = false;
   Timer? _retryTimer;
 
@@ -70,6 +71,7 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
       _retryTimer?.cancel();
       setState(() {
         _manualIp = ip;
+        _retrying = false;
         _retryHold = false;
       });
     }
@@ -79,7 +81,7 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
     if (_retryHold) return;
     _retryTimer?.cancel();
     setState(() {
-      _loadGeneration++;
+      _retrying = true;
       _retryHold = true;
     });
     _retryTimer = Timer(const Duration(milliseconds: 350), () {
@@ -90,6 +92,7 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
       ref.invalidate(proxyExitIpProvider(widget.proxyName!));
     } else if (effectiveIp.isNotEmpty) {
       refreshIpRisk(ref, effectiveIp);
+      ref.invalidate(ipLocateProvider(effectiveIp));
     }
   }
 
@@ -112,8 +115,12 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
     final state = effectiveIp.isNotEmpty
         ? ref.watch(ipRiskProvider(effectiveIp))
         : null;
-    final isLoading = resolvingIp || (state?.isLoading ?? false) || _retryHold;
-    final risk = state == null || state.hasError ? null : state.value;
+    final isLoading = resolvingIp || (state?.isLoading ?? false);
+    final baseRisk = state == null || state.hasError ? null : state.value;
+    final attribution = effectiveIp.isNotEmpty
+        ? ref.watch(ipLocateProvider(effectiveIp)).value
+        : null;
+    final risk = baseRisk;
     final hidden = ref.watch(appSettingProvider.select((s) => s.hideIp));
     final switchKey = widget.proxyName != null && _manualIp == null
         ? widget.proxyName!
@@ -126,11 +133,6 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
             : (widget.outbound ? l.outboundIp : l.ipDetails),
         iconActions: [
           IconButtonData(
-            glyph: AppGlyphs.refresh,
-            tooltip: l.ipQualityRetry,
-            onPressed: isLoading ? null : () => _retry(effectiveIp),
-          ),
-          IconButtonData(
             glyph: hidden ? AppGlyphs.eyeOff : AppGlyphs.eye,
             tooltip: l.hideIp,
             onPressed: () => ref
@@ -140,8 +142,8 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
         ],
         body: Builder(
           builder: (context) => NullStatusSwitcher(
-            key: ValueKey((switchKey, _loadGeneration)),
-            isLoading: isLoading,
+            key: ValueKey(switchKey),
+            isLoading: !_retrying && isLoading,
             holdsArrival: false,
             loadingStatus: const Center(child: ActivityIndicator.page()),
             child: ListView(
@@ -223,7 +225,9 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
                     context,
                     isLoading: isLoading,
                     risk: risk,
+                    attribution: attribution,
                     hidden: hidden,
+                    onRetry: () => _retry(effectiveIp),
                   ),
                 ),
               ],
@@ -238,7 +242,9 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
     BuildContext context, {
     required bool isLoading,
     required IpRisk? risk,
+    required IpLocateInfo? attribution,
     required bool hidden,
+    required VoidCallback onRetry,
   }) {
     final l = context.appLocalizations;
     if (!isLoading && risk != null) {
@@ -252,8 +258,8 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
             RiskChecksCard(risk: risk),
             const SizedBox(height: 12),
           ],
-          _LocationCard(risk: risk, hidden: hidden),
-          ListFooter(text: '${l.ipRiskSource} Scamalytics'),
+          _LocationCard(risk: risk, attribution: attribution, hidden: hidden),
+          ListFooter(text: '${l.ipRiskSource} ${l.ipRiskSources}'),
         ],
       );
     }
@@ -279,6 +285,24 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
                   .of(context)
                   .copyWith(color: context.colorScheme.error),
             ),
+            const SizedBox(height: 16),
+            ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 48),
+              child: FadeBox(
+                child: isLoading || _retryHold
+                    ? const SizedBox(
+                        key: ValueKey('spinner'),
+                        height: 48,
+                        child: Center(child: ActivityIndicator(size: 20)),
+                      )
+                    : FilledButton.icon(
+                        key: const ValueKey('retry'),
+                        onPressed: onRetry,
+                        icon: const GlyphIcon(AppGlyphs.refresh, size: 18),
+                        label: Text(l.retry),
+                      ),
+              ),
+            ),
           ],
         ),
       ),
@@ -287,8 +311,13 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
 }
 
 class _LocationCard extends StatelessWidget {
-  const _LocationCard({required this.risk, required this.hidden});
+  const _LocationCard({
+    required this.risk,
+    required this.attribution,
+    required this.hidden,
+  });
   final IpRisk risk;
+  final IpLocateInfo? attribution;
   final bool hidden;
 
   Widget _value(
@@ -325,52 +354,52 @@ class _LocationCard extends StatelessWidget {
     final country = risk.countryLabel ?? '';
     final place = risk.placeLabel ?? '';
     final hasLocation = country.isNotEmpty || place.isNotEmpty;
-    final showAsnPill = hasLocation && risk.asn.isNotEmpty;
-    final owner = showAsnPill
-        ? risk.organization
-        : [
-            risk.organization,
-            risk.asn,
-          ].where((s) => s.isNotEmpty).join(' \u00b7 ');
+    final info = attribution?.ip == risk.ip ? attribution : null;
+    final company = info?.company ?? '';
+    final network = info?.network ?? '';
+    final asn = info?.asn ?? '';
+    final showAsnPill = asn.isNotEmpty;
     final rows = <Widget>[
-      if (hasLocation)
+      if (hasLocation || showAsnPill)
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    country.isNotEmpty ? l.ipRiskLocation : l.ipRiskCity,
-                    style: AppTextStyle.footnote
-                        .of(context)
-                        .copyWith(color: cs.onSurfaceVariant),
-                  ),
-                  if (country.isNotEmpty) ...[
-                    const SizedBox(height: 6),
-                    EmojiText(
-                      country,
-                      style: AppTextStyle.headline.of(
-                        context,
-                        emphasized: true,
+            if (hasLocation)
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      country.isNotEmpty ? l.ipRiskLocation : l.ipRiskCity,
+                      style: AppTextStyle.footnote
+                          .of(context)
+                          .copyWith(color: cs.onSurfaceVariant),
+                    ),
+                    if (country.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      EmojiText(
+                        country,
+                        style: AppTextStyle.headline.of(
+                          context,
+                          emphasized: true,
+                        ),
                       ),
-                    ),
+                    ],
+                    if (place.isNotEmpty) ...[
+                      SizedBox(height: country.isNotEmpty ? 4 : 6),
+                      SelectableText(
+                        place,
+                        style: country.isNotEmpty
+                            ? AppTextStyle.subheadline
+                                  .of(context)
+                                  .copyWith(color: cs.onSurfaceVariant)
+                            : AppTextStyle.body.of(context, emphasized: true),
+                      ),
+                    ],
                   ],
-                  if (place.isNotEmpty) ...[
-                    SizedBox(height: country.isNotEmpty ? 4 : 6),
-                    SelectableText(
-                      place,
-                      style: country.isNotEmpty
-                          ? AppTextStyle.subheadline
-                                .of(context)
-                                .copyWith(color: cs.onSurfaceVariant)
-                          : AppTextStyle.body.of(context, emphasized: true),
-                    ),
-                  ],
-                ],
+                ),
               ),
-            ),
+            if (!hasLocation) const Spacer(),
             if (showAsnPill) ...[
               const SizedBox(width: 12),
               DecoratedBox(
@@ -384,7 +413,7 @@ class _LocationCard extends StatelessWidget {
                     vertical: 3,
                   ),
                   child: Text(
-                    risk.asn,
+                    asn,
                     style: AppTextStyle.footnote
                         .of(context, emphasized: true)
                         .toTabular
@@ -395,14 +424,9 @@ class _LocationCard extends StatelessWidget {
             ],
           ],
         ),
-      if (owner.isNotEmpty)
-        _value(
-          context,
-          showAsnPill ? l.ipOrganization : l.operatorOrAsn,
-          owner,
-        ),
-      if (risk.isp.isNotEmpty && risk.isp != risk.organization)
-        _value(context, l.isp, risk.isp),
+      if (company.isNotEmpty) _value(context, l.isp, company),
+      if (network.isNotEmpty && network != company)
+        _value(context, l.ipRiskAsn, network),
       if (!hidden && risk.hostname.isNotEmpty)
         _value(context, l.ipRiskHostname, risk.hostname),
     ];

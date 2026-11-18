@@ -1246,6 +1246,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "ipRiskAnonymousVpn": MessageLookupByLibrary.simpleMessage(
       "Anonymizing VPN",
     ),
+    "ipRiskAsn": MessageLookupByLibrary.simpleMessage("ASN"),
     "ipRiskBlacklist": MessageLookupByLibrary.simpleMessage("Blacklist flags"),
     "ipRiskCheck": MessageLookupByLibrary.simpleMessage("Check IP purity"),
     "ipRiskCity": MessageLookupByLibrary.simpleMessage("Region / city"),
@@ -1314,6 +1315,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "ipRiskShareLittle": MessageLookupByLibrary.simpleMessage("Very little"),
     "ipRiskShareSome": MessageLookupByLibrary.simpleMessage("Some"),
     "ipRiskSource": MessageLookupByLibrary.simpleMessage("Source"),
+    "ipRiskSources": MessageLookupByLibrary.simpleMessage(
+      "Scamalytics and IPLocate.io",
+    ),
     "ipRiskTorExit": MessageLookupByLibrary.simpleMessage("Tor exit node"),
     "ipRiskVeryHigh": MessageLookupByLibrary.simpleMessage("Very high risk"),
     "ipRiskWebProxy": MessageLookupByLibrary.simpleMessage("Web proxy"),

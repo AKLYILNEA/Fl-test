@@ -1154,6 +1154,8 @@
   "ipRiskHint": "Введите IP для проверки",
   "ipRiskInvalid": "Введите действительный публичный IP",
   "ipRiskSource": "Источник",
+  "ipRiskSources": "Scamalytics и IPLocate.io",
+  "ipRiskAsn": "ASN",
   "ipRiskHomeBroadband": "Премиальный резидентный IP",
   "ipRiskNoteTitle": "Об оценке мошенничества",
   "ipRiskNoteDirect": "Scamalytics напрямую видит веб-трафик с этого IP. Оценка {score} отражает долю этого трафика, подозреваемого в мошенничестве.",

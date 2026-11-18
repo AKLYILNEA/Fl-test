@@ -976,6 +976,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "ipRiskAmountLow": MessageLookupByLibrary.simpleMessage("较少"),
     "ipRiskAmountMedium": MessageLookupByLibrary.simpleMessage("中等"),
     "ipRiskAnonymousVpn": MessageLookupByLibrary.simpleMessage("匿名 VPN"),
+    "ipRiskAsn": MessageLookupByLibrary.simpleMessage("ASN"),
     "ipRiskBlacklist": MessageLookupByLibrary.simpleMessage("黑名单标记"),
     "ipRiskCheck": MessageLookupByLibrary.simpleMessage("纯净度检测"),
     "ipRiskCity": MessageLookupByLibrary.simpleMessage("省份 / 城市"),
@@ -1024,6 +1025,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "ipRiskShareLittle": MessageLookupByLibrary.simpleMessage("极少"),
     "ipRiskShareSome": MessageLookupByLibrary.simpleMessage("部分"),
     "ipRiskSource": MessageLookupByLibrary.simpleMessage("数据来源"),
+    "ipRiskSources": MessageLookupByLibrary.simpleMessage(
+      "Scamalytics 和 IPLocate.io",
+    ),
     "ipRiskTorExit": MessageLookupByLibrary.simpleMessage("Tor 出口节点"),
     "ipRiskVeryHigh": MessageLookupByLibrary.simpleMessage("极高风险"),
     "ipRiskWebProxy": MessageLookupByLibrary.simpleMessage("Web 代理"),

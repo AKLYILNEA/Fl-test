@@ -1302,6 +1302,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "ipRiskAmountLow": MessageLookupByLibrary.simpleMessage("Низкий"),
     "ipRiskAmountMedium": MessageLookupByLibrary.simpleMessage("Средний"),
     "ipRiskAnonymousVpn": MessageLookupByLibrary.simpleMessage("Анонимный VPN"),
+    "ipRiskAsn": MessageLookupByLibrary.simpleMessage("ASN"),
     "ipRiskBlacklist": MessageLookupByLibrary.simpleMessage(
       "Отметки в чёрных списках",
     ),
@@ -1382,6 +1383,9 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "ipRiskShareSome": MessageLookupByLibrary.simpleMessage("Часть"),
     "ipRiskSource": MessageLookupByLibrary.simpleMessage("Источник"),
+    "ipRiskSources": MessageLookupByLibrary.simpleMessage(
+      "Scamalytics и IPLocate.io",
+    ),
     "ipRiskTorExit": MessageLookupByLibrary.simpleMessage("Выходной узел Tor"),
     "ipRiskVeryHigh": MessageLookupByLibrary.simpleMessage(
       "Очень высокий риск",

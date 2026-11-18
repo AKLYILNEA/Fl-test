@@ -357,11 +357,21 @@ abstract class CoreHandlerInterface {
     );
   }
 
-  Future<Map<String, dynamic>?> readIpCache(String ip) =>
-      _find(CoreMethod.ipCacheGet, _json, arguments: {'ip': ip});
+  Future<Map<String, dynamic>?> readIpCache(String ip, {String? source}) =>
+      _find(
+        CoreMethod.ipCacheGet,
+        _json,
+        arguments: {'ip': ip, 'source': ?source},
+      );
 
-  Future<void> writeIpCache(String ip, Map<String, dynamic> data) =>
-      _command(CoreMethod.ipCacheSet, arguments: {'ip': ip, 'data': data});
+  Future<void> writeIpCache(
+    String ip,
+    Map<String, dynamic> data, {
+    String? source,
+  }) => _command(
+    CoreMethod.ipCacheSet,
+    arguments: {'ip': ip, 'data': data, 'source': ?source},
+  );
 
   Future<String> ipCountry(String ip) {
     return _query(

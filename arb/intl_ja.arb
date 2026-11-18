@@ -1154,6 +1154,8 @@
   "ipRiskHint": "確認する IP を入力",
   "ipRiskInvalid": "有効なグローバル IP を入力してください",
   "ipRiskSource": "データ提供元",
+  "ipRiskSources": "Scamalytics と IPLocate.io",
+  "ipRiskAsn": "ASN",
   "ipRiskHomeBroadband": "プレミアム住宅用 IP",
   "ipRiskNoteTitle": "不正スコアについて",
   "ipRiskNoteDirect": "Scamalytics はこの IP の Web トラフィックを直接観測しています。スコア {score} は、そのうち不正が疑われるトラフィックの割合を示します。",

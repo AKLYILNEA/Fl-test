@@ -1060,6 +1060,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "ipRiskAmountLow": MessageLookupByLibrary.simpleMessage("적음"),
     "ipRiskAmountMedium": MessageLookupByLibrary.simpleMessage("보통"),
     "ipRiskAnonymousVpn": MessageLookupByLibrary.simpleMessage("익명 VPN"),
+    "ipRiskAsn": MessageLookupByLibrary.simpleMessage("ASN"),
     "ipRiskBlacklist": MessageLookupByLibrary.simpleMessage("블랙리스트 등록"),
     "ipRiskCheck": MessageLookupByLibrary.simpleMessage("IP 순도 확인"),
     "ipRiskCity": MessageLookupByLibrary.simpleMessage("지역 / 도시"),
@@ -1110,6 +1111,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "ipRiskShareLittle": MessageLookupByLibrary.simpleMessage("거의 없음"),
     "ipRiskShareSome": MessageLookupByLibrary.simpleMessage("일부"),
     "ipRiskSource": MessageLookupByLibrary.simpleMessage("데이터 출처"),
+    "ipRiskSources": MessageLookupByLibrary.simpleMessage(
+      "Scamalytics 및 IPLocate.io",
+    ),
     "ipRiskTorExit": MessageLookupByLibrary.simpleMessage("Tor 출구 노드"),
     "ipRiskVeryHigh": MessageLookupByLibrary.simpleMessage("매우 높은 위험"),
     "ipRiskWebProxy": MessageLookupByLibrary.simpleMessage("웹 프록시"),
