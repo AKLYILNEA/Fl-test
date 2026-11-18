@@ -5,6 +5,8 @@ import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/providers/core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'request_retry.dart';
+
 String _name(Object? value) {
   if (value is! String) return '';
   final text = value.trim();
@@ -86,10 +88,16 @@ class IpLocateRepository {
     } catch (_) {
       // Storage availability does not determine network availability.
     }
-    if (cancel.isCancelled) return null;
     try {
-      final info = await fetch(ip, cancel);
-      if (info.ip != ip || info.isEmpty) return null;
+      final info = await retryIpRequest(cancel, () async {
+        final result = await fetch(ip, cancel);
+        if (result.ip != ip || result.isEmpty) {
+          throw const FormatException(
+            'IPLocate returned no matching attribution',
+          );
+        }
+        return result;
+      });
       try {
         await write(ip, info.toJson());
       } catch (_) {

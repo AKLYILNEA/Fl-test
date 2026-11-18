@@ -7,6 +7,7 @@ import 'package:fl_clash/providers/core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'request_retry.dart';
 import 'risk_model.dart';
 import 'risk_parser.dart';
 
@@ -66,8 +67,7 @@ class IpRiskRepository {
         // A missing Core or an incompatible cache must not block the query.
       }
     }
-    if (cancel.isCancelled) throw cancel.cancelError!;
-    final result = await fetch(ip, cancel);
+    final result = await retryIpRequest(cancel, () => fetch(ip, cancel));
     try {
       await write(ip, result.toJson());
     } catch (_) {

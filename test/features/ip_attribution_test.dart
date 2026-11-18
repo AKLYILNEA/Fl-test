@@ -185,15 +185,36 @@ void main() {
 
   test('IPLocate failures are not cached', () async {
     var writes = 0;
+    var attempts = 0;
     final repository = IpLocateRepository(
       read: (_) async => null,
       write: (_, _) async {
         writes++;
       },
-      fetch: (_, _) async => throw StateError('offline'),
+      fetch: (_, _) async {
+        attempts++;
+        throw StateError('offline');
+      },
     );
     expect(await repository.load('1.2.3.4', CancelToken()), isNull);
     expect(writes, 0);
+    expect(attempts, 3);
+  });
+
+  test('disposing an IPLocate lookup stops automatic retries', () async {
+    var attempts = 0;
+    final cancel = CancelToken();
+    final repository = IpLocateRepository(
+      read: (_) async => null,
+      write: (_, _) async => fail('Cancelled results must not be cached'),
+      fetch: (_, token) async {
+        attempts++;
+        token.cancel();
+        throw token.cancelError!;
+      },
+    );
+    expect(await repository.load('1.2.3.4', cancel), isNull);
+    expect(attempts, 1);
   });
 
   testWidgets('detail waits for IPLocate and shows both sources together', (

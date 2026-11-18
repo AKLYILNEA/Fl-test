@@ -98,15 +98,45 @@ void main() {
   });
 
   test(
+    'cold lookup retries the request and caches its first success',
+    () async {
+      var attempts = 0;
+      var reads = 0;
+      var writes = 0;
+      final repository = IpRiskRepository(
+        read: (_) async {
+          reads++;
+          return null;
+        },
+        write: (_, _) async {
+          writes++;
+        },
+        fetch: (_, _) async {
+          if (++attempts < 3) throw StateError('offline');
+          return risk;
+        },
+      );
+      expect(await repository.load(risk.ip, CancelToken()), risk);
+      expect(attempts, 3);
+      expect(reads, 1);
+      expect(writes, 1);
+    },
+  );
+
+  test(
     'failed force refresh does not overwrite the last good result',
     () async {
       var writes = 0;
+      var attempts = 0;
       final repository = IpRiskRepository(
         read: (_) async => risk.toJson(),
         write: (_, _) async {
           writes++;
         },
-        fetch: (_, _) async => throw StateError('offline'),
+        fetch: (_, _) async {
+          attempts++;
+          throw StateError('offline');
+        },
       );
       repository.forceNextQuery(risk.ip);
       await expectLater(
@@ -114,6 +144,7 @@ void main() {
         throwsStateError,
       );
       expect(writes, 0);
+      expect(attempts, 3);
       expect((await repository.load(risk.ip, CancelToken())).score, risk.score);
     },
   );
