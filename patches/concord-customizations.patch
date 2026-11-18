@@ -501,7 +501,7 @@ index 4c6eb66..8af0782 100644
      /// `"name" Type addr` of where `target` would leave now, without waking a lazy group.
 diff --git a/crates/engine/src/probe/speed_test.rs b/crates/engine/src/probe/speed_test.rs
 new file mode 100644
-index 0000000..4bbfb08
+index 0000000..e7b0748
 --- /dev/null
 +++ b/crates/engine/src/probe/speed_test.rs
 @@ -0,0 +1,618 @@
@@ -708,18 +708,18 @@ index 0000000..4bbfb08
 +                )?;
 +            }
 +        } else {
-+            let progress = counter.clone();
-+            let payload = payload.clone();
-+            let payload_len = payload.len();
-+            let frames =
-+                futures_util::stream::iter((0..payload.len()).step_by(BLOCK).map(move |offset| {
-+                    let chunk = payload.slice(offset..(offset + BLOCK).min(payload.len()));
-+                    progress.fetch_add(chunk.len() as u64, Ordering::Relaxed);
-+                    Ok::<_, Infallible>(Frame::data(chunk))
-+                }));
-+            let body = if payload_len == 0 {
++            let body = if payload.is_empty() {
 +                Empty::<Bytes>::new().boxed()
 +            } else {
++                let progress = counter.clone();
++                let upload = payload.clone();
++                let frames = futures_util::stream::iter((0..upload.len()).step_by(BLOCK).map(
++                    move |offset| {
++                        let chunk = upload.slice(offset..(offset + BLOCK).min(upload.len()));
++                        progress.fetch_add(chunk.len() as u64, Ordering::Relaxed);
++                        Ok::<_, Infallible>(Frame::data(chunk))
++                    },
++                ));
 +                BodyExt::boxed(StreamBody::new(frames))
 +            };
 +            let request = builder.body(body).map_err(io_error)?;
