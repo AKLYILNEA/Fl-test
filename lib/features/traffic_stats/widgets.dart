@@ -738,31 +738,20 @@ class _TrafficStatsRunningTime extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Row(
+                spacing: 8,
                 children: [
                   GlyphIcon(
                     AppGlyphs.clock,
-                    size: 15,
+                    size: 18,
                     color: context.colorScheme.onSurfaceVariant,
                   ),
-                  const SizedBox(width: 6),
                   Expanded(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: AlignmentDirectional.centerStart,
-                      child: Transform.translate(
-                        offset: const Offset(0, 1),
-                        child: Text(
-                          l.trafficStatsRunningTime,
-                          maxLines: 1,
-                          softWrap: false,
-                          overflow: TextOverflow.visible,
-                          style: AppTextStyle.footnote
-                              .of(context)
-                              .copyWith(
-                                color: context.colorScheme.onSurfaceVariant,
-                              ),
-                        ),
-                      ),
+                    child: Text(
+                      l.trafficStatsRunningTime,
+                      maxLines: 1,
+                      softWrap: false,
+                      overflow: TextOverflow.ellipsis,
+                      style: DashboardText.cardTitle(context),
                     ),
                   ),
                 ],
