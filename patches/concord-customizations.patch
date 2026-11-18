@@ -94,10 +94,10 @@ index 6bf951b..75c97a5 100644
          self.refresh();
 diff --git a/crates/api/src/control/customization.rs b/crates/api/src/control/customization.rs
 new file mode 100644
-index 0000000..d547638
+index 0000000..c44b5da
 --- /dev/null
 +++ b/crates/api/src/control/customization.rs
-@@ -0,0 +1,205 @@
+@@ -0,0 +1,277 @@
 +use std::collections::BTreeMap;
 +use std::net::IpAddr;
 +
@@ -111,7 +111,8 @@ index 0000000..d547638
 +const CACHE_LIMIT: usize = 1024;
 +
 +fn cache_key(ip: &str, source: Option<&str>) -> Result<String, ApiError> {
-+    let address = ip.parse::<IpAddr>()
++    let address = ip
++        .parse::<IpAddr>()
 +        .map_err(|_| ApiError::invalid_field("ip", "invalid IP address"))?;
 +    let source = match source {
 +        None | Some("scamalytics") => "scamalytics",
@@ -126,42 +127,65 @@ index 0000000..d547638
 +}
 +
 +impl Control {
-+    pub(super) async fn traffic_stats_configure(&self, params: TrafficStatsConfig) -> Result<Empty, ApiError> {
++    pub(super) async fn traffic_stats_configure(
++        &self,
++        params: TrafficStatsConfig,
++    ) -> Result<Empty, ApiError> {
 +        self.require_initialized()?;
-+        self.engine.configure_traffic_stats(concord_engine::StatsOptions {
-+            enable: params.enable,
-+            detail: params.detail,
-+            retention_days: params.retention_days.clamp(7, 30),
-+            tz_offset: params.tz_offset,
-+            profile: params.profile,
-+        }, params.screen_on, params.suspended);
++        self.engine.configure_traffic_stats(
++            concord_engine::StatsOptions {
++                enable: params.enable,
++                detail: params.detail,
++                retention_days: params.retention_days.clamp(7, 30),
++                tz_offset: params.tz_offset,
++                profile: params.profile,
++            },
++            params.screen_on,
++            params.suspended,
++        );
 +        Ok(Empty {})
 +    }
 +
-+    pub(super) async fn traffic_stats_get(&self, params: TrafficStatsQuery) -> Result<Json, ApiError> {
++    pub(super) async fn traffic_stats_get(
++        &self,
++        params: TrafficStatsQuery,
++    ) -> Result<Json, ApiError> {
 +        self.require_initialized()?;
 +        let format = time::macros::format_description!("[year]-[month]-[day]");
-+        let parse = |key, date: &str| time::Date::parse(date, format)
-+            .map_err(|err| ApiError::invalid_field(key, err.to_string()));
++        let parse = |key, date: &str| {
++            time::Date::parse(date, format)
++                .map_err(|err| ApiError::invalid_field(key, err.to_string()))
++        };
 +        let start = parse("start", &params.start)?;
 +        let end = parse("end", &params.end)?;
 +        if end < start || (end - start).whole_days() > 399 {
-+            return Err(ApiError::invalid_field("end", "date range must contain 1 to 400 days"));
++            return Err(ApiError::invalid_field(
++                "end",
++                "date range must contain 1 to 400 days",
++            ));
 +        }
-+        let top = if params.top == 0 { 50 } else { params.top.min(200) };
++        let top = if params.top == 0 {
++            50
++        } else {
++            params.top.min(200)
++        };
 +        Ok(self.engine.query_traffic_stats(start, end, top))
 +    }
 +
 +    pub(super) async fn traffic_stats_clear(&self, _params: Empty) -> Result<Empty, ApiError> {
 +        self.require_initialized()?;
-+        self.engine.clear_traffic_stats()
++        self.engine
++            .clear_traffic_stats()
 +            .map_err(|err| ApiError::internal(err.to_string()))?;
 +        Ok(Empty {})
 +    }
 +
 +    pub(super) async fn ip_country(&self, params: IpAddress) -> Result<String, ApiError> {
 +        self.require_initialized()?;
-+        Ok(params.ip.parse().map_or_else(|_| String::new(), |ip| self.engine.ip_country(ip)))
++        Ok(params
++            .ip
++            .parse()
++            .map_or_else(|_| String::new(), |ip| self.engine.ip_country(ip)))
 +    }
 +
 +    pub(super) async fn ip_cache_get(&self, params: IpCacheGet) -> Result<Json, ApiError> {
@@ -171,9 +195,13 @@ index 0000000..d547638
 +        };
 +        let _guard = self.ip_cache_lock.lock().await;
 +        let now = time::OffsetDateTime::now_utc().unix_timestamp();
-+        let entries: BTreeMap<String, Value> = home.read(CACHE_FILE).ok()
-+            .and_then(|bytes| serde_json::from_slice(&bytes).ok()).unwrap_or_default();
-+        Ok(entries.get(&key)
++        let entries: BTreeMap<String, Value> = home
++            .read(CACHE_FILE)
++            .ok()
++            .and_then(|bytes| serde_json::from_slice(&bytes).ok())
++            .unwrap_or_default();
++        Ok(entries
++            .get(&key)
 +            .filter(|entry| (now - CACHE_TTL_SECONDS..=now).contains(&cache_time(entry)))
 +            .map_or(Value::Null, |entry| entry["data"].clone()))
 +    }
@@ -184,32 +212,41 @@ index 0000000..d547638
 +            return Err(ApiError::invalid_field("data", "invalid cache record"));
 +        }
 +        self.require_initialized()?;
-+        let home = self.engine.home().ok_or_else(|| ApiError::internal("missing core home"))?;
++        let home = self
++            .engine
++            .home()
++            .ok_or_else(|| ApiError::internal("missing core home"))?;
 +        let _guard = self.ip_cache_lock.lock().await;
 +        let now = time::OffsetDateTime::now_utc().unix_timestamp();
-+        let mut entries: BTreeMap<String, Value> = home.read(CACHE_FILE).ok()
-+            .and_then(|bytes| serde_json::from_slice(&bytes).ok()).unwrap_or_default();
++        let mut entries: BTreeMap<String, Value> = home
++            .read(CACHE_FILE)
++            .ok()
++            .and_then(|bytes| serde_json::from_slice(&bytes).ok())
++            .unwrap_or_default();
 +        entries.retain(|_, entry| (now - CACHE_TTL_SECONDS..=now).contains(&cache_time(entry)));
 +        entries.insert(key, json!({"saved": now, "data": params.data}));
 +        let excess = entries.len().saturating_sub(CACHE_LIMIT);
 +        if excess != 0 {
-+            let mut oldest: Vec<_> = entries.iter()
-+                .map(|(key, entry)| (cache_time(entry), key.clone())).collect();
++            let mut oldest: Vec<_> = entries
++                .iter()
++                .map(|(key, entry)| (cache_time(entry), key.clone()))
++                .collect();
 +            oldest.sort_unstable();
 +            for (_, key) in oldest.into_iter().take(excess) {
 +                entries.remove(&key);
 +            }
 +        }
-+        let bytes = serde_json::to_vec(&entries).map_err(|err| ApiError::internal(err.to_string()))?;
-+        home.write_private(CACHE_FILE, &bytes).map_err(|err| ApiError::internal(err.to_string()))?;
++        let bytes =
++            serde_json::to_vec(&entries).map_err(|err| ApiError::internal(err.to_string()))?;
++        home.write_private(CACHE_FILE, &bytes)
++            .map_err(|err| ApiError::internal(err.to_string()))?;
 +        Ok(Empty {})
 +    }
 +}
 +
-+
++use concord_common::sync::lock;
 +use std::collections::VecDeque;
 +use std::sync::{Arc, Mutex};
-+use concord_common::sync::lock;
 +use tokio_util::sync::CancellationToken;
 +
 +#[derive(Clone)]
@@ -224,20 +261,32 @@ index 0000000..d547638
 +
 +impl SpeedTests {
 +    pub(super) fn cancel_all(&self) {
-+        for job in &self.0 { job.cancel.cancel(); }
++        for job in &self.0 {
++            job.cancel.cancel();
++        }
 +    }
 +
 +    fn add(&mut self, id: String, initial: Value, replace: bool) -> SpeedJob {
-+        if replace { self.cancel_all(); }
++        if replace {
++            self.cancel_all();
++        }
 +        self.0.retain(|job| {
-+            if job.id != id { return true; }
++            if job.id != id {
++                return true;
++            }
 +            job.cancel.cancel();
 +            false
 +        });
 +        while self.0.len() >= 8 {
-+            if let Some(oldest) = self.0.pop_front() { oldest.cancel.cancel(); }
++            if let Some(oldest) = self.0.pop_front() {
++                oldest.cancel.cancel();
++            }
 +        }
-+        let job = SpeedJob { id, state: Arc::new(Mutex::new(initial)), cancel: CancellationToken::new() };
++        let job = SpeedJob {
++            id,
++            state: Arc::new(Mutex::new(initial)),
++            cancel: CancellationToken::new(),
++        };
 +        self.0.push_back(job.clone());
 +        job
 +    }
@@ -245,10 +294,16 @@ index 0000000..d547638
 +
 +fn setup_speed_test(params: &SpeedTestParams) -> Result<Value, ApiError> {
 +    if params.id.is_empty() || params.id.len() > 128 {
-+        return Err(ApiError::invalid_field("id", "missing or oversized speed test id"));
++        return Err(ApiError::invalid_field(
++            "id",
++            "missing or oversized speed test id",
++        ));
 +    }
 +    if !matches!(params.protocol.as_str(), "h1" | "h2" | "h3") {
-+        return Err(ApiError::invalid_field("protocol", "expected h1, h2, or h3"));
++        return Err(ApiError::invalid_field(
++            "protocol",
++            "expected h1, h2, or h3",
++        ));
 +    }
 +    Ok(json!({
 +        "id": params.id, "phase": "connecting", "provider": "speedtest",
@@ -263,9 +318,12 @@ index 0000000..d547638
 +        let state = setup_speed_test(&params)?;
 +        let job = lock(&self.speed_tests).add(params.id.clone(), state.clone(), true);
 +        let prober = self.engine.speed_prober().clone();
-+        let params = serde_json::to_value(params).map_err(|err| ApiError::internal(err.to_string()))?;
++        let params =
++            serde_json::to_value(params).map_err(|err| ApiError::internal(err.to_string()))?;
 +        tokio::spawn(async move {
-+            prober.run_speed_test(params, job.state, job.cancel, false).await;
++            prober
++                .run_speed_test(params, job.state, job.cancel, false)
++                .await;
 +        });
 +        Ok(state)
 +    }
@@ -274,26 +332,40 @@ index 0000000..d547638
 +        self.require_configured()?;
 +        let state = setup_speed_test(&params)?;
 +        let job = lock(&self.speed_tests).add(params.id.clone(), state, false);
-+        let params = serde_json::to_value(params).map_err(|err| ApiError::internal(err.to_string()))?;
-+        self.engine.speed_prober().run_speed_test(params, job.state.clone(), job.cancel, true).await;
++        let params =
++            serde_json::to_value(params).map_err(|err| ApiError::internal(err.to_string()))?;
++        self.engine
++            .speed_prober()
++            .run_speed_test(params, job.state.clone(), job.cancel, true)
++            .await;
 +        let result = lock(&job.state).clone();
 +        Ok(result)
 +    }
 +
 +    pub(super) async fn speed_test_status(&self, params: SpeedTestId) -> Result<Json, ApiError> {
-+        lock(&self.speed_tests).0.iter().find(|job| job.id == params.id)
++        lock(&self.speed_tests)
++            .0
++            .iter()
++            .find(|job| job.id == params.id)
 +            .map(|job| lock(&job.state).clone())
 +            .ok_or_else(|| ApiError::invalid_field("id", "unknown speed test"))
 +    }
 +
 +    pub(super) async fn speed_test_cancel(&self, params: SpeedTestId) -> Result<Empty, ApiError> {
-+        if let Some(job) = lock(&self.speed_tests).0.iter().find(|job| job.id == params.id) {
++        if let Some(job) = lock(&self.speed_tests)
++            .0
++            .iter()
++            .find(|job| job.id == params.id)
++        {
 +            job.cancel.cancel();
 +        }
 +        Ok(Empty {})
 +    }
 +
-+    pub(super) async fn speed_test_servers(&self, params: SpeedTestServerQuery) -> Result<Json, ApiError> {
++    pub(super) async fn speed_test_servers(
++        &self,
++        params: SpeedTestServerQuery,
++    ) -> Result<Json, ApiError> {
 +        self.require_configured()?;
 +        let job = lock(&self.speed_tests).add(params.id, Value::Null, false);
 +        tokio::select! {
@@ -319,7 +391,7 @@ index e876652..98b96b7 100644
  rustls-pki-types = { workspace = true }
  socket2 = { workspace = true }
 diff --git a/crates/engine/src/engine.rs b/crates/engine/src/engine.rs
-index 349db1b..8a3e0bb 100644
+index 349db1b..ac17947 100644
 --- a/crates/engine/src/engine.rs
 +++ b/crates/engine/src/engine.rs
 @@ -121,7 +121,7 @@ pub struct Engine {
@@ -377,7 +449,7 @@ index 349db1b..8a3e0bb 100644
 +    }
 +
 +    pub fn ip_country(&self, ip: std::net::IpAddr) -> String {
-+        self.geo.store.country_codes(ip).into_iter().next().unwrap_or_default()
++        self.shared.geo.store.country_codes(ip).into_iter().next().unwrap_or_default()
 +    }
 +
      fn set_running(&self, running: bool) {
@@ -429,14 +501,14 @@ index 4c6eb66..8af0782 100644
      /// `"name" Type addr` of where `target` would leave now, without waking a lazy group.
 diff --git a/crates/engine/src/probe/speed_test.rs b/crates/engine/src/probe/speed_test.rs
 new file mode 100644
-index 0000000..6bd8727
+index 0000000..4bbfb08
 --- /dev/null
 +++ b/crates/engine/src/probe/speed_test.rs
-@@ -0,0 +1,418 @@
+@@ -0,0 +1,618 @@
 +use std::convert::Infallible;
 +use std::io;
-+use std::sync::{Arc, Mutex};
 +use std::sync::atomic::{AtomicU64, Ordering};
++use std::sync::{Arc, Mutex};
 +use std::time::Duration;
 +
 +use bytes::{Buf, Bytes};
@@ -455,7 +527,8 @@ index 0000000..6bd8727
 +
 +use super::{ProbeEnv, Prober};
 +
-+const DIRECTORY: &str = "https://www.speedtest.net/api/js/servers?engine=js&limit=10&https_functional=true";
++const DIRECTORY: &str =
++    "https://www.speedtest.net/api/js/servers?engine=js&limit=10&https_functional=true";
 +const BLOCK: usize = 64 * 1024;
 +const TRANSFER: usize = 25_000_000;
 +
@@ -464,7 +537,11 @@ index 0000000..6bd8727
 +enum Sender {
 +    H1(http1::SendRequest<RequestBody>),
 +    H2(http2::SendRequest<RequestBody>),
-+    H3(h3::client::SendRequest<h3_quinn::OpenStreams, Bytes>, quinn::Endpoint, quinn::Connection),
++    H3(
++        h3::client::SendRequest<h3_quinn::OpenStreams, Bytes>,
++        quinn::Endpoint,
++        quinn::Connection,
++    ),
 +}
 +
 +struct Session {
@@ -484,11 +561,21 @@ index 0000000..6bd8727
 +    }
 +}
 +
-+fn io_error(error: impl std::fmt::Display) -> io::Error { io::Error::other(error.to_string()) }
++fn io_error(error: impl std::fmt::Display) -> io::Error {
++    io::Error::other(error.to_string())
++}
 +
 +impl Session {
-+    async fn connect(env: &dyn ProbeEnv, url: Url, proxy: &str, protocol: &str) -> io::Result<Self> {
-+        let host = url.host_str().ok_or_else(|| io_error("missing host"))?.trim_matches(['[', ']']);
++    async fn connect(
++        env: &dyn ProbeEnv,
++        url: Url,
++        proxy: &str,
++        protocol: &str,
++    ) -> io::Result<Self> {
++        let host = url
++            .host_str()
++            .ok_or_else(|| io_error("missing host"))?
++            .trim_matches(['[', ']']);
 +        let address = Address::new(host, url.port_or_known_default().unwrap_or(443));
 +        let pin = (!proxy.is_empty()).then_some(proxy);
 +        let lifetime = CancellationToken::new();
@@ -496,38 +583,52 @@ index 0000000..6bd8727
 +        let (sender, chains) = if protocol == "h3" {
 +            let (socket, peer, chains) = env.speed_udp(&address, pin).await?;
 +            let mut endpoint = quinn::Endpoint::new_with_abstract_socket(
-+                quinn::EndpointConfig::default(), None, socket, Arc::new(quinn::TokioRuntime),
++                quinn::EndpointConfig::default(),
++                None,
++                socket,
++                Arc::new(quinn::TokioRuntime),
 +            )?;
-+            let tls = concord_tls::quic_client_config(
-+                &TlsOptions::default(), env.trust(), &["h3"],
-+            ).map_err(io_error)?;
++            let tls = concord_tls::quic_client_config(&TlsOptions::default(), env.trust(), &["h3"])
++                .map_err(io_error)?;
 +            endpoint.set_default_client_config(quinn::ClientConfig::new(Arc::new(
 +                quinn::crypto::rustls::QuicClientConfig::try_from(tls).map_err(io_error)?,
 +            )));
-+            let connection = endpoint.connect(peer, host).map_err(io_error)?.await.map_err(io_error)?;
++            let connection = endpoint
++                .connect(peer, host)
++                .map_err(io_error)?
++                .await
++                .map_err(io_error)?;
 +            let (mut connection_driver, requests) =
-+                h3::client::new(h3_quinn::Connection::new(connection.clone())).await.map_err(io_error)?;
++                h3::client::new(h3_quinn::Connection::new(connection.clone()))
++                    .await
++                    .map_err(io_error)?;
 +            tokio::spawn(async move {
 +                tokio::select! { _ = connection_driver.wait_idle() => {}, _ = driver.cancelled() => {} }
 +            });
 +            (Sender::H3(requests, endpoint, connection), chains)
 +        } else {
 +            let dialed = env.dial(&address, pin).await?;
-+            let tls = TlsConnector::new(TlsOptions {
-+                alpn: vec![if protocol == "h2" { "h2" } else { "http/1.1" }.to_owned()],
-+                ..TlsOptions::default()
-+            }, env.trust()).map_err(io_error)?;
++            let tls = TlsConnector::new(
++                TlsOptions {
++                    alpn: vec![if protocol == "h2" { "h2" } else { "http/1.1" }.to_owned()],
++                    ..TlsOptions::default()
++                },
++                env.trust(),
++            )
++            .map_err(io_error)?;
 +            let stream = tls.connect(dialed.stream, host).await?;
 +            let io: BoxStream = Box::new(stream);
 +            let sender = if protocol == "h2" {
 +                let (sender, connection) = http2::handshake(TokioExecutor::new(), TokioIo::new(io))
-+                    .await.map_err(io_error)?;
++                    .await
++                    .map_err(io_error)?;
 +                tokio::spawn(async move {
 +                    tokio::select! { _ = connection => {}, _ = driver.cancelled() => {} }
 +                });
 +                Sender::H2(sender)
 +            } else {
-+                let (sender, connection) = http1::handshake(TokioIo::new(io)).await.map_err(io_error)?;
++                let (sender, connection) =
++                    http1::handshake(TokioIo::new(io)).await.map_err(io_error)?;
 +                tokio::spawn(async move {
 +                    tokio::select! { _ = connection => {}, _ = driver.cancelled() => {} }
 +                });
@@ -535,11 +636,20 @@ index 0000000..6bd8727
 +            };
 +            (sender, dialed.chains)
 +        };
-+        Ok(Self { sender, base: url, chains, lifetime })
++        Ok(Self {
++            sender,
++            base: url,
++            chains,
++            lifetime,
++        })
 +    }
 +
 +    async fn transfer(
-+        &mut self, endpoint: &str, payload: &Bytes, max_body: usize, capture: bool,
++        &mut self,
++        endpoint: &str,
++        payload: &Bytes,
++        max_body: usize,
++        capture: bool,
 +        counter: &Arc<AtomicU64>,
 +    ) -> io::Result<(f64, Vec<u8>)> {
 +        let url = self.base.join(endpoint).map_err(io_error)?;
@@ -549,12 +659,20 @@ index 0000000..6bd8727
 +        };
 +        let mut builder = Request::builder()
 +            .uri(target)
-+            .method(if payload.is_empty() { Method::GET } else { Method::POST })
++            .method(if payload.is_empty() {
++                Method::GET
++            } else {
++                Method::POST
++            })
 +            .header(header::USER_AGENT, super::BROWSER_USER_AGENT)
-+            .header(header::HOST, &url[Position::BeforeHost..Position::AfterPort])
++            .header(
++                header::HOST,
++                &url[Position::BeforeHost..Position::AfterPort],
++            )
 +            .header(header::ACCEPT_ENCODING, "identity");
 +        if !payload.is_empty() {
-+            builder = builder.header(header::CONTENT_TYPE, "application/octet-stream")
++            builder = builder
++                .header(header::CONTENT_TYPE, "application/octet-stream")
 +                .header(header::CONTENT_LENGTH, payload.len());
 +        }
 +        let start = Instant::now();
@@ -562,10 +680,15 @@ index 0000000..6bd8727
 +        let mut bytes = 0usize;
 +        let latency;
 +        if let Sender::H3(sender, _, _) = &mut self.sender {
-+            let mut stream = sender.send_request(builder.body(()).map_err(io_error)?)
-+                .await.map_err(io_error)?;
++            let mut stream = sender
++                .send_request(builder.body(()).map_err(io_error)?)
++                .await
++                .map_err(io_error)?;
 +            for chunk in payload.chunks(BLOCK) {
-+                stream.send_data(Bytes::copy_from_slice(chunk)).await.map_err(io_error)?;
++                stream
++                    .send_data(Bytes::copy_from_slice(chunk))
++                    .await
++                    .map_err(io_error)?;
 +                counter.fetch_add(chunk.len() as u64, Ordering::Relaxed);
 +            }
 +            stream.finish().await.map_err(io_error)?;
@@ -574,33 +697,51 @@ index 0000000..6bd8727
 +            while let Some(mut chunk) = stream.recv_data().await.map_err(io_error)? {
 +                let length = chunk.remaining();
 +                let chunk = chunk.copy_to_bytes(length);
-+                capture_bytes(&chunk, &mut bytes, &mut data, max_body, capture, counter, payload.is_empty())?;
++                capture_bytes(
++                    &chunk,
++                    &mut bytes,
++                    &mut data,
++                    max_body,
++                    capture,
++                    counter,
++                    payload.is_empty(),
++                )?;
 +            }
 +        } else {
 +            let progress = counter.clone();
 +            let payload = payload.clone();
 +            let payload_len = payload.len();
-+            let frames = futures_util::stream::iter((0..payload.len()).step_by(BLOCK).map(move |offset| {
-+                let chunk = payload.slice(offset..(offset + BLOCK).min(payload.len()));
-+                progress.fetch_add(chunk.len() as u64, Ordering::Relaxed);
-+                Ok::<_, Infallible>(Frame::data(chunk))
-+            }));
++            let frames =
++                futures_util::stream::iter((0..payload.len()).step_by(BLOCK).map(move |offset| {
++                    let chunk = payload.slice(offset..(offset + BLOCK).min(payload.len()));
++                    progress.fetch_add(chunk.len() as u64, Ordering::Relaxed);
++                    Ok::<_, Infallible>(Frame::data(chunk))
++                }));
 +            let body = if payload_len == 0 {
 +                Empty::<Bytes>::new().boxed()
 +            } else {
-+                StreamBody::new(frames).boxed()
++                BodyExt::boxed(StreamBody::new(frames))
 +            };
 +            let request = builder.body(body).map_err(io_error)?;
 +            let response = match &mut self.sender {
 +                Sender::H1(sender) => sender.send_request(request).await,
 +                Sender::H2(sender) => sender.send_request(request).await,
 +                Sender::H3(..) => unreachable!(),
-+            }.map_err(io_error)?;
++            }
++            .map_err(io_error)?;
 +            latency = response_latency(start, response.status(), response.headers())?;
 +            let mut body = response.into_body();
 +            while let Some(frame) = body.frame().await {
 +                if let Ok(chunk) = frame.map_err(io_error)?.into_data() {
-+                    capture_bytes(&chunk, &mut bytes, &mut data, max_body, capture, counter, payload.is_empty())?;
++                    capture_bytes(
++                        &chunk,
++                        &mut bytes,
++                        &mut data,
++                        max_body,
++                        capture,
++                        counter,
++                        payload.is_empty(),
++                    )?;
 +                }
 +            }
 +        }
@@ -608,59 +749,118 @@ index 0000000..6bd8727
 +    }
 +}
 +
-+fn response_latency(start: Instant, status: StatusCode, headers: &http::HeaderMap) -> io::Result<f64> {
++fn response_latency(
++    start: Instant,
++    status: StatusCode,
++    headers: &http::HeaderMap,
++) -> io::Result<f64> {
 +    if !status.is_success() {
 +        return Err(io_error(format!("HTTP {status}")));
 +    }
 +    let elapsed = start.elapsed().as_secs_f64() * 1000.0;
-+    let processing = headers.get("server-timing").and_then(|v| v.to_str().ok())
-+        .and_then(|value| value.split(';').find_map(|part| part.trim().strip_prefix("dur=")))
-+        .and_then(|value| value.parse::<f64>().ok()).unwrap_or_default();
-+    Ok(if processing > 0.0 && processing < elapsed { elapsed - processing } else { elapsed })
++    let processing = headers
++        .get("server-timing")
++        .and_then(|v| v.to_str().ok())
++        .and_then(|value| {
++            value
++                .split(';')
++                .find_map(|part| part.trim().strip_prefix("dur="))
++        })
++        .and_then(|value| value.parse::<f64>().ok())
++        .unwrap_or_default();
++    Ok(if processing > 0.0 && processing < elapsed {
++        elapsed - processing
++    } else {
++        elapsed
++    })
 +}
 +
 +fn capture_bytes(
-+    chunk: &[u8], bytes: &mut usize, body: &mut Vec<u8>, max: usize, capture: bool,
-+    counter: &AtomicU64, count: bool,
++    chunk: &[u8],
++    bytes: &mut usize,
++    body: &mut Vec<u8>,
++    max: usize,
++    capture: bool,
++    counter: &AtomicU64,
++    count: bool,
 +) -> io::Result<()> {
 +    *bytes += chunk.len();
-+    if *bytes > max { return Err(io_error("response exceeds speed test limit")); }
-+    if count { counter.fetch_add(chunk.len() as u64, Ordering::Relaxed); }
-+    if capture { body.extend_from_slice(chunk); }
++    if *bytes > max {
++        return Err(io_error("response exceeds speed test limit"));
++    }
++    if count {
++        counter.fetch_add(chunk.len() as u64, Ordering::Relaxed);
++    }
++    if capture {
++        body.extend_from_slice(chunk);
++    }
 +    Ok(())
 +}
 +
 +fn server_url(server: &Value) -> Option<Url> {
 +    let host = server["host"].as_str()?;
 +    let url = Url::parse(&format!("https://{host}/")).ok()?;
-+    (url.username().is_empty() && url.password().is_none() && url.path() == "/"
-+        && url.query().is_none() && url.fragment().is_none()).then_some(url)
++    (url.username().is_empty()
++        && url.password().is_none()
++        && url.path() == "/"
++        && url.query().is_none()
++        && url.fragment().is_none())
++    .then_some(url)
 +}
 +
-+async fn latency_probe(env: &dyn ProbeEnv, base: Url, proxy: &str, protocol: &str) -> io::Result<(Session, f64)> {
++async fn latency_probe(
++    env: &dyn ProbeEnv,
++    base: Url,
++    proxy: &str,
++    protocol: &str,
++) -> io::Result<(Session, f64)> {
 +    timeout(Duration::from_secs(4), async {
 +        let mut session = Session::connect(env, base, proxy, protocol).await?;
-+        let (latency, _) = session.transfer("/latency.txt", &Bytes::new(), 32 * 1024, false, &Arc::new(AtomicU64::new(0))).await?;
++        let (latency, _) = session
++            .transfer(
++                "/latency.txt",
++                &Bytes::new(),
++                32 * 1024,
++                false,
++                &Arc::new(AtomicU64::new(0)),
++            )
++            .await?;
 +        Ok((session, latency))
-+    }).await?
++    })
++    .await?
 +}
 +
 +impl Prober {
 +    pub async fn speed_servers(&self, proxy: &str, search: &str) -> io::Result<Vec<Value>> {
 +        let mut url = Url::parse(DIRECTORY).expect("fixed Speedtest directory URL");
-+        if !search.trim().is_empty() { url.query_pairs_mut().append_pair("search", search.trim()); }
++        if !search.trim().is_empty() {
++            url.query_pairs_mut().append_pair("search", search.trim());
++        }
 +        let path = url[Position::BeforePath..Position::AfterQuery].to_owned();
-+        let mut session = timeout(Duration::from_secs(8), Session::connect(&*self.env, url, proxy, "h1")).await??;
-+        let (_, body) = timeout(Duration::from_secs(8), session.transfer(
-+            &path, &Bytes::new(), 256 * 1024, true, &Arc::new(AtomicU64::new(0)),
-+        )).await??;
++        let mut session = timeout(
++            Duration::from_secs(8),
++            Session::connect(&*self.env, url, proxy, "h1"),
++        )
++        .await??;
++        let (_, body) = timeout(
++            Duration::from_secs(8),
++            session.transfer(
++                &path,
++                &Bytes::new(),
++                256 * 1024,
++                true,
++                &Arc::new(AtomicU64::new(0)),
++            ),
++        )
++        .await??;
 +        let rows: Vec<Value> = serde_json::from_slice(&body)?;
 +        let mut probes = FuturesUnordered::new();
 +        for row in rows.into_iter().take(10) {
 +            if let Some(base) = server_url(&row) {
 +                probes.push(async move {
 +                    let mut row = row;
-+                    let latency = latency_probe(&*self.env, base, proxy, "h1").await
++                    let latency = latency_probe(&*self.env, base, proxy, "h1")
++                        .await
 +                        .map_or(0.0, |(_, latency)| latency);
 +                    row["latency"] = json!(latency);
 +                    row
@@ -668,15 +868,28 @@ index 0000000..6bd8727
 +            }
 +        }
 +        let mut result = Vec::new();
-+        while let Some(row) = probes.next().await { result.push(row); }
++        while let Some(row) = probes.next().await {
++            result.push(row);
++        }
 +        result.sort_by(|a, b| {
-+            let rank = |row: &Value| row["latency"].as_f64().filter(|x| *x > 0.0).unwrap_or(f64::INFINITY);
++            let rank = |row: &Value| {
++                row["latency"]
++                    .as_f64()
++                    .filter(|x| *x > 0.0)
++                    .unwrap_or(f64::INFINITY)
++            };
 +            rank(a).total_cmp(&rank(b))
 +        });
 +        Ok(result)
 +    }
 +
-+    pub async fn run_speed_test(&self, params: Value, state: Arc<Mutex<Value>>, cancel: CancellationToken, probe_only: bool) {
++    pub async fn run_speed_test(
++        &self,
++        params: Value,
++        state: Arc<Mutex<Value>>,
++        cancel: CancellationToken,
++        probe_only: bool,
++    ) {
 +        let run = self.speed_test_inner(&params, &state, probe_only);
 +        let error = tokio::select! {
 +            biased;
@@ -695,21 +908,30 @@ index 0000000..6bd8727
 +        state["error"] = json!(error);
 +    }
 +
-+    async fn speed_test_inner(&self, params: &Value, state: &Mutex<Value>, probe_only: bool) -> io::Result<()> {
++    async fn speed_test_inner(
++        &self,
++        params: &Value,
++        state: &Mutex<Value>,
++        probe_only: bool,
++    ) -> io::Result<()> {
 +        let proxy = params["proxy"].as_str().unwrap_or_default();
 +        if !proxy.is_empty() && !self.env.knows(proxy) {
 +            return Err(io_error("unknown outbound"));
 +        }
 +        let (streams, duration, requested) = {
 +            let state = lock(state);
-+            (state["streams"].as_u64().unwrap_or(1) as usize,
++            (
++                state["streams"].as_u64().unwrap_or(1) as usize,
 +                Duration::from_secs(state["duration"].as_u64().unwrap_or(10)),
-+                state["protocol"].as_str().unwrap_or("h2").to_owned())
++                state["protocol"].as_str().unwrap_or("h2").to_owned(),
++            )
 +        };
 +        let server = if server_url(&params["server"]).is_some() {
 +            params["server"].clone()
 +        } else {
-+            self.speed_servers(proxy, "").await?.into_iter()
++            self.speed_servers(proxy, "")
++                .await?
++                .into_iter()
 +                .find(|row| row["latency"].as_f64().is_some_and(|ms| ms > 0.0))
 +                .ok_or_else(|| io_error("no reachable Speedtest server"))?
 +        };
@@ -723,30 +945,53 @@ index 0000000..6bd8727
 +                Err(error) => return Err(error),
 +            }
 +        };
-+        let address = Address::new(base.host_str().unwrap_or_default(), base.port_or_known_default().unwrap_or(443));
-+        let (rule, payload) = self.env.speed_rule(&address, (!proxy.is_empty()).then_some(proxy)).await;
++        let address = Address::new(
++            base.host_str().unwrap_or_default(),
++            base.port_or_known_default().unwrap_or(443),
++        );
++        let (rule, payload) = self
++            .env
++            .speed_rule(&address, (!proxy.is_empty()).then_some(proxy))
++            .await;
 +        {
 +            let mut state = lock(state);
 +            state["server"] = json!({"host":server["host"], "country":server["cc"], "city":server["name"], "sponsor":server["sponsor"]});
 +            state["protocol"] = json!(protocol);
 +            state["fallback"] = json!(protocol != requested);
-+            state["outbound"] = json!({"chains":session.chains, "rule": rule, "rule-payload": payload});
-+            state["direct"] = json!(session.chains.first().is_some_and(|name| name.eq_ignore_ascii_case("direct")));
++            state["outbound"] =
++                json!({"chains":session.chains, "rule": rule, "rule-payload": payload});
++            state["direct"] = json!(
++                session
++                    .chains
++                    .first()
++                    .is_some_and(|name| name.eq_ignore_ascii_case("direct"))
++            );
 +            state["latency"] = json!(first);
 +        }
-+        if probe_only { return Ok(()); }
++        if probe_only {
++            return Ok(());
++        }
 +        lock(state)["phase"] = json!("latency");
 +        let mut samples = vec![first];
 +        let counter = Arc::new(AtomicU64::new(0));
 +        for n in 1..20 {
-+            let latency = timeout(Duration::from_secs(3), session.transfer(
-+                "/latency.txt", &Bytes::new(), 32 * 1024, false, &counter,
-+            )).await;
-+            if let Ok(Ok((ms, _))) = latency { samples.push(ms); }
++            let latency = timeout(
++                Duration::from_secs(3),
++                session.transfer("/latency.txt", &Bytes::new(), 32 * 1024, false, &counter),
++            )
++            .await;
++            if let Ok(Ok((ms, _))) = latency {
++                samples.push(ms);
++            }
 +            lock(state)["progress"] = json!(n as f64 / 20.0);
 +        }
 +        let median = median_value(samples.clone());
-+        let jitter = median_value(samples.windows(2).map(|pair| (pair[0] - pair[1]).abs()).collect());
++        let jitter = median_value(
++            samples
++                .windows(2)
++                .map(|pair| (pair[0] - pair[1]).abs())
++                .collect(),
++        );
 +        {
 +            let mut state = lock(state);
 +            state["latency"] = json!(median);
@@ -772,7 +1017,9 @@ index 0000000..6bd8727
 +                workers.push(async move {
 +                    let mut connection = Session::connect(env, base, proxy, protocol).await?;
 +                    loop {
-+                        connection.transfer(endpoint, &body, TRANSFER + BLOCK, false, &counter).await?;
++                        connection
++                            .transfer(endpoint, &body, TRANSFER + BLOCK, false, &counter)
++                            .await?;
 +                    }
 +                    #[allow(unreachable_code)]
 +                    Ok::<(), io::Error>(())
@@ -786,7 +1033,12 @@ index 0000000..6bd8727
 +            let mut rates = Vec::new();
 +            let mut loaded = Vec::new();
 +            let mut tick = tokio::time::interval(Duration::from_millis(200));
-+            let mut ping = Box::pin(loaded_latency_from(&*self.env, base.clone(), proxy, protocol));
++            let mut ping = Box::pin(loaded_latency_from(
++                &*self.env,
++                base.clone(),
++                proxy,
++                protocol,
++            ));
 +            loop {
 +                tokio::select! {
 +                    _ = tokio::time::sleep_until(end) => break,
@@ -812,7 +1064,9 @@ index 0000000..6bd8727
 +                }
 +            }
 +            let measured = counter.load(Ordering::Relaxed).saturating_sub(before);
-+            if measured == 0 { return Err(io_error("no speed test data transferred")); }
++            if measured == 0 {
++                return Err(io_error("no speed test data transferred"));
++            }
 +            let mut value = lock(state);
 +            value[phase] = json!(median_value(rates));
 +            value[format!("{phase}-latency")] = json!(median_value(loaded));
@@ -821,25 +1075,43 @@ index 0000000..6bd8727
 +        let mut value = lock(state);
 +        let down = value["download-latency"].as_f64().unwrap_or_default();
 +        let up = value["upload-latency"].as_f64().unwrap_or_default();
-+        if down > 0.0 && up > 0.0 { value["rpm"] = json!((120_000.0 / (down + up)) as u64); }
++        if down > 0.0 && up > 0.0 {
++            value["rpm"] = json!((120_000.0 / (down + up)) as u64);
++        }
 +        value["progress"] = json!(1.0);
 +        Ok(())
 +    }
 +}
 +
-+async fn loaded_latency_from(env: &dyn ProbeEnv, base: Url, proxy: &str, protocol: &str) -> Option<f64> {
++async fn loaded_latency_from(
++    env: &dyn ProbeEnv,
++    base: Url,
++    proxy: &str,
++    protocol: &str,
++) -> Option<f64> {
 +    tokio::time::sleep(Duration::from_millis(400)).await;
-+    latency_probe(env, base, proxy, protocol).await.ok().map(|(_, ms)| ms)
++    latency_probe(env, base, proxy, protocol)
++        .await
++        .ok()
++        .map(|(_, ms)| ms)
 +}
 +
 +fn median(values: &mut [f64]) -> f64 {
-+    if values.is_empty() { return 0.0; }
++    if values.is_empty() {
++        return 0.0;
++    }
 +    values.sort_by(f64::total_cmp);
 +    let mid = values.len() / 2;
-+    if values.len().is_multiple_of(2) { (values[mid - 1] + values[mid]) / 2.0 } else { values[mid] }
++    if values.len().is_multiple_of(2) {
++        (values[mid - 1] + values[mid]) / 2.0
++    } else {
++        values[mid]
++    }
 +}
 +
-+fn median_value(mut values: Vec<f64>) -> f64 { median(&mut values) }
++fn median_value(mut values: Vec<f64>) -> f64 {
++    median(&mut values)
++}
 +
 +fn upload_payload() -> Bytes {
 +    let mut block = vec![0u8; BLOCK];
@@ -1141,10 +1413,10 @@ index bf073d5..e106a1a 100644
              self.events.publish(CoreEvent::Request(record.clone()));
 diff --git a/crates/tunnel/src/traffic_stats.rs b/crates/tunnel/src/traffic_stats.rs
 new file mode 100644
-index 0000000..0492fa7
+index 0000000..766c758
 --- /dev/null
 +++ b/crates/tunnel/src/traffic_stats.rs
-@@ -0,0 +1,440 @@
+@@ -0,0 +1,530 @@
 +use std::collections::{BTreeMap, HashMap};
 +use std::sync::Arc;
 +use std::sync::atomic::Ordering;
@@ -1216,7 +1488,9 @@ index 0000000..0492fa7
 +    fn to_json(&self, name: &str) -> Value {
 +        let mut subs: Vec<_> = self.subs.iter().collect();
 +        subs.sort_unstable_by_key(|(name, bytes)| (std::cmp::Reverse(bytes.total()), *name));
-+        let subs: Vec<_> = subs.into_iter().take(20)
++        let subs: Vec<_> = subs
++            .into_iter()
++            .take(20)
 +            .map(|(name, bytes)| json!({"name":name, "up":bytes.up, "down":bytes.down}))
 +            .collect();
 +        json!({"name":name, "up":self.bytes.up, "down":self.bytes.down,
@@ -1246,7 +1520,13 @@ index 0000000..0492fa7
 +
 +impl Default for StatsOptions {
 +    fn default() -> Self {
-+        Self { enable: false, detail: true, retention_days: 30, tz_offset: 0, profile: String::new() }
++        Self {
++            enable: false,
++            detail: true,
++            retention_days: 30,
++            tz_offset: 0,
++            profile: String::new(),
++        }
 +    }
 +}
 +
@@ -1275,14 +1555,25 @@ index 0000000..0492fa7
 +fn rank(items: &BTreeMap<String, Item>, by_hits: bool) -> Vec<(&String, &Item)> {
 +    let mut sorted: Vec<_> = items.iter().collect();
 +    sorted.sort_unstable_by_key(|(name, item)| {
-+        (std::cmp::Reverse(if by_hits { item.hits } else { item.bytes.total() }), *name)
++        (
++            std::cmp::Reverse(if by_hits {
++                item.hits
++            } else {
++                item.bytes.total()
++            }),
++            *name,
++        )
 +    });
 +    sorted
 +}
 +
 +impl TrafficRecorder {
 +    pub fn load(&mut self, home: Arc<HomeDir>) {
-+        if self.home.as_ref().is_some_and(|old| old.root() == home.root()) {
++        if self
++            .home
++            .as_ref()
++            .is_some_and(|old| old.root() == home.root())
++        {
 +            return;
 +        }
 +        self.days.clear();
@@ -1297,8 +1588,11 @@ index 0000000..0492fa7
 +    }
 +
 +    fn read_days(&self) -> BTreeMap<String, Day> {
-+        self.home.as_ref().and_then(|home| home.read(FILE).ok())
-+            .and_then(|data| serde_json::from_slice(&data).ok()).unwrap_or_default()
++        self.home
++            .as_ref()
++            .and_then(|home| home.read(FILE).ok())
++            .and_then(|data| serde_json::from_slice(&data).ok())
++            .unwrap_or_default()
 +    }
 +
 +    fn daily(&mut self, day: Date) -> &mut Day {
@@ -1313,14 +1607,22 @@ index 0000000..0492fa7
 +
 +    fn settle(&mut self, now: OffsetDateTime) {
 +        let Some(start) = self.since else { return };
-+        if now <= start { return; }
++        if now <= start {
++            return;
++        }
 +        // Retention limits catch-up after a long sleep.
 +        let end = self.local(now);
-+        let mut start = self.local(start).max(end - time::Duration::days(i64::from(self.options.retention_days)));
++        let mut start = self
++            .local(start)
++            .max(end - time::Duration::days(i64::from(self.options.retention_days)));
 +        self.since = Some(now);
 +        while start < end {
-+            let midnight = start.date().next_day().expect("current date has a successor")
-+                .midnight().assume_offset(start.offset());
++            let midnight = start
++                .date()
++                .next_day()
++                .expect("current date has a successor")
++                .midnight()
++                .assume_offset(start.offset());
 +            let until = midnight.min(end);
 +            self.daily(start.date()).running_ms += (until - start).whole_milliseconds() as u64;
 +            start = until;
@@ -1332,7 +1634,9 @@ index 0000000..0492fa7
 +        self.settle(now);
 +        self.running = running;
 +        self.since = (running && self.options.enable).then_some(now);
-+        if !running { self.save(); }
++        if !running {
++            self.save();
++        }
 +    }
 +
 +    pub fn configure(&mut self, options: StatsOptions, records: &[Arc<ConnRecord>]) {
@@ -1347,9 +1651,13 @@ index 0000000..0492fa7
 +            self.cursors.clear();
 +            if self.options.enable {
 +                for record in records {
-+                    self.cursors.insert(record.seq, Cursor {
-+                        saved: Bytes::read(record), profile: self.options.profile.clone(),
-+                    });
++                    self.cursors.insert(
++                        record.seq,
++                        Cursor {
++                            saved: Bytes::read(record),
++                            profile: self.options.profile.clone(),
++                        },
++                    );
 +                }
 +            }
 +        }
@@ -1366,11 +1674,19 @@ index 0000000..0492fa7
 +    }
 +
 +    pub fn opened(&mut self, record: &ConnRecord) {
-+        if !self.options.enable { return; }
-+        if self.cursors.contains_key(&record.seq) { return; }
-+        self.cursors.insert(record.seq, Cursor {
-+            saved: Bytes::default(), profile: self.options.profile.clone(),
-+        });
++        if !self.options.enable {
++            return;
++        }
++        if self.cursors.contains_key(&record.seq) {
++            return;
++        }
++        self.cursors.insert(
++            record.seq,
++            Cursor {
++                saved: Bytes::default(),
++                profile: self.options.profile.clone(),
++            },
++        );
 +        if self.options.detail && !record.rule.is_empty() {
 +            let now = self.local(OffsetDateTime::now_utc());
 +            let day = self.daily(now.date());
@@ -1382,23 +1698,39 @@ index 0000000..0492fa7
 +    }
 +
 +    fn record(&mut self, record: &ConnRecord, now: OffsetDateTime) {
-+        let Some(cursor) = self.cursors.get_mut(&record.seq) else { return };
++        let Some(cursor) = self.cursors.get_mut(&record.seq) else {
++            return;
++        };
 +        let current = Bytes::read(record);
 +        let delta = current.since(cursor.saved);
 +        cursor.saved = current;
-+        if delta.total() == 0 { return; }
++        if delta.total() == 0 {
++            return;
++        }
 +        let profile = cursor.profile.clone();
 +        let now = self.local(now);
 +        let detail = self.options.detail;
 +        let day = self.daily(now.date());
 +        day.total.add(delta);
-+        if !record.direct { day.proxy.add(delta); }
++        if !record.direct {
++            day.proxy.add(delta);
++        }
 +        day.hours[usize::from(now.hour())].add(delta);
-+        if !detail { return; }
++        if !detail {
++            return;
++        }
 +
 +        let mut host = record.meta.host.to_string();
-+        if host.is_empty() { host = record.meta.sniff_host.to_string(); }
-+        if host.is_empty() { host = record.meta.dst_ip.map(|ip| ip.to_string()).unwrap_or_default(); }
++        if host.is_empty() {
++            host = record.meta.sniff_host.to_string();
++        }
++        if host.is_empty() {
++            host = record
++                .meta
++                .dst_ip
++                .map(|ip| ip.to_string())
++                .unwrap_or_default();
++        }
 +        let host = host.trim().trim_end_matches('.').to_ascii_lowercase();
 +        let domain = if host.parse::<std::net::IpAddr>().is_ok() {
 +            host.as_str()
@@ -1409,7 +1741,9 @@ index 0000000..0492fa7
 +        let rule = Self::rule(record);
 +        let names = [domain, &record.meta.process, exit, &profile, &rule];
 +        for (index, name) in names.into_iter().enumerate() {
-+            if name.is_empty() { continue; }
++            if name.is_empty() {
++                continue;
++            }
 +            let items = &mut day.detail[index];
 +            let item = items.entry(name.to_owned()).or_default();
 +            item.bytes.add(delta);
@@ -1418,12 +1752,19 @@ index 0000000..0492fa7
 +                if item.subs.len() > 25 {
 +                    let mut list: Vec<_> = item.subs.iter().collect();
 +                    list.sort_unstable_by_key(|(_, bytes)| bytes.total());
-+                    let to_remove: Vec<_> = list.into_iter().take(item.subs.len() - 20)
-+                        .map(|(key, _)| key.clone()).collect();
-+                    for key in to_remove { item.subs.remove(&key); }
++                    let to_remove: Vec<_> = list
++                        .into_iter()
++                        .take(item.subs.len() - 20)
++                        .map(|(key, _)| key.clone())
++                        .collect();
++                    for key in to_remove {
++                        item.subs.remove(&key);
++                    }
 +                }
 +            }
-+            if index == 1 { item.path.clone_from(&record.meta.process_path); }
++            if index == 1 {
++                item.path.clone_from(&record.meta.process_path);
++            }
 +            trim_items(items, [200, 100, 100, 50, 100][index], index == 4);
 +        }
 +    }
@@ -1435,12 +1776,17 @@ index 0000000..0492fa7
 +
 +    fn sample(&mut self, records: &[Arc<ConnRecord>], now: OffsetDateTime) {
 +        if self.options.enable {
-+            for record in records { self.record(record, now); }
++            for record in records {
++                self.record(record, now);
++            }
 +        }
 +    }
 +
 +    fn cutoff(&self, now: OffsetDateTime) -> String {
-+        date_key(self.local(now).date() - time::Duration::days(i64::from(self.options.retention_days.saturating_sub(1))))
++        date_key(
++            self.local(now).date()
++                - time::Duration::days(i64::from(self.options.retention_days.saturating_sub(1))),
++        )
 +    }
 +
 +    fn prune(&mut self, now: OffsetDateTime) {
@@ -1451,7 +1797,9 @@ index 0000000..0492fa7
 +    }
 +
 +    fn save(&mut self) {
-+        if !self.dirty { return; }
++        if !self.dirty {
++            return;
++        }
 +        let result = self.home.as_ref().map(|home| {
 +            let mut days = self.read_days();
 +            let cutoff = self.cutoff(OffsetDateTime::now_utc());
@@ -1473,9 +1821,8 @@ index 0000000..0492fa7
 +    }
 +
 +    pub fn interval(&self) -> Option<Duration> {
-+        (self.options.enable && !self.suspended && self.running).then(|| {
-+            Duration::from_secs(if self.screen_off { 900 } else { 300 })
-+        })
++        (self.options.enable && !self.suspended && self.running)
++            .then(|| Duration::from_secs(if self.screen_off { 900 } else { 300 }))
 +    }
 +
 +    pub fn checkpoint(&mut self, records: &[Arc<ConnRecord>]) {
@@ -1505,7 +1852,13 @@ index 0000000..0492fa7
 +        Ok(())
 +    }
 +
-+    pub fn query(&mut self, start: Date, end: Date, top: usize, records: &[Arc<ConnRecord>]) -> Value {
++    pub fn query(
++        &mut self,
++        start: Date,
++        end: Date,
++        top: usize,
++        records: &[Arc<ConnRecord>],
++    ) -> Value {
 +        self.checkpoint(records);
 +        let mut persisted = self.read_days();
 +        let cutoff = self.cutoff(OffsetDateTime::now_utc());
@@ -1549,8 +1902,13 @@ index 0000000..0492fa7
 +                .map(String::as_str).unwrap_or_default(),
 +        });
 +        for (index, name) in DIMENSIONS.into_iter().enumerate() {
-+            output[name] = Value::Array(rank(&answer.detail[index], index == 4).into_iter()
-+                .take(top).map(|(name, item)| item.to_json(name)).collect());
++            output[name] = Value::Array(
++                rank(&answer.detail[index], index == 4)
++                    .into_iter()
++                    .take(top)
++                    .map(|(name, item)| item.to_json(name))
++                    .collect(),
++            );
 +        }
 +        output
 +    }
@@ -1558,12 +1916,16 @@ index 0000000..0492fa7
 +
 +fn trim_items(items: &mut BTreeMap<String, Item>, max: usize, by_hits: bool) {
 +    if items.len() > max + max / 4 {
-+        let remove: Vec<_> = rank(items, by_hits).into_iter().skip(max)
-+            .map(|(name, _)| name.clone()).collect();
-+        for name in remove { items.remove(&name); }
++        let remove: Vec<_> = rank(items, by_hits)
++            .into_iter()
++            .skip(max)
++            .map(|(name, _)| name.clone())
++            .collect();
++        for name in remove {
++            items.remove(&name);
++        }
 +    }
 +}
-+
 +
 +#[cfg(test)]
 +mod tests {

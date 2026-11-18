@@ -108,18 +108,24 @@ jobs:
           keytool -list -keystore android/app/keystore.jks -storepass "$STORE_PASSWORD" -alias "$KEY_ALIAS"
           keytool -list -v -keystore android/app/keystore.jks -storepass "$STORE_PASSWORD" -alias "$KEY_ALIAS" | grep -E 'SHA256:'
 
-      - name: Resolve Flutter dependencies
-        run: flutter pub get
+      - name: Setup Gradle
+        if: matrix.platform == 'android'
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Get Flutter Dependency
+        run: |
+          flutter --version
+          flutter pub get
       - name: Check generated localizations
         run: |
           flutter gen-l10n
           git diff --exit-code -- lib/l10n
       - name: Check Dart
         run: flutter analyze --no-fatal-infos lib test
-      - name: Build installer
+      - name: Setup
         env:
           ANDROID_NDK_HOME: ${{ steps.ndk.outputs.ndk-path }}
-        run: dart tool/package.dart ${{ matrix.platform }} --env dev --tag dev --arch ${{ matrix.arch }} --targets ${{ matrix.target }}
+        run: dart tool/package.dart ${{ matrix.platform }} --env dev --tag dev --arch ${{ matrix.arch }} --targets ${{ matrix.target }} -v
       - name: Verify Android signature
         if: startsWith(matrix.platform,'android')
         env:
