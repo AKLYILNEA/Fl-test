@@ -108,13 +108,6 @@ jobs:
           keytool -list -keystore android/app/keystore.jks -storepass "$STORE_PASSWORD" -alias "$KEY_ALIAS"
           keytool -list -v -keystore android/app/keystore.jks -storepass "$STORE_PASSWORD" -alias "$KEY_ALIAS" | grep -E 'SHA256:'
 
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ env.GO_VERSION }}
-          cache: ${{ env.BRANCH_CACHE }}
-          cache-dependency-path: core/go.sum
-
       - name: Resolve Flutter dependencies
         run: flutter pub get
       - name: Check generated localizations
