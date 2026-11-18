@@ -749,16 +749,19 @@ class _TrafficStatsRunningTime extends StatelessWidget {
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
                       alignment: AlignmentDirectional.centerStart,
-                      child: Text(
-                        l.trafficStatsRunningTime,
-                        maxLines: 1,
-                        softWrap: false,
-                        overflow: TextOverflow.visible,
-                        style: AppTextStyle.footnote
-                            .of(context)
-                            .copyWith(
-                              color: context.colorScheme.onSurfaceVariant,
-                            ),
+                      child: Transform.translate(
+                        offset: const Offset(0, 1),
+                        child: Text(
+                          l.trafficStatsRunningTime,
+                          maxLines: 1,
+                          softWrap: false,
+                          overflow: TextOverflow.visible,
+                          style: AppTextStyle.footnote
+                              .of(context)
+                              .copyWith(
+                                color: context.colorScheme.onSurfaceVariant,
+                              ),
+                        ),
                       ),
                     ),
                   ),
