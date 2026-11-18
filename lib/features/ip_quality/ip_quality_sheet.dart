@@ -381,65 +381,63 @@ class _LocationCard extends StatelessWidget {
     final showAsnPill = asn.isNotEmpty;
     final rows = <Widget>[
       if (hasLocation || showAsnPill)
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (hasLocation)
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (hasLocation)
+                  Expanded(
+                    child: Text(
                       country.isNotEmpty ? l.ipRiskLocation : l.ipRiskCity,
                       style: AppTextStyle.footnote
                           .of(context)
                           .copyWith(color: cs.onSurfaceVariant),
                     ),
-                    if (country.isNotEmpty) ...[
-                      const SizedBox(height: 6),
-                      EmojiText(
-                        country,
-                        style: AppTextStyle.headline.of(
-                          context,
-                          emphasized: true,
-                        ),
+                  )
+                else
+                  const Spacer(),
+                if (showAsnPill) ...[
+                  const SizedBox(width: 12),
+                  DecoratedBox(
+                    decoration: ShapeDecoration(
+                      color: DashboardColors.of(context).tone,
+                      shape: AppShape.full,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 9,
+                        vertical: 3,
                       ),
-                    ],
-                    if (place.isNotEmpty) ...[
-                      SizedBox(height: country.isNotEmpty ? 4 : 6),
-                      SelectableText(
-                        place,
-                        style: country.isNotEmpty
-                            ? AppTextStyle.subheadline
-                                  .of(context)
-                                  .copyWith(color: cs.onSurfaceVariant)
-                            : AppTextStyle.body.of(context, emphasized: true),
+                      child: Text(
+                        asn,
+                        style: AppTextStyle.footnote
+                            .of(context, emphasized: true)
+                            .toTabular
+                            .copyWith(color: cs.onSurfaceVariant),
                       ),
-                    ],
-                  ],
-                ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            if (country.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              EmojiText(
+                country,
+                style: AppTextStyle.headline.of(context, emphasized: true),
               ),
-            if (!hasLocation) const Spacer(),
-            if (showAsnPill) ...[
-              const SizedBox(width: 12),
-              DecoratedBox(
-                decoration: ShapeDecoration(
-                  color: DashboardColors.of(context).tone,
-                  shape: AppShape.full,
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 9,
-                    vertical: 3,
-                  ),
-                  child: Text(
-                    asn,
-                    style: AppTextStyle.footnote
-                        .of(context, emphasized: true)
-                        .toTabular
-                        .copyWith(color: cs.onSurfaceVariant),
-                  ),
-                ),
+            ],
+            if (place.isNotEmpty) ...[
+              SizedBox(height: country.isNotEmpty ? 4 : 6),
+              SelectableText(
+                place,
+                style: country.isNotEmpty
+                    ? AppTextStyle.subheadline
+                          .of(context)
+                          .copyWith(color: cs.onSurfaceVariant)
+                    : AppTextStyle.body.of(context, emphasized: true),
               ),
             ],
           ],

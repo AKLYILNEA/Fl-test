@@ -617,13 +617,18 @@ void main() {
         findsOneWidget,
       );
       expect(find.textContaining('· AS4811'), findsNothing);
-      final asnBox = tester.widget<DecoratedBox>(
-        find
-            .ancestor(
-              of: find.text('AS9999'),
-              matching: find.byType(DecoratedBox),
-            )
-            .first,
+      final asnPill = find
+          .ancestor(
+            of: find.text('AS9999'),
+            matching: find.byType(DecoratedBox),
+          )
+          .first;
+      final asnBox = tester.widget<DecoratedBox>(asnPill);
+      expect(
+        tester
+            .getTopRight(find.text('Shanghai \u00b7 Hongkou (Hongkou Qu)'))
+            .dx,
+        closeTo(tester.getTopRight(asnPill).dx, 1),
       );
       expect(
         (asnBox.decoration as ShapeDecoration).color,
