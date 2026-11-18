@@ -97,6 +97,7 @@ class DashboardCardHeader extends StatelessWidget {
     this.leading = const [],
     this.trailing = const [],
     this.chevron = false,
+    this.share,
   });
 
   static const height = 24.0;
@@ -109,6 +110,7 @@ class DashboardCardHeader extends StatelessWidget {
   final List<Widget> leading;
   final List<Widget> trailing;
   final bool chevron;
+  final double? share;
 
   @override
   Widget build(BuildContext context) {
@@ -154,6 +156,7 @@ class DashboardCardHeader extends StatelessWidget {
                 ? start
                 : DashboardCappedRow(
                     start: start,
+                    share: share ?? 0.5,
                     end: Row(
                       mainAxisSize: MainAxisSize.min,
                       spacing: 8,
@@ -669,6 +672,7 @@ class DashboardSwitchRow extends StatelessWidget {
     this.color,
     this.onTap,
     this.showIcon = true,
+    this.inactiveBadgeColor,
   });
 
   final Glyph glyph;
@@ -682,6 +686,7 @@ class DashboardSwitchRow extends StatelessWidget {
   final Color? color;
   final VoidCallback? onTap;
   final bool showIcon;
+  final Color? inactiveBadgeColor;
 
   static const _gap = 12.0;
 
@@ -715,6 +720,8 @@ class DashboardSwitchRow extends StatelessWidget {
     final colorScheme = context.colorScheme;
     final colors = DashboardColors.of(context);
     final glyphSize = iconSize * 0.5;
+    final inactiveColor = inactiveBadgeColor ??
+        (color == Colors.transparent ? colors.tone : colors.card);
     return DashboardBlock(
       radius: radius,
       color: color,
@@ -742,7 +749,7 @@ class DashboardSwitchRow extends StatelessWidget {
                   : ShapeBadge(
                       key: const ValueKey(false),
                       shape: MaterialShapes.circle,
-                      color: colors.card,
+                      color: inactiveColor,
                       size: iconSize,
                       child: GlyphIcon(
                         glyph,

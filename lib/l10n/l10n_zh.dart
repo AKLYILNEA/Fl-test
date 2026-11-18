@@ -144,7 +144,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get ru => '俄语';
 
   @override
-  String get zhCN => '中文简体';
+  String get zhCN => '简体中文';
 
   @override
   String get theme => '主题';
@@ -3770,4 +3770,570 @@ class AppLocalizationsZh extends AppLocalizations {
   String rootTunFallback(Object reason) {
     return 'Root 不可用（$reason），本次使用系统 VPN。';
   }
+
+  @override
+  String get config => '配置';
+
+  @override
+  String get advanced => '进阶';
+
+  @override
+  String get ipDetails => 'IP 详情';
+
+  @override
+  String get silentLaunchDesc => '静默启动时不显示窗口。';
+
+  @override
+  String get accessControlDesc => '访问控制决定哪些应用使用代理。';
+
+  @override
+  String get wakelock => '亮屏锁';
+
+  @override
+  String get secondaryDevelopmentBuild => '二次开发构建';
+
+  @override
+  String get addressHelp => 'WebDAV服务器地址';
+
+  @override
+  String get authenticationDesc => '认证开启后，使用本地代理端口需要账号密码。';
+
+  @override
+  String get autoCloseConnectionsDesc => '自动关闭连接会在切换代理后断开已有连接。';
+
+  @override
+  String get sidebarBlurDesc => '背景模糊会让侧边栏透出窗口后方的桌面。';
+
+  @override
+  String get vpnEnableDesc => 'VPN 通过 VpnService 自动路由系统所有流量。';
+
+  @override
+  String get ntpStatusDesc => '开启 NTP 后从 NTP 服务器获取时间，而非系统时钟。';
+
+  @override
+  String get dialerProxyDesc => '拨号代理为连接 NTP 服务器使用的出站。';
+
+  @override
+  String get snifferStatusDesc => '域名嗅探从 TLS、HTTP、QUIC 流量中识别域名，供规则匹配。';
+
+  @override
+  String get overrideDestinationDesc => '覆盖目标地址使用嗅探到的域名替换原目标地址发起连接。';
+
+  @override
+  String get parsePureIpDesc => '解析纯 IP 会嗅探只有 IP 地址的连接。';
+
+  @override
+  String get skipDomainDesc => '嗅探到跳过域名中的域名时不予采用。';
+
+  @override
+  String get fakeipFilterModeDesc =>
+      'Fake-IP 过滤模式中，blacklist 排除匹配项，whitelist 仅用于匹配项，rule 按规则匹配。';
+
+  @override
+  String get ipv6InboundDesc => '开启 IPv6 后，VPN 允许 IPv6 入站。';
+
+  @override
+  String get interfaceNameDesc => '网卡名称为出站连接使用的网卡。';
+
+  @override
+  String get advancedConfigDesc => '进阶配置包含网络、DNS、附加规则与脚本。';
+
+  @override
+  String get singleAdd => '单条添加';
+
+  @override
+  String get batchAdd => '批量添加';
+
+  @override
+  String get batchListInputTip => '每行一项，也可用逗号分隔';
+
+  @override
+  String get batchMapInputTip => '每行一条，键和值之间用空格分隔';
+
+  @override
+  String get customProfileResources => '自定义配置资源';
+
+  @override
+  String get customProfileResourcesDesc =>
+      '自定义配置资源是你自行添加的代理、规则集、筛选与图标集，供自定义配置引用。';
+
+  @override
+  String get batteryOptimizationDesc => '忽略电池优化可保证应用在后台运行。';
+
+  @override
+  String get onDemandDesc => '按需运行会在连上排除的 Wi-Fi 时暂停代理。';
+
+  @override
+  String get blockConnection => '阻止连接';
+
+  @override
+  String get proxyNode => '代理节点';
+
+  @override
+  String get bypassPrivateRouteDesc => '开启绕过私有路由地址后，局域网、回环和组播地址不经过虚拟网卡。';
+
+  @override
+  String get excludeInterfaceDesc => '从这些网卡（如 docker0）进入的流量不经过虚拟网卡。';
+
+  @override
+  String get includeUidDesc => '只有这些用户 ID 的进程产生的流量经过虚拟网卡。';
+
+  @override
+  String get excludeUidDesc => '这些用户 ID 的进程产生的流量不经过虚拟网卡。';
+
+  @override
+  String get excludeSrcPortDesc => '源端口为这些端口的流量不经过虚拟网卡。';
+
+  @override
+  String get excludeDstPortDesc => '发往这些目标端口的流量不经过虚拟网卡。';
+
+  @override
+  String get emojiStyle => 'Emoji字体';
+
+  @override
+  String get customFont => '自定义字体';
+
+  @override
+  String get nodeCount => '代理节点';
+
+  @override
+  String get ruleCount => '路由规则';
+
+  @override
+  String get providerCount => '外部资源';
+
+  @override
+  String get currentProfile => '当前配置';
+
+  @override
+  String get iconRules => '正则图标';
+
+  @override
+  String get iconRulesTip => '名称匹配该正则的策略组，会使用所选图标集中与其名称对应的图标。';
+
+  @override
+  String get invalidRegex => '正则表达式无效';
+
+  @override
+  String get iconSetRemoved => '图标集已被移除';
+
+  @override
+  String get iconRulesEmpty => '正则图标为空';
+
+  @override
+  String get addIconRule => '添加正则图标';
+
+  @override
+  String get editIconRule => '编辑正则图标';
+
+  @override
+  String get iconRuleHelp =>
+      '1. 完全匹配：如 ^YouTube\$ 仅匹配名称完全为 YouTube 的策略组。\n2. 关键词匹配：如 YouTube 可匹配所有名称包含 YouTube 的策略组。\n3. 多项匹配：如 (YouTube|Netflix|Disney) 可同时匹配多个流媒体策略组。\n4. 全局通配：如 .* 可匹配所有策略组，全部使用该 Icon 图标。\n5. 前缀与后缀：如 ^PROXY 匹配前缀， Auto\$ 匹配后缀；规则自上而下按序生效。';
+
+  @override
+  String get refreshGroupIcons => '刷新策略组图标';
+
+  @override
+  String get refreshGroupIconsTip => '清空所有已缓存的远程图标与图标集图片，重新同步远程图标集并拉取最新图标。';
+
+  @override
+  String get groupIconsRefreshed => '策略组图标已刷新';
+
+  @override
+  String get ipRiskAlert => 'IP 风险提示';
+
+  @override
+  String get ipRiskCheck => '纯净度检测';
+
+  @override
+  String get ipRiskScore => '欺诈值';
+
+  @override
+  String get ipRiskLow => '低风险';
+
+  @override
+  String get ipRiskMedium => '中风险';
+
+  @override
+  String get ipRiskHigh => '高风险';
+
+  @override
+  String get ipRiskVeryHigh => '极高风险';
+
+  @override
+  String get ipRiskHostingOrProxy => '机房或代理';
+
+  @override
+  String get ipRiskDatacenter => '数据中心';
+
+  @override
+  String get ipRiskResidentialProxy => '住宅代理';
+
+  @override
+  String get ipRiskBlacklist => '黑名单标记';
+
+  @override
+  String get ipRiskProxyType => '代理类型';
+
+  @override
+  String get ipRiskAnonymousVpn => '匿名 VPN';
+
+  @override
+  String get ipRiskTorExit => 'Tor 出口节点';
+
+  @override
+  String get ipRiskServer => '服务器';
+
+  @override
+  String get ipRiskPublicProxy => '公共代理';
+
+  @override
+  String get ipRiskWebProxy => 'Web 代理';
+
+  @override
+  String get ipRiskSearchRobot => '搜索引擎爬虫';
+
+  @override
+  String get ipRiskHostname => '主机名';
+
+  @override
+  String get ipRiskHint => '输入要查询的 IP';
+
+  @override
+  String get ipRiskInvalid => '请输入有效的公网 IP';
+
+  @override
+  String get ipRiskSource => '数据来源';
+
+  @override
+  String get ipRiskSources => 'Scamalytics 和 IPLocate.io';
+
+  @override
+  String get ipRiskAsn => 'ASN';
+
+  @override
+  String get ipRiskHomeBroadband => '优质原生 IP';
+
+  @override
+  String get ipRiskNoteTitle => '欺诈值说明';
+
+  @override
+  String ipRiskNoteDirect(Object score) {
+    return 'Scamalytics 能直接观测到该 IP 的网页流量，欺诈值 $score 代表其中疑似欺诈流量所占的比例。';
+  }
+
+  @override
+  String ipRiskNoteIndirect(Object isp, Object score) {
+    return 'Scamalytics 无法直接观测该 IP 的网页流量，欺诈值 $score 是依据 $isp 旗下 IP 的整体风险估算的。';
+  }
+
+  @override
+  String get ipRiskNoteGeneric =>
+      '欺诈值代表 Scamalytics 认为来自该 IP 的网页流量中疑似欺诈流量所占的比例，范围为 0–100。';
+
+  @override
+  String get ipRiskNoteAmount => '观测流量';
+
+  @override
+  String get ipRiskNoteAmountIsp => '运营商流量';
+
+  @override
+  String get ipRiskNoteShare => '疑似欺诈';
+
+  @override
+  String get ipRiskAmountLow => '较少';
+
+  @override
+  String get ipRiskAmountMedium => '中等';
+
+  @override
+  String get ipRiskAmountHigh => '较多';
+
+  @override
+  String get ipRiskShareLittle => '极少';
+
+  @override
+  String get ipRiskShareSome => '部分';
+
+  @override
+  String get ipRiskShareAlmostAll => '几乎全部';
+
+  @override
+  String get ipRiskNoteOwner => '所有者';
+
+  @override
+  String get ipRiskNoteConnection => '连接类型';
+
+  @override
+  String get ipRiskCommercialServer => '商业服务器';
+
+  @override
+  String get ipRiskNoteProxying => '可能在代理来自其他地区的流量，实际用户可能位于任何地方';
+
+  @override
+  String get ipRiskNoteWarningHigh => '如果看到来自该 IP 的网页流量，很可能是欺诈分子在活动。';
+
+  @override
+  String get ipRiskNoteWarningVeryHigh => '如果看到来自该 IP 的网页流量，极有可能是欺诈分子在活动。';
+
+  @override
+  String get ipRiskNoteFootnote => '以上评估仅针对网页流量，其他类型流量的风险可能不同。';
+
+  @override
+  String get ipRiskLocation => '国家 / 地区';
+
+  @override
+  String get ipRiskCity => '省份 / 城市';
+
+  @override
+  String get operatorOrAsn => '归属 / ASN';
+
+  @override
+  String get ipRiskFailed => '无法获取 IP 信息，请重试。';
+
+  @override
+  String get isp => '运营商';
+
+  @override
+  String get speedTest => '网速测试';
+
+  @override
+  String get speedTestStart => '开始测速';
+
+  @override
+  String get speedTestAgain => '重新测速';
+
+  @override
+  String get speedTestHistory => '测速记录';
+
+  @override
+  String get speedTestHistoryEmpty => '暂无测速记录';
+
+  @override
+  String get speedTestHistoryRetention => '保留 14 天';
+
+  @override
+  String get speedTestClearHistoryTip => '确定清空全部测速记录？';
+
+  @override
+  String get speedTestFollowRules => '跟随规则';
+
+  @override
+  String get speedTestOutbound => '出站';
+
+  @override
+  String get speedTestCoreStopped => '未启动 · 直连测速';
+
+  @override
+  String get speedTestReady => '准备就绪';
+
+  @override
+  String get speedTestConnecting => '连接中';
+
+  @override
+  String get speedTestPacketLoss => '丢包';
+
+  @override
+  String get speedTestJitter => '抖动';
+
+  @override
+  String get speedTestLoadedLatency => '负载延迟';
+
+  @override
+  String get speedTestResponsiveness => '响应性';
+
+  @override
+  String get speedTestDataUsed => '已用流量';
+
+  @override
+  String get speedTestServer => '测速服务器';
+
+  @override
+  String get speedTestServerAutoDesc => '自动选择 Speedtest 服务器';
+
+  @override
+  String get speedTestProtocol => '协议';
+
+  @override
+  String get speedTestMobileDataTip => '当前正在使用移动数据，一次测速可能消耗数百 MB 流量，是否继续？';
+
+  @override
+  String get speedTestErrorRejected => '测速请求被规则拦截';
+
+  @override
+  String get speedTestErrorRejectedDesc => '当前规则将测速域名指向了 REJECT，可更换出站后重试';
+
+  @override
+  String get speedTestErrorBlocked => '测速服务不可用';
+
+  @override
+  String speedTestErrorBlockedDesc(Object provider) {
+    return '出站节点可能屏蔽了 $provider 测速，可切换测速源或更换出站';
+  }
+
+  @override
+  String get speedTestErrorUnavailable => '无法连接测速服务';
+
+  @override
+  String get speedTestErrorTimeout => '连接测速服务超时';
+
+  @override
+  String get speedTestErrorNetworkDesc => '请检查出站是否可用后重试';
+
+  @override
+  String get speedTestChangeOutbound => '更换出站';
+
+  @override
+  String get speedTestSettings => '测速设置';
+
+  @override
+  String get speedTestDuration => '测试时长';
+
+  @override
+  String get speedTestConnections => '连接方式';
+
+  @override
+  String get speedTestSingleThread => '单线程';
+
+  @override
+  String get speedTestMultiThread => '多线程';
+
+  @override
+  String speedTestConnectionsDesc(Object count) {
+    return '多线程会并发 $count 条连接以跑满带宽';
+  }
+
+  @override
+  String get speedTestProtocolDesc =>
+      'HTTP/3 基于 QUIC (UDP)，不可用时依次回退到 HTTP/2、（HTTP/2 不可用时）HTTP/1.1';
+
+  @override
+  String speedTestProtocolFallback(Object fallback, Object protocol) {
+    return '$protocol 不可用，已回退到 $fallback';
+  }
+
+  @override
+  String get speedTestProbing => '探测中';
+
+  @override
+  String get speedTestRealtime => '实时速率';
+
+  @override
+  String get speedTestQuality => '网络质量';
+
+  @override
+  String speedTestStreams(Object count) {
+    return '$count 条连接';
+  }
+
+  @override
+  String get speedTestManual => '手动指定';
+
+  @override
+  String get speedTestExitNode => '出站节点';
+
+  @override
+  String get speedTestRoute => '路由规则';
+
+  @override
+  String get speedTestCredit => '测速服务器由 Speedtest by Ookla 提供。';
+
+  @override
+  String get speedTestStop => '停止测速';
+
+  @override
+  String get trafficStats => '流量统计';
+
+  @override
+  String get trafficStatsDesc => '按日、周、月查看流量具体去向';
+
+  @override
+  String get trafficStatsDay => '日';
+
+  @override
+  String get trafficStatsWeek => '周';
+
+  @override
+  String get trafficStatsMonth => '月';
+
+  @override
+  String get trafficStatsTotal => '总流量';
+
+  @override
+  String get trafficStatsOverview => '流量概览';
+
+  @override
+  String get trafficStatsRunningTime => '累计运行';
+
+  @override
+  String get trafficStatsHourUnit => '小时';
+
+  @override
+  String get trafficStatsMinuteUnit => '分';
+
+  @override
+  String get trafficStatsTrend => '流量趋势';
+
+  @override
+  String get trafficStatsRuleHits => '规则命中';
+
+  @override
+  String trafficStatsHitCount(Object count) {
+    return '$count 次';
+  }
+
+  @override
+  String get trafficStatsRanking => '流量排行';
+
+  @override
+  String get trafficStatsNode => '节点';
+
+  @override
+  String get trafficStatsDisabled => '未开启流量统计';
+
+  @override
+  String get trafficStatsDisabledDesc => '开启后将按域名、进程、节点与规则本地统计每日流量使用情况。';
+
+  @override
+  String get trafficStatsEnable => '启用流量统计';
+
+  @override
+  String get trafficStatsEnableAction => '开启';
+
+  @override
+  String get trafficStatsDetail => '详细统计';
+
+  @override
+  String get trafficStatsDetailDesc => '记录域名、进程、节点、配置与规则的流量明细';
+
+  @override
+  String get trafficStatsSiteIcon => '网站图标';
+
+  @override
+  String get trafficStatsSiteIconDesc => '为域名排行获取并本地缓存网站图标';
+
+  @override
+  String get trafficStatsRetention => '数据保留天数';
+
+  @override
+  String trafficStatsDays(Object count) {
+    return '$count 天';
+  }
+
+  @override
+  String get trafficStatsSettings => '统计设置';
+
+  @override
+  String get trafficStatsClearTip => '确定要清除所有已保存的流量统计数据吗？';
+
+  @override
+  String trafficStatsSince(Object date) {
+    return '统计自 $date';
+  }
+
+  @override
+  String get trafficStatsDetailOffTip => '当前未开启详细统计，仅记录总流量与时段趋势。';
+
+  @override
+  String get trafficStatsRefresh => '刷新';
 }

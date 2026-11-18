@@ -3892,4 +3892,579 @@ class AppLocalizationsKo extends AppLocalizations {
   String rootTunFallback(Object reason) {
     return 'Root를 사용할 수 없어($reason) 이번에는 시스템 VPN을 사용합니다.';
   }
+
+  @override
+  String get config => '구성';
+
+  @override
+  String get advanced => '고급';
+
+  @override
+  String get ipDetails => 'IP 상세 정보';
+
+  @override
+  String get silentLaunchDesc => '백그라운드 실행은 창을 표시하지 않고 시작합니다.';
+
+  @override
+  String get accessControlDesc => '접근 제어는 프록시를 사용할 앱을 선택합니다.';
+
+  @override
+  String get wakelock => '화면 켜짐 유지';
+
+  @override
+  String get secondaryDevelopmentBuild => '2차 개발 빌드';
+
+  @override
+  String get addressHelp => 'WebDAV 서버 주소';
+
+  @override
+  String get authenticationDesc => '인증을 켜면 로컬 프록시 포트에서 사용자 이름과 비밀번호를 요구합니다.';
+
+  @override
+  String get autoCloseConnectionsDesc => '연결 자동 종료는 프록시를 전환할 때 열려 있는 연결을 끊습니다.';
+
+  @override
+  String get sidebarBlurDesc => '배경 흐림은 창 뒤의 바탕화면을 사이드바에 비쳐 보이게 합니다.';
+
+  @override
+  String get vpnEnableDesc => 'VPN은 VpnService를 통해 모든 시스템 트래픽을 자동으로 라우팅합니다.';
+
+  @override
+  String get ntpStatusDesc => 'NTP는 시스템 시계 대신 NTP 서버에서 시간을 가져옵니다.';
+
+  @override
+  String get dialerProxyDesc => '다이얼러 프록시는 NTP 서버에 연결할 때 사용하는 아웃바운드입니다.';
+
+  @override
+  String get snifferStatusDesc =>
+      '스니퍼는 TLS, HTTP, QUIC 트래픽에서 도메인을 읽어 규칙이 일치할 수 있게 합니다.';
+
+  @override
+  String get overrideDestinationDesc => '대상 덮어쓰기는 원래 주소 대신 스니핑한 도메인으로 연결합니다.';
+
+  @override
+  String get parsePureIpDesc => '순수 IP 분석은 IP 주소만 있는 연결을 스니핑합니다.';
+
+  @override
+  String get skipDomainDesc => '건너뛸 도메인 목록에 있는 스니핑된 도메인은 사용하지 않습니다.';
+
+  @override
+  String get fakeipFilterModeDesc =>
+      'Fake-IP 필터 모드에서 블랙리스트는 일치 항목을 제외하고, 화이트리스트는 일치 항목에만 가짜 IP를 사용하며, 규칙은 규칙에 따라 일치시킵니다.';
+
+  @override
+  String get ipv6InboundDesc => 'IPv6를 켜면 VPN이 IPv6 인바운드를 허용합니다.';
+
+  @override
+  String get interfaceNameDesc => '인터페이스 이름은 아웃바운드 연결이 사용하는 네트워크 인터페이스입니다.';
+
+  @override
+  String get advancedConfigDesc => '고급 구성에는 네트워크, DNS, 추가한 규칙, 스크립트가 포함됩니다.';
+
+  @override
+  String get singleAdd => '개별 추가';
+
+  @override
+  String get batchAdd => '일괄 추가';
+
+  @override
+  String get batchListInputTip => '한 줄에 하나씩 또는 쉼표로 구분하여 입력하세요';
+
+  @override
+  String get batchMapInputTip => '한 줄에 하나씩, 키, 공백, 값 순서로 입력하세요';
+
+  @override
+  String get customProfileResources => '사용자 지정 프로필 리소스';
+
+  @override
+  String get customProfileResourcesDesc =>
+      '사용자 지정 프로필 리소스는 직접 추가해 사용자 지정 프로필에서 쓰는 프록시, 규칙 공급자, 필터, 아이콘 세트입니다.';
+
+  @override
+  String get batteryOptimizationDesc => '배터리 최적화를 무시하면 앱이 백그라운드에서 계속 실행됩니다.';
+
+  @override
+  String get onDemandDesc => '필요 시 실행은 제외된 Wi-Fi에서 프록시를 일시 중지합니다.';
+
+  @override
+  String get blockConnection => '연결 차단';
+
+  @override
+  String get proxyNode => '프록시 노드';
+
+  @override
+  String get bypassPrivateRouteDesc =>
+      '사설 주소 우회를 켜면 LAN, 루프백, 멀티캐스트 주소는 TUN을 거치지 않습니다.';
+
+  @override
+  String get excludeInterfaceDesc =>
+      'docker0와 같이 제외할 인터페이스로 들어오는 트래픽은 TUN을 거치지 않습니다.';
+
+  @override
+  String get includeUidDesc => '포함할 사용자 ID의 프로세스 트래픽만 TUN을 거칩니다.';
+
+  @override
+  String get excludeUidDesc => '제외할 사용자 ID의 프로세스 트래픽은 TUN을 거치지 않습니다.';
+
+  @override
+  String get excludeSrcPortDesc => '제외할 소스 포트에서 나가는 트래픽은 TUN을 거치지 않습니다.';
+
+  @override
+  String get excludeDstPortDesc => '제외할 대상 포트로 가는 트래픽은 TUN을 거치지 않습니다.';
+
+  @override
+  String get emojiStyle => '이모지 글꼴';
+
+  @override
+  String get customFont => '사용자 지정 글꼴';
+
+  @override
+  String get nodeCount => '노드 수';
+
+  @override
+  String get ruleCount => '규칙 항목';
+
+  @override
+  String get providerCount => '제공자';
+
+  @override
+  String get currentProfile => '현재 프로필';
+
+  @override
+  String get iconRules => '정규식 아이콘';
+
+  @override
+  String get iconRulesTip => '이름이 정규식과 일치하는 그룹은 선택한 아이콘 세트의 아이콘을 사용합니다.';
+
+  @override
+  String get invalidRegex => '잘못된 정규식';
+
+  @override
+  String get iconSetRemoved => '아이콘 세트가 삭제됨';
+
+  @override
+  String get iconRulesEmpty => '정규식 아이콘이 비어 있습니다';
+
+  @override
+  String get addIconRule => '정규식 아이콘 추가';
+
+  @override
+  String get editIconRule => '정규식 아이콘 수정';
+
+  @override
+  String get iconRuleHelp =>
+      '1. 완전 일치: 예: ^YouTube\$ 는 이름이 YouTube 인 그룹에만 일치합니다.\n2. 키워드 일치: 예: YouTube 는 이름에 YouTube 가 포함된 모든 그룹에 일치합니다.\n3. 다중 일치: 예: (YouTube|Netflix|Disney) 는 여러 미디어 그룹과 동시에 일치합니다.\n4. 전체 와일드카드: 예: .* 는 모든 그룹과 일치하며 해당 Icon 아이콘을 적용합니다.\n5. 접두사 및 접미사: 예: ^PROXY 는 접두사, Auto\$ 는 접미사에 일치하며 위에서 아래 순서로 적용됩니다.';
+
+  @override
+  String get refreshGroupIcons => '그룹 아이콘 새로고침';
+
+  @override
+  String get refreshGroupIconsTip =>
+      '캐시된 원격 아이콘과 아이콘 세트 이미지를 모두 지우고 원격 아이콘 세트를 다시 동기화하여 최신 아이콘을 가져옵니다.';
+
+  @override
+  String get groupIconsRefreshed => '그룹 아이콘을 새로고침했습니다';
+
+  @override
+  String get ipRiskAlert => 'IP 위험 알림';
+
+  @override
+  String get ipRiskCheck => 'IP 순도 확인';
+
+  @override
+  String get ipRiskScore => '사기 점수';
+
+  @override
+  String get ipRiskLow => '낮은 위험';
+
+  @override
+  String get ipRiskMedium => '중간 위험';
+
+  @override
+  String get ipRiskHigh => '높은 위험';
+
+  @override
+  String get ipRiskVeryHigh => '매우 높은 위험';
+
+  @override
+  String get ipRiskHostingOrProxy => '호스팅 또는 프록시';
+
+  @override
+  String get ipRiskDatacenter => '데이터 센터';
+
+  @override
+  String get ipRiskResidentialProxy => '주거용 프록시';
+
+  @override
+  String get ipRiskBlacklist => '블랙리스트 등록';
+
+  @override
+  String get ipRiskProxyType => '프록시 유형';
+
+  @override
+  String get ipRiskAnonymousVpn => '익명 VPN';
+
+  @override
+  String get ipRiskTorExit => 'Tor 출구 노드';
+
+  @override
+  String get ipRiskServer => '서버';
+
+  @override
+  String get ipRiskPublicProxy => '공개 프록시';
+
+  @override
+  String get ipRiskWebProxy => '웹 프록시';
+
+  @override
+  String get ipRiskSearchRobot => '검색 엔진 크롤러';
+
+  @override
+  String get ipRiskHostname => '호스트 이름';
+
+  @override
+  String get ipRiskHint => '조회할 IP 입력';
+
+  @override
+  String get ipRiskInvalid => '유효한 공인 IP를 입력하세요';
+
+  @override
+  String get ipRiskSource => '데이터 출처';
+
+  @override
+  String get ipRiskSources => 'Scamalytics 및 IPLocate.io';
+
+  @override
+  String get ipRiskAsn => 'ASN';
+
+  @override
+  String get ipRiskHomeBroadband => '프리미엄 주거용 IP';
+
+  @override
+  String get ipRiskNoteTitle => '사기 점수 안내';
+
+  @override
+  String ipRiskNoteDirect(Object score) {
+    return 'Scamalytics는 이 IP의 웹 트래픽을 직접 관측합니다. 점수 $score은(는) 그중 사기로 의심되는 트래픽의 비율을 나타냅니다.';
+  }
+
+  @override
+  String ipRiskNoteIndirect(Object isp, Object score) {
+    return 'Scamalytics는 이 IP의 웹 트래픽을 직접 관측할 수 없습니다. 점수 $score은(는) $isp이(가) 운영하는 IP 전체의 위험도를 바탕으로 추정한 값입니다.';
+  }
+
+  @override
+  String get ipRiskNoteGeneric =>
+      '사기 점수(0–100)는 이 IP의 웹 트래픽 중 Scamalytics가 사기로 의심하는 비율을 나타냅니다.';
+
+  @override
+  String get ipRiskNoteAmount => '관측된 트래픽';
+
+  @override
+  String get ipRiskNoteAmountIsp => '사업자 트래픽';
+
+  @override
+  String get ipRiskNoteShare => '사기 의심';
+
+  @override
+  String get ipRiskAmountLow => '적음';
+
+  @override
+  String get ipRiskAmountMedium => '보통';
+
+  @override
+  String get ipRiskAmountHigh => '많음';
+
+  @override
+  String get ipRiskShareLittle => '거의 없음';
+
+  @override
+  String get ipRiskShareSome => '일부';
+
+  @override
+  String get ipRiskShareAlmostAll => '거의 전부';
+
+  @override
+  String get ipRiskNoteOwner => '소유자';
+
+  @override
+  String get ipRiskNoteConnection => '연결 유형';
+
+  @override
+  String get ipRiskCommercialServer => '상업용 서버';
+
+  @override
+  String get ipRiskNoteProxying =>
+      '다른 지역의 트래픽을 중계하고 있을 수 있으며, 실제 사용자는 어디에나 있을 수 있습니다';
+
+  @override
+  String get ipRiskNoteWarningHigh => '이 IP의 웹 트래픽은 사기범의 활동일 가능성이 높습니다.';
+
+  @override
+  String get ipRiskNoteWarningVeryHigh => '이 IP의 웹 트래픽은 사기범의 활동일 가능성이 매우 높습니다.';
+
+  @override
+  String get ipRiskNoteFootnote =>
+      '이 평가는 웹 트래픽만을 대상으로 하며, 다른 트래픽의 위험도는 다를 수 있습니다.';
+
+  @override
+  String get ipRiskLocation => '국가 / 지역';
+
+  @override
+  String get ipRiskCity => '지역 / 도시';
+
+  @override
+  String get operatorOrAsn => '소속 / ASN';
+
+  @override
+  String get ipRiskFailed => 'IP 정보를 불러오지 못했습니다. 다시 시도해 주세요.';
+
+  @override
+  String get isp => '통신사';
+
+  @override
+  String get speedTest => '속도 테스트';
+
+  @override
+  String get speedTestStart => '측정 시작';
+
+  @override
+  String get speedTestAgain => '다시 측정';
+
+  @override
+  String get speedTestHistory => '측정 기록';
+
+  @override
+  String get speedTestHistoryEmpty => '측정 기록이 없습니다';
+
+  @override
+  String get speedTestHistoryRetention => '14일간 보관';
+
+  @override
+  String get speedTestClearHistoryTip => '모든 측정 기록을 삭제할까요?';
+
+  @override
+  String get speedTestFollowRules => '규칙 따르기';
+
+  @override
+  String get speedTestOutbound => '아웃바운드';
+
+  @override
+  String get speedTestCoreStopped => '미실행 · 직접 연결 측정';
+
+  @override
+  String get speedTestReady => '준비 완료';
+
+  @override
+  String get speedTestConnecting => '연결 중';
+
+  @override
+  String get speedTestPacketLoss => '패킷 손실';
+
+  @override
+  String get speedTestJitter => '지터';
+
+  @override
+  String get speedTestLoadedLatency => '부하 지연';
+
+  @override
+  String get speedTestResponsiveness => '응답성';
+
+  @override
+  String get speedTestDataUsed => '사용 데이터';
+
+  @override
+  String get speedTestServer => '측정 서버';
+
+  @override
+  String get speedTestServerAutoDesc => 'Speedtest 서버 자동 선택';
+
+  @override
+  String get speedTestProtocol => '프로토콜';
+
+  @override
+  String get speedTestMobileDataTip =>
+      '모바일 데이터를 사용 중입니다. 1회 측정에 수백 MB가 사용될 수 있습니다. 계속할까요?';
+
+  @override
+  String get speedTestErrorRejected => '규칙에 의해 차단됨';
+
+  @override
+  String get speedTestErrorRejectedDesc =>
+      '현재 규칙이 측정 도메인을 REJECT로 보냅니다. 다른 아웃바운드를 선택한 후 다시 시도하세요.';
+
+  @override
+  String get speedTestErrorBlocked => '속도 테스트를 사용할 수 없음';
+
+  @override
+  String speedTestErrorBlockedDesc(Object provider) {
+    return '아웃바운드가 $provider 속도 테스트를 차단하고 있을 수 있습니다. 측정 소스나 아웃바운드를 바꿔 보세요.';
+  }
+
+  @override
+  String get speedTestErrorUnavailable => '속도 테스트 서비스에 연결할 수 없음';
+
+  @override
+  String get speedTestErrorTimeout => '속도 테스트 시간 초과';
+
+  @override
+  String get speedTestErrorNetworkDesc => '아웃바운드를 사용할 수 있는지 확인한 후 다시 시도하세요.';
+
+  @override
+  String get speedTestChangeOutbound => '아웃바운드 변경';
+
+  @override
+  String get speedTestSettings => '측정 설정';
+
+  @override
+  String get speedTestDuration => '측정 시간';
+
+  @override
+  String get speedTestConnections => '연결 방식';
+
+  @override
+  String get speedTestSingleThread => '단일';
+
+  @override
+  String get speedTestMultiThread => '다중';
+
+  @override
+  String speedTestConnectionsDesc(Object count) {
+    return '다중은 $count개의 병렬 연결로 대역폭을 채웁니다';
+  }
+
+  @override
+  String get speedTestProtocolDesc =>
+      'HTTP/3는 QUIC(UDP)를 사용하며, 사용할 수 없으면 HTTP/2로, HTTP/2도 안 되면 HTTP/1.1로 전환합니다';
+
+  @override
+  String speedTestProtocolFallback(Object fallback, Object protocol) {
+    return '$protocol를 사용할 수 없어 $fallback로 전환했습니다';
+  }
+
+  @override
+  String get speedTestProbing => '확인 중';
+
+  @override
+  String get speedTestRealtime => '실시간 속도';
+
+  @override
+  String get speedTestQuality => '네트워크 품질';
+
+  @override
+  String speedTestStreams(Object count) {
+    return '$count개 연결';
+  }
+
+  @override
+  String get speedTestManual => '수동 지정';
+
+  @override
+  String get speedTestExitNode => '출구 노드';
+
+  @override
+  String get speedTestRoute => '라우팅 규칙';
+
+  @override
+  String get speedTestCredit => '테스트 서버 제공: Speedtest by Ookla.';
+
+  @override
+  String get speedTestStop => '테스트 중지';
+
+  @override
+  String get trafficStats => '트래픽 통계';
+
+  @override
+  String get trafficStatsDesc => '일, 주, 월별 트래픽 세부 내역을 확인합니다';
+
+  @override
+  String get trafficStatsDay => '일';
+
+  @override
+  String get trafficStatsWeek => '주';
+
+  @override
+  String get trafficStatsMonth => '월';
+
+  @override
+  String get trafficStatsTotal => '총 트래픽';
+
+  @override
+  String get trafficStatsOverview => '요약';
+
+  @override
+  String get trafficStatsRunningTime => '누적 실행 시간';
+
+  @override
+  String get trafficStatsHourUnit => '시간';
+
+  @override
+  String get trafficStatsMinuteUnit => '분';
+
+  @override
+  String get trafficStatsTrend => '트래픽 추이';
+
+  @override
+  String get trafficStatsRuleHits => '규칙 일치';
+
+  @override
+  String trafficStatsHitCount(Object count) {
+    return '$count회';
+  }
+
+  @override
+  String get trafficStatsRanking => '트래픽 순위';
+
+  @override
+  String get trafficStatsNode => '노드';
+
+  @override
+  String get trafficStatsDisabled => '트래픽 통계 꺼짐';
+
+  @override
+  String get trafficStatsDisabledDesc =>
+      '켜면 도메인, 프로세스, 노드, 규칙별 일일 사용량을 로컬에 기록합니다.';
+
+  @override
+  String get trafficStatsEnable => '트래픽 통계 사용';
+
+  @override
+  String get trafficStatsEnableAction => '켜기';
+
+  @override
+  String get trafficStatsDetail => '세부 통계';
+
+  @override
+  String get trafficStatsDetailDesc => '도메인, 프로세스, 노드, 프로필, 규칙별 트래픽 기록';
+
+  @override
+  String get trafficStatsSiteIcon => '사이트 아이콘';
+
+  @override
+  String get trafficStatsSiteIconDesc => '도메인 순위용 파비콘을 로컬에 캐시합니다';
+
+  @override
+  String get trafficStatsRetention => '데이터 보관 기간';
+
+  @override
+  String trafficStatsDays(Object count) {
+    return '$count일';
+  }
+
+  @override
+  String get trafficStatsSettings => '통계 설정';
+
+  @override
+  String get trafficStatsClearTip => '저장된 모든 트래픽 통계 데이터를 지우시겠습니까?';
+
+  @override
+  String trafficStatsSince(Object date) {
+    return '$date부터';
+  }
+
+  @override
+  String get trafficStatsDetailOffTip => '세부 통계가 꺼져 있어 총량과 시간별 추이만 기록됩니다.';
+
+  @override
+  String get trafficStatsRefresh => '새로고침';
 }

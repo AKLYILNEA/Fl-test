@@ -38,6 +38,12 @@ dependencies:
     path: plugins/code_forge
   re_highlight: ^0.0.3
   archive: ^4.3.0
+  uni_platform: ^0.1.3
+  device_info_plus: ^13.3.0
+  connectivity_plus: 7.2.0
+  screen_retriever: ^0.2.2
+  wakelock_plus: ^1.4.0
+  win32_registry: ^3.0.3
   flutter_riverpod: ^3.4.3
   riverpod_annotation: ^4.0.7
   riverpod: ^3.4.3
@@ -72,9 +78,13 @@ dev_dependencies:
   sqlite3: ^3.7.0
   cross_file: ^0.3.5+5
   mocktail: ^1.0.5
+  file: ^7.0.1
 
 flutter:
   generate: true
+  shaders:
+    - shaders/about_bg.frag
+    - shaders/about_title.frag
   assets:
     - assets/data/
     - assets/fonts/
@@ -89,9 +99,19 @@ flutter:
     - path: assets/images/tray/windows/
       platforms: [ windows ]
   fonts:
+    - family: MapleMono
+      fonts:
+        - asset: assets/fonts/MapleMono-Regular.ttf
+        - asset: assets/fonts/MapleMono-Bold.ttf
+          weight: 700
     - family: JetBrainsMono
       fonts:
-        - asset: assets/fonts/JetBrainsMono-Regular.ttf
+        - asset: assets/fonts/MapleMono-Regular.ttf
+        - asset: assets/fonts/MapleMono-Bold.ttf
+          weight: 700
     - family: Twemoji
       fonts:
         - asset: assets/fonts/Twemoji.Mozilla.ttf
+    - family: OpenMoji
+      fonts:
+        - asset: assets/fonts/Openmoji.ttf

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
@@ -14,7 +16,7 @@ import 'package:prism_ui/shapes/shapes.dart';
 import 'card.dart';
 import 'connections_table.dart';
 
-const _stackedIcons = 4;
+const _stackedIcons = 5;
 
 /// The inset of a block's corner, so the icon tile inside it is concentric.
 const _blockInset = 10.0;
@@ -84,9 +86,11 @@ class _GroupIcon extends StatelessWidget {
             size: size - inset * 2,
             color: colorScheme.onSurfaceVariant,
           ),
-          child: CommonTargetIcon(
-            src: group.icon,
-            fallback: GroupMonogram(group.name),
+          child: Consumer(
+            builder: (_, ref, _) => CommonTargetIcon(
+              src: ref.watch(proxyGroupIconProvider(group.name)),
+              fallback: GroupMonogram(group.name),
+            ),
           ),
         ),
       ),
@@ -247,10 +251,12 @@ class ProxyGroupsCard extends ConsumerWidget {
                 const Expanded(child: _GroupsEmpty(fit: true))
               else ...[
                 SizedBox(
-                  height:
-                      connectionsTableTop(density, scale) -
-                      padding.top -
-                      DashboardCardHeader.height * scale,
+                  height: math.max(
+                    0,
+                    connectionsTableTop(density, scale) -
+                        padding.top -
+                        DashboardCardHeader.height * scale,
+                  ),
                 ),
                 Expanded(child: tiles),
               ],
@@ -322,9 +328,16 @@ class _GroupsFigure extends StatelessWidget {
             text: '${groups.length}',
             style: DashboardText.figure(context, metrics.style),
           ),
-          TextSpan(
-            text: ' ${context.appLocalizations.groupCountUnit}',
-            style: DashboardText.unit(context),
+          WidgetSpan(
+            alignment: PlaceholderAlignment.baseline,
+            baseline: TextBaseline.alphabetic,
+            child: Transform.translate(
+              offset: const Offset(0, -1),
+              child: Text(
+                ' ${context.appLocalizations.groupCountUnit}',
+                style: DashboardText.unit(context),
+              ),
+            ),
           ),
         ],
       ),
@@ -531,7 +544,6 @@ class ProxyGroupsSummaryCard extends ConsumerWidget {
             _GroupsHeader(groups: groups),
             const Spacer(),
             if (groups.isEmpty) const _GroupsEmptySummary() else figure,
-            const Spacer(),
           ],
         ),
       );

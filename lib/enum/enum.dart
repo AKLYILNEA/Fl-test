@@ -184,6 +184,20 @@ enum ResultType {
   error,
 }
 
+enum CoreEventType {
+  speedTest,
+  log,
+  delay,
+  request,
+  requestTraffic,
+  dns,
+  loaded,
+  crash,
+  geoUpdate,
+  routeChanged,
+  dialerLoop,
+}
+
 enum FindProcessMode { always, strict }
 
 enum InterfaceNameMode { clear, follow, custom }
@@ -436,13 +450,13 @@ enum FunctionTag {
 
 enum DashboardWidget {
   currentOutbound,
+  proxyGroups,
   networkSpeed,
   outboundMode,
   vpnButton(platforms: [SupportPlatform.Android]),
   networkTakeover(platforms: desktopPlatforms),
   serviceStatus,
   profiles,
-  proxyGroups,
   connectionStats,
   intranetIp,
   memoryInfo;

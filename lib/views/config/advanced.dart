@@ -82,9 +82,12 @@ class AdvancedConfigView extends ConsumerWidget {
           bottom: 16 + context.bottomInset,
         ),
         children: [
-          generateSection(items: items),
           generateSection(
-            title: appLocalizations.customResources,
+            title: appLocalizations.advanced,
+            items: items,
+          ),
+          generateSection(
+            title: appLocalizations.custom,
             items: customItems,
           ),
           generateSection(

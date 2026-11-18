@@ -1,6 +1,7 @@
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/core/core.dart';
 import 'package:fl_clash/enum/enum.dart';
+import 'package:fl_clash/features/ip_quality/ip_address_row.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/ui/icons/icons.dart';
@@ -230,14 +231,18 @@ class _DnsQueriesViewState extends ConsumerState<DnsQueriesView>
 }
 
 void _showDnsQueryDetail(BuildContext context, DnsQuery dnsQuery) {
-  showNestedSheet<void>(
-    context,
-    builder: (_) {
-      return Scaffold(
+  showSheet<void>(
+    context: context,
+    props: const SheetProps(
+      backgroundColor: Colors.transparent,
+      retainExpandedHeight: true,
+    ),
+    builder: (_) => NestedPagedSheet(
+      builder: (_) => Scaffold(
         body: DnsQueryDetailView(dnsQuery: dnsQuery),
         title: context.appLocalizations.details('DNS'),
-      );
-    },
+      ),
+    ),
   );
 }
 
@@ -467,7 +472,7 @@ class DnsQueryDetailView extends StatelessWidget {
             title: appLocalizations.answers,
             items: [
               for (final answer in dnsQuery.answers)
-                DetailRow(title: answer, copyText: answer),
+                IpAddressRow(address: answer),
             ],
           ),
       ],

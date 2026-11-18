@@ -166,6 +166,7 @@ class SetupAction extends _$SetupAction {
     _startTime = await serviceStartTime();
     if (_isRunning) {
       globalState.lastConfigMd5 = await preferences.getAppliedConfigMd5();
+      globalState.lastConfigCounts = await preferences.getAppliedConfigCounts();
       await _run(true, initialize: true, resume: true);
     } else if (ref.read(appSettingProvider).autoRun) {
       await setRunning(true, initialize: true);
@@ -733,10 +734,11 @@ class SetupAction extends _$SetupAction {
         setupState: setupState,
         patchConfig: patchClashConfig,
       );
-      return switch (res.base) {
+      final yamlContent = switch (res.base) {
         final base? => await _core.buildProfile(base),
         null => res.yaml,
       };
+      return unescapeYamlUnicode(yamlContent);
     } catch (e) {
       dialogs.showBanner(e.toString(), level: BannerLevel.error);
     }
@@ -900,6 +902,7 @@ class SetupAction extends _$SetupAction {
     if (!profileFailed && yamlMd5 == globalState.lastConfigMd5 && !force) {
       _appliedInputs = inputs;
       globalState.lastConfigCounts = realProfile.counts;
+      unawaited(preferences.saveAppliedConfigCounts(realProfile.counts));
       await preloadInvoke?.call();
       return _SetupTaskResult.completed;
     }
@@ -907,7 +910,6 @@ class SetupAction extends _$SetupAction {
     // has no proxies, so until this push succeeds no applied config is known.
     _appliedInputs = null;
     globalState.lastConfigMd5 = null;
-    globalState.lastConfigCounts = null;
     if (system.isAndroid) {
       await ref.read(vpnOptionsProvider.future);
       await preferences.saveShareState(ref.read(sharedStateProvider));
@@ -951,6 +953,7 @@ class SetupAction extends _$SetupAction {
             }
             await _loadConfigWarnings();
             globalState.lastConfigCounts = configCountsOf(const {});
+            unawaited(preferences.saveAppliedConfigCounts(globalState.lastConfigCounts));
             await globalState.safeRun(() => onUpdated?.call());
             throw MessageException(error.message);
           } finally {
@@ -967,6 +970,7 @@ class SetupAction extends _$SetupAction {
         globalState.lastConfigMd5 = yamlMd5;
         globalState.lastConfigCounts =
             realProfile?.counts ?? configCountsOf(const {});
+        unawaited(preferences.saveAppliedConfigCounts(globalState.lastConfigCounts));
         _appliedInputs = inputs;
         await _openController(realPatchConfig);
         if (system.isAndroid) {

@@ -1,21 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- glyph.svg's geometry; the state shows only in the colors. -->
+<!-- Logo glyph for unstarted / monochrome state (light taskbar / pure black) -->
 <svg width="240" height="240" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
   <title>status_1</title>
-  <defs>
-    <linearGradient id="fill" x1="39.62" y1="112.53" x2="200.08" y2="19.89" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#6E7484"/>
-      <stop offset="0.1963" stop-color="#747A8A"/>
-      <stop offset="0.348" stop-color="#7B808F"/>
-      <stop offset="0.5002" stop-color="#828594"/>
-      <stop offset="0.6519" stop-color="#8B8E9D"/>
-      <stop offset="0.8042" stop-color="#9597A6"/>
-      <stop offset="1" stop-color="#A2A3B1"/>
-    </linearGradient>
-  </defs>
-  <g stroke="url(#fill)" stroke-width="46.32" stroke-linecap="round">
-    <line x1="59.68" y1="100.95" x2="180.02" y2="31.47"/>
-    <line x1="90.56" y1="154.43" x2="150.74" y2="119.69"/>
+  <g stroke-width="46.32" stroke-linecap="round">
+    <line x1="59.68" y1="100.95" x2="180.02" y2="31.47" stroke="#000000"/>
+    <line x1="90.56" y1="154.43" x2="150.74" y2="119.69" stroke="#000000"/>
   </g>
-  <circle cx="121.44" cy="207.92" r="23.16" fill="url(#fill)"/>
+  <circle cx="121.44" cy="207.92" r="23.16" fill="#000000"/>
 </svg>

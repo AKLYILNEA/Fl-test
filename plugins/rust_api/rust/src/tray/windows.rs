@@ -218,6 +218,7 @@ unsafe extern "system" fn window_proc(
             return 0;
         }
         WM_SETTINGCHANGE if is_color_set_change(lparam) => {
+            emit(TraySignalKind::ThemeChanged, 0);
             if let Some(flush) = FLUSH_MENUS.get().copied().flatten() {
                 flush();
             }

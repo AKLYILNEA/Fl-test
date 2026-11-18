@@ -248,7 +248,7 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const TestApp(child: AboutView()),
+        child: const TestApp(child: AboutView(dynamicBackground: false)),
       ),
     );
     await tester.pump();
@@ -286,7 +286,7 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: const TestApp(child: AboutView()),
+        child: const TestApp(child: AboutView(dynamicBackground: false)),
       ),
     );
     await tester.pump();

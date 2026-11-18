@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:fl_clash/common/constant.dart';
 import 'package:fl_clash/enum/enum.dart';
+import 'package:fl_clash/models/models.dart';
 
 import 'core_api.dart';
 import 'core_client.dart';
@@ -23,6 +24,109 @@ final class RpcCoreApi implements CoreApi {
   final CoreClient client;
 
   RpcCoreApi(this.client);
+
+  @override
+  Future<Map<String, dynamic>?> readIpCache(String ip, {String? source}) =>
+      _call(
+        'ip.cacheGet',
+        (data) => data == null ? null : _object(data),
+        params: {'ip': ip, 'source': ?source},
+        timeout: const Duration(seconds: 1),
+      );
+
+  @override
+  Future<void> writeIpCache(String ip, JsonMap data, {String? source}) =>
+      _command(
+        'ip.cacheSet',
+        params: {'ip': ip, 'source': ?source, 'data': data},
+        timeout: const Duration(seconds: 5),
+      );
+
+  @override
+  Future<String> ipCountry(String ip) =>
+      _call('ip.country', (data) => data as String, params: {'ip': ip});
+
+  @override
+  Future<void> configureTrafficStats(
+    TrafficStatsSettings settings, {
+    required String profile,
+    required int tzOffset,
+    bool? screenOn,
+    bool? suspended,
+  }) => _command(
+    'trafficStats.configure',
+    params: {
+      'enable': settings.enable,
+      'detail': settings.detail,
+      'retentionDays': settings.retentionDays,
+      'tzOffset': tzOffset,
+      'profile': profile,
+      'screenOn': ?screenOn,
+      'suspended': ?suspended,
+    },
+  );
+
+  @override
+  Future<TrafficStatsResult> getTrafficStats({
+    required String start,
+    required String end,
+    int top = 50,
+  }) => _call(
+    'trafficStats.get',
+    (data) => TrafficStatsResult.fromJson(_object(data)),
+    params: {'start': start, 'end': end, 'top': top},
+  );
+
+  @override
+  Future<void> clearTrafficStats() => _command('trafficStats.clear');
+
+  @override
+  Future<SpeedTestState> probeSpeedTest(
+    SpeedTestSettings settings,
+    String proxy,
+    String id,
+  ) => _call(
+    'speedTest.probe',
+    (data) => SpeedTestState.fromJson(_object(data)),
+    params: settings.toParams(proxy, id),
+    timeout: const Duration(seconds: 45),
+  );
+
+  @override
+  Future<SpeedTestState> startSpeedTest(
+    SpeedTestSettings settings,
+    String proxy,
+    String id,
+  ) => _call(
+    'speedTest.start',
+    (data) => SpeedTestState.fromJson(_object(data)),
+    params: settings.toParams(proxy, id),
+  );
+
+  @override
+  Future<SpeedTestState> speedTestStatus(String id) => _call(
+    'speedTest.status',
+    (data) => SpeedTestState.fromJson(_object(data)),
+    params: {'id': id},
+  );
+
+  @override
+  Future<void> cancelSpeedTest(String id) =>
+      _command('speedTest.cancel', params: {'id': id});
+
+  @override
+  Future<List<SpeedTestNode>> speedTestServers(
+    String proxy,
+    String search,
+    String id,
+  ) => _call(
+    'speedTest.servers',
+    (data) => [
+      for (final item in data as List) SpeedTestNode.fromJson(_object(item)),
+    ],
+    params: {'proxy': proxy, 'search': search, 'id': id},
+    timeout: const Duration(seconds: 25),
+  );
 
   Future<T> _call<T>(
     String method,

@@ -169,7 +169,10 @@ const configKey = 'config';
 const systemDnsRecordKey = 'system_dns_record';
 const bootRecordKey = 'boot_record';
 const appliedConfigMd5Key = 'applied_config_md5';
-const repository = 'chen08209/FlClash';
+const wakelockEnabledKey = 'wakelock_enabled';
+const iconRulesKey = 'proxies_icon_rules';
+const defaultSystemDnsFallback = '223.5.5.5';
+const repository = 'AKLYILNEA/Fl-test';
 const maxMobileWidth = 600;
 const maxLaptopWidth = 840;
 const defaultTestUrl = 'https://www.gstatic.com/generate_204';
@@ -221,7 +224,7 @@ const pausedMaxLogsLength = maxLogsLength * 2;
 const pausedMaxRequestsLength = maxRequestsLength * 2;
 const pausedMaxDnsQueriesLength = maxDnsQueriesLength * 2;
 
-const trafficSampleLength = 30;
+const trafficSampleLength = 60;
 
 // iOS 27's system colors but the deeper blue of earlier iOS, in the order of the
 // macOS accent colors.

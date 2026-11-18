@@ -2,11 +2,11 @@ import 'dart:math' as math;
 
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/common/service_probe.dart';
-import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/features/features.dart';
-import 'package:fl_clash/features/ip_quality/labels.dart';
 import 'package:fl_clash/models/models.dart';
-import 'package:fl_clash/providers/ip_quality.dart';
+import 'package:fl_clash/features/ip_quality/risk_provider.dart';
+import 'package:fl_clash/features/ip_quality/risk_model.dart';
+import 'package:fl_clash/features/ip_quality/risk_view.dart';
 import 'package:fl_clash/providers/outbound_ip.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/providers/routed_probe.dart';
@@ -20,7 +20,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:prism_ui/shapes/shapes.dart';
 
 import 'card.dart';
-import 'package:prism_ui/prism_ui.dart';
 
 const _builtinOutbounds = {'DIRECT', 'REJECT', 'REJECT-DROP', 'PASS'};
 
@@ -28,9 +27,11 @@ bool isBuiltinOutbound(String name) => _builtinOutbounds.contains(name);
 
 const _ipMask = '*****';
 
-const _decorationGrowth = 0.12;
+const _decorationGrowth = 0.06;
 
 const _decorationTurn = 2 * math.pi / 12;
+
+const _decorationBottomGap = 10.0;
 
 /// The address the proxied traffic leaves by, next to the start button.
 class CurrentOutboundCard extends ConsumerStatefulWidget {
@@ -58,8 +59,8 @@ class _CurrentOutboundCardState extends ConsumerState<CurrentOutboundCard> {
 
   void _refresh(String? ip) {
     _probe.refresh(const [routedOutbound]);
-    if (ip != null && ref.read(ipQualityProvider(ip)).hasError) {
-      ref.invalidate(ipQualityProvider(ip));
+    if (ip != null && ref.read(ipRiskProvider(ip)).hasError) {
+      ref.invalidate(ipRiskProvider(ip));
     }
   }
 
@@ -80,7 +81,7 @@ class _CurrentOutboundCardState extends ConsumerState<CurrentOutboundCard> {
     final failed = phase == ProbePhase.failed && ipInfo == null;
     final qualityState = ipInfo == null
         ? null
-        : ref.watch(ipQualityProvider(ipInfo.ip));
+        : ref.watch(ipRiskProvider(ipInfo.ip));
     final quality = qualityState?.value;
     final qualityLoading =
         qualityState != null && quality == null && qualityState.isLoading;
@@ -130,7 +131,7 @@ class _CurrentOutboundCardState extends ConsumerState<CurrentOutboundCard> {
                 children: [
                   PositionedDirectional(
                     end: metrics.decorationEnd,
-                    top: metrics.decorationTop,
+                    bottom: metrics.decorationBottom,
                     child: TweenAnimationBuilder<double>(
                       tween: Tween(end: isStart ? 1 : 0),
                       duration: context.motionDuration(_morphDuration),
@@ -179,17 +180,19 @@ class _CurrentOutboundCardState extends ConsumerState<CurrentOutboundCard> {
                           ),
                         ],
                       ),
-                      SizedBox(height: metrics.ipTop),
+                      if (density.isDesktop)
+                        const Spacer()
+                      else
+                        SizedBox(height: metrics.ipTop),
                       _ExitRow(
                         info: ipInfo,
+                        quality: quality,
                         failed: failed,
                         loading: loading,
                         checking: phase == ProbePhase.probing || qualityLoading,
                         onRefresh: () => _refresh(ipInfo?.ip),
-                        quality: quality,
-                        active: isStart,
+                        active: isStart && !suspended,
                         metrics: metrics,
-                        large: !density.isDesktop,
                       ),
                       if (density.isDesktop)
                         const Spacer()
@@ -327,7 +330,6 @@ class _OutboundMetrics {
     required this.buttonSlot,
     required this.decorationSize,
     required this.decorationEnd,
-    required this.decorationTop,
   });
 
   factory _OutboundMetrics.of(DashboardDensity density) => switch (density) {
@@ -340,9 +342,8 @@ class _OutboundMetrics {
       ip: AppTextStyle.title1,
       buttonSize: 104,
       buttonSlot: 120,
-      decorationSize: 290,
-      decorationEnd: -64,
-      decorationTop: -87,
+      decorationSize: 268,
+      decorationEnd: -52,
     ),
     DashboardDensity.compact => _OutboundMetrics(
       padding: dashboardCardPadding(density),
@@ -353,9 +354,8 @@ class _OutboundMetrics {
       ip: AppTextStyle.title2,
       buttonSize: 84,
       buttonSlot: 100,
-      decorationSize: 250,
-      decorationEnd: -64,
-      decorationTop: -75,
+      decorationSize: 232,
+      decorationEnd: -46,
     ),
     DashboardDensity.mobile => const _OutboundMetrics(
       padding: EdgeInsetsDirectional.fromSTEB(20, 18, 16, 18),
@@ -366,9 +366,8 @@ class _OutboundMetrics {
       ip: AppTextStyle.title2,
       buttonSize: 88,
       buttonSlot: 88,
-      decorationSize: 240,
-      decorationEnd: -60,
-      decorationTop: -66,
+      decorationSize: 216,
+      decorationEnd: -48,
     ),
   };
 
@@ -382,31 +381,33 @@ class _OutboundMetrics {
   final double buttonSlot;
   final double decorationSize;
   final double decorationEnd;
-  final double decorationTop;
+
+  /// Places the unscaled flower box so that when expanded by [_decorationGrowth],
+  /// its lowest lobe rests [_decorationBottomGap] above the card's bottom edge.
+  double get decorationBottom =>
+      _decorationBottomGap + decorationSize * _decorationGrowth / 2;
 }
 
 class _ExitRow extends StatelessWidget {
   const _ExitRow({
     required this.info,
+    required this.quality,
     required this.failed,
     required this.loading,
     required this.checking,
     required this.onRefresh,
-    required this.quality,
     required this.active,
     required this.metrics,
-    required this.large,
   });
 
   final IpInfo? info;
+  final IpRisk? quality;
   final bool failed;
   final bool loading;
   final bool checking;
   final VoidCallback onRefresh;
-  final IpQuality? quality;
   final bool active;
   final _OutboundMetrics metrics;
-  final bool large;
 
   @override
   Widget build(BuildContext context) {
@@ -415,7 +416,7 @@ class _ExitRow extends StatelessWidget {
       context,
       metrics.ip,
       color: active ? colorScheme.onSurface : colorScheme.onSurfaceVariant,
-    ).copyWith(letterSpacing: 0);
+    ).copyWith(letterSpacing: 0, height: 1.15);
     final info = this.info;
     final appLocalizations = context.appLocalizations;
     final Widget ip = info != null
@@ -440,8 +441,12 @@ class _ExitRow extends StatelessWidget {
             style: style.copyWith(color: colorScheme.error),
           )
         : SkeletonText(width: 140, style: style);
+    final ipHeight = MediaQuery.textScalerOf(
+      context,
+    ).scale((style.fontSize ?? metrics.ip.size) * (style.height ?? 1.15));
     return Row(
       spacing: 12,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         _CountryBadge(
           countryCode: info?.countryCode,
@@ -452,32 +457,25 @@ class _ExitRow extends StatelessWidget {
         ),
         Expanded(
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(
-                height:
-                    metrics.ip.leading * DashboardDensityScope.scaleOf(context),
-                child: Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: ip,
-                ),
-              ),
-              const SizedBox(height: 4),
-              if (failed)
-                SizedBox(
-                  height: _chipHeight(large),
+              Transform.translate(
+                offset: const Offset(0, -2.5),
+                child: SizedBox(
+                  height: ipHeight,
                   child: Align(
                     alignment: AlignmentDirectional.centerStart,
-                    child: Text(
-                      appLocalizations.tapIconToRetry,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: DashboardText.label(context),
-                    ),
+                    child: ip,
                   ),
-                )
-              else
-                _IpChips(quality: quality, loading: loading, large: large),
+                ),
+              ),
+              const SizedBox(height: 2),
+              _IpLocationSubText(
+                quality: quality,
+                loading: loading,
+                active: active,
+              ),
             ],
           ),
         ),
@@ -497,65 +495,70 @@ class _IpText extends ConsumerWidget {
     final hideIp = ref.watch(
       appSettingProvider.select((state) => state.hideIp),
     );
-    return DashboardFitText(hideIp ? _ipMask : ip, style: style);
+    if (!hideIp) {
+      return DashboardFitText(ip, style: style);
+    }
+    return DashboardFitText(
+      _ipMask,
+      style: style.copyWith(
+        fontFamily: FontFamily.mapleMono.value,
+        color: context.colorScheme.success,
+      ),
+    );
   }
 }
 
-double _chipHeight(bool large) => large ? 28 : 24;
-
-const _chipSkeletonWidths = [48.0, 72.0];
-
-class _IpChips extends StatelessWidget {
-  const _IpChips({
+class _IpLocationSubText extends StatelessWidget {
+  const _IpLocationSubText({
     required this.quality,
     required this.loading,
-    required this.large,
+    required this.active,
   });
 
-  final IpQuality? quality;
+  final IpRisk? quality;
   final bool loading;
-  final bool large;
+  final bool active;
 
   @override
   Widget build(BuildContext context) {
-    final quality = this.quality;
-    final height = _chipHeight(large);
-    // Chips that do not fit wrap onto a clipped second line; the details
-    // sheet still lists them all.
+    final style = _cellStyle(context).copyWith(
+      fontSize: 14,
+      height: 1.1,
+      color: active
+          ? context.colorScheme.onSurfaceVariant
+          : context.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+    );
+    final subHeight = MediaQuery.textScalerOf(context).scale(18.0);
     return SizedBox(
-      height: height,
-      child: ClipRect(
-        child: Wrap(
-          spacing: 6,
-          runSpacing: height,
-          children: switch (quality) {
-            final quality? => [
-              DashboardChip(label: quality.type.label(context), large: large),
-              DashboardChip(
-                label:
-                    '${context.appLocalizations.ipQualityShort} ${quality.level.label(context)}',
-                tone: switch (quality.level) {
-                  IpQualityLevel.good => DashboardChipTone.ok,
-                  IpQualityLevel.normal => DashboardChipTone.idle,
-                  IpQualityLevel.risky => DashboardChipTone.warn,
-                },
-                large: large,
-              ),
-            ],
-            null when loading => [
-              for (final width in _chipSkeletonWidths)
-                SkeletonPill(width: width, height: height),
-            ],
-            null => [
-              DashboardChip(
-                label: context.appLocalizations.ipTypeUnknown,
-                large: large,
-              ),
-            ],
-          },
-        ),
+      height: subHeight,
+      child: Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: _buildContent(context, style),
       ),
     );
+  }
+
+  Widget _buildContent(BuildContext context, TextStyle style) {
+    if (loading) {
+      return SkeletonText(width: 80, style: style);
+    }
+    final display = quality?.countryLabel ?? quality?.placeLabel;
+    final tooltip = quality?.fullLocationLabel;
+    if (display == null || display.isEmpty) {
+      return Text('\u2014', maxLines: 1, style: style);
+    }
+    final text = EmojiText(
+      display,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: style.copyWith(
+        color: active
+            ? context.colorScheme.onSurface
+            : context.colorScheme.onSurfaceVariant,
+      ),
+    );
+    if (tooltip == null || tooltip.isEmpty) return text;
+    return Tooltip(message: tooltip, child: text);
   }
 }
 
@@ -691,7 +694,7 @@ class _Cells extends StatelessWidget {
     required this.gap,
   });
 
-  final IpQuality? quality;
+  final IpRisk? quality;
   final bool loading;
   final bool active;
   final double gap;
@@ -699,27 +702,37 @@ class _Cells extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final appLocalizations = context.appLocalizations;
-    final organization = switch (quality) {
-      IpQuality(organization: final name?) when name.isNotEmpty => name,
-      IpQuality(asn: final asn?) => 'AS$asn',
-      _ => null,
-    };
+    final risk = quality;
+    final Widget scoreValue = risk != null
+        ? FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: AlignmentDirectional.centerStart,
+            child: Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(text: '${risk.displayScore} \u00b7 '),
+                  TextSpan(
+                    text: risk.levelLabel(context),
+                    style: TextStyle(color: riskScoreColor(risk.displayScore)),
+                  ),
+                ],
+              ),
+              maxLines: 1,
+              style: _cellStyle(
+                context,
+              ).copyWith(color: context.colorScheme.onSurface),
+            ),
+          )
+        : loading
+        ? SkeletonText(width: 48, style: _cellStyle(context))
+        : const _Placeholder();
+
     return Row(
-      spacing: gap,
       children: [
-        _Cell(
-          label: appLocalizations.runTime,
-          value: active ? const _RunTimeValue() : const _Placeholder(),
-        ),
-        Flexible(
-          child: _Cell(
-            label: appLocalizations.ipOrganization,
-            value: organization != null
-                ? _CellText(organization)
-                : loading
-                ? SkeletonText(width: 96, style: _cellStyle(context))
-                : const _Placeholder(),
-          ),
+        _RunTimeCell(active: active),
+        SizedBox(width: gap),
+        Expanded(
+          child: _Cell(label: appLocalizations.ipRiskScore, value: scoreValue),
         ),
       ],
     );
@@ -734,6 +747,7 @@ class _Cell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cellHeight = MediaQuery.textScalerOf(context).scale(20.0);
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -745,7 +759,13 @@ class _Cell extends StatelessWidget {
           style: DashboardText.label(context),
         ),
         const SizedBox(height: 2),
-        value,
+        SizedBox(
+          height: cellHeight,
+          child: Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: value,
+          ),
+        ),
       ],
     );
   }
@@ -779,12 +799,61 @@ class _Placeholder extends StatelessWidget {
   }
 }
 
-class _RunTimeValue extends ConsumerWidget {
-  const _RunTimeValue();
+double _measureTextWidth(BuildContext context, String text, TextStyle style) {
+  final painter = TextPainter(
+    text: TextSpan(text: text, style: style),
+    textDirection: Directionality.of(context),
+    textScaler: MediaQuery.textScalerOf(context),
+    maxLines: 1,
+  )..layout();
+  return painter.width;
+}
+
+double _runTimeSlotWidth(BuildContext context, int hourDigits) {
+  final style = _cellStyle(context);
+  final labelStyle = DashboardText.label(context);
+  final count = math.max(2, hourDigits);
+  final template8 = '${'8' * count}:88:88';
+  final template0 = '${'0' * count}:00:00';
+  final template4 = '${'4' * count}:44:44';
+  final template9 = '${'9' * count}:99:99';
+  final w8 = _measureTextWidth(context, template8, style);
+  final w0 = _measureTextWidth(context, template0, style);
+  final w4 = _measureTextWidth(context, template4, style);
+  final w9 = _measureTextWidth(context, template9, style);
+  final valueWidth = math.max(math.max(w8, w0), math.max(w4, w9));
+  final labelWidth = _measureTextWidth(
+    context,
+    context.appLocalizations.runTime,
+    labelStyle,
+  );
+  return math.max(valueWidth, labelWidth) + 1.0;
+}
+
+class _RunTimeCell extends ConsumerWidget {
+  const _RunTimeCell({required this.active});
+
+  final bool active;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return _CellText(getTimeText(ref.watch(runTimeProvider)));
+    final appLocalizations = context.appLocalizations;
+    final String timeText;
+    final int hourDigits;
+    if (active) {
+      timeText = getTimeText(ref.watch(runTimeProvider));
+      final colon = timeText.indexOf(':');
+      hourDigits = colon == -1 ? 2 : math.max(2, colon);
+    } else {
+      timeText = '00:00:00';
+      hourDigits = 2;
+    }
+    final slotWidth = _runTimeSlotWidth(context, hourDigits);
+
+    return SizedBox(
+      width: slotWidth,
+      child: _Cell(label: appLocalizations.runTime, value: _CellText(timeText)),
+    );
   }
 }
 

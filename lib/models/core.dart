@@ -484,4 +484,6 @@ abstract class ExternalProvider with _$ExternalProvider {
 
 extension ExternalProviderExt on ExternalProvider {
   String get updatingKey => 'provider_$name';
+
+  bool get isProxy => type == 'Proxy';
 }

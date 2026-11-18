@@ -3993,4 +3993,612 @@ class AppLocalizationsRu extends AppLocalizations {
   String rootTunFallback(Object reason) {
     return 'Root недоступен ($reason), поэтому сейчас используется системный VPN.';
   }
+
+  @override
+  String get config => 'Конфигурация';
+
+  @override
+  String get advanced => 'Дополнительно';
+
+  @override
+  String get ipDetails => 'Сведения об IP';
+
+  @override
+  String get silentLaunchDesc => 'Тихий запуск не показывает окно.';
+
+  @override
+  String get accessControlDesc =>
+      'Контроль доступа выбирает приложения, использующие прокси.';
+
+  @override
+  String get wakelock => 'Не выключать экран';
+
+  @override
+  String get secondaryDevelopmentBuild => 'Вторичная сборка разработки';
+
+  @override
+  String get addressHelp => 'Адрес сервера WebDAV';
+
+  @override
+  String get authenticationDesc =>
+      'Аутентификация требует логин и пароль для локального порта прокси.';
+
+  @override
+  String get autoCloseConnectionsDesc =>
+      'Автозакрытие соединений обрывает открытые соединения при смене прокси.';
+
+  @override
+  String get sidebarBlurDesc =>
+      'Размытие фона показывает рабочий стол за окном сквозь боковую панель.';
+
+  @override
+  String get vpnEnableDesc =>
+      'VPN автоматически направляет весь системный трафик через VpnService.';
+
+  @override
+  String get ntpStatusDesc =>
+      'NTP берёт время с NTP-сервера, а не из системных часов.';
+
+  @override
+  String get dialerProxyDesc =>
+      'Прокси для подключения — исход, через который идёт обращение к NTP-серверу.';
+
+  @override
+  String get snifferStatusDesc =>
+      'Сниффер определяет домен по трафику TLS, HTTP и QUIC, чтобы правила могли его сопоставить.';
+
+  @override
+  String get overrideDestinationDesc =>
+      '«Подменять адрес назначения» подключается к обнаруженному домену вместо исходного адреса.';
+
+  @override
+  String get parsePureIpDesc =>
+      '«Разбирать чистые IP» анализирует соединения, у которых есть только IP-адрес.';
+
+  @override
+  String get skipDomainDesc =>
+      'Обнаруженный домен из пропускаемых доменов не используется.';
+
+  @override
+  String get fakeipFilterModeDesc =>
+      'В режиме фильтра Fake-IP blacklist исключает совпадения, whitelist применяется только к ним, rule — по правилам.';
+
+  @override
+  String get ipv6InboundDesc =>
+      'При включённом IPv6 VPN принимает входящий IPv6.';
+
+  @override
+  String get interfaceNameDesc =>
+      'Имя интерфейса задаёт сетевой интерфейс для исходящих соединений.';
+
+  @override
+  String get advancedConfigDesc =>
+      'Расширенная конфигурация включает сеть, DNS, добавленные правила и скрипты.';
+
+  @override
+  String get singleAdd => 'По одному';
+
+  @override
+  String get batchAdd => 'Массовое добавление';
+
+  @override
+  String get batchListInputTip =>
+      'По одному значению на строку или через запятую';
+
+  @override
+  String get batchMapInputTip =>
+      'По одной записи на строку: ключ, пробел, значение';
+
+  @override
+  String get customProfileResources => 'Ресурсы пользовательских профилей';
+
+  @override
+  String get customProfileResourcesDesc =>
+      'Ресурсы пользовательских профилей — это прокси, провайдеры правил, фильтры и наборы значков, которые вы сами добавляете для пользовательских профилей.';
+
+  @override
+  String get batteryOptimizationDesc =>
+      'Игнорирование оптимизации батареи позволяет приложению работать в фоне.';
+
+  @override
+  String get onDemandDesc =>
+      '«По условию» приостанавливает прокси в исключённых сетях Wi-Fi.';
+
+  @override
+  String get blockConnection => 'Заблокировать соединение';
+
+  @override
+  String get proxyNode => 'Прокси-узел';
+
+  @override
+  String get bypassPrivateRouteDesc =>
+      'При обходе частных адресов адреса LAN, loopback и multicast идут в обход TUN.';
+
+  @override
+  String get excludeInterfaceDesc =>
+      'Трафик с исключённых интерфейсов, например с docker0, идёт в обход TUN.';
+
+  @override
+  String get includeUidDesc =>
+      'Через TUN идёт только трафик процессов включённых ID пользователей.';
+
+  @override
+  String get excludeUidDesc =>
+      'Трафик процессов исключённых ID пользователей идёт в обход TUN.';
+
+  @override
+  String get excludeSrcPortDesc =>
+      'Трафик с исключённых исходных портов идёт в обход TUN.';
+
+  @override
+  String get excludeDstPortDesc =>
+      'Трафик на исключённые порты назначения идёт в обход TUN.';
+
+  @override
+  String get emojiStyle => 'Шрифт эмодзи';
+
+  @override
+  String get customFont => 'Пользовательский шрифт';
+
+  @override
+  String get nodeCount => 'Узлы';
+
+  @override
+  String get ruleCount => 'Правила';
+
+  @override
+  String get providerCount => 'Провайдеры';
+
+  @override
+  String get currentProfile => 'Текущий профиль';
+
+  @override
+  String get iconRules => 'Значки по regex';
+
+  @override
+  String get iconRulesTip =>
+      'Группа, имя которой соответствует регулярному выражению, берёт значок из выбранного набора значков.';
+
+  @override
+  String get invalidRegex => 'Недопустимое регулярное выражение';
+
+  @override
+  String get iconSetRemoved => 'Набор значков удалён';
+
+  @override
+  String get iconRulesEmpty => 'Правила значков пусты';
+
+  @override
+  String get addIconRule => 'Добавить значок по regex';
+
+  @override
+  String get editIconRule => 'Изменить значок по regex';
+
+  @override
+  String get iconRuleHelp =>
+      '1. Точное совпадение: например, ^YouTube\$ соответствует только группе с именем YouTube.\n2. По ключевому слову: например, YouTube соответствует любой группе, содержащей YouTube.\n3. Несколько условий: например, (YouTube|Netflix|Disney) совпадает сразу с несколькими группами.\n4. Подстановочный знак: например, .* соответствует всем группам и применяет выбранный значок Icon.\n5. Префикс и суффикс: например, ^PROXY для префикса, Auto\$ для суффикса; правила применяются сверху вниз.';
+
+  @override
+  String get refreshGroupIcons => 'Обновить значки групп';
+
+  @override
+  String get refreshGroupIconsTip =>
+      'Очистить все кешированные удалённые значки и изображения наборов значков, повторно синхронизировать удалённые наборы и загрузить свежие значки.';
+
+  @override
+  String get groupIconsRefreshed => 'Значки групп обновлены';
+
+  @override
+  String get ipRiskAlert => 'Предупреждение о риске IP';
+
+  @override
+  String get ipRiskCheck => 'Проверить чистоту IP';
+
+  @override
+  String get ipRiskScore => 'Оценка мошенничества';
+
+  @override
+  String get ipRiskLow => 'Низкий риск';
+
+  @override
+  String get ipRiskMedium => 'Средний риск';
+
+  @override
+  String get ipRiskHigh => 'Высокий риск';
+
+  @override
+  String get ipRiskVeryHigh => 'Очень высокий риск';
+
+  @override
+  String get ipRiskHostingOrProxy => 'Хостинг или прокси';
+
+  @override
+  String get ipRiskDatacenter => 'Дата-центр';
+
+  @override
+  String get ipRiskResidentialProxy => 'Резидентный прокси';
+
+  @override
+  String get ipRiskBlacklist => 'Отметки в чёрных списках';
+
+  @override
+  String get ipRiskProxyType => 'Тип прокси';
+
+  @override
+  String get ipRiskAnonymousVpn => 'Анонимный VPN';
+
+  @override
+  String get ipRiskTorExit => 'Выходной узел Tor';
+
+  @override
+  String get ipRiskServer => 'Сервер';
+
+  @override
+  String get ipRiskPublicProxy => 'Публичный прокси';
+
+  @override
+  String get ipRiskWebProxy => 'Веб-прокси';
+
+  @override
+  String get ipRiskSearchRobot => 'Поисковый робот';
+
+  @override
+  String get ipRiskHostname => 'Имя хоста';
+
+  @override
+  String get ipRiskHint => 'Введите IP для проверки';
+
+  @override
+  String get ipRiskInvalid => 'Введите действительный публичный IP';
+
+  @override
+  String get ipRiskSource => 'Источник';
+
+  @override
+  String get ipRiskSources => 'Scamalytics и IPLocate.io';
+
+  @override
+  String get ipRiskAsn => 'ASN';
+
+  @override
+  String get ipRiskHomeBroadband => 'Премиальный резидентный IP';
+
+  @override
+  String get ipRiskNoteTitle => 'Об оценке мошенничества';
+
+  @override
+  String ipRiskNoteDirect(Object score) {
+    return 'Scamalytics напрямую видит веб-трафик с этого IP. Оценка $score отражает долю этого трафика, подозреваемого в мошенничестве.';
+  }
+
+  @override
+  String ipRiskNoteIndirect(Object isp, Object score) {
+    return 'Scamalytics не видит веб-трафик с этого IP напрямую. Оценка $score рассчитана по общему риску IP-адресов $isp.';
+  }
+
+  @override
+  String get ipRiskNoteGeneric =>
+      'Оценка мошенничества (0–100) отражает долю веб-трафика с этого IP, которую Scamalytics подозревает в мошенничестве.';
+
+  @override
+  String get ipRiskNoteAmount => 'Наблюдаемый трафик';
+
+  @override
+  String get ipRiskNoteAmountIsp => 'Трафик оператора';
+
+  @override
+  String get ipRiskNoteShare => 'Подозрение на мошенничество';
+
+  @override
+  String get ipRiskAmountLow => 'Низкий';
+
+  @override
+  String get ipRiskAmountMedium => 'Средний';
+
+  @override
+  String get ipRiskAmountHigh => 'Высокий';
+
+  @override
+  String get ipRiskShareLittle => 'Очень малая часть';
+
+  @override
+  String get ipRiskShareSome => 'Часть';
+
+  @override
+  String get ipRiskShareAlmostAll => 'Почти весь';
+
+  @override
+  String get ipRiskNoteOwner => 'Владелец';
+
+  @override
+  String get ipRiskNoteConnection => 'Тип подключения';
+
+  @override
+  String get ipRiskCommercialServer => 'Коммерческий сервер';
+
+  @override
+  String get ipRiskNoteProxying =>
+      'Может проксировать трафик из других регионов; реальный пользователь может находиться где угодно';
+
+  @override
+  String get ipRiskNoteWarningHigh =>
+      'Веб-трафик с этого IP, вероятно, связан с мошенниками.';
+
+  @override
+  String get ipRiskNoteWarningVeryHigh =>
+      'Веб-трафик с этого IP с очень высокой вероятностью связан с мошенниками.';
+
+  @override
+  String get ipRiskNoteFootnote =>
+      'Оценка касается только веб-трафика; риск для другого трафика может отличаться.';
+
+  @override
+  String get ipRiskLocation => 'Страна / регион';
+
+  @override
+  String get ipRiskCity => 'Регион / город';
+
+  @override
+  String get operatorOrAsn => 'Организация / ASN';
+
+  @override
+  String get ipRiskFailed =>
+      'Не удалось загрузить данные IP. Повторите попытку.';
+
+  @override
+  String get isp => 'Провайдер';
+
+  @override
+  String get speedTest => 'Тест скорости';
+
+  @override
+  String get speedTestStart => 'Начать тест';
+
+  @override
+  String get speedTestAgain => 'Повторить';
+
+  @override
+  String get speedTestHistory => 'История тестов';
+
+  @override
+  String get speedTestHistoryEmpty => 'История пуста';
+
+  @override
+  String get speedTestHistoryRetention => 'Хранится 14 дней';
+
+  @override
+  String get speedTestClearHistoryTip => 'Очистить всю историю тестов?';
+
+  @override
+  String get speedTestFollowRules => 'По правилам';
+
+  @override
+  String get speedTestOutbound => 'Выход';
+
+  @override
+  String get speedTestCoreStopped => 'Не запущен · Прямой тест';
+
+  @override
+  String get speedTestReady => 'Готово';
+
+  @override
+  String get speedTestConnecting => 'Подключение';
+
+  @override
+  String get speedTestPacketLoss => 'Потери';
+
+  @override
+  String get speedTestJitter => 'Джиттер';
+
+  @override
+  String get speedTestLoadedLatency => 'Задержка под нагрузкой';
+
+  @override
+  String get speedTestResponsiveness => 'Отзывчивость';
+
+  @override
+  String get speedTestDataUsed => 'Трафик';
+
+  @override
+  String get speedTestServer => 'Сервер теста';
+
+  @override
+  String get speedTestServerAutoDesc =>
+      'Автоматически выбирать сервер Speedtest';
+
+  @override
+  String get speedTestProtocol => 'Протокол';
+
+  @override
+  String get speedTestMobileDataTip =>
+      'Используются мобильные данные. Один тест может потратить сотни МБ. Продолжить?';
+
+  @override
+  String get speedTestErrorRejected => 'Заблокировано правилами';
+
+  @override
+  String get speedTestErrorRejectedDesc =>
+      'Текущие правила направляют домен теста в REJECT. Выберите другой выход и повторите.';
+
+  @override
+  String get speedTestErrorBlocked => 'Тест скорости недоступен';
+
+  @override
+  String speedTestErrorBlockedDesc(Object provider) {
+    return 'Выход может блокировать тесты $provider. Смените источник теста или выход.';
+  }
+
+  @override
+  String get speedTestErrorUnavailable => 'Не удаётся подключиться к сервису';
+
+  @override
+  String get speedTestErrorTimeout => 'Время ожидания истекло';
+
+  @override
+  String get speedTestErrorNetworkDesc =>
+      'Проверьте доступность выхода и повторите.';
+
+  @override
+  String get speedTestChangeOutbound => 'Сменить выход';
+
+  @override
+  String get speedTestSettings => 'Настройки теста';
+
+  @override
+  String get speedTestDuration => 'Длительность';
+
+  @override
+  String get speedTestConnections => 'Соединения';
+
+  @override
+  String get speedTestSingleThread => 'Одно';
+
+  @override
+  String get speedTestMultiThread => 'Несколько';
+
+  @override
+  String speedTestConnectionsDesc(Object count) {
+    return 'Несколько — $count параллельных соединений для полной загрузки канала';
+  }
+
+  @override
+  String get speedTestProtocolDesc =>
+      'HTTP/3 работает поверх QUIC (UDP); если он недоступен — откат на HTTP/2, а если недоступен и HTTP/2 — на HTTP/1.1';
+
+  @override
+  String speedTestProtocolFallback(Object fallback, Object protocol) {
+    return '$protocol недоступен, используется $fallback';
+  }
+
+  @override
+  String get speedTestProbing => 'Проверка';
+
+  @override
+  String get speedTestRealtime => 'Скорость в реальном времени';
+
+  @override
+  String get speedTestQuality => 'Качество сети';
+
+  @override
+  String speedTestStreams(Object count) {
+    return 'Соединений: $count';
+  }
+
+  @override
+  String get speedTestManual => 'Вручную';
+
+  @override
+  String get speedTestExitNode => 'Выходной узел';
+
+  @override
+  String get speedTestRoute => 'Правило';
+
+  @override
+  String get speedTestCredit =>
+      'Серверы тестирования предоставляет Speedtest by Ookla.';
+
+  @override
+  String get speedTestStop => 'Остановить тест';
+
+  @override
+  String get trafficStats => 'Статистика трафика';
+
+  @override
+  String get trafficStatsDesc =>
+      'Подробная разбивка трафика по дням, неделям и месяцам';
+
+  @override
+  String get trafficStatsDay => 'День';
+
+  @override
+  String get trafficStatsWeek => 'Неделя';
+
+  @override
+  String get trafficStatsMonth => 'Месяц';
+
+  @override
+  String get trafficStatsTotal => 'Всего трафика';
+
+  @override
+  String get trafficStatsOverview => 'Обзор';
+
+  @override
+  String get trafficStatsRunningTime => 'Общее время работы';
+
+  @override
+  String get trafficStatsHourUnit => 'ч';
+
+  @override
+  String get trafficStatsMinuteUnit => 'мин';
+
+  @override
+  String get trafficStatsTrend => 'Динамика трафика';
+
+  @override
+  String get trafficStatsRuleHits => 'Срабатывания правил';
+
+  @override
+  String trafficStatsHitCount(Object count) {
+    return '$count раз';
+  }
+
+  @override
+  String get trafficStatsRanking => 'Рейтинг трафика';
+
+  @override
+  String get trafficStatsNode => 'Узел';
+
+  @override
+  String get trafficStatsDisabled => 'Статистика трафика отключена';
+
+  @override
+  String get trafficStatsDisabledDesc =>
+      'Включите сбор статистики для локального учёта трафика по доменам, процессам, узлам и правилам.';
+
+  @override
+  String get trafficStatsEnable => 'Включить статистику трафика';
+
+  @override
+  String get trafficStatsEnableAction => 'Включить';
+
+  @override
+  String get trafficStatsDetail => 'Подробный учёт';
+
+  @override
+  String get trafficStatsDetailDesc =>
+      'Записывать детализацию по доменам, процессам, узлам, профилям и правилам';
+
+  @override
+  String get trafficStatsSiteIcon => 'Иконки сайтов';
+
+  @override
+  String get trafficStatsSiteIconDesc =>
+      'Загружать и кэшировать иконки доменов локально';
+
+  @override
+  String get trafficStatsRetention => 'Срок хранения';
+
+  @override
+  String trafficStatsDays(Object count) {
+    return '$count дн.';
+  }
+
+  @override
+  String get trafficStatsSettings => 'Настройки статистики';
+
+  @override
+  String get trafficStatsClearTip =>
+      'Очистить все сохранённые данные статистики трафика?';
+
+  @override
+  String trafficStatsSince(Object date) {
+    return 'С $date';
+  }
+
+  @override
+  String get trafficStatsDetailOffTip =>
+      'Подробный учёт выключен. Записывается только общий трафик и динамика.';
+
+  @override
+  String get trafficStatsRefresh => 'Обновить';
 }

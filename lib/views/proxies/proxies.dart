@@ -3,6 +3,7 @@ import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/ui/icons/icons.dart';
+import 'package:fl_clash/views/proxies/icon_style.dart';
 import 'package:fl_clash/views/proxies/list.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/widgets.dart';
@@ -41,8 +42,19 @@ class _ProxiesViewState extends ConsumerState<ProxiesView> {
   ) {
     final appLocalizations = context.appLocalizations;
     return [
+      if (style.type == ProxiesType.list)
+        PopupMenuItem(
+          glyph: AppGlyphs.iconTile,
+          label: appLocalizations.iconStyle,
+          onPressed: () {
+            BaseNavigator.push(context, const ProxiesIconStyleView());
+          },
+        ),
       _optionsMenuItem(
-        glyph: AppGlyphs.appsList,
+        glyph: switch (style.type) {
+          ProxiesType.list => AppGlyphs.appsListDetail,
+          ProxiesType.tab => AppGlyphs.appRecent,
+        },
         label: appLocalizations.style,
         section: const PopupMenuSection(),
         options: ProxiesType.values,
@@ -65,7 +77,11 @@ class _ProxiesViewState extends ConsumerState<ProxiesView> {
             _updateStyle((state) => state.copyWith(sortType: type)),
       ),
       _optionsMenuItem(
-        glyph: AppGlyphs.dashboard,
+        glyph: switch (style.layout) {
+          ProxiesLayout.tight => AppGlyphs.columnsThree,
+          ProxiesLayout.standard => AppGlyphs.columnsTwo,
+          ProxiesLayout.loose => AppGlyphs.columnsOne,
+        },
         label: appLocalizations.layout,
         options: ProxiesLayout.values,
         value: style.layout,
@@ -78,7 +94,11 @@ class _ProxiesViewState extends ConsumerState<ProxiesView> {
             _updateStyle((state) => state.copyWith(layout: layout)),
       ),
       _optionsMenuItem(
-        glyph: AppGlyphs.textSize,
+        glyph: switch (style.cardType) {
+          ProxyCardType.loose => AppGlyphs.cardLarge,
+          ProxyCardType.standard => AppGlyphs.cardMedium,
+          ProxyCardType.compact => AppGlyphs.cardSmall,
+        },
         label: appLocalizations.size,
         options: ProxyCardType.values,
         value: style.cardType,
@@ -86,20 +106,6 @@ class _ProxiesViewState extends ConsumerState<ProxiesView> {
         onSelected: (type) =>
             _updateStyle((state) => state.copyWith(cardType: type)),
       ),
-      if (style.type == ProxiesType.list)
-        _optionsMenuItem(
-          glyph: AppGlyphs.iconTile,
-          label: appLocalizations.iconStyle,
-          options: ProxiesIconStyle.values,
-          value: style.iconStyle,
-          textOf: (iconStyle) => switch (iconStyle) {
-            ProxiesIconStyle.filled => appLocalizations.iconStyleFilled,
-            ProxiesIconStyle.plain => appLocalizations.iconStylePlain,
-            ProxiesIconStyle.hidden => appLocalizations.iconStyleHidden,
-          },
-          onSelected: (iconStyle) =>
-              _updateStyle((state) => state.copyWith(iconStyle: iconStyle)),
-        ),
       PopupMenuItem(
         glyph: AppGlyphs.eyeOff,
         label: appLocalizations.hideTimeoutProxies,

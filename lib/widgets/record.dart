@@ -162,12 +162,20 @@ class DetailRow extends StatelessWidget {
   final String title;
   final Widget? value;
   final String? copyText;
+  final VoidCallback? onPressed;
 
-  const DetailRow({super.key, required this.title, this.value, this.copyText});
+  const DetailRow({
+    super.key,
+    required this.title,
+    this.value,
+    this.copyText,
+    this.onPressed,
+  });
 
   DetailRow.text({super.key, required this.title, required String value})
     : value = Text(value),
-      copyText = value;
+      copyText = value,
+      onPressed = null;
 
   Future<void> _copy(BuildContext context, String text) async {
     await Clipboard.setData(ClipboardData(text: text));
@@ -180,7 +188,9 @@ class DetailRow extends StatelessWidget {
     final value = this.value;
     final copyText = this.copyText;
     return DecorationListItem(
-      onPressed: copyText == null ? null : () => _copy(context, copyText),
+      onPressed:
+          onPressed ??
+          (copyText == null ? null : () => _copy(context, copyText)),
       title: value == null
           ? Text(title)
           : Row(

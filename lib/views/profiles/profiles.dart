@@ -361,35 +361,30 @@ class ProfileItem extends ConsumerWidget {
       profile.type == ProfileType.url ? profile.subscriptionInfo : null;
 
   String _subtitle(BuildContext context) {
-    final info = _subscriptionInfo;
-    if (info != null && info.usage != null) {
-      final used = info.upload + info.download;
-      return '${used.traffic.show} / ${info.total.traffic.show}';
-    }
     final appLocalizations = context.appLocalizations;
-    return switch (profile.type) {
-      ProfileType.url => appLocalizations.remote,
-      ProfileType.file => appLocalizations.local,
-      ProfileType.custom => appLocalizations.custom,
-    };
+    final info = _subscriptionInfo;
+    final time = profile.lastUpdateDate?.getLastUpdateTimeDesc(
+      context,
+      compact: true,
+    );
+    final lead = info != null && info.usage != null
+        ? '${(info.upload + info.download).traffic.show} / '
+              '${info.total.traffic.show}'
+        : switch (profile.type) {
+            ProfileType.url => appLocalizations.remote,
+            ProfileType.file => appLocalizations.lastUpdated,
+            ProfileType.custom => appLocalizations.custom,
+          };
+    return time == null || time.isEmpty ? lead : '$lead · $time';
   }
 
-  Widget _buildTrailing(BuildContext context, {required bool isUpdating}) {
-    return AnimatedSwitcher(
-      duration: context.motionDuration(commonDuration),
-      layoutBuilder: (currentChild, previousChildren) => Stack(
-        alignment: AlignmentDirectional.centerEnd,
-        children: [...previousChildren, ?currentChild],
-      ),
-      child: isUpdating
-          ? const ActivityIndicator(key: ValueKey('updating'), size: 24)
-          : LastUpdateTimeText(
-              key: const ValueKey('lastUpdate'),
-              lastUpdateDate: profile.lastUpdateDate,
-              style: AppTextStyle.footnote.of(context).toLighter,
-              compact: true,
-            ),
-    );
+  Widget? _buildTrailing(BuildContext context, {required bool isUpdating}) {
+    // The card's subtitle already carries the "x days ago"; the row on the right
+    // only shows that a sync is running.
+    if (!isUpdating) {
+      return null;
+    }
+    return const ActivityIndicator(size: 24);
   }
 
   Future<void> _handleCopyLink(BuildContext context) async {
@@ -533,6 +528,9 @@ class ProfileItem extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isUpdating = ref.watch(isUpdatingProvider(profile.updatingKey));
+    final customCount = profile.type == ProfileType.custom
+        ? ref.watch(profileGroupsCountProvider(profile.id)).value
+        : null;
     final subscriptionInfo = _subscriptionInfo;
     final isSelected = profile.id == groupValue;
     return ContextMenuRegion(
@@ -552,16 +550,28 @@ class ProfileItem extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             spacing: 8,
             children: [
-              if (profile.type == ProfileType.custom)
-                _GroupsCountChip(profileId: profile.id)
-              else
-                _buildTrailing(context, isUpdating: isUpdating),
+              ?_buildTrailing(context, isUpdating: isUpdating),
               if (isSelected) const SelectionBadge(size: 24),
             ],
           ),
           title: _ProfileCardTitle(
             profile: profile,
             expire: subscriptionInfo?.expireDate,
+            // A profile that never expires still says so in the pill, and a file
+            // says where it comes from, now that the subtitle carries the time.
+            chip: subscriptionInfo?.expireDate != null
+                ? null
+                : switch (profile.type) {
+                    ProfileType.url => context.appLocalizations.infiniteTime,
+                    ProfileType.file => context.appLocalizations.local,
+                    ProfileType.custom => customCount?.compact,
+                  },
+            chipTooltip: profile.type == ProfileType.custom && customCount != null
+                ? context.appLocalizations.proxyGroupsCount(
+                    customCount,
+                    customCount.compact,
+                  )
+                : null,
             subtitle: _subtitle(context),
           ),
         ),
@@ -574,11 +584,15 @@ class _ProfileCardTitle extends StatelessWidget {
   const _ProfileCardTitle({
     required this.profile,
     required this.expire,
+    required this.chip,
+    required this.chipTooltip,
     required this.subtitle,
   });
 
   final Profile profile;
   final DateTime? expire;
+  final String? chip;
+  final String? chipTooltip;
   final String subtitle;
 
   @override
@@ -589,6 +603,9 @@ class _ProfileCardTitle extends StatelessWidget {
       children: [
         ChipTitle(
           title: profile.realLabel,
+          chip: chip,
+          chipTonal: false,
+          chipTooltip: chipTooltip,
           expire: expire,
           style: AppTextStyle.headline.of(context),
         ),
@@ -600,30 +617,6 @@ class _ProfileCardTitle extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
         ),
       ],
-    );
-  }
-}
-
-/// Square-cornered so a lone digit never reads as a second [SelectionBadge].
-class _GroupsCountChip extends ConsumerWidget {
-  const _GroupsCountChip({required this.profileId});
-
-  final int profileId;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final count = ref.watch(profileGroupsCountProvider(profileId)).value;
-    if (count == null) {
-      return const SizedBox.shrink();
-    }
-    final colorScheme = context.colorScheme;
-    return Tooltip(
-      message: context.appLocalizations.proxyGroupsCount(count, count.compact),
-      child: TonalChip(
-        label: count.compact,
-        color: colorScheme.primary.opacity15,
-        foregroundColor: colorScheme.primary,
-      ),
     );
   }
 }

@@ -250,13 +250,15 @@ class ProxyGroupView extends ConsumerWidget {
     );
   }
 
+  Widget _scrollbar(Widget child) => system.isDesktop
+      ? Scrollbar(controller: controller, child: child)
+      : child;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final proxies = group.all;
-    return Scrollbar(
-      controller: controller,
-      thumbVisibility: true,
-      child: GridView.builder(
+    return _scrollbar(
+      GridView.builder(
         key: _getPageStorageKey(ref),
         controller: controller,
         padding: EdgeInsets.only(

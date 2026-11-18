@@ -12,6 +12,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:prism_ui/prism_ui.dart';
 
 import '../../helpers/glyph_finders.dart';
 import '../../helpers/test_app.dart';
@@ -125,7 +126,7 @@ void main() {
     expect(service.width, closeTo(upload.width, 0.01));
     expect(
       tester.widget<ServiceStatusCard>(find.byType(ServiceStatusCard)).columns,
-      1,
+      2,
     );
     expect(memory.top, service.top);
     expect(memory.left, closeTo(service.right + 16, 0.01));
@@ -243,12 +244,27 @@ void main() {
     expect(stats.bottom, 660 - 24);
     expect(stats.width, closeTo(current.width, 0.01));
     expect(groups.top, stats.top);
-    expect(find.text('12 groups', findRichText: true), findsOneWidget);
+    final summary = find.byType(ProxyGroupsSummaryCard);
+    expect(
+      find.descendant(
+        of: summary,
+        matching: find.byWidgetPredicate(
+          (widget) =>
+              widget is Text &&
+              widget.textSpan?.toPlainText(includePlaceholders: false) == '12',
+        ),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: summary, matching: find.text(' groups')),
+      findsOneWidget,
+    );
     expect(scrollExtentOf(tester), 0);
     expect(find.byType(Scrollable), findsOneWidget);
     expect(tester.takeException(), isNull);
 
-    await pumpDashboard(tester, const Size(1220, 700));
+    await pumpDashboard(tester, const Size(1220, 660));
     expect(find.byType(ConnectionsTableCard), findsNothing);
     expect(find.byType(ConnectionStatsCard), findsOneWidget);
 
@@ -464,6 +480,21 @@ void main() {
       expect(tester.takeException(), isNull);
     }
 
+    await teardown(tester);
+  });
+
+  testWidgets('desktop app bar shows the wakelock action', (tester) async {
+    await pumpDashboard(
+      tester,
+      const Size(1220, 824),
+      platform: SupportPlatform.Windows,
+    );
+
+    expect(
+      find.widgetWithGlyph(AppBarActionButton, AppGlyphs.sun),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
     await teardown(tester);
   });
 }

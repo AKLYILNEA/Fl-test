@@ -3999,4 +3999,607 @@ class AppLocalizationsEn extends AppLocalizations {
   String rootTunFallback(Object reason) {
     return 'Root is unavailable ($reason), so this run uses the system VPN.';
   }
+
+  @override
+  String get config => 'Configuration';
+
+  @override
+  String get advanced => 'Advanced';
+
+  @override
+  String get ipDetails => 'IP Details';
+
+  @override
+  String get silentLaunchDesc =>
+      'Silent launch starts without showing the window.';
+
+  @override
+  String get accessControlDesc =>
+      'Access control picks which apps use the proxy.';
+
+  @override
+  String get wakelock => 'Keep screen on';
+
+  @override
+  String get secondaryDevelopmentBuild => 'Secondary development build';
+
+  @override
+  String get addressHelp => 'WebDAV server address';
+
+  @override
+  String get authenticationDesc =>
+      'Authentication asks for a username and password on the local proxy port.';
+
+  @override
+  String get autoCloseConnectionsDesc =>
+      'Auto close connections drops open connections when you switch proxies.';
+
+  @override
+  String get sidebarBlurDesc =>
+      'Background blur lets the desktop behind the window show through the sidebar.';
+
+  @override
+  String get vpnEnableDesc =>
+      'VPN routes all system traffic through VpnService automatically.';
+
+  @override
+  String get ntpStatusDesc =>
+      'NTP takes the time from an NTP server instead of the system clock.';
+
+  @override
+  String get dialerProxyDesc =>
+      'Dialer proxy is the outbound used to reach the NTP server.';
+
+  @override
+  String get snifferStatusDesc =>
+      'The sniffer reads the domain from TLS, HTTP and QUIC traffic so rules can match it.';
+
+  @override
+  String get overrideDestinationDesc =>
+      'Override destination connects to the sniffed domain instead of the original address.';
+
+  @override
+  String get parsePureIpDesc =>
+      'Parse pure IP sniffs connections that carry only an IP address.';
+
+  @override
+  String get skipDomainDesc =>
+      'A sniffed domain on the Skip domains list is not used.';
+
+  @override
+  String get fakeipFilterModeDesc =>
+      'In Fake-IP filter mode, blacklist excludes matches, whitelist fakes only matches, and rule matches as rules.';
+
+  @override
+  String get ipv6InboundDesc => 'With IPv6 on, the VPN allows IPv6 inbound.';
+
+  @override
+  String get interfaceNameDesc =>
+      'Interface name is the network interface outbound connections use.';
+
+  @override
+  String get advancedConfigDesc =>
+      'Advanced configuration holds network, DNS, added rules, and scripts.';
+
+  @override
+  String get singleAdd => 'Single add';
+
+  @override
+  String get batchAdd => 'Batch add';
+
+  @override
+  String get batchListInputTip => 'One item per line, or separated by commas';
+
+  @override
+  String get batchMapInputTip => 'One entry per line: key, a space, then value';
+
+  @override
+  String get customProfileResources => 'Custom profile resources';
+
+  @override
+  String get customProfileResourcesDesc =>
+      'Custom profile resources are the proxies, rule providers, filters, and icon sets you add yourself for custom profiles to use.';
+
+  @override
+  String get batteryOptimizationDesc =>
+      'Ignore battery optimization keeps the app running in the background.';
+
+  @override
+  String get onDemandDesc => 'On demand pauses the proxy on excluded Wi-Fi.';
+
+  @override
+  String get blockConnection => 'Block connection';
+
+  @override
+  String get proxyNode => 'Proxy Node';
+
+  @override
+  String get bypassPrivateRouteDesc =>
+      'With Bypass private addresses on, LAN, loopback and multicast addresses skip TUN.';
+
+  @override
+  String get excludeInterfaceDesc =>
+      'Traffic arriving on excluded interfaces, such as docker0, skips TUN.';
+
+  @override
+  String get includeUidDesc =>
+      'Only traffic from processes of included user IDs goes through TUN.';
+
+  @override
+  String get excludeUidDesc =>
+      'Traffic from processes of excluded user IDs skips TUN.';
+
+  @override
+  String get excludeSrcPortDesc =>
+      'Traffic from excluded source ports skips TUN.';
+
+  @override
+  String get excludeDstPortDesc =>
+      'Traffic to excluded destination ports skips TUN.';
+
+  @override
+  String get emojiStyle => 'Emoji font';
+
+  @override
+  String get customFont => 'Custom font';
+
+  @override
+  String get nodeCount => 'Proxies';
+
+  @override
+  String get ruleCount => 'Rules';
+
+  @override
+  String get providerCount => 'Providers';
+
+  @override
+  String get currentProfile => 'Current profile';
+
+  @override
+  String get iconRules => 'Regex icons';
+
+  @override
+  String get iconRulesTip =>
+      'A group whose name matches the regex takes its icon from the chosen icon set.';
+
+  @override
+  String get invalidRegex => 'Invalid regular expression';
+
+  @override
+  String get iconSetRemoved => 'Icon set removed';
+
+  @override
+  String get iconRulesEmpty => 'Regex icons are empty';
+
+  @override
+  String get addIconRule => 'Add regex icon';
+
+  @override
+  String get editIconRule => 'Edit regex icon';
+
+  @override
+  String get iconRuleHelp =>
+      '1. Exact match: e.g. ^YouTube\$ matches only the group named YouTube.\n2. Keyword match: e.g. YouTube matches any group whose name contains YouTube.\n3. Multiple match: e.g. (YouTube|Netflix|Disney) matches multiple media groups.\n4. Wildcard: e.g. .* matches all groups to use the selected icon.\n5. Prefix & suffix: e.g. ^PROXY matches prefix, Auto\$ matches suffix; evaluated from top to bottom.';
+
+  @override
+  String get refreshGroupIcons => 'Refresh group icons';
+
+  @override
+  String get refreshGroupIconsTip =>
+      'Clear all cached remote icons and icon-set images, update remote icon sets and fetch fresh icons.';
+
+  @override
+  String get groupIconsRefreshed => 'Group icons refreshed';
+
+  @override
+  String get ipRiskAlert => 'IP Risk Alert';
+
+  @override
+  String get ipRiskCheck => 'Check IP purity';
+
+  @override
+  String get ipRiskScore => 'Fraud score';
+
+  @override
+  String get ipRiskLow => 'Low risk';
+
+  @override
+  String get ipRiskMedium => 'Medium risk';
+
+  @override
+  String get ipRiskHigh => 'High risk';
+
+  @override
+  String get ipRiskVeryHigh => 'Very high risk';
+
+  @override
+  String get ipRiskHostingOrProxy => 'Hosting or proxy';
+
+  @override
+  String get ipRiskDatacenter => 'Datacenter';
+
+  @override
+  String get ipRiskResidentialProxy => 'Residential proxy';
+
+  @override
+  String get ipRiskBlacklist => 'Blacklist flags';
+
+  @override
+  String get ipRiskProxyType => 'Proxy type';
+
+  @override
+  String get ipRiskAnonymousVpn => 'Anonymizing VPN';
+
+  @override
+  String get ipRiskTorExit => 'Tor exit node';
+
+  @override
+  String get ipRiskServer => 'Server';
+
+  @override
+  String get ipRiskPublicProxy => 'Public proxy';
+
+  @override
+  String get ipRiskWebProxy => 'Web proxy';
+
+  @override
+  String get ipRiskSearchRobot => 'Search engine robot';
+
+  @override
+  String get ipRiskHostname => 'Hostname';
+
+  @override
+  String get ipRiskHint => 'Enter an IP to check';
+
+  @override
+  String get ipRiskInvalid => 'Enter a valid public IP';
+
+  @override
+  String get ipRiskSource => 'Source';
+
+  @override
+  String get ipRiskSources => 'Scamalytics and IPLocate.io';
+
+  @override
+  String get ipRiskAsn => 'ASN';
+
+  @override
+  String get ipRiskHomeBroadband => 'Premium Residential IP';
+
+  @override
+  String get ipRiskNoteTitle => 'About the fraud score';
+
+  @override
+  String ipRiskNoteDirect(Object score) {
+    return 'Scamalytics can see web traffic from this IP directly. The score of $score reflects the share of that traffic suspected to be fraudulent.';
+  }
+
+  @override
+  String ipRiskNoteIndirect(Object isp, Object score) {
+    return 'Scamalytics can\'t see web traffic from this IP directly. The score of $score is estimated from the overall risk of IPs operated by $isp.';
+  }
+
+  @override
+  String get ipRiskNoteGeneric =>
+      'The fraud score (0–100) reflects the share of web traffic from this IP that Scamalytics suspects to be fraudulent.';
+
+  @override
+  String get ipRiskNoteAmount => 'Observed traffic';
+
+  @override
+  String get ipRiskNoteAmountIsp => 'Operator traffic';
+
+  @override
+  String get ipRiskNoteShare => 'Suspected fraud';
+
+  @override
+  String get ipRiskAmountLow => 'Low';
+
+  @override
+  String get ipRiskAmountMedium => 'Medium';
+
+  @override
+  String get ipRiskAmountHigh => 'High';
+
+  @override
+  String get ipRiskShareLittle => 'Very little';
+
+  @override
+  String get ipRiskShareSome => 'Some';
+
+  @override
+  String get ipRiskShareAlmostAll => 'Almost all';
+
+  @override
+  String get ipRiskNoteOwner => 'Owner';
+
+  @override
+  String get ipRiskNoteConnection => 'Connection';
+
+  @override
+  String get ipRiskCommercialServer => 'Commercial server';
+
+  @override
+  String get ipRiskNoteProxying =>
+      'May be relaying traffic from elsewhere; the actual user could be anywhere';
+
+  @override
+  String get ipRiskNoteWarningHigh =>
+      'Web traffic from this IP is likely to come from fraudsters.';
+
+  @override
+  String get ipRiskNoteWarningVeryHigh =>
+      'Web traffic from this IP is very likely to come from fraudsters.';
+
+  @override
+  String get ipRiskNoteFootnote =>
+      'This assessment covers web traffic only; other traffic may carry a different risk.';
+
+  @override
+  String get ipRiskLocation => 'Country / region';
+
+  @override
+  String get ipRiskCity => 'Region / city';
+
+  @override
+  String get operatorOrAsn => 'Organization / ASN';
+
+  @override
+  String get ipRiskFailed => 'Couldn\'t load IP information. Try again.';
+
+  @override
+  String get isp => 'ISP';
+
+  @override
+  String get speedTest => 'Speed Test';
+
+  @override
+  String get speedTestStart => 'Start Test';
+
+  @override
+  String get speedTestAgain => 'Test Again';
+
+  @override
+  String get speedTestHistory => 'Test History';
+
+  @override
+  String get speedTestHistoryEmpty => 'No test history yet';
+
+  @override
+  String get speedTestHistoryRetention => 'Kept for 14 days';
+
+  @override
+  String get speedTestClearHistoryTip => 'Clear all speed test history?';
+
+  @override
+  String get speedTestFollowRules => 'Follow Rules';
+
+  @override
+  String get speedTestOutbound => 'Outbound';
+
+  @override
+  String get speedTestCoreStopped => 'Not started · Direct test';
+
+  @override
+  String get speedTestReady => 'Ready';
+
+  @override
+  String get speedTestConnecting => 'Connecting';
+
+  @override
+  String get speedTestPacketLoss => 'Packet Loss';
+
+  @override
+  String get speedTestJitter => 'Jitter';
+
+  @override
+  String get speedTestLoadedLatency => 'Loaded Latency';
+
+  @override
+  String get speedTestResponsiveness => 'Responsiveness';
+
+  @override
+  String get speedTestDataUsed => 'Data Used';
+
+  @override
+  String get speedTestServer => 'Test Server';
+
+  @override
+  String get speedTestServerAutoDesc => 'Automatically select Speedtest server';
+
+  @override
+  String get speedTestProtocol => 'Protocol';
+
+  @override
+  String get speedTestMobileDataTip =>
+      'You are on mobile data. One test may use hundreds of MB. Continue?';
+
+  @override
+  String get speedTestErrorRejected => 'Blocked by rules';
+
+  @override
+  String get speedTestErrorRejectedDesc =>
+      'The current rules route the test domain to REJECT. Choose another outbound and retry.';
+
+  @override
+  String get speedTestErrorBlocked => 'Speed test unavailable';
+
+  @override
+  String speedTestErrorBlockedDesc(Object provider) {
+    return 'The outbound may be blocking $provider speed tests. Switch the test source or the outbound.';
+  }
+
+  @override
+  String get speedTestErrorUnavailable => 'Cannot reach the speed test service';
+
+  @override
+  String get speedTestErrorTimeout => 'Speed test timed out';
+
+  @override
+  String get speedTestErrorNetworkDesc =>
+      'Check whether the outbound is available, then retry.';
+
+  @override
+  String get speedTestChangeOutbound => 'Change Outbound';
+
+  @override
+  String get speedTestSettings => 'Speed Test Settings';
+
+  @override
+  String get speedTestDuration => 'Test Duration';
+
+  @override
+  String get speedTestConnections => 'Connections';
+
+  @override
+  String get speedTestSingleThread => 'Single';
+
+  @override
+  String get speedTestMultiThread => 'Multi';
+
+  @override
+  String speedTestConnectionsDesc(Object count) {
+    return 'Multi uses $count parallel connections to saturate bandwidth';
+  }
+
+  @override
+  String get speedTestProtocolDesc =>
+      'HTTP/3 runs over QUIC (UDP); if unavailable it falls back to HTTP/2, and to HTTP/1.1 if HTTP/2 is unavailable too';
+
+  @override
+  String speedTestProtocolFallback(Object fallback, Object protocol) {
+    return '$protocol unavailable, fell back to $fallback';
+  }
+
+  @override
+  String get speedTestProbing => 'Detecting';
+
+  @override
+  String get speedTestRealtime => 'Realtime Throughput';
+
+  @override
+  String get speedTestQuality => 'Network Quality';
+
+  @override
+  String speedTestStreams(Object count) {
+    return '$count connections';
+  }
+
+  @override
+  String get speedTestManual => 'Manual';
+
+  @override
+  String get speedTestExitNode => 'Exit Node';
+
+  @override
+  String get speedTestRoute => 'Route Rule';
+
+  @override
+  String get speedTestCredit =>
+      'Test servers are provided by Speedtest by Ookla.';
+
+  @override
+  String get speedTestStop => 'Stop Test';
+
+  @override
+  String get trafficStats => 'Traffic Statistics';
+
+  @override
+  String get trafficStatsDesc =>
+      'View detailed breakdown of traffic by day, week, or month';
+
+  @override
+  String get trafficStatsDay => 'Day';
+
+  @override
+  String get trafficStatsWeek => 'Week';
+
+  @override
+  String get trafficStatsMonth => 'Month';
+
+  @override
+  String get trafficStatsTotal => 'Total Traffic';
+
+  @override
+  String get trafficStatsOverview => 'Overview';
+
+  @override
+  String get trafficStatsRunningTime => 'Cumulative uptime';
+
+  @override
+  String get trafficStatsHourUnit => 'h';
+
+  @override
+  String get trafficStatsMinuteUnit => 'min';
+
+  @override
+  String get trafficStatsTrend => 'Traffic Trend';
+
+  @override
+  String get trafficStatsRuleHits => 'Rule Hits';
+
+  @override
+  String trafficStatsHitCount(Object count) {
+    return '$count hits';
+  }
+
+  @override
+  String get trafficStatsRanking => 'Traffic Ranking';
+
+  @override
+  String get trafficStatsNode => 'Node';
+
+  @override
+  String get trafficStatsDisabled => 'Traffic statistics not enabled';
+
+  @override
+  String get trafficStatsDisabledDesc =>
+      'Turn on traffic statistics to record daily usage by domain, process, node, and rule locally.';
+
+  @override
+  String get trafficStatsEnable => 'Enable Traffic Statistics';
+
+  @override
+  String get trafficStatsEnableAction => 'Enable';
+
+  @override
+  String get trafficStatsDetail => 'Detailed Breakdown';
+
+  @override
+  String get trafficStatsDetailDesc =>
+      'Record per-domain, process, node, profile, and rule traffic';
+
+  @override
+  String get trafficStatsSiteIcon => 'Website Icons';
+
+  @override
+  String get trafficStatsSiteIconDesc =>
+      'Fetch website favicons for domain rankings locally';
+
+  @override
+  String get trafficStatsRetention => 'Data Retention';
+
+  @override
+  String trafficStatsDays(Object count) {
+    return '$count days';
+  }
+
+  @override
+  String get trafficStatsSettings => 'Statistics Settings';
+
+  @override
+  String get trafficStatsClearTip =>
+      'Are you sure you want to clear all saved traffic statistics data?';
+
+  @override
+  String trafficStatsSince(Object date) {
+    return 'Since $date';
+  }
+
+  @override
+  String get trafficStatsDetailOffTip =>
+      'Detailed breakdown is turned off. Only total and hourly traffic are recorded.';
+
+  @override
+  String get trafficStatsRefresh => 'Refresh';
 }

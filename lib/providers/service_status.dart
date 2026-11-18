@@ -52,7 +52,7 @@ class ServiceStatus extends _$ServiceStatus
 class ShownServiceCount extends _$ShownServiceCount
     with AutoDisposeNotifierMixin {
   @override
-  int build() => 2;
+  int build() => 4;
 }
 
 @riverpod

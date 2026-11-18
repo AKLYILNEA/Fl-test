@@ -1,5 +1,6 @@
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
+import 'package:fl_clash/features/ip_quality/ip_address_row.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/config.dart';
 import 'package:fl_clash/ui/icons/icons.dart';
@@ -16,7 +17,7 @@ String _endpointText(String ip, String port) {
     return '';
   }
   if (port.isNotEmpty) {
-    return '$ip:$port';
+    return ip.contains(':') ? '[$ip]:$port' : '$ip:$port';
   }
   return ip;
 }
@@ -374,23 +375,36 @@ class TrackerInfoDetailView extends ConsumerWidget {
         ),
         generateSection(
           title: appLocalizations.address,
-          items: _buildRows([
-            (appLocalizations.host, metadata.host),
-            (
-              appLocalizations.source,
-              _endpointText(metadata.sourceIP, metadata.sourcePort),
-            ),
-            (
-              appLocalizations.destination,
-              _endpointText(metadata.destinationIP, metadata.destinationPort),
-            ),
-            (
-              appLocalizations.destinationGeoIP,
-              metadata.destinationGeoIP.join(' '),
-            ),
-            (appLocalizations.destinationIPASN, metadata.destinationIPASN),
-            (appLocalizations.remoteDestination, metadata.remoteDestination),
-          ]),
+          items: [
+            ..._buildRows([(appLocalizations.host, metadata.host)]),
+            if (metadata.sourceIP.isNotEmpty)
+              IpAddressRow(
+                title: appLocalizations.source,
+                address: _endpointText(metadata.sourceIP, metadata.sourcePort),
+                allowDetails: false,
+              ),
+            if (metadata.destinationIP.isNotEmpty)
+              IpAddressRow(
+                title: appLocalizations.destination,
+                address: _endpointText(
+                  metadata.destinationIP,
+                  metadata.destinationPort,
+                ),
+                countries: metadata.destinationGeoIP,
+              ),
+            ..._buildRows([
+              (
+                appLocalizations.destinationGeoIP,
+                metadata.destinationGeoIP.join(' '),
+              ),
+              (appLocalizations.destinationIPASN, metadata.destinationIPASN),
+            ]),
+            if (metadata.remoteDestination.isNotEmpty)
+              IpAddressRow(
+                title: appLocalizations.remoteDestination,
+                address: metadata.remoteDestination,
+              ),
+          ],
         ),
         generateSection(
           title: appLocalizations.proxies,

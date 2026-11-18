@@ -61,6 +61,7 @@ class Scaffold extends StatefulWidget {
   /// Folded into the overflow menu once the bar would hold more than three
   /// buttons, as [primaryAction] and [menuItems] are; [actions] never fold.
   final List<IconButtonData> iconActions;
+  final bool groupIconActions;
   final List<PopupMenuItem> menuItems;
 
   /// Answers a form: last in the bar, and in a form sheet the filled default
@@ -81,6 +82,7 @@ class Scaffold extends StatefulWidget {
   final ValueListenable<List<ScaffoldKeyword>>? keywords;
   final bool? resizeToAvoidBottomInset;
   final VoidCallback? backAction;
+  final List<BoxShadow> leadingShadows;
 
   /// Puts the toggle of the sort mode in the bar.
   final bool canSort;
@@ -95,6 +97,7 @@ class Scaffold extends StatefulWidget {
     this.actions,
     this.statusActions = const [],
     this.backAction,
+    this.leadingShadows = const [],
     this.isLoading = false,
     this.searchState,
     this.searchActions = const [],
@@ -102,6 +105,7 @@ class Scaffold extends StatefulWidget {
     this.selectionActions = const [],
     this.primaryAction,
     this.iconActions = const [],
+    this.groupIconActions = true,
     this.menuItems = const [],
     this.confirmationAction,
     this.keywords,
@@ -486,7 +490,19 @@ class ScaffoldState extends State<Scaffold>
             child: AnimatedOpacity(
               opacity: hidden ? 0 : 1,
               duration: context.motionDuration(kThemeAnimationDuration),
-              child: BarItemPresence(child: ElasticPress(child: button)),
+              child: BarItemPresence(
+                child: ElasticPress(
+                  child: widget.leadingShadows.isEmpty
+                      ? button
+                      : DecoratedBox(
+                          decoration: ShapeDecoration(
+                            shape: AppShape.full,
+                            shadows: widget.leadingShadows,
+                          ),
+                          child: button,
+                        ),
+                ),
+              ),
             ),
           ),
         ),
@@ -592,7 +608,15 @@ class ScaffoldState extends State<Scaffold>
       menuItems: widget.menuItems,
     );
     final shown = [?lead, ...fold.shown];
-    final grouped = shown.length > 1 ? shown.take(_maxGroupedActions) : null;
+    final totalButtons =
+        shown.length +
+        selection.buttons +
+        widgets.length +
+        (fold.overflow.isEmpty ? 0 : 1);
+    final grouped =
+        widget.groupIconActions && totalButtons >= 3 && shown.length > 1
+        ? shown.take(_maxGroupedActions)
+        : null;
     final actions = [
       if (grouped != null)
         TonalButtonGroup(

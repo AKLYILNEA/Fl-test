@@ -90,6 +90,10 @@ class Bootstrap {
     globalState.packageInfo = await PackageInfo.fromPlatform();
     final storedConfig = await preferences.getConfigMap();
     _resetMixedPort = unusableMixedPort(storedConfig?['patchClashConfig']);
+    final appliedCounts = await preferences.getAppliedConfigCounts();
+    if (appliedCounts != null) {
+      globalState.lastConfigCounts = appliedCounts;
+    }
     var config = await migration.run();
     if (_resetMixedPort != null) {
       await preferences.saveConfig(config);

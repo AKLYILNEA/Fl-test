@@ -155,6 +155,10 @@ class _ProxiesListViewState extends ConsumerState<ProxiesListView> {
     animateScrollTo(_controller, _getGroupOffset(groupName) + rowOffset);
   }
 
+  Widget _scrollbar(Widget child) => system.isDesktop
+      ? Scrollbar(controller: _controller, child: child)
+      : child;
+
   @override
   Widget build(BuildContext context) {
     final appLocalizations = context.appLocalizations;
@@ -211,10 +215,8 @@ class _ProxiesListViewState extends ConsumerState<ProxiesListView> {
                 onChange: _handleChange,
                 onScrollToSelected: _scrollToGroupSelected,
               );
-              return Scrollbar(
-                controller: _controller,
-                thumbVisibility: true,
-                child: CustomScrollView(
+              return _scrollbar(
+                CustomScrollView(
                   key: proxiesListStoreKey,
                   controller: _controller,
                   slivers: [
@@ -624,15 +626,19 @@ class ListHeader extends ConsumerWidget {
             Flexible(
               child: Row(
                 children: [
-                  _GroupIcon(src: group.icon, name: groupName),
-                  Flexible(child: _GroupSummary(groupName: groupName)),
+                  _GroupIcon(name: groupName),
+                  Flexible(
+                    child: _GroupSummary(
+                      groupName: groupName,
+                      groupType: group.type,
+                    ),
+                  ),
                 ],
               ),
             ),
             _GroupActions(
               isExpand: isExpand,
               isDelayTesting: isDelayTesting,
-              groupType: group.type.name,
               onScrollToSelected: () {
                 onScrollToSelected(groupName);
               },
@@ -690,13 +696,13 @@ List<BoxShadow> _floatingShadows(ColorScheme colorScheme, double lift) {
 }
 
 class _GroupIcon extends ConsumerWidget {
-  const _GroupIcon({required this.src, required this.name});
+  const _GroupIcon({required this.name});
 
-  final String src;
   final String name;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final src = ref.watch(proxyGroupIconProvider(name));
     final iconStyle = ref.watch(
       proxiesStyleSettingProvider.select((state) => state.iconStyle),
     );
@@ -756,9 +762,10 @@ class _GroupIcon extends ConsumerWidget {
 }
 
 class _GroupSummary extends StatelessWidget {
-  const _GroupSummary({required this.groupName});
+  const _GroupSummary({required this.groupName, required this.groupType});
 
   final String groupName;
+  final GroupType groupType;
 
   @override
   Widget build(BuildContext context) {
@@ -773,30 +780,65 @@ class _GroupSummary extends StatelessWidget {
           style: AppTextStyle.callout.of(context, emphasized: true),
         ),
         const SizedBox(height: 2),
-        Flexible(flex: 1, child: _SelectedProxyName(groupName: groupName)),
+        Flexible(
+          flex: 1,
+          child: _SelectedProxyLine(groupName: groupName, groupType: groupType),
+        ),
       ],
     );
   }
 }
 
-class _SelectedProxyName extends ConsumerWidget {
-  const _SelectedProxyName({required this.groupName});
+/// The group's kind and the node it picked, on one line under the name: kind ·
+/// node icon node, the way bettbox lays it out.
+class _SelectedProxyLine extends ConsumerWidget {
+  const _SelectedProxyLine({required this.groupName, required this.groupType});
 
   final String groupName;
+  final GroupType groupType;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final proxyName = ref
         .watch(selectedProxyNameProvider(groupName))
         .takeFirstValid([]);
-    if (proxyName.isEmpty) {
-      return const SizedBox.shrink();
-    }
-    return EmojiText(
-      proxyName,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: AppTextStyle.caption1.of(context, emphasized: true).toLight,
+    final style = AppTextStyle.caption1.of(context, emphasized: true).toLight;
+    final icon = proxyName.isEmpty
+        ? null
+        : ref.watch(proxyGroupIconProvider(proxyName));
+    final textScaler = MediaQuery.textScalerOf(context);
+    final iconSize = textScaler.scale(AppTextStyle.caption1.leading);
+    return Row(
+      children: [
+        Text(groupType.name, style: style),
+        if (proxyName.isNotEmpty) ...[
+          Text(' · ', style: style),
+          if (icon != null && icon.isNotEmpty) ...[
+            SizedBox.square(
+              dimension: iconSize,
+              child: FittedBox(
+                fit: BoxFit.contain,
+                child: IconTheme.merge(
+                  data: IconThemeData(size: iconSize, color: style.color),
+                  child: CommonTargetIcon(
+                    src: icon,
+                    fallback: GroupMonogram(proxyName),
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(width: textScaler.scale(4)),
+          ],
+          Flexible(
+            child: EmojiText(
+              proxyName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: style,
+            ),
+          ),
+        ],
+      ],
     );
   }
 }
@@ -805,7 +847,6 @@ class _GroupActions extends StatelessWidget {
   const _GroupActions({
     required this.isExpand,
     required this.isDelayTesting,
-    required this.groupType,
     required this.onScrollToSelected,
     required this.onDelayTest,
     required this.onToggle,
@@ -813,7 +854,6 @@ class _GroupActions extends StatelessWidget {
 
   final bool isExpand;
   final bool isDelayTesting;
-  final String groupType;
   final VoidCallback onScrollToSelected;
   final VoidCallback onDelayTest;
   final VoidCallback onToggle;
@@ -842,13 +882,6 @@ class _GroupActions extends StatelessWidget {
                       : const GlyphIcon(AppGlyphs.bolt),
                 ),
               ],
-            )
-          else
-            Text(
-              groupType,
-              style: AppTextStyle.caption1
-                  .of(context, emphasized: true)
-                  .toLight,
             ),
           const SizedBox(width: 6),
           ElasticPress(

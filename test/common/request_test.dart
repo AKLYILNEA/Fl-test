@@ -28,6 +28,7 @@ class _HostAdapter implements HttpClientAdapter {
   _HostAdapter(this.byHost);
 
   final Map<String, ResponseBody Function()> byHost;
+  final requested = <Uri>[];
 
   @override
   Future<ResponseBody> fetch(
@@ -35,6 +36,7 @@ class _HostAdapter implements HttpClientAdapter {
     Stream<Uint8List>? requestStream,
     Future<void>? cancelFuture,
   ) async {
+    requested.add(options.uri);
     return byHost[options.uri.host]!();
   }
 
@@ -111,6 +113,11 @@ void main() {
         'tag_name': 'v1.2.3',
         'body': 'notes',
       });
+      expect((request.dio.httpClientAdapter as _HostAdapter).requested, [
+        Uri.parse(
+          'https://api.github.com/repos/aaANDkk/FlClash-Myui/releases/latest',
+        ),
+      ]);
     });
 
     test(
@@ -130,6 +137,12 @@ void main() {
         });
 
         expect(await request.latestRelease(), {'tag_name': 'v1.2.4'});
+        expect((request.dio.httpClientAdapter as _HostAdapter).requested, [
+          Uri.parse(
+            'https://api.github.com/repos/aaANDkk/FlClash-Myui/releases/latest',
+          ),
+          Uri.parse('https://github.com/aaANDkk/FlClash-Myui/releases/latest'),
+        ]);
       },
     );
 

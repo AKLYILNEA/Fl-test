@@ -47,6 +47,10 @@ Future<ResolvedVersion> resolveVersion(String root, {String? tag}) async {
     'HEAD',
   ], workingDirectory: root);
   tag ??= _tagFromEnvironment() ?? await _tagAtHead(root);
+  if (tag == 'dev') {
+    final base = pubspecVersionOf(root).split('+').first;
+    return (version: '$base-rs.dev', commit: commit, tag: tag);
+  }
   if (tag != null) {
     return (version: releaseVersionOfTag(tag), commit: commit, tag: tag);
   }

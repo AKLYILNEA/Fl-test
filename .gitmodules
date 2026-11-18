@@ -1,8 +1,4 @@
-[submodule "plugins/prism_ui"]
-	path = plugins/prism_ui
-	url = git@github.com:chen08209/prism_ui.git
-	branch = main
 [submodule "concord"]
 	path = concord
-	url = git@github.com:chen08209/concord.git
+	url = https://github.com/chen08209/concord.git
 	branch = main

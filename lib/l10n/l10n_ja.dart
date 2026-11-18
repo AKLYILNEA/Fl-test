@@ -3817,4 +3817,581 @@ class AppLocalizationsJa extends AppLocalizations {
   String rootTunFallback(Object reason) {
     return 'Root が使えないため（$reason）、今回はシステム VPN を使います。';
   }
+
+  @override
+  String get config => '設定';
+
+  @override
+  String get advanced => '詳細設定';
+
+  @override
+  String get ipDetails => 'IP の詳細';
+
+  @override
+  String get silentLaunchDesc => 'サイレント起動ではウィンドウを表示しません。';
+
+  @override
+  String get accessControlDesc => 'アクセス制御では、プロキシを利用するアプリを選びます。';
+
+  @override
+  String get wakelock => '画面常時点灯';
+
+  @override
+  String get secondaryDevelopmentBuild => '二次開発ビルド';
+
+  @override
+  String get addressHelp => 'WebDAVサーバーのアドレス';
+
+  @override
+  String get authenticationDesc =>
+      '認証を有効にすると、ローカルプロキシポートの利用にユーザー名とパスワードが必要になります。';
+
+  @override
+  String get autoCloseConnectionsDesc => 'プロキシを切り替えると、既存の接続を自動的に閉じます。';
+
+  @override
+  String get sidebarBlurDesc => '背景のぼかしでは、ウィンドウの背後のデスクトップがサイドバー越しに見えます。';
+
+  @override
+  String get vpnEnableDesc => 'VPN は VpnService でシステムの全トラフィックを自動的にルーティングします。';
+
+  @override
+  String get ntpStatusDesc => 'NTP を有効にすると、システムクロックではなく NTP サーバーから時刻を取得します。';
+
+  @override
+  String get dialerProxyDesc => 'ダイヤラープロキシは NTP サーバーへの接続に使用するアウトバウンドです。';
+
+  @override
+  String get snifferStatusDesc =>
+      'スニッファーは TLS・HTTP・QUIC の通信からドメインを読み取り、ルールで照合できるようにします。';
+
+  @override
+  String get overrideDestinationDesc => '宛先を上書きすると、元のアドレスではなく検出したドメインに接続します。';
+
+  @override
+  String get parsePureIpDesc => '純粋な IP を解析すると、IP アドレスしかない接続をスニッフィングします。';
+
+  @override
+  String get skipDomainDesc => 'スキップするドメインにあるドメインを検出しても使用しません。';
+
+  @override
+  String get fakeipFilterModeDesc =>
+      'Fake-IP フィルターモードでは、blacklist は一致を除外、whitelist は一致のみ、rule はルールで判定します。';
+
+  @override
+  String get ipv6InboundDesc => 'IPv6 を有効にすると、VPN で IPv6 インバウンドを許可します。';
+
+  @override
+  String get interfaceNameDesc => 'インターフェース名は、アウトバウンド接続に使用するネットワークインターフェースです。';
+
+  @override
+  String get advancedConfigDesc => '詳細設定には、ネットワーク、DNS、追加ルール、スクリプトがあります。';
+
+  @override
+  String get singleAdd => '個別追加';
+
+  @override
+  String get batchAdd => '一括追加';
+
+  @override
+  String get batchListInputTip => '1行に1項目、またはカンマ区切りで入力してください';
+
+  @override
+  String get batchMapInputTip => '1行に1件、キーと値はスペースで区切ってください';
+
+  @override
+  String get customProfileResources => 'カスタムプロファイルのリソース';
+
+  @override
+  String get customProfileResourcesDesc =>
+      'カスタムプロファイルのリソースは、自分で追加してカスタムプロファイルから使うプロキシ、ルールプロバイダー、フィルター、アイコンセットです。';
+
+  @override
+  String get batteryOptimizationDesc => '電池の最適化を無視すると、アプリがバックグラウンドで動作し続けます。';
+
+  @override
+  String get onDemandDesc => 'オンデマンドは、除外した Wi-Fi に接続している間プロキシを一時停止します。';
+
+  @override
+  String get blockConnection => '接続をブロック';
+
+  @override
+  String get proxyNode => 'プロキシノード';
+
+  @override
+  String get bypassPrivateRouteDesc =>
+      'プライベートアドレスをバイパスすると、LAN・ループバック・マルチキャストのアドレスは TUN を通りません。';
+
+  @override
+  String get excludeInterfaceDesc => 'docker0 などの除外インターフェースから入る通信は TUN を通りません。';
+
+  @override
+  String get includeUidDesc => '対象ユーザー ID のプロセスの通信だけが TUN を通ります。';
+
+  @override
+  String get excludeUidDesc => '除外ユーザー ID のプロセスの通信は TUN を通りません。';
+
+  @override
+  String get excludeSrcPortDesc => '除外送信元ポートからの通信は TUN を通りません。';
+
+  @override
+  String get excludeDstPortDesc => '除外宛先ポートへの通信は TUN を通りません。';
+
+  @override
+  String get emojiStyle => '絵文字フォント';
+
+  @override
+  String get customFont => 'カスタムフォント';
+
+  @override
+  String get nodeCount => 'ノード数';
+
+  @override
+  String get ruleCount => 'ルール項目';
+
+  @override
+  String get providerCount => 'プロバイダー';
+
+  @override
+  String get currentProfile => '現在のプロファイル';
+
+  @override
+  String get iconRules => '正規表現アイコン';
+
+  @override
+  String get iconRulesTip => '名前が正規表現に一致するグループは、選択したアイコンセットのアイコンを使用します。';
+
+  @override
+  String get invalidRegex => '正規表現が無効です';
+
+  @override
+  String get iconSetRemoved => 'アイコンセットは削除されました';
+
+  @override
+  String get iconRulesEmpty => '正規表現アイコンが空です';
+
+  @override
+  String get addIconRule => '正規表現アイコンを追加';
+
+  @override
+  String get editIconRule => '正規表現アイコンを編集';
+
+  @override
+  String get iconRuleHelp =>
+      '1. 完全一致：例 ^YouTube\$ は YouTube という名前のグループにのみ一致します。\n2. キーワード一致：例 YouTube は名前に YouTube を含むすべてのグループに一致します。\n3. 複数一致：例 (YouTube|Netflix|Disney) は複数のストリーミンググループに同時に一致します。\n4. ワイルドカード：例 .* はすべてのグループに一致し、選択したアイコンを適用します。\n5. 前方・後方一致：例 ^PROXY は前方一致、 Auto\$ は後方一致；上から順に評価されます。';
+
+  @override
+  String get refreshGroupIcons => 'グループアイコンを更新';
+
+  @override
+  String get refreshGroupIconsTip =>
+      'キャッシュ済みのリモートアイコンとアイコンセット画像をすべて削除し、リモートアイコンセットを再同期して最新のアイコンを取得します。';
+
+  @override
+  String get groupIconsRefreshed => 'グループアイコンを更新しました';
+
+  @override
+  String get ipRiskAlert => 'IP リスク警告';
+
+  @override
+  String get ipRiskCheck => 'IP の純度を確認';
+
+  @override
+  String get ipRiskScore => '不正スコア';
+
+  @override
+  String get ipRiskLow => '低リスク';
+
+  @override
+  String get ipRiskMedium => '中リスク';
+
+  @override
+  String get ipRiskHigh => '高リスク';
+
+  @override
+  String get ipRiskVeryHigh => '非常に高いリスク';
+
+  @override
+  String get ipRiskHostingOrProxy => 'データセンターまたはプロキシ';
+
+  @override
+  String get ipRiskDatacenter => 'データセンター';
+
+  @override
+  String get ipRiskResidentialProxy => '住宅プロキシ';
+
+  @override
+  String get ipRiskBlacklist => 'ブラックリスト登録';
+
+  @override
+  String get ipRiskProxyType => 'プロキシの種類';
+
+  @override
+  String get ipRiskAnonymousVpn => '匿名 VPN';
+
+  @override
+  String get ipRiskTorExit => 'Tor 出口ノード';
+
+  @override
+  String get ipRiskServer => 'サーバー';
+
+  @override
+  String get ipRiskPublicProxy => '公開プロキシ';
+
+  @override
+  String get ipRiskWebProxy => 'Web プロキシ';
+
+  @override
+  String get ipRiskSearchRobot => '検索エンジンのクローラー';
+
+  @override
+  String get ipRiskHostname => 'ホスト名';
+
+  @override
+  String get ipRiskHint => '確認する IP を入力';
+
+  @override
+  String get ipRiskInvalid => '有効なグローバル IP を入力してください';
+
+  @override
+  String get ipRiskSource => 'データ提供元';
+
+  @override
+  String get ipRiskSources => 'Scamalytics と IPLocate.io';
+
+  @override
+  String get ipRiskAsn => 'ASN';
+
+  @override
+  String get ipRiskHomeBroadband => 'プレミアム住宅用 IP';
+
+  @override
+  String get ipRiskNoteTitle => '不正スコアについて';
+
+  @override
+  String ipRiskNoteDirect(Object score) {
+    return 'Scamalytics はこの IP の Web トラフィックを直接観測しています。スコア $score は、そのうち不正が疑われるトラフィックの割合を示します。';
+  }
+
+  @override
+  String ipRiskNoteIndirect(Object isp, Object score) {
+    return 'Scamalytics はこの IP の Web トラフィックを直接観測できません。スコア $score は $isp が運用する IP 全体のリスクから推定されています。';
+  }
+
+  @override
+  String get ipRiskNoteGeneric =>
+      '不正スコア（0〜100）は、この IP からの Web トラフィックのうち Scamalytics が不正を疑う割合を示します。';
+
+  @override
+  String get ipRiskNoteAmount => '観測トラフィック';
+
+  @override
+  String get ipRiskNoteAmountIsp => '事業者のトラフィック';
+
+  @override
+  String get ipRiskNoteShare => '不正の疑い';
+
+  @override
+  String get ipRiskAmountLow => '少ない';
+
+  @override
+  String get ipRiskAmountMedium => '中程度';
+
+  @override
+  String get ipRiskAmountHigh => '多い';
+
+  @override
+  String get ipRiskShareLittle => 'ごくわずか';
+
+  @override
+  String get ipRiskShareSome => '一部';
+
+  @override
+  String get ipRiskShareAlmostAll => 'ほぼすべて';
+
+  @override
+  String get ipRiskNoteOwner => '所有者';
+
+  @override
+  String get ipRiskNoteConnection => '接続の種類';
+
+  @override
+  String get ipRiskCommercialServer => '商用サーバー';
+
+  @override
+  String get ipRiskNoteProxying =>
+      '他地域のトラフィックを中継している可能性があり、実際の利用者はどこにいてもおかしくありません';
+
+  @override
+  String get ipRiskNoteWarningHigh =>
+      'この IP からの Web トラフィックは、不正行為者によるものである可能性が高いです。';
+
+  @override
+  String get ipRiskNoteWarningVeryHigh =>
+      'この IP からの Web トラフィックは、不正行為者によるものである可能性が非常に高いです。';
+
+  @override
+  String get ipRiskNoteFootnote =>
+      'この評価は Web トラフィックのみを対象としており、その他のトラフィックのリスクは異なる場合があります。';
+
+  @override
+  String get ipRiskLocation => '国・地域';
+
+  @override
+  String get ipRiskCity => '地域・都市';
+
+  @override
+  String get operatorOrAsn => '組織 / ASN';
+
+  @override
+  String get ipRiskFailed => 'IP 情報を取得できませんでした。再試行してください。';
+
+  @override
+  String get isp => 'プロバイダ';
+
+  @override
+  String get speedTest => '速度テスト';
+
+  @override
+  String get speedTestStart => '測定開始';
+
+  @override
+  String get speedTestAgain => '再測定';
+
+  @override
+  String get speedTestHistory => '測定履歴';
+
+  @override
+  String get speedTestHistoryEmpty => '測定履歴はありません';
+
+  @override
+  String get speedTestHistoryRetention => '14 日間保存';
+
+  @override
+  String get speedTestClearHistoryTip => 'すべての測定履歴を削除しますか？';
+
+  @override
+  String get speedTestFollowRules => 'ルールに従う';
+
+  @override
+  String get speedTestOutbound => 'アウトバウンド';
+
+  @override
+  String get speedTestCoreStopped => '未起動・直接接続で測定';
+
+  @override
+  String get speedTestReady => '準備完了';
+
+  @override
+  String get speedTestConnecting => '接続中';
+
+  @override
+  String get speedTestPacketLoss => 'パケットロス';
+
+  @override
+  String get speedTestJitter => 'ジッター';
+
+  @override
+  String get speedTestLoadedLatency => '負荷時遅延';
+
+  @override
+  String get speedTestResponsiveness => '応答性';
+
+  @override
+  String get speedTestDataUsed => '使用データ量';
+
+  @override
+  String get speedTestServer => '測定サーバー';
+
+  @override
+  String get speedTestServerAutoDesc => 'Speedtest サーバーを自動選択';
+
+  @override
+  String get speedTestProtocol => 'プロトコル';
+
+  @override
+  String get speedTestMobileDataTip =>
+      'モバイルデータ通信中です。1 回の測定で数百 MB を消費する場合があります。続行しますか？';
+
+  @override
+  String get speedTestErrorRejected => 'ルールによりブロックされました';
+
+  @override
+  String get speedTestErrorRejectedDesc =>
+      '現在のルールでは測定ドメインが REJECT に割り当てられています。別のアウトバウンドを選んで再試行してください。';
+
+  @override
+  String get speedTestErrorBlocked => '速度テストを利用できません';
+
+  @override
+  String speedTestErrorBlockedDesc(Object provider) {
+    return 'アウトバウンドが $provider の速度テストをブロックしている可能性があります。測定元またはアウトバウンドを変更してください。';
+  }
+
+  @override
+  String get speedTestErrorUnavailable => '速度テストサービスに接続できません';
+
+  @override
+  String get speedTestErrorTimeout => '速度テストがタイムアウトしました';
+
+  @override
+  String get speedTestErrorNetworkDesc => 'アウトバウンドが利用可能か確認してから再試行してください。';
+
+  @override
+  String get speedTestChangeOutbound => 'アウトバウンドを変更';
+
+  @override
+  String get speedTestSettings => '測定設定';
+
+  @override
+  String get speedTestDuration => '測定時間';
+
+  @override
+  String get speedTestConnections => '接続方式';
+
+  @override
+  String get speedTestSingleThread => 'シングル';
+
+  @override
+  String get speedTestMultiThread => 'マルチ';
+
+  @override
+  String speedTestConnectionsDesc(Object count) {
+    return 'マルチは $count 本の並列接続で帯域を使い切ります';
+  }
+
+  @override
+  String get speedTestProtocolDesc =>
+      'HTTP/3 は QUIC (UDP) を使用し、使えない場合は HTTP/2 に、HTTP/2 も使えない場合は HTTP/1.1 に切り替えます';
+
+  @override
+  String speedTestProtocolFallback(Object fallback, Object protocol) {
+    return '$protocol が利用できないため $fallback に切り替えました';
+  }
+
+  @override
+  String get speedTestProbing => '検出中';
+
+  @override
+  String get speedTestRealtime => 'リアルタイム速度';
+
+  @override
+  String get speedTestQuality => 'ネットワーク品質';
+
+  @override
+  String speedTestStreams(Object count) {
+    return '$count 接続';
+  }
+
+  @override
+  String get speedTestManual => '手動指定';
+
+  @override
+  String get speedTestExitNode => '出口ノード';
+
+  @override
+  String get speedTestRoute => 'ルーティング';
+
+  @override
+  String get speedTestCredit => 'テストサーバーの提供元: Speedtest by Ookla。';
+
+  @override
+  String get speedTestStop => 'テストを停止';
+
+  @override
+  String get trafficStats => 'トラフィック統計';
+
+  @override
+  String get trafficStatsDesc => '日・週・月ごとのトラフィック内訳を確認します';
+
+  @override
+  String get trafficStatsDay => '日';
+
+  @override
+  String get trafficStatsWeek => '週';
+
+  @override
+  String get trafficStatsMonth => '月';
+
+  @override
+  String get trafficStatsTotal => '合計トラフィック';
+
+  @override
+  String get trafficStatsOverview => '概要';
+
+  @override
+  String get trafficStatsRunningTime => '累積稼働時間';
+
+  @override
+  String get trafficStatsHourUnit => '時間';
+
+  @override
+  String get trafficStatsMinuteUnit => '分';
+
+  @override
+  String get trafficStatsTrend => 'トラフィック推移';
+
+  @override
+  String get trafficStatsRuleHits => 'ルール一致';
+
+  @override
+  String trafficStatsHitCount(Object count) {
+    return '$count 回';
+  }
+
+  @override
+  String get trafficStatsRanking => 'トラフィックランキング';
+
+  @override
+  String get trafficStatsNode => 'ノード';
+
+  @override
+  String get trafficStatsDisabled => 'トラフィック統計が無効です';
+
+  @override
+  String get trafficStatsDisabledDesc =>
+      '有効にすると、ドメイン・プロセス・ノード・ルール別の通信量をローカルに記録します。';
+
+  @override
+  String get trafficStatsEnable => 'トラフィック統計を有効にする';
+
+  @override
+  String get trafficStatsEnableAction => '有効化';
+
+  @override
+  String get trafficStatsDetail => '詳細統計';
+
+  @override
+  String get trafficStatsDetailDesc => 'ドメイン・プロセス・ノード・プロファイル・ルールの内訳を記録';
+
+  @override
+  String get trafficStatsSiteIcon => 'サイトアイコン';
+
+  @override
+  String get trafficStatsSiteIconDesc => 'ドメインランキング用にファビコンを取得してキャッシュします';
+
+  @override
+  String get trafficStatsRetention => 'データ保持期間';
+
+  @override
+  String trafficStatsDays(Object count) {
+    return '$count 日';
+  }
+
+  @override
+  String get trafficStatsSettings => '統計設定';
+
+  @override
+  String get trafficStatsClearTip => '保存されているトラフィック統計データをすべて消去しますか？';
+
+  @override
+  String trafficStatsSince(Object date) {
+    return '$date 以降の統計';
+  }
+
+  @override
+  String get trafficStatsDetailOffTip => '詳細統計がオフのため、合計と時間帯別の推移のみ記録されます。';
+
+  @override
+  String get trafficStatsRefresh => '更新';
 }

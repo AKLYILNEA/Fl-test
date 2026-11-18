@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:collection/collection.dart';
 import 'package:fl_clash/enum/enum.dart';
+import 'package:fl_clash/models/models.dart';
 
 import 'dto.dart';
 
@@ -168,6 +169,42 @@ typedef SelectResult = ({bool changed, int seq});
 /// the Core stops producing for it.
 abstract interface class CoreApi {
   Future<void> init({required String home, int? sdkInt});
+
+  Future<Map<String, dynamic>?> readIpCache(String ip, {String? source});
+  Future<void> writeIpCache(String ip, JsonMap data, {String? source});
+  Future<String> ipCountry(String ip);
+
+  Future<void> configureTrafficStats(
+    TrafficStatsSettings settings, {
+    required String profile,
+    required int tzOffset,
+    bool? screenOn,
+    bool? suspended,
+  });
+  Future<TrafficStatsResult> getTrafficStats({
+    required String start,
+    required String end,
+    int top = 50,
+  });
+  Future<void> clearTrafficStats();
+
+  Future<SpeedTestState> probeSpeedTest(
+    SpeedTestSettings settings,
+    String proxy,
+    String id,
+  );
+  Future<SpeedTestState> startSpeedTest(
+    SpeedTestSettings settings,
+    String proxy,
+    String id,
+  );
+  Future<SpeedTestState> speedTestStatus(String id);
+  Future<void> cancelSpeedTest(String id);
+  Future<List<SpeedTestNode>> speedTestServers(
+    String proxy,
+    String search,
+    String id,
+  );
 
   Future<void> releaseMemory();
 

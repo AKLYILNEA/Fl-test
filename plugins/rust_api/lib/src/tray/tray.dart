@@ -179,6 +179,8 @@ final class Tray {
     switch (signal.kind) {
       case TraySignalKind.iconActivated:
         _events.add(const TrayIconActivated());
+      case TraySignalKind.themeChanged:
+        _events.add(const TrayThemeChanged());
       case TraySignalKind.menuRequested:
         _events.add(const TrayMenuRequested());
       case TraySignalKind.itemSelected:
