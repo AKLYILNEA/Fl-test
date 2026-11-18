@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:fl_clash/features/ip_quality/request_retry.dart';
 import 'package:fl_clash/features/ip_quality/risk_model.dart';
 import 'package:fl_clash/features/ip_quality/risk_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -36,6 +38,32 @@ const risk = IpRisk(
 );
 
 void main() {
+  testWidgets(
+    'one deadline covers all attempts and cancels a stalled request',
+    (tester) async {
+      final cancel = CancelToken();
+      final stalled = Completer<String>();
+      var attempts = 0;
+      final result = retryIpRequest(cancel, () async {
+        if (++attempts == 1) {
+          await Future<void>.delayed(const Duration(seconds: 2));
+          throw TimeoutException('first request');
+        }
+        return stalled.future;
+      }, timeout: const Duration(seconds: 3));
+      final failure = expectLater(result, throwsA(isA<TimeoutException>()));
+      await tester.pump(const Duration(seconds: 2));
+      expect(attempts, 2);
+      expect(cancel.isCancelled, isFalse);
+      await tester.pump(const Duration(seconds: 1));
+      await failure;
+      expect(cancel.isCancelled, isTrue);
+      stalled.complete('late result');
+      await tester.pump();
+      expect(attempts, 2);
+    },
+  );
+
   test('complete result survives JSON persistence including unknown flags', () {
     final restored = IpRisk.fromJson(jsonDecode(jsonEncode(risk.toJson())));
     expect(restored.toJson(), risk.toJson());
@@ -96,6 +124,29 @@ void main() {
     );
     expect(await repository.load(risk.ip, CancelToken()), risk);
   });
+
+  test(
+    'risk data is available while the cache write is still pending',
+    () async {
+      final saved = Completer<void>();
+      final repository = IpRiskRepository(
+        read: (_) async => null,
+        write: (_, _) => saved.future,
+        fetch: (_, _) async => risk,
+      );
+      try {
+        expect(
+          await repository
+              .load(risk.ip, CancelToken())
+              .timeout(const Duration(seconds: 1)),
+          risk,
+        );
+        expect(saved.isCompleted, isFalse);
+      } finally {
+        saved.complete();
+      }
+    },
+  );
 
   test(
     'cold lookup retries the request and caches its first success',

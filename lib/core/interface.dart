@@ -66,8 +66,9 @@ abstract class CoreHandlerInterface {
     CoreMethod method,
     R Function(Object data) decode, {
     Object? arguments,
+    Duration? timeout,
   }) async {
-    final data = await _call(method, arguments: arguments);
+    final data = await _call(method, arguments: arguments, timeout: timeout);
     return data == null ? null : decode(data);
   }
 
@@ -362,6 +363,7 @@ abstract class CoreHandlerInterface {
         CoreMethod.ipCacheGet,
         _json,
         arguments: {'ip': ip, 'source': ?source},
+        timeout: const Duration(seconds: 1),
       );
 
   Future<void> writeIpCache(
@@ -371,6 +373,7 @@ abstract class CoreHandlerInterface {
   }) => _command(
     CoreMethod.ipCacheSet,
     arguments: {'ip': ip, 'data': data, 'source': ?source},
+    timeout: const Duration(seconds: 5),
   );
 
   Future<String> ipCountry(String ip) {

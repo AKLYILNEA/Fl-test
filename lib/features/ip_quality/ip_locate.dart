@@ -97,12 +97,13 @@ class IpLocateRepository {
           );
         }
         return result;
-      });
-      try {
-        await write(ip, info.toJson());
-      } catch (_) {
-        // Keep the successful result even if the disk is unavailable.
-      }
+      }, timeout: const Duration(seconds: 15));
+      // Return successful data even while Core is still saving it.
+      unawaited(
+        Future<void>.sync(
+          () => write(ip, info.toJson()),
+        ).catchError((Object _) {}),
+      );
       return info;
     } catch (_) {
       // Preserve a cache miss on failure so the details page can retry it.

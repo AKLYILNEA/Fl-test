@@ -67,12 +67,17 @@ class IpRiskRepository {
         // A missing Core or an incompatible cache must not block the query.
       }
     }
-    final result = await retryIpRequest(cancel, () => fetch(ip, cancel));
-    try {
-      await write(ip, result.toJson());
-    } catch (_) {
-      // A disk write failure must not discard a successful network response.
-    }
+    final result = await retryIpRequest(
+      cancel,
+      () => fetch(ip, cancel),
+      timeout: const Duration(seconds: 30),
+    );
+    // Return successful data even while Core is still saving it.
+    unawaited(
+      Future<void>.sync(
+        () => write(ip, result.toJson()),
+      ).catchError((Object _) {}),
+    );
     return result;
   }
 }

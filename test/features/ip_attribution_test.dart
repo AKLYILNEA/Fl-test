@@ -183,6 +183,30 @@ void main() {
     },
   );
 
+  test(
+    'IPLocate data is available while the cache write is still pending',
+    () async {
+      final saved = Completer<void>();
+      const info = IpLocateInfo(ip: '1.2.3.4', company: 'Example');
+      final repository = IpLocateRepository(
+        read: (_) async => null,
+        write: (_, _) => saved.future,
+        fetch: (_, _) async => info,
+      );
+      try {
+        expect(
+          await repository
+              .load(info.ip, CancelToken())
+              .timeout(const Duration(seconds: 1)),
+          info,
+        );
+        expect(saved.isCompleted, isFalse);
+      } finally {
+        saved.complete();
+      }
+    },
+  );
+
   test('IPLocate failures are not cached', () async {
     var writes = 0;
     var attempts = 0;
