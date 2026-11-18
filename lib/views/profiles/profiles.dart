@@ -569,6 +569,7 @@ class _ProfileCardTitle extends StatelessWidget {
         ChipTitle(
           title: profile.realLabel,
           chip: chip,
+          chipTonal: false,
           chipTooltip: chipTooltip,
           expire: expire,
           style: AppTextStyle.headline.of(context),
