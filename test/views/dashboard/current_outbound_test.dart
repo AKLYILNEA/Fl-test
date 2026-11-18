@@ -1,4 +1,5 @@
 import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/features/ip_quality/ip_locate.dart';
 import 'package:fl_clash/features/ip_quality/risk_model.dart';
 import 'package:fl_clash/features/ip_quality/risk_view.dart';
 import 'package:fl_clash/common/service_probe.dart'
@@ -105,6 +106,7 @@ Widget _app(
   Future<IpRisk> Function(Ref ref, String ip) quality, {
   DashboardDensity density = DashboardDensity.standard,
   bool root = false,
+  VoidCallback? onAttributionQuery,
 }) {
   return TestApp(
     locale: const Locale('en'),
@@ -121,6 +123,10 @@ Widget _app(
         }),
       ),
       ipRiskProvider.overrideWith(quality),
+      ipLocateProvider.overrideWith((_, ip) async {
+        onAttributionQuery?.call();
+        return IpLocateInfo(ip: ip, company: 'Example Broadband');
+      }),
     ],
     child: _card(density: density),
   );
@@ -426,12 +432,18 @@ void main() {
       tester,
     ) async {
       _useTallView(tester);
-      await tester.pumpWidget(_app((_, _) async => _residential));
+      var attributionQueries = 0;
+      await tester.pumpWidget(
+        _app(
+          (_, _) async => _residential,
+          onAttributionQuery: () => attributionQueries++,
+        ),
+      );
       await tester.pump();
 
       await tester.tap(find.text('Fraud score'));
       await tester.pumpAndSettle();
-      expect(find.text('iplocate.io'), findsNothing);
+      expect(attributionQueries, 0);
 
       await tester.tap(find.text(_ip));
       await tester.pumpAndSettle();
@@ -443,7 +455,8 @@ void main() {
         ),
         findsOneWidget,
       );
-      expect(find.text('Source Scamalytics'), findsOneWidget);
+      expect(attributionQueries, 1);
+      expect(find.text('Source Scamalytics and IPLocate.io'), findsOneWidget);
       expect(find.text('Residential proxy'), findsOneWidget);
     });
 

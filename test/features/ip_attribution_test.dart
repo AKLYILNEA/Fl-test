@@ -7,6 +7,7 @@ import 'package:fl_clash/features/ip_quality/risk_model.dart';
 import 'package:fl_clash/features/ip_quality/risk_parser.dart';
 import 'package:fl_clash/features/ip_quality/risk_provider.dart';
 import 'package:fl_clash/features/ip_quality/risk_view.dart';
+import 'package:fl_clash/ui/ui.dart' as app_ui;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -77,7 +78,7 @@ void main() {
     );
   }
 
-  testWidgets('missing IPLocate does not substitute Scamalytics attribution', (
+  testWidgets('IPLocate failure shows retry and reuses successful risk data', (
     tester,
   ) async {
     final base = scamalytics(
@@ -85,18 +86,32 @@ void main() {
       company: 'Old Company',
       isp: 'Old Network',
     );
+    var riskQueries = 0;
+    var locateQueries = 0;
     await tester.pumpWidget(
       TestApp(
         locale: const Locale('en'),
         overrides: [
-          ipRiskProvider('1.2.3.4').overrideWith((_) async => base),
-          ipLocateProvider('1.2.3.4').overrideWith((_) async => null),
+          ipRiskProvider('1.2.3.4').overrideWith((_) async {
+            riskQueries++;
+            return base;
+          }),
+          ipLocateProvider('1.2.3.4').overrideWith((_) async {
+            if (++locateQueries == 1) return null;
+            return const IpLocateInfo(ip: '1.2.3.4', company: 'New Company');
+          }),
         ],
         child: const IpRiskSheet(ip: '1.2.3.4'),
       ),
     );
     await tester.pumpAndSettle();
+    expect(find.byType(RiskScoreCard), findsNothing);
+    await tester.tap(find.byType(app_ui.FilledButton));
+    await tester.pumpAndSettle();
+    expect(riskQueries, 1);
+    expect(locateQueries, 2);
     expect(find.byType(RiskScoreCard), findsOneWidget);
+    expect(find.text('New Company'), findsOneWidget);
     expect(find.text('Old Company'), findsNothing);
     expect(find.text('Old Network'), findsNothing);
     expect(find.text('AS123'), findsNothing);
@@ -168,7 +183,7 @@ void main() {
     },
   );
 
-  test('failed enrichment is optional and does not cache failures', () async {
+  test('IPLocate failures are not cached', () async {
     var writes = 0;
     final repository = IpLocateRepository(
       read: (_) async => null,
@@ -181,42 +196,42 @@ void main() {
     expect(writes, 0);
   });
 
-  testWidgets(
-    'pending IPLocate does not block risk content and updates only attribution',
-    (tester) async {
-      final locate = Completer<IpLocateInfo?>();
-      final base = scamalytics(
-        '1.2.3.4',
-        company: 'Original Company',
-        isp: 'Original Network',
-      );
-      await tester.pumpWidget(
-        TestApp(
-          locale: const Locale('en'),
-          overrides: [
-            ipRiskProvider('1.2.3.4').overrideWith((_) async => base),
-            ipLocateProvider('1.2.3.4').overrideWith((_) => locate.future),
-          ],
-          child: const IpRiskSheet(ip: '1.2.3.4'),
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(find.byType(RiskScoreCard), findsOneWidget);
-      expect(find.text('Original Company'), findsNothing);
-      expect(find.text('AS123'), findsNothing);
-      locate.complete(
-        const IpLocateInfo(
-          ip: '1.2.3.4',
-          company: 'Preferred Company',
-          network: 'Preferred Network',
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(find.text('Preferred Company'), findsOneWidget);
-      expect(find.text('Preferred Network'), findsOneWidget);
-      expect(find.text('Original Company'), findsNothing);
-      expect(find.byType(RiskScoreCard), findsOneWidget);
-      await tester.pumpWidget(const SizedBox.shrink());
-    },
-  );
+  testWidgets('detail waits for IPLocate and shows both sources together', (
+    tester,
+  ) async {
+    final locate = Completer<IpLocateInfo?>();
+    final base = scamalytics(
+      '1.2.3.4',
+      company: 'Original Company',
+      isp: 'Original Network',
+    );
+    await tester.pumpWidget(
+      TestApp(
+        locale: const Locale('en'),
+        overrides: [
+          ipRiskProvider('1.2.3.4').overrideWith((_) async => base),
+          ipLocateProvider('1.2.3.4').overrideWith((_) => locate.future),
+        ],
+        child: const IpRiskSheet(ip: '1.2.3.4'),
+      ),
+    );
+    await tester.pump();
+    expect(find.byType(RiskScoreCard), findsNothing);
+    expect(find.byType(app_ui.ActivityIndicator), findsOneWidget);
+    expect(find.text('Original Company'), findsNothing);
+    expect(find.text('AS123'), findsNothing);
+    locate.complete(
+      const IpLocateInfo(
+        ip: '1.2.3.4',
+        company: 'Preferred Company',
+        network: 'Preferred Network',
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Preferred Company'), findsOneWidget);
+    expect(find.text('Preferred Network'), findsOneWidget);
+    expect(find.text('Original Company'), findsNothing);
+    expect(find.byType(RiskScoreCard), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
 }

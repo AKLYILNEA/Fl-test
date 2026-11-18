@@ -77,7 +77,11 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
     }
   }
 
-  void _retry(String effectiveIp) {
+  void _retry(
+    String effectiveIp, {
+    required bool riskFailed,
+    required bool attributionFailed,
+  }) {
     if (_retryHold) return;
     _retryTimer?.cancel();
     setState(() {
@@ -91,8 +95,8 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
     if (effectiveIp.isEmpty && widget.proxyName != null && _manualIp == null) {
       ref.invalidate(proxyExitIpProvider(widget.proxyName!));
     } else if (effectiveIp.isNotEmpty) {
-      refreshIpRisk(ref, effectiveIp);
-      ref.invalidate(ipLocateProvider(effectiveIp));
+      if (riskFailed) refreshIpRisk(ref, effectiveIp);
+      if (attributionFailed) ref.invalidate(ipLocateProvider(effectiveIp));
     }
   }
 
@@ -115,12 +119,24 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
     final state = effectiveIp.isNotEmpty
         ? ref.watch(ipRiskProvider(effectiveIp))
         : null;
-    final isLoading = resolvingIp || (state?.isLoading ?? false);
-    final baseRisk = state == null || state.hasError ? null : state.value;
-    final attribution = effectiveIp.isNotEmpty
-        ? ref.watch(ipLocateProvider(effectiveIp)).value
+    final attributionState = effectiveIp.isNotEmpty
+        ? ref.watch(ipLocateProvider(effectiveIp))
         : null;
-    final risk = baseRisk;
+    final risk = state == null || state.hasError ? null : state.value;
+    final attribution = attributionState == null || attributionState.hasError
+        ? null
+        : attributionState.value;
+    final riskFailed = state != null && !state.isLoading && risk == null;
+    final attributionFailed =
+        attributionState != null &&
+        !attributionState.isLoading &&
+        attribution == null;
+    final isLoading =
+        resolvingIp ||
+        (!riskFailed &&
+            !attributionFailed &&
+            ((state?.isLoading ?? false) ||
+                (attributionState?.isLoading ?? false)));
     final hidden = ref.watch(appSettingProvider.select((s) => s.hideIp));
     final switchKey = widget.proxyName != null && _manualIp == null
         ? widget.proxyName!
@@ -227,7 +243,11 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
                     risk: risk,
                     attribution: attribution,
                     hidden: hidden,
-                    onRetry: () => _retry(effectiveIp),
+                    onRetry: () => _retry(
+                      effectiveIp,
+                      riskFailed: riskFailed,
+                      attributionFailed: attributionFailed,
+                    ),
                   ),
                 ),
               ],
@@ -247,7 +267,7 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
     required VoidCallback onRetry,
   }) {
     final l = context.appLocalizations;
-    if (!isLoading && risk != null) {
+    if (!isLoading && risk != null && attribution != null) {
       return Column(
         key: const ValueKey('data'),
         crossAxisAlignment: CrossAxisAlignment.stretch,

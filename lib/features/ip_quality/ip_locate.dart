@@ -97,7 +97,7 @@ class IpLocateRepository {
       }
       return info;
     } catch (_) {
-      // Attribution is optional: a failure must not hide the risk results.
+      // Preserve a cache miss on failure so the details page can retry it.
       return null;
     }
   }
