@@ -222,7 +222,16 @@ func (c *trafficCollector) settleRunningTimeLocked(now time.Time) {
 	if c.runningSince.IsZero() {
 		return
 	}
-	start := c.runningSince
+	// Service uptime includes device sleep. Go's monotonic clock can stop
+	// during suspend (notably on Android/Linux), unlike the calendar clock.
+	// Strip it from both endpoints before comparing or subtracting them.
+	now = now.Round(0)
+	start := c.runningSince.Round(0)
+	if !now.After(start) {
+		// Do not move the checkpoint backwards and later count that span twice
+		// if the system clock is corrected while the service is running.
+		return
+	}
 	c.runningSince = now
 	zone := time.FixedZone("traffic", c.options.TzOffset*60)
 	for start.Before(now) {
@@ -241,7 +250,7 @@ func (c *trafficCollector) settleRunningTimeLocked(now time.Time) {
 func (c *trafficCollector) syncRunningTimeLocked() {
 	if c.enabled.Load() && c.running && !c.suspended {
 		if c.runningSince.IsZero() {
-			c.runningSince = trafficNow()
+			c.runningSince = trafficNow().Round(0)
 		}
 		c.armLocked()
 	} else {
