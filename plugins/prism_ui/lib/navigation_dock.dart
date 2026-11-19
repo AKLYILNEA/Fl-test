@@ -255,21 +255,29 @@ class _DockSurface extends StatelessWidget {
   const _DockSurface({
     required this.glass,
     required this.style,
-    required this.glow,
+    this.glow,
     required this.child,
   });
 
   final bool glass;
   final LiquidGlassStyle style;
-  final ValueListenable<LiquidGlassGlow> glow;
+  final ValueListenable<LiquidGlassGlow>? glow;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = context.colorScheme;
     if (glass) {
+      final activeGlow = glow;
+      if (activeGlow == null) {
+        return LiquidGlass(
+          style: style,
+          glow: LiquidGlassGlow.none,
+          child: child,
+        );
+      }
       return ValueListenableBuilder(
-        valueListenable: glow,
+        valueListenable: activeGlow,
         builder: (_, glow, child) =>
             LiquidGlass(style: style, glow: glow, child: child),
         child: child,
@@ -314,11 +322,16 @@ class NavigationDock extends StatelessWidget {
     required this.destinations,
     required this.selectedIndex,
     required this.onSelected,
+    this.frosted = false,
   });
 
   final List<NavigationDockDestination> destinations;
   final int selectedIndex;
   final ValueChanged<int> onSelected;
+
+  /// Blurs the outer pill with standard liquid glass even when
+  /// [LiquidGlassScope] is off, without press glow or lifted glass lens effects.
+  final bool frosted;
 
   static double heightOf(BuildContext context) {
     return _barHeight +
@@ -363,6 +376,7 @@ class NavigationDock extends StatelessWidget {
                       destinations: destinations,
                       selectedIndex: selectedIndex,
                       onSelected: onSelected,
+                      frosted: frosted,
                     ),
                   ),
                 ),
@@ -877,11 +891,13 @@ class FloatingNavigationBar extends StatefulWidget {
     required this.destinations,
     required this.selectedIndex,
     required this.onSelected,
+    this.frosted = false,
   });
 
   final List<NavigationDockDestination> destinations;
   final int selectedIndex;
   final ValueChanged<int> onSelected;
+  final bool frosted;
 
   @override
   State<FloatingNavigationBar> createState() => _FloatingNavigationBarState();
@@ -1267,14 +1283,15 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar>
       (height, label) => math.max(height, label.height),
     );
     final glass = LiquidGlassScope.of(context);
+    final useGlassBar = glass || widget.frosted;
     final ultra =
         LiquidGlassScope.qualityOf(context) == LiquidGlassQuality.ultra;
     final bar = _DockSurface(
-      glass: glass,
+      glass: useGlassBar,
       style: LiquidGlassStyle.pill(colorScheme),
-      glow: _touchGlow,
+      glow: glass ? _touchGlow : null,
       child: Surface(
-        color: glass
+        color: useGlassBar
             ? Colors.transparent
             : SurfaceLevel.floatingOf(colorScheme).colorOf(colorScheme),
         shape: AppShape.full,
@@ -1351,7 +1368,7 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar>
                             animation: _motion,
                             builder: (_, _) => _Lens(
                               rect: lensRect(),
-                              lift: _lift.value,
+                              lift: !glass && widget.frosted ? 0 : _lift.value,
                               glass: glass,
                             ),
                           ),

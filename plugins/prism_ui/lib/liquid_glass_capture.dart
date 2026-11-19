@@ -46,10 +46,12 @@ class LiquidGlassHost extends StatelessWidget {
   const LiquidGlassHost({
     super.key,
     required this.enabled,
+    this.quality,
     required this.child,
   });
 
   final bool enabled;
+  final LiquidGlassQuality? quality;
   final Widget child;
 
   @visibleForTesting
@@ -70,7 +72,7 @@ class LiquidGlassHost extends StatelessWidget {
     return _LiquidGlassHostBox(
       enabled: enabled,
       devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
-      quality: LiquidGlassScope.qualityOf(context),
+      quality: quality ?? LiquidGlassScope.qualityOf(context),
       child: child,
     );
   }

@@ -340,6 +340,60 @@ void main() {
     });
   }
 
+  testWidgets(
+    'a frosted dock blurs the outer pill when liquid glass is off without '
+    'press glow or lifted glass lenses',
+    (tester) async {
+      tester.view.physicalSize = _mobileSize;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(
+        TestApp(
+          wrapInProviderScope: true,
+          homeBuilder: (child) => HostScaffold(
+            body: Align(
+              alignment: Alignment.bottomCenter,
+              child: LiquidGlassScope(
+                enabled: false,
+                quality: LiquidGlassQuality.standard,
+                child: LiquidGlassHost(
+                  enabled: true,
+                  quality: LiquidGlassQuality.standard,
+                  child: child,
+                ),
+              ),
+            ),
+          ),
+          child: NavigationDock(
+            frosted: true,
+            destinations: const [
+              NavigationDockDestination(glyph: AppGlyphs.dashboard, label: 'a'),
+              NavigationDockDestination(glyph: AppGlyphs.tools, label: 'b'),
+            ],
+            selectedIndex: 0,
+            onSelected: (_) {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final glass = find.byType(LiquidGlass);
+      expect(glass, findsOneWidget);
+      expect(tester.widget<LiquidGlass>(glass).glow, LiquidGlassGlow.none);
+
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.text('b')),
+      );
+      await tester.pumpAndSettle();
+      expect(glass, findsOneWidget);
+      expect(tester.widget<LiquidGlass>(glass).glow, LiquidGlassGlow.none);
+
+      await gesture.up();
+      await tester.pumpAndSettle();
+      expect(glass, findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('the bar swells under a pointer and stretches past its end', (
     tester,
   ) async {
