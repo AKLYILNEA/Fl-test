@@ -6,6 +6,7 @@ import 'package:fl_clash/core/event.dart';
 import 'package:fl_clash/core/desktop/model.dart';
 import 'package:fl_clash/core/interface.dart';
 import 'package:fl_clash/core/method.dart';
+import 'package:fl_clash/core/spill.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -33,9 +34,10 @@ class _RecordingCoreHandler extends CoreHandlerInterface {
     required CoreMethod method,
     Object? arguments,
     Duration? timeout,
+    CoreResultModel? model,
   }) async {
     calls[method] = arguments;
-    return switch (method) {
+    final result = switch (method) {
       CoreMethod.speedTestStart || CoreMethod.speedTestProbe => {
         'id': (arguments as Map)['id'],
         'phase': 'done',
@@ -155,7 +157,11 @@ class _RecordingCoreHandler extends CoreHandlerInterface {
           },
         ],
       },
-      CoreMethod.routeWatch => {'core-epoch': 1, 'route-version': 0},
+      CoreMethod.routeWatch => {
+        'core-epoch': 1,
+        'route-version': 0,
+        'running': true,
+      },
       CoreMethod.routeCheck => {
         'core-epoch': 1,
         'route-version': 3,
@@ -183,6 +189,7 @@ class _RecordingCoreHandler extends CoreHandlerInterface {
       },
       _ => null,
     };
+    return model == null ? result : model(result);
   }
 }
 
@@ -192,6 +199,7 @@ class _FailingConfigCoreHandler extends _RecordingCoreHandler {
     required CoreMethod method,
     Object? arguments,
     Duration? timeout,
+    CoreResultModel? model,
   }) async {
     if (method == CoreMethod.configRead) {
       throw const CoreMethodException(
@@ -204,6 +212,7 @@ class _FailingConfigCoreHandler extends _RecordingCoreHandler {
       method: method,
       arguments: arguments,
       timeout: timeout,
+      model: model,
     );
   }
 }
@@ -214,6 +223,7 @@ class _EmptyConfigCoreHandler extends _RecordingCoreHandler {
     required CoreMethod method,
     Object? arguments,
     Duration? timeout,
+    CoreResultModel? model,
   }) async {
     if (method == CoreMethod.configRead) {
       return null;
@@ -222,6 +232,7 @@ class _EmptyConfigCoreHandler extends _RecordingCoreHandler {
       method: method,
       arguments: arguments,
       timeout: timeout,
+      model: model,
     );
   }
 }
@@ -306,7 +317,7 @@ void main() {
     );
     expect(switched, const ChangeProxyResult(changed: true));
     final route = await handler.watchRoute(true);
-    expect(route, const RouteSnapshot(coreEpoch: 1));
+    expect(route, const RouteSnapshot(coreEpoch: 1, running: true));
     final check = await handler.checkRoutes(
       const CheckRoutesParams(
         routes: [
@@ -598,7 +609,10 @@ void main() {
       ),
       const Delay(name: 'DIRECT', url: 'https://example.com', value: 42),
     );
-    expect((await handler.getConnections()).single.id, 'connection-1');
+    expect(
+      await handler.getConnectionsWith((connections) => connections.single.id),
+      'connection-1',
+    );
     expect(await handler.getConnectionCount(), 3);
     expect((await handler.getExternalProviders()).single.name, 'provider-1');
     expect(

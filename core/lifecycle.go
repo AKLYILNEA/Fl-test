@@ -66,6 +66,7 @@ func handleStopListener() {
 	flushTrafficStats()
 	listener.StopListener()
 	resolver.ResetConnection()
+	bumpRouteEpoch()
 }
 
 func updateListeners(cfg *config.Config) {

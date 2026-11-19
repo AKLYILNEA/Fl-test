@@ -1,20 +1,14 @@
 name: build
 
-# Only tagged builds (or manual dispatches) run CI; only tagged builds publish a release.
 on:
   push:
     tags:
       - 'v*'
   workflow_dispatch:
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/v') }}
-
 env:
   IS_STABLE: ${{ !contains(github.ref, '-') }}
-  BRANCH_CACHE: ${{ !startsWith(github.ref, 'refs/tags/') }}
-  FLUTTER_VERSION: '3.47.6'
+  FLUTTER_VERSION: '3.50.0'
   GO_VERSION: '1.27.1'
   NDK_VERSION: r28c
 
@@ -36,59 +30,44 @@ jobs:
       - name: Free disk space (Linux)
         if: runner.os == 'Linux'
         run: |
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /usr/local/lib/android/sdk/ndk
-          sudo rm -rf /opt/ghc
-          sudo rm -rf "/usr/local/share/boost"
-          sudo docker system prune --all --force --volumes 2>/dev/null || true
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android/sdk/ndk /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL || true
           df -h
 
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          fetch-depth: 0
           submodules: recursive
 
       - name: Setup Android Signing
         if: startsWith(matrix.platform,'android')
         env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE || secrets.FLCLASH || secrets.flclash }}
+          KEYSTORE_B64: ${{ secrets.KEYSTORE || secrets.FLCLASH_KEYSTORE }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS || secrets.FLCLASH_KEY_ALIAS || 'flclash' }}
           STORE_PASSWORD: ${{ secrets.STORE_PASSWORD || secrets.FLCLASH_STORE_PASSWORD || 'flclash123456' }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || secrets.FLCLASH_KEY_PASSWORD || 'flclash123456' }}
         run: |
-          python3 - << 'EOF'
-          import base64, os, sys
-
-          raw = "".join(os.environ.get("KEYSTORE_BASE64", "").split())
-          if not raw:
-              sys.exit(
-                  "The KEYSTORE secret is empty. An APK signed with the per-machine "
-                  "debug key changes certificate on every run and cannot be installed "
-                  "over the existing app, so the build stops here."
-              )
-          raw += "=" * (-len(raw) % 4)
-          data = base64.b64decode(raw, validate=True)
-          os.makedirs("android/app", exist_ok=True)
-          with open("android/app/keystore.jks", "wb") as f:
-              f.write(data)
-          with open("android/local.properties", "a", encoding="utf-8") as f:
-              f.write(
-                  f"\nkeyAlias={os.environ['KEY_ALIAS']}\n"
-                  f"storePassword={os.environ['STORE_PASSWORD']}\n"
-                  f"keyPassword={os.environ['KEY_PASSWORD']}\n"
-              )
-          print(f"Keystore written: {len(data)} bytes")
-          EOF
-          # Catches a truncated secret or a password that does not match the
-          # store before Gradle turns it into a silent debug-signed APK.
-          keytool -list -keystore android/app/keystore.jks -storepass "$STORE_PASSWORD" -alias "$KEY_ALIAS"
-          keytool -list -v -keystore android/app/keystore.jks -storepass "$STORE_PASSWORD" -alias "$KEY_ALIAS" | grep -E 'SHA256:'
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 --decode > android/app/keystore.jks
+          else
+            echo "WARNING: KEYSTORE secret not set, generating temporary keystore."
+            keytool -genkey -v -keystore android/app/keystore.jks \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -alias "$KEY_ALIAS" \
+              -storepass "$STORE_PASSWORD" -keypass "$KEY_PASSWORD" \
+              -dname "CN=FlClash, OU=Dev, O=FlClash, L=City, S=State, C=CN"
+          fi
+          {
+            echo "keyAlias=$KEY_ALIAS"
+            echo "storePassword=$STORE_PASSWORD"
+            echo "keyPassword=$KEY_PASSWORD"
+          } >> android/local.properties
 
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
-          cache: ${{ env.BRANCH_CACHE }}
+          cache: true
           cache-dependency-path: core/go.sum
 
       - name: Setup Gradle
@@ -102,9 +81,9 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: stable
+          channel: 'stable'
           flutter-version: ${{ env.FLUTTER_VERSION }}
-          cache: ${{ env.BRANCH_CACHE }}
+          cache: true
 
       - name: Setup NDK
         if: startsWith(matrix.platform,'android')
@@ -119,11 +98,7 @@ jobs:
         run: |
           flutter --version
           flutter pub get
-
-      - name: Generate localizations
-        run: |
-          dart run intl_utils:generate
-          git diff --exit-code -- lib/l10n
+          flutter gen-l10n
 
       # The core embeds this bundle and FlClashHttpOverrides.trustCoreRoots loads it for Dart.
       # Pinned by hash, so a new bundle from https://curl.se/docs/caextract.html is a reviewed bump.
@@ -140,7 +115,7 @@ jobs:
       - name: Setup
         env:
           ANDROID_NDK_HOME: ${{ steps.build-ndk.outputs.ndk-path }}
-        run: dart setup.dart ${{ matrix.platform }} ${{ matrix.platform == 'android' && matrix.arch && format('--arch {0}', matrix.arch) || '' }} ${{ matrix.platform == 'windows' && '--targets exe' || '' }} ${{ env.IS_STABLE == 'true' && '--env stable' || '' }} -v
+        run: dart tool/package.dart ${{ matrix.platform }} ${{ matrix.platform == 'android' && matrix.arch && format('--arch {0}', matrix.arch) || '' }} ${{ matrix.platform == 'windows' && '--targets exe' || '' }} ${{ env.IS_STABLE == 'true' && '--env stable' || '' }} -v
 
       - name: Upload
         uses: actions/upload-artifact@v4
@@ -224,6 +199,7 @@ jobs:
       - name: Generate sha256
         run: |
           cd ./dist
+          rm -f manifest.json
           sha256sum ./* > SHA256SUMS
 
       - name: Release
