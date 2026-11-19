@@ -277,12 +277,13 @@ class _IpLookupViewState extends ConsumerState<IpLookupView> {
     }
 
     if (!isLoading && risk != null && attribution != null) {
+      final hasChecks = risk.checks.isNotEmpty;
       final heroCard = _IpRiskHeroCard(
         ip: activeIp,
         risk: risk,
         hidden: hidden,
         isOutbound: isOutbound,
-        fillHeight: isWide,
+        fillHeight: isWide && hasChecks,
       );
       final attributionCard = _IpAttributionCard(
         risk: risk,
@@ -290,29 +291,34 @@ class _IpLookupViewState extends ConsumerState<IpLookupView> {
         hidden: hidden,
         isWide: isWide,
       );
+      final flagsCard = hasChecks
+          ? _IpFlagsCard(risk: risk, isWide: isWide)
+          : null;
       return Column(
         key: ValueKey('data:$activeIp'),
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (isWide)
-            IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(flex: 11, child: heroCard),
-                  const SizedBox(width: 12),
-                  Expanded(flex: 9, child: attributionCard),
-                ],
-              ),
-            )
-          else ...[
+          if (isWide) ...[
+            if (flagsCard != null)
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(flex: 9, child: heroCard),
+                    const SizedBox(width: 12),
+                    Expanded(flex: 13, child: flagsCard),
+                  ],
+                ),
+              )
+            else
+              heroCard,
+            const SizedBox(height: 12),
+            attributionCard,
+          ] else ...[
             heroCard,
             const SizedBox(height: 12),
             attributionCard,
-          ],
-          if (risk.checks.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            _IpFlagsCard(risk: risk, isWide: isWide),
+            if (flagsCard != null) ...[const SizedBox(height: 12), flagsCard],
           ],
           ListFooter(text: '${l.ipRiskSource} ${l.ipRiskSources}'),
         ],
@@ -535,7 +541,7 @@ class _IpRiskHeroCard extends StatelessWidget {
           style: AppTextStyle.display
               .of(context, emphasized: true)
               .toTabular
-              .copyWith(fontSize: 48, height: 1.0, color: scoreColor),
+              .copyWith(fontSize: 44, height: 1.0, color: scoreColor),
         ),
         const SizedBox(width: 5),
         Text(
@@ -631,7 +637,7 @@ class _IpRiskHeroCard extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
         Wrap(
           spacing: 18,
           runSpacing: 6,
@@ -652,18 +658,6 @@ class _IpRiskHeroCard extends StatelessWidget {
             ),
           ],
         ),
-      ],
-    );
-
-    final mainBody = Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        scoreBlock,
-        const SizedBox(height: 12),
-        Divider(height: 1, thickness: Divider.separatorThicknessOf(context)),
-        const SizedBox(height: 12),
-        ipColumn,
       ],
     );
 
@@ -740,27 +734,26 @@ class _IpRiskHeroCard extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 mainAxisSize: fillHeight ? MainAxisSize.max : MainAxisSize.min,
-                mainAxisAlignment: fillHeight
-                    ? MainAxisAlignment.spaceBetween
-                    : MainAxisAlignment.start,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      header,
-                      const SizedBox(height: 12),
-                      mainBody,
-                    ],
+                  header,
+                  const SizedBox(height: 8),
+                  scoreBlock,
+                  const SizedBox(height: 9),
+                  if (fillHeight) const Spacer(flex: 1),
+                  Divider(
+                    height: 1,
+                    thickness: Divider.separatorThicknessOf(context),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 14),
-                    child: riskScale,
-                  ),
+                  const SizedBox(height: 9),
+                  if (fillHeight) const Spacer(flex: 1),
+                  ipColumn,
+                  const SizedBox(height: 11),
+                  if (fillHeight) const Spacer(flex: 2),
+                  riskScale,
                 ],
               ),
             ),
@@ -889,63 +882,297 @@ class _IpAttributionCard extends StatelessWidget {
               .of(context)
               .copyWith(color: cs.onSurfaceVariant),
         ),
-        const SizedBox(height: 5),
+        const SizedBox(height: 2),
         value,
       ],
     );
   }
 
-  Widget _textField(BuildContext context, String label, String value) {
-    return _field(
-      context,
-      label,
-      SelectableText(
-        value,
-        style: AppTextStyle.subheadline.of(context, emphasized: true),
-      ),
+  Widget _textValue(BuildContext context, String value) {
+    return SelectableText(
+      value,
+      style: AppTextStyle.subheadline.of(context, emphasized: true),
     );
   }
 
-  Widget _asnField(
-    BuildContext context,
-    String label, {
+  Widget _asnValue(
+    BuildContext context, {
     required String asn,
     required String network,
   }) {
     final cs = context.colorScheme;
-    final Widget value;
     if (asn.isNotEmpty && network.isNotEmpty) {
-      value = Wrap(
-        spacing: 6,
-        runSpacing: 2,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          SelectableText(
-            asn,
-            style: AppTextStyle.subheadline
-                .of(context, emphasized: true)
-                .toTabular,
-          ),
-          SelectableText(
-            '· $network',
-            style: AppTextStyle.footnote
-                .of(context)
-                .copyWith(color: cs.onSurfaceVariant),
-          ),
-        ],
+      return SelectableText.rich(
+        TextSpan(
+          children: [
+            TextSpan(
+              text: asn,
+              style: AppTextStyle.subheadline
+                  .of(context, emphasized: true)
+                  .toTabular,
+            ),
+            TextSpan(
+              text: ' · $network',
+              style: AppTextStyle.footnote
+                  .of(context)
+                  .copyWith(color: cs.onSurfaceVariant),
+            ),
+          ],
+        ),
       );
-    } else if (asn.isNotEmpty) {
-      value = SelectableText(
+    }
+    if (asn.isNotEmpty) {
+      return SelectableText(
         asn,
         style: AppTextStyle.subheadline.of(context, emphasized: true).toTabular,
       );
-    } else {
-      value = SelectableText(
-        network,
-        style: AppTextStyle.subheadline.of(context, emphasized: true),
-      );
     }
-    return _field(context, label, value);
+    return SelectableText(
+      network,
+      style: AppTextStyle.subheadline.of(context, emphasized: true),
+    );
+  }
+
+  Widget _buildWideBoardingPass(
+    BuildContext context, {
+    required String country,
+    required String place,
+    required String countryCode,
+    required bool hasLocation,
+    required String company,
+    required String asn,
+    required String network,
+    required bool showNetwork,
+    required bool showAsnRow,
+    required bool showHostname,
+  }) {
+    final l = context.appLocalizations;
+    final cs = context.colorScheme;
+    final isDark = cs.brightness == Brightness.dark;
+    final specs = <({String label, Widget value})>[
+      if (company.isNotEmpty)
+        (label: l.isp, value: _textValue(context, company)),
+      if (showAsnRow)
+        (
+          label: l.ipRiskAsn,
+          value: _asnValue(
+            context,
+            asn: asn,
+            network: showNetwork ? network : '',
+          ),
+        ),
+      if (showHostname)
+        (label: l.ipRiskHostname, value: _textValue(context, risk.hostname)),
+    ];
+
+    var visualRows = specs.length;
+    if (company.length > 44) visualRows++;
+    if (showHostname && risk.hostname.length > 44) visualRows++;
+
+    final countryFontSize = switch (visualRows) {
+      <= 1 => 20.0,
+      2 => 23.0,
+      3 => 26.5,
+      _ => 29.0,
+    };
+    final placeFontSize = switch (visualRows) {
+      <= 1 => 12.5,
+      2 => 13.5,
+      3 => 14.5,
+      _ => 15.0,
+    };
+    final headerGap = switch (visualRows) {
+      <= 1 => 5.0,
+      2 => 8.0,
+      3 => 10.0,
+      _ => 12.0,
+    };
+    final placeGap = switch (visualRows) {
+      <= 1 => 2.0,
+      2 => 3.0,
+      _ => 4.0,
+    };
+
+    final leftZone = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          children: [
+            GlyphIcon(AppGlyphs.location, size: 14, color: cs.primary),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                country.isNotEmpty || !hasLocation
+                    ? l.ipRiskLocation
+                    : l.ipRiskCity,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyle.caption1
+                    .of(context, emphasized: true)
+                    .copyWith(color: cs.onSurfaceVariant),
+              ),
+            ),
+            if (countryCode.isNotEmpty) ...[
+              const SizedBox(width: 8),
+              DecoratedBox(
+                decoration: ShapeDecoration(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(7),
+                    side: BorderSide(
+                      color: cs.primary.withValues(alpha: isDark ? 0.42 : 0.32),
+                      width: 1.3,
+                    ),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  child: Text(
+                    countryCode,
+                    style: AppTextStyle.caption2
+                        .of(context, emphasized: true)
+                        .toTabular
+                        .copyWith(color: cs.primary, letterSpacing: 0.8),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+        if (hasLocation) ...[
+          SizedBox(height: headerGap),
+          if (country.isNotEmpty)
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: AlignmentDirectional.centerStart,
+              child: EmojiText(
+                country,
+                maxLines: 1,
+                style: AppTextStyle.title2
+                    .of(context, emphasized: true)
+                    .copyWith(fontSize: countryFontSize, height: 1.16),
+              ),
+            ),
+          if (place.isNotEmpty) ...[
+            SizedBox(height: country.isNotEmpty ? placeGap : 0),
+            SelectableText(
+              place,
+              style: country.isNotEmpty
+                  ? AppTextStyle.subheadline
+                        .of(context)
+                        .copyWith(
+                          fontSize: placeFontSize,
+                          color: cs.onSurfaceVariant,
+                        )
+                  : AppTextStyle.title3
+                        .of(context, emphasized: true)
+                        .copyWith(fontSize: countryFontSize),
+            ),
+          ],
+        ],
+      ],
+    );
+
+    final rightZone = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (final (index, spec) in specs.indexed) ...[
+          if (index > 0) ...[
+            const SizedBox(height: 8),
+            Divider(
+              height: 1,
+              thickness: Divider.separatorThicknessOf(context),
+            ),
+            const SizedBox(height: 8),
+          ],
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 64,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Text(
+                    spec.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyle.caption1
+                        .of(context)
+                        .copyWith(color: cs.onSurfaceVariant),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(child: spec.value),
+            ],
+          ),
+        ],
+      ],
+    );
+
+    return Card(
+      radius: AppCorner.xl,
+      padding: EdgeInsets.zero,
+      child: ClipPath(
+        clipper: ShapeBorderClipper(
+          shape: AppShape.xl,
+          textDirection: Directionality.of(context),
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              right: -24,
+              top: 0,
+              bottom: 0,
+              child: Center(
+                child: IgnorePointer(
+                  child: GlyphIcon(
+                    AppGlyphs.proxies,
+                    size: 124,
+                    color: cs.primary.withValues(alpha: isDark ? 0.09 : 0.065),
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+              child: specs.isEmpty
+                  ? leftZone
+                  : !hasLocation
+                  ? rightZone
+                  : IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(flex: 9, child: leftZone),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: SizedBox(
+                              width: 1.5,
+                              child: CustomPaint(
+                                painter: _DashedVerticalDividerPainter(
+                                  color: cs.outlineVariant.withValues(
+                                    alpha: isDark ? 0.55 : 0.48,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Expanded(flex: 13, child: rightZone),
+                        ],
+                      ),
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -965,8 +1192,24 @@ class _IpAttributionCard extends StatelessWidget {
     final showNetwork = network.isNotEmpty && network != company;
     final showAsnRow = asn.isNotEmpty || showNetwork;
     final showHostname = !hidden && risk.hostname.isNotEmpty;
-    final sectionGap = isWide ? 15.0 : 12.0;
 
+    if (isWide) {
+      return _buildWideBoardingPass(
+        context,
+        country: country,
+        place: place,
+        countryCode: countryCode,
+        hasLocation: hasLocation,
+        company: company,
+        asn: asn,
+        network: network,
+        showNetwork: showNetwork,
+        showAsnRow: showAsnRow,
+        showHostname: showHostname,
+      );
+    }
+
+    const sectionGap = 10.0;
     final sections = <Widget>[
       if (hasLocation)
         Column(
@@ -978,10 +1221,10 @@ class _IpAttributionCard extends StatelessWidget {
                 country,
                 style: AppTextStyle.title2
                     .of(context, emphasized: true)
-                    .copyWith(fontSize: 23, height: 1.22),
+                    .copyWith(fontSize: 22, height: 1.2),
               ),
             if (place.isNotEmpty) ...[
-              SizedBox(height: country.isNotEmpty ? 5 : 0),
+              SizedBox(height: country.isNotEmpty ? 3 : 0),
               SelectableText(
                 place,
                 style: country.isNotEmpty
@@ -993,15 +1236,16 @@ class _IpAttributionCard extends StatelessWidget {
             ],
           ],
         ),
-      if (company.isNotEmpty) _textField(context, l.isp, company),
+      if (company.isNotEmpty)
+        _field(context, l.isp, _textValue(context, company)),
       if (showAsnRow)
-        _asnField(
+        _field(
           context,
           l.ipRiskAsn,
-          asn: asn,
-          network: showNetwork ? network : '',
+          _asnValue(context, asn: asn, network: showNetwork ? network : ''),
         ),
-      if (showHostname) _textField(context, l.ipRiskHostname, risk.hostname),
+      if (showHostname)
+        _field(context, l.ipRiskHostname, _textValue(context, risk.hostname)),
     ];
 
     return Card(
@@ -1016,18 +1260,17 @@ class _IpAttributionCard extends StatelessWidget {
           children: [
             Positioned(
               right: -24,
-              bottom: -26,
+              bottom: -22,
               child: IgnorePointer(
-                child: CustomPaint(
-                  size: Size.square(isWide ? 164 : 144),
-                  painter: _GlobeWatermarkPainter(
-                    color: cs.primary.withValues(alpha: isDark ? 0.11 : 0.08),
-                  ),
+                child: GlyphIcon(
+                  AppGlyphs.proxies,
+                  size: 128,
+                  color: cs.primary.withValues(alpha: isDark ? 0.10 : 0.07),
                 ),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 mainAxisSize: MainAxisSize.min,
@@ -1077,15 +1320,15 @@ class _IpAttributionCard extends StatelessWidget {
                     ],
                   ),
                   if (sections.isNotEmpty) ...[
-                    SizedBox(height: isWide ? 15 : 14),
+                    const SizedBox(height: 12),
                     for (final (index, section) in sections.indexed) ...[
                       if (index > 0) ...[
-                        SizedBox(height: sectionGap),
+                        const SizedBox(height: sectionGap),
                         Divider(
                           height: 1,
                           thickness: Divider.separatorThicknessOf(context),
                         ),
-                        SizedBox(height: sectionGap),
+                        const SizedBox(height: sectionGap),
                       ],
                       section,
                     ],
@@ -1100,47 +1343,30 @@ class _IpAttributionCard extends StatelessWidget {
   }
 }
 
-class _GlobeWatermarkPainter extends CustomPainter {
-  const _GlobeWatermarkPainter({required this.color});
+class _DashedVerticalDividerPainter extends CustomPainter {
+  const _DashedVerticalDividerPainter({required this.color});
 
   final Color color;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.shortestSide * 0.375;
     final paint = Paint()
       ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = size.shortestSide * 0.042
+      ..strokeWidth = size.width
       ..strokeCap = StrokeCap.round;
-
-    canvas.drawCircle(center, radius, paint);
-    canvas.drawOval(
-      Rect.fromCenter(center: center, width: radius * 0.94, height: radius * 2),
-      paint,
-    );
-    canvas.drawLine(
-      Offset(center.dx - radius, center.dy),
-      Offset(center.dx + radius, center.dy),
-      paint,
-    );
-    final latOffset = radius * 0.5;
-    final chordHalf = radius * math.sqrt(0.75);
-    canvas.drawLine(
-      Offset(center.dx - chordHalf, center.dy - latOffset),
-      Offset(center.dx + chordHalf, center.dy - latOffset),
-      paint,
-    );
-    canvas.drawLine(
-      Offset(center.dx - chordHalf, center.dy + latOffset),
-      Offset(center.dx + chordHalf, center.dy + latOffset),
-      paint,
-    );
+    const dash = 4.0;
+    const gap = 4.0;
+    final x = size.width / 2;
+    var y = 0.0;
+    while (y < size.height) {
+      final end = math.min(y + dash, size.height);
+      canvas.drawLine(Offset(x, y), Offset(x, end), paint);
+      y += dash + gap;
+    }
   }
 
   @override
-  bool shouldRepaint(_GlobeWatermarkPainter oldDelegate) =>
+  bool shouldRepaint(_DashedVerticalDividerPainter oldDelegate) =>
       color != oldDelegate.color;
 }
 
@@ -1165,9 +1391,10 @@ class _IpFlagsCard extends StatelessWidget {
 
     return Card(
       radius: AppCorner.xl,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: isWide ? MainAxisSize.max : MainAxisSize.min,
         children: [
           Row(
             children: [
@@ -1216,15 +1443,17 @@ class _IpFlagsCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 11),
           for (final (index, group) in groups.indexed) ...[
             if (index > 0) ...[
-              const SizedBox(height: 13),
+              const SizedBox(height: 8),
+              if (isWide) const Spacer(),
               Divider(
                 height: 1,
                 thickness: Divider.separatorThicknessOf(context),
               ),
-              const SizedBox(height: 13),
+              const SizedBox(height: 8),
+              if (isWide) const Spacer(),
             ],
             _FlagGroupRow(
               title: switch (group) {
@@ -1235,7 +1464,6 @@ class _IpFlagsCard extends StatelessWidget {
               checks: risk.checks.where((c) => c.group == group).toList(),
               homeBroadband:
                   risk.isHomeBroadband && group == IpRiskGroup.datacenter,
-              isWide: isWide,
             ),
           ],
         ],
@@ -1249,13 +1477,11 @@ class _FlagGroupRow extends StatelessWidget {
     required this.title,
     required this.checks,
     required this.homeBroadband,
-    required this.isWide,
   });
 
   final String title;
   final List<IpRiskCheck> checks;
   final bool homeBroadband;
-  final bool isWide;
 
   @override
   Widget build(BuildContext context) {
@@ -1277,13 +1503,13 @@ class _FlagGroupRow extends StatelessWidget {
       title,
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
-      style: AppTextStyle.footnote
+      style: AppTextStyle.caption1
           .of(context, emphasized: true)
           .copyWith(color: cs.onSurfaceVariant),
     );
     final pills = Wrap(
-      spacing: 8,
-      runSpacing: 8,
+      spacing: 6,
+      runSpacing: 6,
       children: [
         if (homeBroadband)
           const _LookupFlagPill(
@@ -1299,19 +1525,6 @@ class _FlagGroupRow extends StatelessWidget {
       ],
     );
 
-    if (isWide) {
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          SizedBox(width: 124, child: labelText),
-          const SizedBox(width: 16),
-          Expanded(child: pills),
-          const SizedBox(width: 14),
-          SizedBox(width: 40, child: countText),
-        ],
-      );
-    }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
@@ -1323,7 +1536,7 @@ class _FlagGroupRow extends StatelessWidget {
             countText,
           ],
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 6),
         pills,
       ],
     );
@@ -1347,22 +1560,22 @@ class _LookupFlagPill extends StatelessWidget {
         ? cs.error
         : cs.onSurfaceVariant;
     final leading = home
-        ? GlyphIcon(AppGlyphs.checkCircle, size: 14, color: color)
+        ? GlyphIcon(AppGlyphs.checkCircle, size: 13, color: color)
         : hit
-        ? GlyphIcon(AppGlyphs.error, size: 14, color: color)
+        ? GlyphIcon(AppGlyphs.error, size: 13, color: color)
         : check.hit == null
-        ? GlyphIcon(AppGlyphs.helpCircle, size: 14, color: color)
+        ? GlyphIcon(AppGlyphs.helpCircle, size: 13, color: color)
         : DecoratedBox(
             decoration: ShapeDecoration(
               shape: AppShape.circle.copyWith(
-                side: BorderSide(color: color, width: 1.4),
+                side: BorderSide(color: color, width: 1.3),
               ),
             ),
-            child: const SizedBox.square(dimension: 12),
+            child: const SizedBox.square(dimension: 11),
           );
     return Container(
-      constraints: const BoxConstraints(minHeight: 28),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      constraints: const BoxConstraints(minHeight: 26),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
       decoration: ShapeDecoration(
         color: hit || home ? color.withValues(alpha: 0.12) : colors.tone,
         shape: AppShape.sm,

@@ -189,8 +189,8 @@ void main() {
     expect(find.text(_outboundIp), findsOneWidget);
     expect(find.text('28'), findsOneWidget);
     expect(find.text('KR'), findsOneWidget);
-    expect(find.text('AS20473'), findsOneWidget);
-    expect(find.text('· AS-CHOOPA'), findsOneWidget);
+    expect(find.textContaining('AS20473'), findsOneWidget);
+    expect(find.textContaining('AS-CHOOPA'), findsOneWidget);
     expect(find.text(l.ipFlags), findsAtLeastNWidgets(1));
     expect(find.byGlyph(AppGlyphs.refresh), findsNothing);
     expect(find.byTooltip(l.hideIp), findsOneWidget);
@@ -206,13 +206,13 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text(_customIp), findsAtLeastNWidgets(1));
     expect(find.text('AU'), findsOneWidget);
-    expect(find.text('AS13335'), findsOneWidget);
+    expect(find.textContaining('AS13335'), findsOneWidget);
     expect(find.text('Cloudflare, Inc.'), findsOneWidget);
 
     await tester.tap(find.text(l.outboundIp));
     await tester.pumpAndSettle();
     expect(find.text(_outboundIp), findsOneWidget);
-    expect(find.text('AS20473'), findsOneWidget);
+    expect(find.textContaining('AS20473'), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
   });
