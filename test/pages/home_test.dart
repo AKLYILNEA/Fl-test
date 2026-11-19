@@ -36,6 +36,79 @@ void main() {
     addTearDown(() => navigationPort = null);
   });
 
+  testWidgets('opening a toolbar menu retains the dock glass capture', (
+    tester,
+  ) async {
+    const size = Size(400, 850);
+    tester.view.physicalSize = size * 3;
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(() => LiquidGlassHost.debugLastCapture = null);
+
+    final container = ProviderContainer(
+      overrides: [
+        profilesProvider.overrideWith(TestProfiles.new),
+        navigationItemsStateProvider.overrideWithValue(
+          NavigationItemsState(
+            value: [
+              NavigationItem(
+                glyph: AppGlyphs.proxies,
+                label: PageLabel.proxies,
+                builder: (_) => Scaffold(
+                  title: 'Proxies',
+                  searchState: AppBarSearchState(onSearch: (_) {}),
+                  menuItems: [
+                    for (var i = 0; i < 6; i++)
+                      PopupMenuItem(label: 'Option $i', onPressed: () {}),
+                  ],
+                  body: const SizedBox.expand(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    globalState.container = container;
+    container.read(viewSizeProvider.notifier).value = size;
+    container.read(currentPageLabelProvider.notifier).toPage(PageLabel.proxies);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const TestApp(
+          includeNavigatorKey: false,
+          liquidGlass: LiquidGlassQuality.ultra,
+          child: HomePage(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(NavigationDock), findsOneWidget);
+
+    await tester.tap(_glyph(Glyphs.more));
+    for (var frame = 0; frame < 9; frame++) {
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+
+    final before = LiquidGlassHost.debugLastCapture!;
+    LiquidGlassHost.debugLastCapture = null;
+    await tester.pump(const Duration(milliseconds: 16));
+    final after = LiquidGlassHost.debugLastCapture!;
+
+    final dock = before.panes.singleWhere(
+      (pane) => pane.pane.top > size.height / 2,
+    );
+    final laterDock = after.panes.singleWhere(
+      (pane) => pane.pane.top > size.height / 2,
+    );
+    expect(find.byType(PopupMenu), findsOneWidget);
+    expect(after.panes.last.pane, isNot(before.panes.last.pane));
+    expect(identical(laterDock.atlas, dock.atlas), isTrue);
+  });
+
   testWidgets('initial desktop layout does not animate mobile navigation out', (
     tester,
   ) async {
@@ -154,19 +227,18 @@ void main() {
       );
       await tester.pump();
 
-      final sidebarBackground = find.descendant(
-        of: find.byType(AppSidebarContainer),
-        matching: find.byWidgetPredicate(
-          (widget) => widget is Container && widget.child is Row,
-        ),
-      );
-      final sidebarContainer = tester.widget<Container>(
-        sidebarBackground.first,
+      final sidebarBackground = tester.widget<ColoredBox>(
+        find
+            .descendant(
+              of: find.byType(AppSidebarContainer),
+              matching: find.byType(ColoredBox),
+            )
+            .first,
       );
       final colorScheme = Theme.of(
         tester.element(find.byType(AppSidebarContainer)),
       ).colorScheme;
-      expect(sidebarContainer.color, SurfaceLevel.page.colorOf(colorScheme));
+      expect(sidebarBackground.color, SurfaceLevel.page.colorOf(colorScheme));
       final sidebarSurface = tester.widget<Surface>(
         find
             .ancestor(
@@ -176,7 +248,7 @@ void main() {
             .first,
       );
       expect(sidebarSurface.color, colorScheme.chromeSurface);
-      expect(sidebarSurface.color, isNot(sidebarContainer.color));
+      expect(sidebarSurface.color, isNot(sidebarBackground.color));
       expect(
         (sidebarSurface.shape! as BorderDirectional).end,
         Divider.createBorderSide(

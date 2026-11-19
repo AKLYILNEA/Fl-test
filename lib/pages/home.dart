@@ -69,75 +69,90 @@ class _HomeShell extends ConsumerWidget {
     final floating = ref.watch(
       appSettingProvider.select((state) => state.floatingNavigationBar),
     );
-    return Surface(
-      color: SurfaceLevel.page.colorOf(context.colorScheme),
-      child: Column(
-        children: [
-          Expanded(
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: FocusTraversalGroup(
-                    policy: PageTraversalPolicy(),
-                    child: BottomInsetScope(
-                      inset: isMobile && floating
-                          ? NavigationDock.insetOf(context)
-                          : 0,
-                      child: _BodyPadding(isMobile: isMobile, child: child),
-                    ),
-                  ),
-                ),
-                PositionedDirectional(
-                  start: 0,
-                  end: 0,
-                  bottom: 0,
-                  child: AnimatedVisibility.bottomNavigation(
-                    visible: isMobile && floating,
-                    child: BarItemPresence.held(
-                      child: _NavigationPadding(
-                        child: NavigationDock(
-                          destinations: [
-                            for (final item in navigationItems)
-                              NavigationDockDestination(
-                                glyph: item.glyph,
-                                label: item.label.label,
-                              ),
-                          ],
-                          selectedIndex: state.currentIndex,
-                          onSelected: (index) {
-                            _handleToPage(navigationItems[index].label, ref);
-                          },
+    return Stack(
+      fit: StackFit.expand,
+      clipBehavior: Clip.none,
+      children: [
+        // Glass can retain this picture while the content animates above it.
+        RepaintBoundary(
+          child: ColoredBox(
+            color: SurfaceLevel.page.colorOf(context.colorScheme),
+          ),
+        ),
+        Surface(
+          color: null,
+          child: Column(
+            children: [
+              Expanded(
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: FocusTraversalGroup(
+                        policy: PageTraversalPolicy(),
+                        child: BottomInsetScope(
+                          inset: isMobile && floating
+                              ? NavigationDock.insetOf(context)
+                              : 0,
+                          child: _BodyPadding(isMobile: isMobile, child: child),
                         ),
                       ),
                     ),
+                    PositionedDirectional(
+                      start: 0,
+                      end: 0,
+                      bottom: 0,
+                      child: AnimatedVisibility.bottomNavigation(
+                        visible: isMobile && floating,
+                        child: BarItemPresence.held(
+                          child: _NavigationPadding(
+                            child: NavigationDock(
+                              destinations: [
+                                for (final item in navigationItems)
+                                  NavigationDockDestination(
+                                    glyph: item.glyph,
+                                    label: item.label.label,
+                                  ),
+                              ],
+                              selectedIndex: state.currentIndex,
+                              onSelected: (index) {
+                                _handleToPage(
+                                  navigationItems[index].label,
+                                  ref,
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              AnimatedVisibility.bottomNavigation(
+                visible: isMobile && !floating,
+                child: _NavigationPadding(
+                  child: NavigationBar(
+                    destinations: [
+                      for (final (index, item) in navigationItems.indexed)
+                        NavigationDestination(
+                          icon: AnimatedGlyph(
+                            glyph: item.glyph,
+                            filled: index == state.currentIndex,
+                          ),
+                          label: item.label.label,
+                        ),
+                    ],
+                    selectedIndex: state.currentIndex,
+                    onDestinationSelected: (index) {
+                      _handleToPage(navigationItems[index].label, ref);
+                    },
                   ),
                 ),
-              ],
-            ),
-          ),
-          AnimatedVisibility.bottomNavigation(
-            visible: isMobile && !floating,
-            child: _NavigationPadding(
-              child: NavigationBar(
-                destinations: [
-                  for (final (index, item) in navigationItems.indexed)
-                    NavigationDestination(
-                      icon: AnimatedGlyph(
-                        glyph: item.glyph,
-                        filled: index == state.currentIndex,
-                      ),
-                      label: item.label.label,
-                    ),
-                ],
-                selectedIndex: state.currentIndex,
-                onDestinationSelected: (index) {
-                  _handleToPage(navigationItems[index].label, ref);
-                },
               ),
-            ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

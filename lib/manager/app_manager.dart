@@ -226,48 +226,58 @@ class AppSidebarContainer extends ConsumerWidget {
 
     final hasSidebar = viewMode != ViewMode.mobile;
     final isLtr = Directionality.of(context) == TextDirection.ltr;
-    return Container(
-      color: backdropOpacity != null ? Colors.transparent : page,
-      child: Row(
-        children: [
-          AnimatedVisibility.sidebar(
-            visible: hasSidebar,
-            child: Surface(
-              color: backdropOpacity != null
-                  ? chrome.withValues(alpha: backdropOpacity)
-                  : chrome,
-              shape: BorderDirectional(end: Divider.createBorderSide(context)),
-              child: MediaQuery.removePadding(
-                context: context,
-                removeLeft: !isLtr,
-                removeRight: isLtr,
-                child: _Sidebar(
-                  items: navigationItems,
-                  currentIndex: currentIndex,
-                  viewMode: viewMode,
-                  onSelected: onSelected,
+    return Stack(
+      fit: StackFit.expand,
+      clipBehavior: Clip.none,
+      children: [
+        RepaintBoundary(
+          child: ColoredBox(
+            color: backdropOpacity != null ? Colors.transparent : page,
+          ),
+        ),
+        Row(
+          children: [
+            AnimatedVisibility.sidebar(
+              visible: hasSidebar,
+              child: Surface(
+                color: backdropOpacity != null
+                    ? chrome.withValues(alpha: backdropOpacity)
+                    : chrome,
+                shape: BorderDirectional(
+                  end: Divider.createBorderSide(context),
+                ),
+                child: MediaQuery.removePadding(
+                  context: context,
+                  removeLeft: !isLtr,
+                  removeRight: isLtr,
+                  child: _Sidebar(
+                    items: navigationItems,
+                    currentIndex: currentIndex,
+                    viewMode: viewMode,
+                    onSelected: onSelected,
+                  ),
                 ),
               ),
             ),
-          ),
-          Expanded(
-            flex: 1,
-            child: ClipRect(
-              child: LayoutBuilder(
-                builder: (_, constraints) {
-                  _updateSideBarWidth(ref, constraints.maxWidth);
-                  return MediaQuery.removePadding(
-                    context: context,
-                    removeLeft: hasSidebar && isLtr,
-                    removeRight: hasSidebar && !isLtr,
-                    child: child,
-                  );
-                },
+            Expanded(
+              flex: 1,
+              child: ClipRect(
+                child: LayoutBuilder(
+                  builder: (_, constraints) {
+                    _updateSideBarWidth(ref, constraints.maxWidth);
+                    return MediaQuery.removePadding(
+                      context: context,
+                      removeLeft: hasSidebar && isLtr,
+                      removeRight: hasSidebar && !isLtr,
+                      child: child,
+                    );
+                  },
+                ),
               ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
+      ],
     );
   }
 }
