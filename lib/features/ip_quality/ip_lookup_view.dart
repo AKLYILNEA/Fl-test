@@ -576,28 +576,15 @@ class _IpRiskHeroCard extends StatelessWidget {
                 ),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 7,
+                    horizontal: 8,
                     vertical: 2,
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    spacing: 5,
-                    children: [
-                      DecoratedBox(
-                        decoration: ShapeDecoration(
-                          color: riskGradient.first,
-                          shape: AppShape.circle,
-                        ),
-                        child: const SizedBox.square(dimension: 6),
-                      ),
-                      Text(
-                        l.outboundIp,
-                        maxLines: 1,
-                        style: AppTextStyle.caption2
-                            .of(context, emphasized: true)
-                            .copyWith(color: riskGradient.first),
-                      ),
-                    ],
+                  child: Text(
+                    l.outboundIp,
+                    maxLines: 1,
+                    style: AppTextStyle.caption2
+                        .of(context, emphasized: true)
+                        .copyWith(color: riskGradient.first),
                   ),
                 ),
               ),
