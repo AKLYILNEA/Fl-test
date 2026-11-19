@@ -7,11 +7,13 @@ import 'package:fl_clash/features/ip_quality/risk_provider.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/outbound_ip.dart';
 import 'package:fl_clash/providers/routed_probe.dart';
+import 'package:fl_clash/ui/icons/icons.dart';
 import 'package:fl_clash/ui/ui.dart' as app_ui;
 import 'package:fl_clash/views/tools.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../helpers/glyph_finders.dart';
 import '../helpers/test_app.dart';
 
 const _outboundIp = '158.247.202.50';
@@ -187,6 +189,9 @@ void main() {
     expect(find.text(_outboundIp), findsOneWidget);
     expect(find.text('28'), findsOneWidget);
     expect(find.text('AS20473'), findsOneWidget);
+    expect(find.text(l.ipFlags), findsAtLeastNWidgets(1));
+    expect(find.byGlyph(AppGlyphs.refresh), findsNothing);
+    expect(find.byTooltip(l.hideIp), findsOneWidget);
 
     await tester.enterText(find.byType(app_ui.SearchField), '192.168.1.1');
     await tester.tap(find.text(l.search));
@@ -197,7 +202,6 @@ void main() {
     await tester.enterText(find.byType(app_ui.SearchField), '$_customIp:443');
     await tester.tap(find.text(l.search));
     await tester.pumpAndSettle();
-    expect(find.text(l.ipRiskInvalid), findsNothing);
     expect(find.text(_customIp), findsAtLeastNWidgets(1));
     expect(find.text('AS13335'), findsOneWidget);
     expect(find.text('Cloudflare, Inc.'), findsOneWidget);

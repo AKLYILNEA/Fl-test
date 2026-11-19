@@ -338,8 +338,7 @@ class _AboutHero extends StatelessWidget {
     required this.onEnterDeveloperMode,
   });
 
-  static const _logoSize = 88.0;
-  static const _logoInset = 10.0;
+  static const _logoSize = 72.0;
 
   Widget _fadeScale(double progress, Widget child) {
     final clamped = progress.clamp(0.0, 1.0);
@@ -368,24 +367,16 @@ class _AboutHero extends StatelessWidget {
             iconProgress,
             _DeveloperModeDetector(
               onEnterDeveloperMode: onEnterDeveloperMode,
-              child: DecoratedBox(
-                decoration: ShapeDecoration(
-                  color: const Color(0xFFFFFFFF),
-                  shape: AppShape.all(24),
-                  shadows: _aboutShadows,
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(_logoInset),
-                  child: Image.asset(
-                    'assets/images/icon.png',
-                    width: _logoSize - _logoInset * 2,
-                    height: _logoSize - _logoInset * 2,
-                  ),
-                ),
+              child: MiuixChromaticLogo(
+                assetPath: 'assets/images/logo.svg',
+                size: _logoSize,
+                backdropKey: backdropKey,
+                controller: controller,
+                preset: preset,
               ),
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 2),
           _fadeScale(
             titleProgress,
             MiuixChromaticTitle(
@@ -547,6 +538,10 @@ class _DeveloperModeDetectorState extends State<_DeveloperModeDetector> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(onTap: _handleTap, child: widget.child);
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: _handleTap,
+      child: widget.child,
+    );
   }
 }

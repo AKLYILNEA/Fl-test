@@ -55,6 +55,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 50));
 
       expect(find.byType(MiuixAboutBackdrop), findsOneWidget);
+      expect(find.byType(MiuixChromaticLogo), findsOneWidget);
       expect(find.byType(MiuixChromaticTitle), findsOneWidget);
       expect(find.text(appName), findsOneWidget);
       expect(find.text('v0.9.3'), findsOneWidget);
@@ -108,7 +109,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(container.read(appSettingProvider).developerMode, isFalse);
-    final icon = find.byType(Image);
+    final icon = find.byType(MiuixChromaticLogo);
     for (var i = 0; i < 5; i++) {
       await tester.tap(icon);
       await tester.pump(const Duration(milliseconds: 50));

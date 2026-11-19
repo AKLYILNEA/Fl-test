@@ -32,7 +32,6 @@ class _IpLookupViewState extends ConsumerState<IpLookupView> {
   late final TextEditingController _controller;
   final _focusNode = FocusNode();
   String? _queriedIp;
-  String? _inputError;
   bool _retrying = false;
   bool _retryHold = false;
   Timer? _retryTimer;
@@ -58,12 +57,14 @@ class _IpLookupViewState extends ConsumerState<IpLookupView> {
   void _submitSearch() {
     final parsed = publicIpOf(_controller.text);
     if (parsed == null) {
-      setState(() => _inputError = context.appLocalizations.ipRiskInvalid);
+      dialogs.showBanner(
+        context.appLocalizations.ipRiskInvalid,
+        level: BannerLevel.error,
+      );
       return;
     }
     _focusNode.unfocus();
     setState(() {
-      _inputError = null;
       _queriedIp = parsed;
       _retrying = false;
     });
@@ -79,7 +80,6 @@ class _IpLookupViewState extends ConsumerState<IpLookupView> {
     _focusNode.unfocus();
     _controller.clear();
     setState(() {
-      _inputError = null;
       _queriedIp = null;
       _retrying = false;
     });
@@ -92,19 +92,6 @@ class _IpLookupViewState extends ConsumerState<IpLookupView> {
       if (!mounted) return;
       setState(() => _retryHold = false);
     });
-  }
-
-  void _refresh(String activeIp) {
-    if (_retryHold) return;
-    _startRetryHold();
-    setState(() => _retrying = false);
-    if (_queriedIp == null) {
-      _probe.refresh(const [routedOutbound]);
-    }
-    if (activeIp.isNotEmpty) {
-      refreshIpRisk(ref, activeIp);
-      ref.invalidate(ipLocateProvider(activeIp));
-    }
   }
 
   void _retryFailed(
@@ -178,7 +165,6 @@ class _IpLookupViewState extends ConsumerState<IpLookupView> {
                 (locateState?.isLoading ?? false)));
 
     final hidden = ref.watch(appSettingProvider.select((s) => s.hideIp));
-    final canRefresh = !_retryHold && !isLoading;
 
     return Theme(
       data: Theme.of(context).copyWith(visualDensity: VisualDensity.standard),
@@ -192,11 +178,6 @@ class _IpLookupViewState extends ConsumerState<IpLookupView> {
                 .read(appSettingProvider.notifier)
                 .update((s) => s.copyWith(hideIp: !hidden)),
           ),
-          IconButtonData(
-            glyph: AppGlyphs.refresh,
-            tooltip: l.trafficStatsRefresh,
-            onPressed: canRefresh ? () => _refresh(activeIp) : null,
-          ),
         ],
         body: Builder(
           builder: (context) => LayoutBuilder(
@@ -207,7 +188,7 @@ class _IpLookupViewState extends ConsumerState<IpLookupView> {
               final heroCardWidth = isWide
                   ? (contentWidth - 12) * 0.6
                   : contentWidth;
-              final horizontalHero = heroCardWidth - 40 >= 360;
+              final horizontalHero = heroCardWidth - 40 >= 380;
               return ListView(
                 padding: EdgeInsets.fromLTRB(
                   sidePadding,
@@ -219,14 +200,8 @@ class _IpLookupViewState extends ConsumerState<IpLookupView> {
                   _IpSearchBar(
                     controller: _controller,
                     focusNode: _focusNode,
-                    errorText: _inputError,
                     showOutboundShortcut: isCustom,
                     isWide: constraints.maxWidth >= 600,
-                    onChanged: (_) {
-                      if (_inputError != null) {
-                        setState(() => _inputError = null);
-                      }
-                    },
                     onSubmitted: _submitSearch,
                     onUseOutbound: _useOutboundIp,
                   ),
@@ -321,7 +296,7 @@ class _IpLookupViewState extends ConsumerState<IpLookupView> {
         risk: risk,
         attribution: attribution,
         hidden: hidden,
-        fillHeight: isWide,
+        isWide: isWide,
       );
       return Column(
         key: ValueKey('data:$activeIp'),
@@ -345,7 +320,7 @@ class _IpLookupViewState extends ConsumerState<IpLookupView> {
           ],
           if (risk.checks.isNotEmpty) ...[
             const SizedBox(height: 12),
-            _IpChecksMatrixCard(risk: risk, isWide: isWide),
+            _IpFlagsCard(risk: risk, isWide: isWide),
           ],
           ListFooter(text: '${l.ipRiskSource} ${l.ipRiskSources}'),
         ],
@@ -387,27 +362,22 @@ class _IpSearchBar extends StatelessWidget {
   const _IpSearchBar({
     required this.controller,
     required this.focusNode,
-    required this.errorText,
     required this.showOutboundShortcut,
     required this.isWide,
-    required this.onChanged,
     required this.onSubmitted,
     required this.onUseOutbound,
   });
 
   final TextEditingController controller;
   final FocusNode focusNode;
-  final String? errorText;
   final bool showOutboundShortcut;
   final bool isWide;
-  final ValueChanged<String> onChanged;
   final VoidCallback onSubmitted;
   final VoidCallback onUseOutbound;
 
   @override
   Widget build(BuildContext context) {
     final l = context.appLocalizations;
-    final cs = context.colorScheme;
     final colors = DashboardColors.of(context);
     final shortcut = _OutboundShortcutPill(onPressed: onUseOutbound);
     return Card(
@@ -426,7 +396,6 @@ class _IpSearchBar extends StatelessWidget {
                   height: 42,
                   fill: colors.tone,
                   hintText: l.ipRiskHint,
-                  onChanged: onChanged,
                   onSubmitted: onSubmitted,
                 ),
               ),
@@ -453,26 +422,6 @@ class _IpSearchBar extends StatelessWidget {
           if (!isWide && showOutboundShortcut) ...[
             const SizedBox(height: 8),
             Align(alignment: AlignmentDirectional.centerStart, child: shortcut),
-          ],
-          if (errorText != null) ...[
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              child: Row(
-                children: [
-                  GlyphIcon(AppGlyphs.error, size: 15, color: cs.error),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      errorText!,
-                      style: AppTextStyle.caption1
-                          .of(context)
-                          .copyWith(color: cs.error),
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ],
         ],
       ),
@@ -539,6 +488,7 @@ class _IpRiskHeroCard extends StatelessWidget {
     final l = context.appLocalizations;
     final cs = context.colorScheme;
     final colors = DashboardColors.of(context);
+    final isDark = cs.brightness == Brightness.dark;
     final scoreColor = riskScoreColor(risk.displayScore);
     final hitCount = risk.checks.where((c) => c.hit == true).length;
     final totalChecks = risk.checks.length;
@@ -584,7 +534,36 @@ class _IpRiskHeroCard extends StatelessWidget {
       ],
     );
 
-    final ipIdentity = Column(
+    final scoreBlock = Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.baseline,
+      textBaseline: TextBaseline.alphabetic,
+      children: [
+        Text(
+          '${risk.displayScore}',
+          maxLines: 1,
+          style: AppTextStyle.display
+              .of(context, emphasized: true)
+              .toTabular
+              .copyWith(
+                fontSize: horizontalHero ? 52 : 46,
+                height: 1.0,
+                color: scoreColor,
+              ),
+        ),
+        const SizedBox(width: 5),
+        Text(
+          '/ 100',
+          maxLines: 1,
+          style: AppTextStyle.callout
+              .of(context, emphasized: true)
+              .toTabular
+              .copyWith(color: cs.onSurfaceVariant),
+        ),
+      ],
+    );
+
+    final ipColumn = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -600,7 +579,7 @@ class _IpRiskHeroCard extends StatelessWidget {
               const SizedBox(width: 8),
               DecoratedBox(
                 decoration: ShapeDecoration(
-                  color: riskGradient.first.withValues(alpha: 0.12),
+                  color: riskGradient.first.withValues(alpha: 0.13),
                   shape: AppShape.full,
                 ),
                 child: Padding(
@@ -644,11 +623,11 @@ class _IpRiskHeroCard extends StatelessWidget {
                   hidden ? '*****' : ip,
                   maxLines: 1,
                   style: hidden
-                      ? AppTextStyle.title3
+                      ? AppTextStyle.title2
                             .of(context, emphasized: true)
                             .toJetBrainsMono
                             .copyWith(color: cs.success)
-                      : AppTextStyle.title3
+                      : AppTextStyle.title2
                             .of(context, emphasized: true)
                             .toTabular,
                 ),
@@ -666,101 +645,104 @@ class _IpRiskHeroCard extends StatelessWidget {
             ),
           ],
         ),
-      ],
-    );
-
-    final statBlocks = IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: _HeroMetricTile(
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 18,
+          runSpacing: 6,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            _InlineMetric(
+              dotColor: typeColor,
               label: l.ipType,
               value: typeText,
-              dotColor: typeColor,
+              valueColor: risk.isHomeBroadband ? riskGradient.first : null,
             ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: _HeroMetricTile(
+            _InlineMetric(
+              dotColor: flagColor,
               label: l.ipFlags,
               value: totalChecks == 0 ? '\u2014' : '$hitCount / $totalChecks',
-              dotColor: flagColor,
               valueColor: totalChecks == 0 ? null : flagColor,
               tabular: true,
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
+      ],
     );
 
-    final gauge = _IpRiskArcGauge(
-      score: risk.displayScore,
-      scoreColor: scoreColor,
-      trackColor: colors.track,
-      surfaceColor: colors.card,
-    );
-
-    final body = horizontalHero
-        ? Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              gauge,
-              const SizedBox(width: 18),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ipIdentity,
-                    const SizedBox(height: 14),
-                    statBlocks,
-                  ],
+    final mainBody = horizontalHero
+        ? IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(child: scoreBlock),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: SizedBox(
+                    width: Divider.separatorThicknessOf(context),
+                    child: ColoredBox(color: Divider.colorOf(context)),
+                  ),
                 ),
-              ),
-            ],
+                Expanded(
+                  child: Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: ipColumn,
+                  ),
+                ),
+              ],
+            ),
           )
         : Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisSize: MainAxisSize.min,
             children: [
-              ipIdentity,
+              scoreBlock,
               const SizedBox(height: 14),
-              Center(child: gauge),
+              Divider(
+                height: 1,
+                thickness: Divider.separatorThicknessOf(context),
+              ),
               const SizedBox(height: 14),
-              statBlocks,
+              ipColumn,
             ],
           );
 
-    final footer = Column(
+    final riskScale = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Divider(height: 1, thickness: Divider.separatorThicknessOf(context)),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Text(
-              l.ipRiskLow,
-              style: AppTextStyle.caption1
-                  .of(context)
-                  .copyWith(color: cs.onSurfaceVariant),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: SizedBox(
-                height: 14,
-                child: CustomPaint(
-                  painter: _MiniRiskBarPainter(
-                    score: risk.displayScore,
-                    surface: colors.card,
-                  ),
+        Semantics(
+          label: '${l.ipRiskScore} ${risk.displayScore} / 100',
+          child: SizedBox(
+            height: 24,
+            width: double.infinity,
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0, end: risk.displayScore.toDouble()),
+              duration: context.motionDuration(
+                const Duration(milliseconds: 520),
+              ),
+              curve: Curves.easeOutCubic,
+              builder: (_, animatedScore, _) => CustomPaint(
+                painter: _RiskScaleBarPainter(
+                  score: animatedScore,
+                  surface: colors.card,
                 ),
               ),
             ),
-            const SizedBox(width: 10),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              l.ipRiskLow,
+              style: AppTextStyle.footnote
+                  .of(context)
+                  .copyWith(color: cs.onSurfaceVariant),
+            ),
             Text(
               l.ipRiskHigh,
-              style: AppTextStyle.caption1
+              style: AppTextStyle.footnote
                   .of(context)
                   .copyWith(color: cs.onSurfaceVariant),
             ),
@@ -771,85 +753,46 @@ class _IpRiskHeroCard extends StatelessWidget {
 
     return Card(
       radius: AppCorner.xl,
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisAlignment: fillHeight
-            ? MainAxisAlignment.spaceBetween
-            : MainAxisAlignment.start,
-        children: [
-          header,
-          const SizedBox(height: 18),
-          body,
-          const SizedBox(height: 18),
-          footer,
-        ],
-      ),
-    );
-  }
-}
-
-class _HeroMetricTile extends StatelessWidget {
-  const _HeroMetricTile({
-    required this.label,
-    required this.value,
-    required this.dotColor,
-    this.valueColor,
-    this.tabular = false,
-  });
-
-  final String label;
-  final String value;
-  final Color dotColor;
-  final Color? valueColor;
-  final bool tabular;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = context.colorScheme;
-    final colors = DashboardColors.of(context);
-    var valueStyle = AppTextStyle.subheadline
-        .of(context, emphasized: true)
-        .copyWith(color: valueColor ?? cs.onSurface);
-    if (tabular) {
-      valueStyle = valueStyle.toTabular;
-    }
-    return DecoratedBox(
-      decoration: ShapeDecoration(color: colors.tone, shape: AppShape.lg),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          mainAxisSize: MainAxisSize.min,
+      padding: EdgeInsets.zero,
+      child: ClipPath(
+        clipper: ShapeBorderClipper(
+          shape: AppShape.xl,
+          textDirection: Directionality.of(context),
+        ),
+        child: Stack(
           children: [
-            Row(
-              spacing: 6,
-              children: [
-                DecoratedBox(
-                  decoration: ShapeDecoration(
-                    color: dotColor,
-                    shape: AppShape.circle,
-                  ),
-                  child: const SizedBox.square(dimension: 7),
-                ),
-                Flexible(
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTextStyle.caption1
-                        .of(context)
-                        .copyWith(color: cs.onSurfaceVariant),
+            Positioned.fill(
+              child: IgnorePointer(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      center: const Alignment(-0.88, -1.15),
+                      radius: 1.05,
+                      colors: [
+                        scoreColor.withValues(alpha: isDark ? 0.16 : 0.13),
+                        scoreColor.withValues(alpha: 0.0),
+                      ],
+                      stops: const [0.0, 0.72],
+                    ),
                   ),
                 ),
-              ],
+              ),
             ),
-            const SizedBox(height: 6),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: AlignmentDirectional.centerStart,
-              child: Text(value, maxLines: 1, style: valueStyle),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisAlignment: fillHeight
+                    ? MainAxisAlignment.spaceBetween
+                    : MainAxisAlignment.start,
+                children: [
+                  header,
+                  const SizedBox(height: 18),
+                  mainBody,
+                  const SizedBox(height: 18),
+                  riskScale,
+                ],
+              ),
             ),
           ],
         ),
@@ -858,205 +801,75 @@ class _HeroMetricTile extends StatelessWidget {
   }
 }
 
-class _IpRiskArcGauge extends StatelessWidget {
-  const _IpRiskArcGauge({
-    required this.score,
-    required this.scoreColor,
-    required this.trackColor,
-    required this.surfaceColor,
+class _InlineMetric extends StatelessWidget {
+  const _InlineMetric({
+    required this.dotColor,
+    required this.label,
+    required this.value,
+    this.valueColor,
+    this.tabular = false,
   });
 
-  final int score;
-  final Color scoreColor;
-  final Color trackColor;
-  final Color surfaceColor;
+  final Color dotColor;
+  final String label;
+  final String value;
+  final Color? valueColor;
+  final bool tabular;
 
   @override
   Widget build(BuildContext context) {
     final cs = context.colorScheme;
-    final l = context.appLocalizations;
-    final target = score.clamp(0, 100) / 100.0;
-    return Semantics(
-      label: '${l.ipRiskScore} $score / 100',
-      child: MediaQuery.withNoTextScaling(
-        child: SizedBox(
-          width: 148,
-          height: 130,
-          child: TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0, end: target),
-            duration: context.motionDuration(const Duration(milliseconds: 650)),
-            curve: Curves.easeOutCubic,
-            builder: (context, progress, _) => Stack(
-              alignment: Alignment.center,
-              children: [
-                Positioned.fill(
-                  child: CustomPaint(
-                    painter: _IpRiskArcPainter(
-                      progress: progress,
-                      scoreColor: scoreColor,
-                      trackColor: trackColor,
-                      surfaceColor: surfaceColor,
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        '$score',
-                        maxLines: 1,
-                        style: AppTextStyle.display
-                            .of(context, emphasized: true)
-                            .toTabular
-                            .copyWith(color: scoreColor, height: 1.0),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '/ 100',
-                        maxLines: 1,
-                        style: AppTextStyle.caption1
-                            .of(context)
-                            .toTabular
-                            .copyWith(color: cs.onSurfaceVariant),
-                      ),
-                    ],
-                  ),
-                ),
-                Positioned(
-                  left: 16,
-                  bottom: 0,
-                  child: Text(
-                    '0',
-                    style: AppTextStyle.caption2
-                        .of(context)
-                        .toTabular
-                        .copyWith(color: cs.onSurfaceVariant),
-                  ),
-                ),
-                Positioned(
-                  right: 10,
-                  bottom: 0,
-                  child: Text(
-                    '100',
-                    style: AppTextStyle.caption2
-                        .of(context)
-                        .toTabular
-                        .copyWith(color: cs.onSurfaceVariant),
-                  ),
-                ),
-              ],
-            ),
-          ),
+    var valueStyle = AppTextStyle.footnote
+        .of(context, emphasized: true)
+        .copyWith(color: valueColor ?? cs.onSurface);
+    if (tabular) {
+      valueStyle = valueStyle.toTabular;
+    }
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      spacing: 6,
+      children: [
+        DecoratedBox(
+          decoration: ShapeDecoration(color: dotColor, shape: AppShape.circle),
+          child: const SizedBox.square(dimension: 7),
         ),
-      ),
+        Text(
+          label,
+          style: AppTextStyle.footnote
+              .of(context)
+              .copyWith(color: cs.onSurfaceVariant),
+        ),
+        Text(value, style: valueStyle),
+      ],
     );
   }
 }
 
-class _IpRiskArcPainter extends CustomPainter {
-  const _IpRiskArcPainter({
-    required this.progress,
-    required this.scoreColor,
-    required this.trackColor,
-    required this.surfaceColor,
-  });
+class _RiskScaleBarPainter extends CustomPainter {
+  const _RiskScaleBarPainter({required this.score, required this.surface});
 
-  final double progress;
-  final Color scoreColor;
-  final Color trackColor;
-  final Color surfaceColor;
-
-  static const _startAngle = math.pi * 145 / 180;
-  static const _sweepAngle = math.pi * 250 / 180;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final stroke = 9.5;
-    final radius = math.min(size.width, size.height) / 2 - stroke;
-    final center = Offset(size.width / 2, size.height * 0.54);
-    final rect = Rect.fromCircle(center: center, radius: radius);
-
-    canvas.drawCircle(
-      center,
-      math.max(0, radius - 12),
-      Paint()..color = scoreColor.withValues(alpha: 0.08),
-    );
-
-    canvas.drawArc(
-      rect,
-      _startAngle,
-      _sweepAngle,
-      false,
-      Paint()
-        ..color = trackColor
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = stroke
-        ..strokeCap = StrokeCap.round,
-    );
-
-    final clamped = progress.clamp(0.0, 1.0);
-    final activeSweep = math.max(_sweepAngle * clamped, 0.02);
-    const capPad = 0.14;
-    final shader = SweepGradient(
-      startAngle: 0,
-      endAngle: _sweepAngle + capPad * 2,
-      colors: riskGradient,
-      stops: const [0.05, 0.5, 0.95],
-      transform: const GradientRotation(_startAngle - capPad),
-    ).createShader(rect);
-
-    canvas.drawArc(
-      rect,
-      _startAngle,
-      activeSweep,
-      false,
-      Paint()
-        ..shader = shader
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = stroke
-        ..strokeCap = StrokeCap.round,
-    );
-
-    final tipAngle = _startAngle + _sweepAngle * clamped;
-    final tip = Offset(
-      center.dx + radius * math.cos(tipAngle),
-      center.dy + radius * math.sin(tipAngle),
-    );
-    canvas.drawCircle(tip, 9.5, Paint()..color = scoreColor.withValues(alpha: 0.22));
-    canvas.drawCircle(tip, 6.2, Paint()..color = scoreColor);
-    canvas.drawCircle(tip, 3.0, Paint()..color = surfaceColor);
-  }
-
-  @override
-  bool shouldRepaint(_IpRiskArcPainter oldDelegate) =>
-      progress != oldDelegate.progress ||
-      scoreColor != oldDelegate.scoreColor ||
-      trackColor != oldDelegate.trackColor ||
-      surfaceColor != oldDelegate.surfaceColor;
-}
-
-class _MiniRiskBarPainter extends CustomPainter {
-  const _MiniRiskBarPainter({required this.score, required this.surface});
-
-  final int score;
+  final double score;
   final Color surface;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final rect = Rect.fromLTWH(0, (size.height - 5) / 2, size.width, 5);
+    final rect = Rect.fromLTWH(0, 8, size.width, 8);
+    final clamped = score.clamp(0.0, 100.0);
     canvas.drawRSuperellipse(
       RSuperellipse.fromRectAndRadius(rect, AppRadius.full.topLeft),
       Paint()
         ..shader = LinearGradient(
-          colors: riskGradient.map((c) => c.withValues(alpha: 0.28)).toList(),
+          colors: riskGradient.map((c) => c.withValues(alpha: .24)).toList(),
         ).createShader(rect),
     );
-    final fraction = score.clamp(0, 100) / 100.0;
     canvas.save();
     canvas.clipRect(
-      Rect.fromLTRB(rect.left, 0, rect.left + rect.width * fraction, size.height),
+      Rect.fromLTRB(
+        rect.left,
+        0,
+        rect.left + rect.width * clamped / 100,
+        size.height,
+      ),
     );
     canvas.drawRSuperellipse(
       RSuperellipse.fromRectAndRadius(rect, AppRadius.full.topLeft),
@@ -1065,15 +878,19 @@ class _MiniRiskBarPainter extends CustomPainter {
     );
     canvas.restore();
     final center = Offset(
-      (rect.width * fraction).clamp(5.5, math.max(5.5, size.width - 5.5)),
-      size.height / 2,
+      (rect.width * clamped / 100).clamp(8.0, math.max(8.0, size.width - 8.0)),
+      12,
     );
-    canvas.drawCircle(center, 5.5, Paint()..color = riskScoreColor(score));
-    canvas.drawCircle(center, 2.5, Paint()..color = surface);
+    canvas.drawCircle(
+      center,
+      8,
+      Paint()..color = riskScoreColor(clamped.round()),
+    );
+    canvas.drawCircle(center, 4, Paint()..color = surface);
   }
 
   @override
-  bool shouldRepaint(_MiniRiskBarPainter oldDelegate) =>
+  bool shouldRepaint(_RiskScaleBarPainter oldDelegate) =>
       score != oldDelegate.score || surface != oldDelegate.surface;
 }
 
@@ -1082,13 +899,40 @@ class _IpAttributionCard extends StatelessWidget {
     required this.risk,
     required this.attribution,
     required this.hidden,
-    this.fillHeight = false,
+    required this.isWide,
   });
 
   final IpRisk risk;
   final IpLocateInfo attribution;
   final bool hidden;
-  final bool fillHeight;
+  final bool isWide;
+
+  Widget _field(
+    BuildContext context,
+    String label,
+    String value, {
+    bool mono = false,
+  }) {
+    final cs = context.colorScheme;
+    final baseStyle = AppTextStyle.subheadline.of(context, emphasized: true);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label,
+          style: AppTextStyle.caption1
+              .of(context)
+              .copyWith(color: cs.onSurfaceVariant),
+        ),
+        const SizedBox(height: 4),
+        SelectableText(
+          value,
+          style: mono ? baseStyle.toJetBrainsMono : baseStyle,
+        ),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1102,18 +946,61 @@ class _IpAttributionCard extends StatelessWidget {
     final company = info?.company ?? '';
     final network = info?.network ?? '';
     final asn = info?.asn ?? '';
+    final showNetwork = network.isNotEmpty && network != company;
     final showHostname = !hidden && risk.hostname.isNotEmpty;
 
-    final tiles = <Widget>[
-      if (company.isNotEmpty) _AttributionTile(label: l.isp, value: company),
-      if (network.isNotEmpty && network != company)
-        _AttributionTile(label: l.ipRiskAsn, value: network),
-      if (showHostname)
-        _AttributionTile(
-          label: l.ipRiskHostname,
-          value: risk.hostname,
-          mono: true,
+    final sections = <Widget>[
+      if (hasLocation)
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (country.isNotEmpty)
+              EmojiText(
+                country,
+                style: AppTextStyle.title2.of(context, emphasized: true),
+              ),
+            if (place.isNotEmpty) ...[
+              SizedBox(height: country.isNotEmpty ? 4 : 0),
+              SelectableText(
+                place,
+                style: country.isNotEmpty
+                    ? AppTextStyle.subheadline
+                          .of(context)
+                          .copyWith(color: cs.onSurfaceVariant)
+                    : AppTextStyle.title3.of(context, emphasized: true),
+              ),
+            ],
+          ],
         ),
+      if (company.isNotEmpty && showNetwork)
+        isWide
+            ? Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(flex: 13, child: _field(context, l.isp, company)),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    flex: 10,
+                    child: _field(context, l.ipRiskAsn, network),
+                  ),
+                ],
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _field(context, l.isp, company),
+                  const SizedBox(height: 12),
+                  _field(context, l.ipRiskAsn, network),
+                ],
+              )
+      else if (company.isNotEmpty)
+        _field(context, l.isp, company)
+      else if (showNetwork)
+        _field(context, l.ipRiskAsn, network),
+      if (showHostname)
+        _field(context, l.ipRiskHostname, risk.hostname, mono: true),
     ];
 
     return Card(
@@ -1121,91 +1008,58 @@ class _IpAttributionCard extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisAlignment: fillHeight
-            ? MainAxisAlignment.spaceBetween
-            : MainAxisAlignment.start,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisSize: MainAxisSize.min,
+          Row(
             children: [
-              Row(
-                children: [
-                  _IpHeaderIconBadge(
-                    glyph: AppGlyphs.location,
-                    color: cs.primary,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      country.isNotEmpty || !hasLocation
-                          ? l.ipRiskLocation
-                          : l.ipRiskCity,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTextStyle.headline.of(
-                        context,
-                        emphasized: true,
-                      ),
-                    ),
-                  ),
-                  if (asn.isNotEmpty) ...[
-                    const SizedBox(width: 12),
-                    DecoratedBox(
-                      decoration: ShapeDecoration(
-                        color: colors.tone,
-                        shape: AppShape.full,
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        child: Text(
-                          asn,
-                          style: AppTextStyle.footnote
-                              .of(context, emphasized: true)
-                              .toTabular
-                              .copyWith(color: cs.onSurfaceVariant),
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
+              _IpHeaderIconBadge(glyph: AppGlyphs.location, color: cs.primary),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  country.isNotEmpty || !hasLocation
+                      ? l.ipRiskLocation
+                      : l.ipRiskCity,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyle.headline.of(context, emphasized: true),
+                ),
               ),
-              if (hasLocation) ...[
-                const SizedBox(height: 16),
-                if (country.isNotEmpty)
-                  EmojiText(
-                    country,
-                    style: AppTextStyle.title2.of(context, emphasized: true),
+              if (asn.isNotEmpty) ...[
+                const SizedBox(width: 12),
+                DecoratedBox(
+                  decoration: ShapeDecoration(
+                    color: colors.tone,
+                    shape: AppShape.full,
                   ),
-                if (place.isNotEmpty) ...[
-                  SizedBox(height: country.isNotEmpty ? 4 : 0),
-                  SelectableText(
-                    place,
-                    style: country.isNotEmpty
-                        ? AppTextStyle.subheadline
-                              .of(context)
-                              .copyWith(color: cs.onSurfaceVariant)
-                        : AppTextStyle.title3.of(context, emphasized: true),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    child: Text(
+                      asn,
+                      style: AppTextStyle.footnote
+                          .of(context, emphasized: true)
+                          .toTabular
+                          .copyWith(color: cs.onSurfaceVariant),
+                    ),
                   ),
-                ],
+                ),
               ],
             ],
           ),
-          if (tiles.isNotEmpty) ...[
+          if (sections.isNotEmpty) ...[
             const SizedBox(height: 16),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                for (final (index, tile) in tiles.indexed) ...[
-                  if (index > 0) const SizedBox(height: 10),
-                  tile,
-                ],
+            for (final (index, section) in sections.indexed) ...[
+              if (index > 0) ...[
+                const SizedBox(height: 14),
+                Divider(
+                  height: 1,
+                  thickness: Divider.separatorThicknessOf(context),
+                ),
+                const SizedBox(height: 14),
               ],
-            ),
+              section,
+            ],
           ],
         ],
       ),
@@ -1213,50 +1067,8 @@ class _IpAttributionCard extends StatelessWidget {
   }
 }
 
-class _AttributionTile extends StatelessWidget {
-  const _AttributionTile({
-    required this.label,
-    required this.value,
-    this.mono = false,
-  });
-
-  final String label;
-  final String value;
-  final bool mono;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = context.colorScheme;
-    final colors = DashboardColors.of(context);
-    final baseStyle = AppTextStyle.subheadline.of(context, emphasized: true);
-    return DecoratedBox(
-      decoration: ShapeDecoration(color: colors.tone, shape: AppShape.lg),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              label,
-              style: AppTextStyle.caption1
-                  .of(context)
-                  .copyWith(color: cs.onSurfaceVariant),
-            ),
-            const SizedBox(height: 4),
-            SelectableText(
-              value,
-              style: mono ? baseStyle.toJetBrainsMono : baseStyle,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _IpChecksMatrixCard extends StatelessWidget {
-  const _IpChecksMatrixCard({required this.risk, required this.isWide});
+class _IpFlagsCard extends StatelessWidget {
+  const _IpFlagsCard({required this.risk, required this.isWide});
 
   final IpRisk risk;
   final bool isWide;
@@ -1274,20 +1086,6 @@ class _IpChecksMatrixCard extends StatelessWidget {
     final totalCount = risk.checks.length;
     final summaryColor = hitCount > 0 ? cs.error : riskGradient.first;
 
-    final groupWidgets = [
-      for (final group in groups)
-        _CheckGroupPanel(
-          title: switch (group) {
-            IpRiskGroup.datacenter => l.ipRiskHostingOrProxy,
-            IpRiskGroup.blacklist => l.ipRiskBlacklist,
-            IpRiskGroup.proxy => l.ipRiskProxyType,
-          },
-          checks: risk.checks.where((c) => c.group == group).toList(),
-          homeBroadband:
-              risk.isHomeBroadband && group == IpRiskGroup.datacenter,
-        ),
-    ];
-
     return Card(
       radius: AppCorner.xl,
       padding: const EdgeInsets.all(20),
@@ -1296,11 +1094,11 @@ class _IpChecksMatrixCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              _IpHeaderIconBadge(glyph: AppGlyphs.target, color: summaryColor),
+              _IpHeaderIconBadge(glyph: AppGlyphs.target, color: cs.primary),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  l.ipRiskCheck,
+                  l.ipFlags,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AppTextStyle.headline.of(context, emphasized: true),
@@ -1342,110 +1140,121 @@ class _IpChecksMatrixCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          if (isWide && groupWidgets.length > 1)
-            IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  for (final (index, panel) in groupWidgets.indexed) ...[
-                    if (index > 0) const SizedBox(width: 12),
-                    Expanded(child: panel),
-                  ],
-                ],
+          for (final (index, group) in groups.indexed) ...[
+            if (index > 0) ...[
+              const SizedBox(height: 13),
+              Divider(
+                height: 1,
+                thickness: Divider.separatorThicknessOf(context),
               ),
-            )
-          else
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                for (final (index, panel) in groupWidgets.indexed) ...[
-                  if (index > 0) const SizedBox(height: 12),
-                  panel,
-                ],
-              ],
+              const SizedBox(height: 13),
+            ],
+            _FlagGroupRow(
+              title: switch (group) {
+                IpRiskGroup.datacenter => l.ipRiskHostingOrProxy,
+                IpRiskGroup.blacklist => l.ipRiskBlacklist,
+                IpRiskGroup.proxy => l.ipRiskProxyType,
+              },
+              checks: risk.checks.where((c) => c.group == group).toList(),
+              homeBroadband:
+                  risk.isHomeBroadband && group == IpRiskGroup.datacenter,
+              isWide: isWide,
             ),
+          ],
         ],
       ),
     );
   }
 }
 
-class _CheckGroupPanel extends StatelessWidget {
-  const _CheckGroupPanel({
+class _FlagGroupRow extends StatelessWidget {
+  const _FlagGroupRow({
     required this.title,
     required this.checks,
     required this.homeBroadband,
+    required this.isWide,
   });
 
   final String title;
   final List<IpRiskCheck> checks;
   final bool homeBroadband;
+  final bool isWide;
 
   @override
   Widget build(BuildContext context) {
     final cs = context.colorScheme;
-    final colors = DashboardColors.of(context);
     final groupHits = checks.where((c) => c.hit == true).length;
-    return DecoratedBox(
-      decoration: ShapeDecoration(color: colors.tone, shape: AppShape.lg),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+    final countText = Text(
+      '$groupHits/${checks.length}',
+      textAlign: TextAlign.end,
+      style: AppTextStyle.caption1
+          .of(context, emphasized: groupHits > 0)
+          .toTabular
+          .copyWith(
+            color: groupHits > 0
+                ? cs.error
+                : cs.onSurfaceVariant.withValues(alpha: 0.78),
+          ),
+    );
+    final labelText = Text(
+      title,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: AppTextStyle.footnote
+          .of(context, emphasized: true)
+          .copyWith(color: cs.onSurfaceVariant),
+    );
+    final pills = Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        if (homeBroadband)
+          const _LookupFlagPill(
+            check: IpRiskCheck(
+              group: IpRiskGroup.datacenter,
+              name: 'Home Broadband',
+              hit: false,
+            ),
+            home: true,
+          )
+        else
+          for (final check in checks) _LookupFlagPill(check: check),
+      ],
+    );
+
+    if (isWide) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SizedBox(width: 124, child: labelText),
+          const SizedBox(width: 16),
+          Expanded(child: pills),
+          const SizedBox(width: 14),
+          SizedBox(width: 40, child: countText),
+        ],
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTextStyle.footnote
-                        .of(context, emphasized: true)
-                        .copyWith(color: cs.onSurfaceVariant),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  '$groupHits/${checks.length}',
-                  style: AppTextStyle.caption2
-                      .of(context, emphasized: groupHits > 0)
-                      .toTabular
-                      .copyWith(
-                        color: groupHits > 0
-                            ? cs.error
-                            : cs.onSurfaceVariant.withValues(alpha: 0.78),
-                      ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                if (homeBroadband)
-                  const _MatrixCheckPill(
-                    check: IpRiskCheck(
-                      group: IpRiskGroup.datacenter,
-                      name: 'Home Broadband',
-                      hit: false,
-                    ),
-                    home: true,
-                  )
-                else
-                  for (final check in checks) _MatrixCheckPill(check: check),
-              ],
-            ),
+            Expanded(child: labelText),
+            const SizedBox(width: 8),
+            countText,
           ],
         ),
-      ),
+        const SizedBox(height: 10),
+        pills,
+      ],
     );
   }
 }
 
-class _MatrixCheckPill extends StatelessWidget {
-  const _MatrixCheckPill({required this.check, this.home = false});
+class _LookupFlagPill extends StatelessWidget {
+  const _LookupFlagPill({required this.check, this.home = false});
 
   final IpRiskCheck check;
   final bool home;
@@ -1478,7 +1287,7 @@ class _MatrixCheckPill extends StatelessWidget {
       constraints: const BoxConstraints(minHeight: 28),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: ShapeDecoration(
-        color: hit || home ? color.withValues(alpha: 0.12) : colors.card,
+        color: hit || home ? color.withValues(alpha: 0.12) : colors.tone,
         shape: AppShape.sm,
       ),
       child: Row(

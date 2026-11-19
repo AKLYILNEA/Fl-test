@@ -5,6 +5,7 @@ import 'package:fl_clash/ui/ui.dart';
 import 'package:flutter/physics.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_svg/svg.dart';
 
 class MiuixBgConfig {
   const MiuixBgConfig({
@@ -168,6 +169,7 @@ class MiuixBgEffectController extends ChangeNotifier {
   ui.FragmentProgram? _titleProgram;
   ui.FragmentShader? _bgShader;
   ui.FragmentShader? _titleShader;
+  ui.FragmentShader? _logoShader;
 
   bool _disposed = false;
   bool _playing = false;
@@ -194,6 +196,13 @@ class MiuixBgEffectController extends ChangeNotifier {
     final program = _titleProgram;
     if (program == null) return null;
     return _titleShader = program.fragmentShader();
+  }
+
+  ui.FragmentShader? get logoShader {
+    if (_logoShader != null) return _logoShader;
+    final program = _titleProgram;
+    if (program == null) return null;
+    return _logoShader = program.fragmentShader();
   }
 
   Future<void> _loadPrograms() async {
@@ -403,6 +412,7 @@ class MiuixBgEffectController extends ChangeNotifier {
     _ticker.dispose();
     _bgShader?.dispose();
     _titleShader?.dispose();
+    _logoShader?.dispose();
     super.dispose();
   }
 }
@@ -584,6 +594,85 @@ class MiuixChromaticTitle extends StatelessWidget {
         );
       },
       child: buildLabel(style.copyWith(color: const Color(0xFFFFFFFF))),
+    );
+  }
+}
+
+class MiuixChromaticLogo extends StatelessWidget {
+  const MiuixChromaticLogo({
+    super.key,
+    required this.assetPath,
+    required this.size,
+    required this.backdropKey,
+    required this.controller,
+    required this.preset,
+  });
+
+  final String assetPath;
+  final double size;
+  final GlobalKey backdropKey;
+  final MiuixBgEffectController controller;
+  final MiuixBgConfig preset;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = context.colorScheme;
+    final isDark = colorScheme.brightness == Brightness.dark;
+    final surface = SurfaceLevel.page.colorOf(colorScheme);
+    const maskPadding = EdgeInsets.all(4);
+    Widget buildSvg(Color tint) => Padding(
+      padding: maskPadding,
+      child: SvgPicture.asset(
+        assetPath,
+        width: size,
+        height: size,
+        colorFilter: ColorFilter.mode(tint, BlendMode.srcIn),
+      ),
+    );
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, child) {
+        final shader = controller.logoShader;
+        if (shader == null) {
+          return buildSvg(colorScheme.onSurface);
+        }
+        return ShaderMask(
+          blendMode: BlendMode.srcIn,
+          shaderCallback: (bounds) {
+            final backdropBox =
+                backdropKey.currentContext?.findRenderObject() as RenderBox?;
+            final selfBox = context.findRenderObject() as RenderBox?;
+            final backdropSize = backdropBox != null && backdropBox.hasSize
+                ? backdropBox.size
+                : bounds.size;
+            var offset = Offset.zero;
+            if (backdropBox != null &&
+                backdropBox.hasSize &&
+                selfBox != null &&
+                selfBox.hasSize) {
+              offset = selfBox.localToGlobal(
+                Offset.zero,
+                ancestor: backdropBox,
+              );
+            }
+            controller.applyTitleUniforms(
+              shader,
+              backdropSize: backdropSize,
+              titleOffset: offset,
+              preset: preset,
+              surface: surface,
+              isDark: isDark,
+              alpha: 1.0,
+            );
+            return shader;
+          },
+          child: CustomPaint(
+            painter: const _TitleLayerBoundsPainter(),
+            child: child,
+          ),
+        );
+      },
+      child: buildSvg(const Color(0xFFFFFFFF)),
     );
   }
 }
