@@ -268,6 +268,40 @@ void main() {
 
     tearDown(() => readRemoteIcon = null);
 
+    testWidgets('reuses a fresh icon after backgrounding and remounting', (
+      tester,
+    ) async {
+      readRemoteIcon = null;
+      final manager = _MockIconCache();
+      targetIconCacheManager = manager;
+      addTearDown(() => targetIconCacheManager = null);
+      const src = 'https://example.com/restored-group.png';
+      final file = MemoryFileSystem().file('/restored-group.png')
+        ..writeAsBytesSync(_onePixelPng);
+      when(() => manager.getFileFromCache(src)).thenAnswer(
+        (_) async => FileInfo(
+          file,
+          FileSource.Cache,
+          DateTime.now().add(const Duration(hours: 1)),
+          src,
+        ),
+      );
+
+      const icon = CommonTargetIcon(src: src, fallback: GroupMonogram('proxy'));
+      await _pump(tester, icon);
+      await tester.pump();
+      expect(find.byType(Image), findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      imageCache.clear();
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+
+      await _pump(tester, icon);
+      expect(find.byType(Image), findsOneWidget);
+      verify(() => manager.getFileFromCache(src)).called(1);
+      verifyNoMoreInteractions(manager);
+    });
+
     testWidgets('refresh replaces a displayed cached image with new pixels', (
       tester,
     ) async {
@@ -549,10 +583,11 @@ void main() {
       expect(imageCache.currentSize, 1);
     });
 
-    for (final (kind, src, bytes) in [
-      ('a raster icon', 'https://example.com/small.png', _onePixelPng),
-      ('an svg icon', 'https://example.com/star.svg', _svg),
-      ('an unreadable icon', 'https://example.com/broken.png', _broken),
+    for (final (kind, src, bytes, rasterizeSvg) in [
+      ('a raster icon', 'https://example.com/small.png', _onePixelPng, false),
+      ('an svg icon', 'https://example.com/star.svg', _svg, false),
+      ('a rasterized svg icon', 'https://example.com/star.svg', _svg, true),
+      ('an unreadable icon', 'https://example.com/broken.png', _broken, false),
     ]) {
       testWidgets('$kind keeps the icon size from loading to loaded', (
         tester,
@@ -564,7 +599,11 @@ void main() {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              CommonTargetIcon(src: src, fallback: const GroupMonogram('p')),
+              CommonTargetIcon(
+                src: src,
+                fallback: const GroupMonogram('p'),
+                rasterizeSvg: rasterizeSvg,
+              ),
               const Text('name'),
             ],
           ),

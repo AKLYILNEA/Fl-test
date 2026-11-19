@@ -11,6 +11,8 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:vector_graphics/vector_graphics_compat.dart'
+    show RenderingStrategy;
 
 const _maxCachedIconBytes = 16 << 20;
 
@@ -33,7 +35,7 @@ class _IconBytesCache {
   _IconBytesCache(this.maxBytes);
 
   final int maxBytes;
-  final _entries = <String, Uint8List?>{};
+  final _entries = <String, ({Uint8List? bytes, DateTime? validTill})>{};
   var _bytes = 0;
 
   bool contains(String key) => _entries.containsKey(key);
@@ -42,16 +44,25 @@ class _IconBytesCache {
     if (!_entries.containsKey(key)) {
       return null;
     }
-    return _entries[key] = _entries.remove(key);
+    final entry = _entries.remove(key)!;
+    _entries[key] = entry;
+    return entry.bytes;
   }
 
-  void operator []=(String key, Uint8List? value) {
+  Uint8List? freshBytes(String key) {
+    final validTill = _entries[key]?.validTill;
+    return validTill != null && validTill.isAfter(DateTime.now())
+        ? this[key]
+        : null;
+  }
+
+  void put(String key, Uint8List? bytes, {DateTime? validTill}) {
     remove(key);
-    final size = value?.lengthInBytes ?? 0;
+    final size = bytes?.lengthInBytes ?? 0;
     if (size > maxBytes) {
       return;
     }
-    _entries[key] = value;
+    _entries[key] = (bytes: bytes, validTill: validTill);
     _bytes += size;
     while (_bytes > maxBytes) {
       remove(_entries.keys.first);
@@ -59,7 +70,7 @@ class _IconBytesCache {
   }
 
   void remove(String key) {
-    _bytes -= _entries.remove(key)?.lengthInBytes ?? 0;
+    _bytes -= _entries.remove(key)?.bytes?.lengthInBytes ?? 0;
   }
 
   Iterable<String> get keys => _entries.keys;
@@ -80,7 +91,9 @@ Uint8List? _decodeIcon(String src) {
   if (_decodedIcons.contains(src)) {
     return _decodedIcons[src];
   }
-  return _decodedIcons[src] = src.getBase64;
+  final bytes = src.getBase64;
+  _decodedIcons.put(src, bytes);
+  return bytes;
 }
 
 class CommonTargetIcon extends StatelessWidget {
@@ -89,7 +102,14 @@ class CommonTargetIcon extends StatelessWidget {
   /// Shown while [src] is empty, loading or unreadable.
   final Widget? fallback;
 
-  const CommonTargetIcon({super.key, required this.src, this.fallback});
+  final bool rasterizeSvg;
+
+  const CommonTargetIcon({
+    super.key,
+    required this.src,
+    this.fallback,
+    this.rasterizeSvg = false,
+  });
 
   Widget _defaultIcon() {
     return fallback ?? const _ImagePlaceholder();
@@ -107,6 +127,7 @@ class CommonTargetIcon extends StatelessWidget {
         isSvg: src.isSvg,
         fallback: _defaultIcon(),
         loadingWidget: fallback,
+        rasterizeSvg: rasterizeSvg,
       );
     }
 
@@ -114,6 +135,7 @@ class CommonTargetIcon extends StatelessWidget {
       src: src,
       defaultWidget: _defaultIcon(),
       loadingWidget: fallback,
+      rasterizeSvg: rasterizeSvg,
     );
   }
 
@@ -195,6 +217,7 @@ class _BytesImage extends StatefulWidget {
     required this.isSvg,
     required this.fallback,
     this.loadingWidget,
+    this.rasterizeSvg = false,
     this.onError,
   });
 
@@ -202,6 +225,7 @@ class _BytesImage extends StatefulWidget {
   final bool isSvg;
   final Widget fallback;
   final Widget? loadingWidget;
+  final bool rasterizeSvg;
   final VoidCallback? onError;
 
   @override
@@ -229,6 +253,9 @@ class _BytesImageState extends State<_BytesImage> {
     return widget.isSvg
         ? SvgPicture.memory(
             widget.bytes,
+            renderingStrategy: widget.rasterizeSvg
+                ? RenderingStrategy.raster
+                : RenderingStrategy.picture,
             width: size,
             height: size,
             fit: BoxFit.scaleDown,
@@ -316,28 +343,43 @@ Future<void> _refreshTargetIcons(
             'Pragma': 'no-cache',
           },
         );
-        _remoteIcons[url] = await file.file.readAsBytes();
+        _remoteIcons.put(
+          url,
+          await file.file.readAsBytes(),
+          validTill: file.validTill,
+        );
       }),
   ]);
 }
 
-Stream<Uint8List> _readCachedIcon(String src) {
+typedef _RemoteIconRead = ({Uint8List bytes, DateTime? validTill});
+
+Stream<_RemoteIconRead> _readCachedIcon(String src) {
   return _cacheManager
       .getFileStreamV2(src)
-      .asyncMap((data) => data.file.readAsBytes());
+      .asyncMap(
+        (data) async =>
+            (bytes: await data.file.readAsBytes(), validTill: data.validTill),
+      );
 }
 
 var _readRemoteIcon = _readCachedIcon;
 
 @visibleForTesting
 set readRemoteIcon(Stream<Uint8List> Function(String src)? value) {
-  _readRemoteIcon = value ?? _readCachedIcon;
+  _readRemoteIcon = value == null
+      ? _readCachedIcon
+      : (src) => value(src).map((bytes) => (bytes: bytes, validTill: null));
 }
 
 Stream<Uint8List> _loadRemoteIcon(String src) async* {
   final refresh = _refreshingIcons;
   if (refresh != null) {
     await refresh;
+  }
+  if (_remoteIcons.freshBytes(src) case final bytes?) {
+    yield bytes;
+    return;
   }
   final done = Completer<void>();
   _pendingIconReads.add(done.future);
@@ -346,13 +388,13 @@ Stream<Uint8List> _loadRemoteIcon(String src) async* {
   // so a cache reset cannot race an older download writing the file back.
   try {
     _readRemoteIcon(src).listen(
-      (bytes) {
+      (read) {
         final current = _remoteIcons[src];
-        controller.add(
-          _remoteIcons[src] = current != null && listEquals(current, bytes)
-              ? current
-              : bytes,
-        );
+        final bytes = current != null && listEquals(current, read.bytes)
+            ? current
+            : read.bytes;
+        _remoteIcons.put(src, bytes, validTill: read.validTill);
+        controller.add(bytes);
       },
       onError: controller.addError,
       onDone: () {
@@ -417,12 +459,14 @@ class ImageCacheWidget extends StatefulWidget {
   final String src;
   final Widget defaultWidget;
   final Widget? loadingWidget;
+  final bool rasterizeSvg;
 
   const ImageCacheWidget({
     super.key,
     required this.src,
     required this.defaultWidget,
     this.loadingWidget,
+    this.rasterizeSvg = false,
   });
 
   @override
@@ -508,6 +552,7 @@ class _ImageCacheWidgetState extends State<ImageCacheWidget> {
           isSvg: widget.src.isSvg,
           fallback: widget.defaultWidget,
           loadingWidget: widget.loadingWidget,
+          rasterizeSvg: widget.rasterizeSvg,
           onError: () => _remoteIcons.remove(widget.src),
         );
       },
