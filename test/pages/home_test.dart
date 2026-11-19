@@ -1091,8 +1091,11 @@ void main() {
   });
 
   for (final animation in TabAnimation.values) {
-    testWidgets('a ${animation.name} tab switch freezes only the outgoing page '
-        'and paints arriving icons before settling', (tester) async {
+    final snapshotsArrival = animation == TabAnimation.slide;
+    testWidgets('a ${animation.name} tab switch '
+        '${snapshotsArrival ? 'snapshots' : 'keeps live'} the arriving page', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(500, 800);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
@@ -1165,11 +1168,12 @@ void main() {
       paints.clear();
       iconReady.value = true;
       await tester.pump(const Duration(milliseconds: 16));
-      expect(paints, contains(true));
-      expect(snapshots('page:tools'), isFalse);
+      expect(paints, snapshotsArrival ? isNot(contains(true)) : contains(true));
+      expect(snapshots('page:tools'), snapshotsArrival);
 
       await tester.pumpAndSettle();
       expect(snapshots('page:tools'), isFalse);
+      expect(paints, contains(true));
       expect(tester.takeException(), isNull);
     });
   }

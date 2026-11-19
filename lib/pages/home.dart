@@ -375,7 +375,7 @@ class _HomePageViewState extends ConsumerState<_HomePageView> {
           controller: _pageController,
           position: index,
           label: widget.navigationItems[_order?[index] ?? index].label,
-          enabled: fade,
+          fade: fade,
           child: page,
         );
       },
@@ -393,14 +393,14 @@ class _FadeTabPage extends ConsumerStatefulWidget {
     required this.controller,
     required this.position,
     required this.label,
-    required this.enabled,
+    required this.fade,
     required this.child,
   });
 
   final PageController controller;
   final int position;
   final PageLabel label;
-  final bool enabled;
+  final bool fade;
   final Widget child;
 
   @override
@@ -433,15 +433,18 @@ class _FadeTabPageState extends ConsumerState<_FadeTabPage> {
 
   @override
   Widget build(BuildContext context) {
-    final arriving = ref.watch(
-      shownPageLabelProvider.select((label) => label == widget.label),
-    );
+    final liveArrival =
+        widget.fade &&
+        ref.watch(
+          shownPageLabelProvider.select((label) => label == widget.label),
+        );
     return AnimatedBuilder(
       animation: widget.controller,
       builder: (_, child) {
         final offset = _delta;
-        _snapshot.allowSnapshotting = !arriving && offset.abs() > _restingDelta;
-        final delta = widget.enabled ? offset : 0.0;
+        _snapshot.allowSnapshotting =
+            !liveArrival && offset.abs() > _restingDelta;
+        final delta = widget.fade ? offset : 0.0;
         return FractionalTranslation(
           translation: Offset(-delta, 0),
           child: Opacity(opacity: 1 - delta.abs(), child: child),
