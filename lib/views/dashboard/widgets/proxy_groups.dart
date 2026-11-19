@@ -90,6 +90,7 @@ class _GroupIcon extends StatelessWidget {
             builder: (_, ref, _) => CommonTargetIcon(
               src: ref.watch(proxyGroupIconProvider(group.name)),
               fallback: GroupMonogram(group.name),
+              rasterizeSvg: true,
             ),
           ),
         ),

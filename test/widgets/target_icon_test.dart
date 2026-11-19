@@ -27,6 +27,30 @@ import '../helpers/test_database_providers.dart';
 
 class _MockIconCache extends Mock implements CacheManager {}
 
+class _MockFileService extends Mock implements FileService {}
+
+class _FakeFileServiceResponse implements FileServiceResponse {
+  _FakeFileServiceResponse(this.validTill);
+
+  @override
+  Stream<List<int>> get content => const Stream.empty();
+
+  @override
+  int? get contentLength => 0;
+
+  @override
+  int get statusCode => 200;
+
+  @override
+  final DateTime validTill;
+
+  @override
+  String? get eTag => null;
+
+  @override
+  String get fileExtension => '.png';
+}
+
 Future<void> _pump(WidgetTester tester, Widget icon) {
   return tester.pumpWidget(
     TestApp(
@@ -38,6 +62,54 @@ Future<void> _pump(WidgetTester tester, Widget icon) {
 }
 
 void main() {
+  test(
+    'IconFileService floors short cache expiries while preserving longer ones',
+    () async {
+      final inner = _MockFileService();
+      final service = IconFileService(
+        inner: inner,
+        minCacheDuration: const Duration(days: 7),
+      );
+      final now = DateTime.now();
+      when(() => inner.get('https://example.com/short.png')).thenAnswer(
+        (_) async =>
+            _FakeFileServiceResponse(now.add(const Duration(minutes: 5))),
+      );
+      when(() => inner.get('https://example.com/long.png')).thenAnswer(
+        (_) async => _FakeFileServiceResponse(now.add(const Duration(days: 30))),
+      );
+
+      final shortRes = await service.get('https://example.com/short.png');
+      final longRes = await service.get('https://example.com/long.png');
+
+      expect(
+        shortRes.validTill.isAfter(now.add(const Duration(days: 6))),
+        isTrue,
+      );
+      expect(
+        longRes.validTill.isAfter(now.add(const Duration(days: 29))),
+        isTrue,
+      );
+    },
+  );
+
+  test(
+    'resolveProxyGroupIcon applies matching icon rules before group icons',
+    () {
+      final rules = [
+        IconRule(pattern: 'HK|香港', icon: 'https://example.com/hk.svg'),
+      ];
+      expect(
+        resolveProxyGroupIcon('🇭🇰 香港节点', 'https://example.com/old.png', rules),
+        'https://example.com/hk.svg',
+      );
+      expect(
+        resolveProxyGroupIcon('🇯🇵 日本节点', 'https://example.com/jp.png', rules),
+        'https://example.com/jp.png',
+      );
+    },
+  );
+
   test(
     'icon files survive a fresh cache instance after temporary cleanup',
     () async {
@@ -338,6 +410,97 @@ void main() {
       expect(find.byType(Image), findsOneWidget);
       verify(() => manager.getFileFromCache(src)).called(1);
       verifyNoMoreInteractions(manager);
+    });
+
+    testWidgets(
+      'precacheTargetIcons re-warms raster PNG and SVG icons after memory '
+      'pressure without re-reading disk cache',
+      (tester) async {
+        readRemoteIcon = null;
+        final manager = _MockIconCache();
+        targetIconCacheManager = manager;
+        addTearDown(() => targetIconCacheManager = null);
+        const pngSrc = 'https://example.com/prewarm-after-trim.png';
+        const svgSrc = 'https://example.com/prewarm-after-trim.svg';
+        final fs = MemoryFileSystem();
+        final pngFile = fs.file('/prewarm.png')..writeAsBytesSync(_onePixelPng);
+        final svgFile = fs.file('/prewarm.svg')..writeAsBytesSync(_svg);
+        final validTill = DateTime.now().add(const Duration(days: 7));
+        when(() => manager.getFileFromCache(pngSrc)).thenAnswer(
+          (_) async => FileInfo(pngFile, FileSource.Cache, validTill, pngSrc),
+        );
+        when(() => manager.getFileFromCache(svgSrc)).thenAnswer(
+          (_) async => FileInfo(svgFile, FileSource.Cache, validTill, svgSrc),
+        );
+
+        await tester.runAsync(() => precacheTargetIcons([pngSrc, svgSrc]));
+        verify(() => manager.getFileFromCache(pngSrc)).called(1);
+        verify(() => manager.getFileFromCache(svgSrc)).called(1);
+
+        // Simulate Android background memory pressure wiping ImageCache.
+        imageCache.clear();
+        expect(imageCache.currentSize, 0);
+
+        // AppLifecycleState.resumed triggers precacheTargetIcons again.
+        await tester.runAsync(() => precacheTargetIcons([pngSrc, svgSrc]));
+        expect(imageCache.currentSize, 2);
+        verifyNoMoreInteractions(manager);
+
+        await _pump(
+          tester,
+          const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CommonTargetIcon(
+                src: pngSrc,
+                fallback: GroupMonogram('Alpha'),
+                rasterizeSvg: true,
+              ),
+              CommonTargetIcon(
+                src: svgSrc,
+                fallback: GroupMonogram('Beta'),
+                rasterizeSvg: true,
+              ),
+            ],
+          ),
+        );
+        expect(find.text('A'), findsNothing);
+        expect(find.text('B'), findsNothing);
+        final rawImages = tester.widgetList<RawImage>(find.byType(RawImage));
+        expect(rawImages, hasLength(2));
+        expect(rawImages.every((img) => img.image != null), isTrue);
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+    );
+
+    testWidgets('deduplicates concurrent loads for the same icon URL', (
+      tester,
+    ) async {
+      final controller = StreamController<Uint8List>();
+      addTearDown(() => unawaited(controller.close()));
+      var calls = 0;
+      readRemoteIcon = (_) {
+        calls++;
+        return controller.stream;
+      };
+      const src = 'https://example.com/dedup-icon.png';
+
+      final precache = precacheTargetIcons([src]);
+      await _pump(
+        tester,
+        const CommonTargetIcon(src: src, fallback: GroupMonogram('Dedup')),
+      );
+      expect(calls, 1);
+
+      await tester.runAsync(() async {
+        controller.add(Uint8List.fromList(_onePixelPng));
+        await controller.close();
+        await precache;
+      });
+      await tester.pump();
+
+      expect(find.byType(Image), findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
     });
 
     testWidgets('refresh replaces a displayed cached image with new pixels', (

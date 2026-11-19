@@ -48,6 +48,65 @@ class IconCacheFileSystem implements FileSystem {
   }
 }
 
+/// Keeps icon responses valid for at least [minCacheDuration] even when a host
+/// (such as raw.githubusercontent.com) sends a short `Cache-Control: max-age`.
+/// Explicit user refreshes bypass this via `emptyCache()` + `force: true`.
+class IconFileService extends FileService {
+  IconFileService({
+    FileService? inner,
+    this.minCacheDuration = const Duration(days: 7),
+  }) : _inner = inner ?? HttpFileService();
+
+  final FileService _inner;
+  final Duration minCacheDuration;
+
+  @override
+  int get concurrentFetches => _inner.concurrentFetches;
+
+  @override
+  set concurrentFetches(int value) {
+    _inner.concurrentFetches = value;
+  }
+
+  @override
+  Future<FileServiceResponse> get(
+    String url, {
+    Map<String, String>? headers,
+  }) async {
+    final response = await _inner.get(url, headers: headers);
+    return _MinCacheFileServiceResponse(response, minCacheDuration);
+  }
+}
+
+class _MinCacheFileServiceResponse implements FileServiceResponse {
+  _MinCacheFileServiceResponse(this._inner, this._minCacheDuration);
+
+  final FileServiceResponse _inner;
+  final Duration _minCacheDuration;
+
+  @override
+  Stream<List<int>> get content => _inner.content;
+
+  @override
+  int? get contentLength => _inner.contentLength;
+
+  @override
+  int get statusCode => _inner.statusCode;
+
+  @override
+  DateTime get validTill {
+    final inner = _inner.validTill;
+    final floor = DateTime.now().add(_minCacheDuration);
+    return inner.isAfter(floor) ? inner : floor;
+  }
+
+  @override
+  String? get eTag => _inner.eTag;
+
+  @override
+  String get fileExtension => _inner.fileExtension;
+}
+
 extension CacheManagerExt on CacheManager {
   Stream<FileInfo> getFileStreamV2(
     String url, {

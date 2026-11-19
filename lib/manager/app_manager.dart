@@ -40,7 +40,12 @@ class _AppStateManagerState extends ConsumerState<AppStateManager>
     });
     ref.listenManual(groupsProvider, (prev, next) {
       if (prev != next) {
-        unawaited(precacheTargetIcons(next.map((group) => group.icon)));
+        _precacheProxyIcons();
+      }
+    }, fireImmediately: true);
+    ref.listenManual(iconRulesProvider, (prev, next) {
+      if (prev != next) {
+        _precacheProxyIcons();
       }
     }, fireImmediately: true);
     ref.listenManual(iconSetsProvider, (_, next) {
@@ -80,10 +85,25 @@ class _AppStateManagerState extends ConsumerState<AppStateManager>
     };
   }
 
+  Iterable<String> _proxyIconSources() {
+    final groups = ref.read(groupsProvider);
+    final rules = ref.read(iconRulesProvider);
+    return [
+      for (final group in groups)
+        resolveProxyGroupIcon(group.name, group.icon, rules),
+      for (final rule in rules) rule.icon,
+    ];
+  }
+
+  void _precacheProxyIcons() {
+    unawaited(precacheTargetIcons(_proxyIconSources()));
+  }
+
   @override
   Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
     _updateVisible(state);
     if (state == AppLifecycleState.resumed) {
+      _precacheProxyIcons();
       unawaited(ref.read(locationPermissionsProvider.notifier).refresh());
       // A certificate removed meanwhile stops decryption before the next start.
       if (rsFeature && ref.read(patchClashConfigProvider).mitm.enable) {
