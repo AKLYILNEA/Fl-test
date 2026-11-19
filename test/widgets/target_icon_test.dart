@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io' as io;
 import 'dart:ui' as ui;
 
 import 'package:file/memory.dart';
+import 'package:fl_clash/common/cache.dart';
 import 'package:fl_clash/models/models.dart' hide FileInfo;
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
@@ -17,6 +19,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:path/path.dart' show join;
 
 import '../helpers/glyph_finders.dart';
 import '../helpers/test_app.dart';
@@ -35,6 +38,41 @@ Future<void> _pump(WidgetTester tester, Widget icon) {
 }
 
 void main() {
+  test(
+    'icon files survive a fresh cache instance after temporary cleanup',
+    () async {
+      final root = await io.Directory.systemTemp.createTemp('icon-storage');
+      addTearDown(() => root.delete(recursive: true));
+      final support = join(root.path, 'support');
+      final temporary = join(root.path, 'temporary');
+      final legacy = await io.Directory(
+        join(temporary, DefaultCacheManager.key),
+      ).create(recursive: true);
+      await io.File(join(legacy.path, 'cached.png')).writeAsBytes(_onePixelPng);
+
+      IconCacheFileSystem openCache() => IconCacheFileSystem(
+        supportPath: () async => support,
+        temporaryPath: () async => temporary,
+      );
+
+      final cache = openCache();
+      final migrated = await cache.createFile('cached.png');
+      expect(await migrated.readAsBytes(), _onePixelPng);
+      expect(await legacy.exists(), isFalse);
+
+      final downloaded = await cache.createFile('downloaded.png');
+      await downloaded.writeAsBytes(_onePixelPng);
+      await io.Directory(temporary).delete(recursive: true);
+
+      final reopened = openCache();
+      for (final name in ['cached.png', 'downloaded.png']) {
+        final file = await reopened.createFile(name);
+        expect(await file.readAsBytes(), _onePixelPng);
+        expect(file.parent.path, join(support, 'target_icons'));
+      }
+    },
+  );
+
   test('refresh removes disk icons and downloads PNG and SVG again, '
       'without restoring unused icons from earlier sessions', () async {
     final manager = _MockIconCache();

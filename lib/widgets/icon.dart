@@ -280,6 +280,10 @@ class _BytesImageState extends State<_BytesImage> {
 final _defaultCacheManager = CacheManager(
   Config(
     DefaultCacheManager.key,
+    fileSystem: IconCacheFileSystem(
+      supportPath: () => appPath.homeDirPath,
+      temporaryPath: () => appPath.tempPath,
+    ),
     fileService: HttpFileService()..concurrentFetches = maxConcurrentIconLoads,
   ),
 );

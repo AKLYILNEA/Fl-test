@@ -1,6 +1,52 @@
 import 'dart:async';
+import 'dart:io' show FileSystemException;
 
+import 'package:file/file.dart' as file;
+import 'package:file/local.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:path/path.dart' show join;
+
+import 'future.dart';
+
+class IconCacheFileSystem implements FileSystem {
+  IconCacheFileSystem({
+    required Future<String> Function() supportPath,
+    required Future<String> Function() temporaryPath,
+  }) : _directory = ResolveOnce(() => _open(supportPath, temporaryPath));
+
+  final ResolveOnce<file.Directory> _directory;
+
+  static Future<file.Directory> _open(
+    Future<String> Function() supportPath,
+    Future<String> Function() temporaryPath,
+  ) async {
+    const fs = LocalFileSystem();
+    final directory = fs.directory(join(await supportPath(), 'target_icons'));
+    if (await directory.exists()) return directory;
+
+    try {
+      final legacy = fs.directory(
+        join(await temporaryPath(), DefaultCacheManager.key),
+      );
+      if (await legacy.exists()) {
+        await directory.parent.create(recursive: true);
+        return await legacy.rename(directory.path);
+      }
+    } on FileSystemException {
+      // The old temporary directory may have been purged during the move.
+    }
+    return directory.create(recursive: true);
+  }
+
+  @override
+  Future<file.File> createFile(String name) async {
+    final directory = await _directory.value;
+    if (!await directory.exists()) {
+      await directory.create(recursive: true);
+    }
+    return directory.childFile(name);
+  }
+}
 
 extension CacheManagerExt on CacheManager {
   Stream<FileInfo> getFileStreamV2(
