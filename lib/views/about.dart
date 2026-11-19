@@ -338,7 +338,7 @@ class _AboutHero extends StatelessWidget {
     required this.onEnterDeveloperMode,
   });
 
-  static const _logoSize = 72.0;
+  static const _logoSize = 96.0;
 
   Widget _fadeScale(double progress, Widget child) {
     final clamped = progress.clamp(0.0, 1.0);
@@ -376,7 +376,6 @@ class _AboutHero extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 2),
           _fadeScale(
             titleProgress,
             MiuixChromaticTitle(

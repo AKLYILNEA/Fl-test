@@ -184,11 +184,6 @@ class _IpLookupViewState extends ConsumerState<IpLookupView> {
             builder: (context, constraints) {
               const sidePadding = 16.0;
               final isWide = constraints.maxWidth >= 760;
-              final contentWidth = constraints.maxWidth - sidePadding * 2;
-              final heroCardWidth = isWide
-                  ? (contentWidth - 12) * 0.6
-                  : contentWidth;
-              final horizontalHero = heroCardWidth - 40 >= 380;
               return ListView(
                 padding: EdgeInsets.fromLTRB(
                   sidePadding,
@@ -237,7 +232,6 @@ class _IpLookupViewState extends ConsumerState<IpLookupView> {
                     child: _buildContent(
                       context,
                       isWide: isWide,
-                      horizontalHero: horizontalHero,
                       activeIp: activeIp,
                       isOutbound: isOutbound,
                       hidden: hidden,
@@ -264,7 +258,6 @@ class _IpLookupViewState extends ConsumerState<IpLookupView> {
   Widget _buildContent(
     BuildContext context, {
     required bool isWide,
-    required bool horizontalHero,
     required String activeIp,
     required bool isOutbound,
     required bool hidden,
@@ -289,7 +282,6 @@ class _IpLookupViewState extends ConsumerState<IpLookupView> {
         risk: risk,
         hidden: hidden,
         isOutbound: isOutbound,
-        horizontalHero: horizontalHero,
         fillHeight: isWide,
       );
       final attributionCard = _IpAttributionCard(
@@ -307,9 +299,9 @@ class _IpLookupViewState extends ConsumerState<IpLookupView> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Expanded(flex: 6, child: heroCard),
+                  Expanded(flex: 11, child: heroCard),
                   const SizedBox(width: 12),
-                  Expanded(flex: 4, child: attributionCard),
+                  Expanded(flex: 9, child: attributionCard),
                 ],
               ),
             )
@@ -472,7 +464,6 @@ class _IpRiskHeroCard extends StatelessWidget {
     required this.risk,
     required this.hidden,
     required this.isOutbound,
-    required this.horizontalHero,
     this.fillHeight = false,
   });
 
@@ -480,7 +471,6 @@ class _IpRiskHeroCard extends StatelessWidget {
   final IpRisk risk;
   final bool hidden;
   final bool isOutbound;
-  final bool horizontalHero;
   final bool fillHeight;
 
   @override
@@ -545,11 +535,7 @@ class _IpRiskHeroCard extends StatelessWidget {
           style: AppTextStyle.display
               .of(context, emphasized: true)
               .toTabular
-              .copyWith(
-                fontSize: horizontalHero ? 52 : 46,
-                height: 1.0,
-                color: scoreColor,
-              ),
+              .copyWith(fontSize: 48, height: 1.0, color: scoreColor),
         ),
         const SizedBox(width: 5),
         Text(
@@ -669,42 +655,17 @@ class _IpRiskHeroCard extends StatelessWidget {
       ],
     );
 
-    final mainBody = horizontalHero
-        ? IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Center(child: scoreBlock),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: SizedBox(
-                    width: Divider.separatorThicknessOf(context),
-                    child: ColoredBox(color: Divider.colorOf(context)),
-                  ),
-                ),
-                Expanded(
-                  child: Align(
-                    alignment: AlignmentDirectional.centerStart,
-                    child: ipColumn,
-                  ),
-                ),
-              ],
-            ),
-          )
-        : Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              scoreBlock,
-              const SizedBox(height: 14),
-              Divider(
-                height: 1,
-                thickness: Divider.separatorThicknessOf(context),
-              ),
-              const SizedBox(height: 14),
-              ipColumn,
-            ],
-          );
+    final mainBody = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        scoreBlock,
+        const SizedBox(height: 14),
+        Divider(height: 1, thickness: Divider.separatorThicknessOf(context)),
+        const SizedBox(height: 14),
+        ipColumn,
+      ],
+    );
 
     final riskScale = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -786,10 +747,16 @@ class _IpRiskHeroCard extends StatelessWidget {
                     ? MainAxisAlignment.spaceBetween
                     : MainAxisAlignment.start,
                 children: [
-                  header,
-                  const SizedBox(height: 18),
-                  mainBody,
-                  const SizedBox(height: 18),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      header,
+                      const SizedBox(height: 14),
+                      mainBody,
+                    ],
+                  ),
+                  const SizedBox(height: 16),
                   riskScale,
                 ],
               ),
@@ -907,14 +874,8 @@ class _IpAttributionCard extends StatelessWidget {
   final bool hidden;
   final bool isWide;
 
-  Widget _field(
-    BuildContext context,
-    String label,
-    String value, {
-    bool mono = false,
-  }) {
+  Widget _field(BuildContext context, String label, String value) {
     final cs = context.colorScheme;
-    final baseStyle = AppTextStyle.subheadline.of(context, emphasized: true);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
@@ -928,7 +889,7 @@ class _IpAttributionCard extends StatelessWidget {
         const SizedBox(height: 4),
         SelectableText(
           value,
-          style: mono ? baseStyle.toJetBrainsMono : baseStyle,
+          style: AppTextStyle.subheadline.of(context, emphasized: true),
         ),
       ],
     );
@@ -999,8 +960,7 @@ class _IpAttributionCard extends StatelessWidget {
         _field(context, l.isp, company)
       else if (showNetwork)
         _field(context, l.ipRiskAsn, network),
-      if (showHostname)
-        _field(context, l.ipRiskHostname, risk.hostname, mono: true),
+      if (showHostname) _field(context, l.ipRiskHostname, risk.hostname),
     ];
 
     return Card(
