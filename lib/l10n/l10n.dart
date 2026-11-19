@@ -10706,6 +10706,11 @@ class AppLocalizations {
       args: [],
     );
   }
+
+  /// `IP Lookup`
+  String get ipQuery {
+    return Intl.message('IP Lookup', name: 'ipQuery', desc: '', args: []);
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<AppLocalizations> {

@@ -1055,6 +1055,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "ipQualityShort": MessageLookupByLibrary.simpleMessage("품질"),
     "ipQualitySource": MessageLookupByLibrary.simpleMessage("응답 출처"),
     "ipQualitySources": MessageLookupByLibrary.simpleMessage("출처"),
+    "ipQuery": MessageLookupByLibrary.simpleMessage("IP 조회"),
     "ipRiskAlert": MessageLookupByLibrary.simpleMessage("IP 위험 알림"),
     "ipRiskAmountHigh": MessageLookupByLibrary.simpleMessage("많음"),
     "ipRiskAmountLow": MessageLookupByLibrary.simpleMessage("적음"),

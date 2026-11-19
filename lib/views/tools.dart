@@ -10,6 +10,7 @@ import 'package:fl_clash/views/backup_and_restore.dart';
 import 'package:fl_clash/views/config/general.dart';
 import 'package:fl_clash/views/hotkey.dart';
 import 'package:fl_clash/widgets/widgets.dart';
+import 'package:fl_clash/features/ip_quality/ip_lookup_view.dart';
 import 'package:fl_clash/features/speed_test/view.dart';
 import 'package:fl_clash/features/traffic_stats/view.dart';
 import 'package:flutter/widgets.dart';
@@ -73,13 +74,18 @@ class _ToolViewState extends ConsumerState<ToolsView> {
         builder: (_, ref, _) {
           final state = ref.watch(moreToolsSelectorStateProvider);
           final navigation = state.navigationItems;
+          final dns = navigation.indexWhere(
+            (item) => item.label == PageLabel.dns,
+          );
           final resources = navigation.indexWhere(
             (item) => item.label == PageLabel.resources,
           );
           final logs = navigation.indexWhere(
             (item) => item.label == PageLabel.logs,
           );
-          final speedTestIndex = resources >= 0
+          final customToolsIndex = dns >= 0
+              ? dns + 1
+              : resources >= 0
               ? resources
               : logs >= 0
               ? logs
@@ -87,17 +93,23 @@ class _ToolViewState extends ConsumerState<ToolsView> {
           return generateSection(
             items: [
               for (var index = 0; index <= navigation.length; index++) ...[
-                if (index == speedTestIndex) ...[
+                if (index == customToolsIndex) ...[
                   ListItem.open(
-                    leading: const GlyphIcon(AppGlyphs.speed),
-                    title: Text(context.appLocalizations.speedTest),
-                    widget: const SpeedTestView(),
+                    leading: const GlyphIcon(AppGlyphs.location),
+                    title: Text(context.appLocalizations.ipQuery),
+                    widget: const IpLookupView(),
                     forceFull: true,
                   ),
                   ListItem.open(
                     leading: const GlyphIcon(AppGlyphs.dataUsage),
                     title: Text(context.appLocalizations.trafficStats),
                     widget: const TrafficStatsView(),
+                    forceFull: true,
+                  ),
+                  ListItem.open(
+                    leading: const GlyphIcon(AppGlyphs.speed),
+                    title: Text(context.appLocalizations.speedTest),
+                    widget: const SpeedTestView(),
                     forceFull: true,
                   ),
                 ],

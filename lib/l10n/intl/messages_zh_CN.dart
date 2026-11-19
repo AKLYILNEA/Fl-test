@@ -971,6 +971,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "ipQualityShort": MessageLookupByLibrary.simpleMessage("质量"),
     "ipQualitySource": MessageLookupByLibrary.simpleMessage("采用来源"),
     "ipQualitySources": MessageLookupByLibrary.simpleMessage("各来源"),
+    "ipQuery": MessageLookupByLibrary.simpleMessage("IP查询"),
     "ipRiskAlert": MessageLookupByLibrary.simpleMessage("IP 风险提示"),
     "ipRiskAmountHigh": MessageLookupByLibrary.simpleMessage("较多"),
     "ipRiskAmountLow": MessageLookupByLibrary.simpleMessage("较少"),

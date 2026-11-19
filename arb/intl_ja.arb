@@ -1257,5 +1257,6 @@
   "trafficStatsClearTip": "保存されているトラフィック統計データをすべて消去しますか？",
   "trafficStatsSince": "{date} 以降の統計",
   "trafficStatsDetailOffTip": "詳細統計がオフのため、合計と時間帯別の推移のみ記録されます。",
-  "trafficStatsRefresh": "更新"
+  "trafficStatsRefresh": "更新",
+  "ipQuery": "IPクエリ"
 }

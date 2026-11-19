@@ -1069,6 +1069,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "ipQualityShort": MessageLookupByLibrary.simpleMessage("品質"),
     "ipQualitySource": MessageLookupByLibrary.simpleMessage("採用したソース"),
     "ipQualitySources": MessageLookupByLibrary.simpleMessage("各ソース"),
+    "ipQuery": MessageLookupByLibrary.simpleMessage("IPクエリ"),
     "ipRiskAlert": MessageLookupByLibrary.simpleMessage("IP リスク警告"),
     "ipRiskAmountHigh": MessageLookupByLibrary.simpleMessage("多い"),
     "ipRiskAmountLow": MessageLookupByLibrary.simpleMessage("少ない"),

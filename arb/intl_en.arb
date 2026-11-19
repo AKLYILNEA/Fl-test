@@ -1257,5 +1257,6 @@
   "trafficStatsClearTip": "Are you sure you want to clear all saved traffic statistics data?",
   "trafficStatsSince": "Since {date}",
   "trafficStatsDetailOffTip": "Detailed breakdown is turned off. Only total and hourly traffic are recorded.",
-  "trafficStatsRefresh": "Refresh"
+  "trafficStatsRefresh": "Refresh",
+  "ipQuery": "IP Lookup"
 }

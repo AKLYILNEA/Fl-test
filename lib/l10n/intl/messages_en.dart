@@ -1239,6 +1239,7 @@ class MessageLookup extends MessageLookupByLibrary {
     "ipQualityShort": MessageLookupByLibrary.simpleMessage("Quality"),
     "ipQualitySource": MessageLookupByLibrary.simpleMessage("Answered by"),
     "ipQualitySources": MessageLookupByLibrary.simpleMessage("Sources"),
+    "ipQuery": MessageLookupByLibrary.simpleMessage("IP Lookup"),
     "ipRiskAlert": MessageLookupByLibrary.simpleMessage("IP Risk Alert"),
     "ipRiskAmountHigh": MessageLookupByLibrary.simpleMessage("High"),
     "ipRiskAmountLow": MessageLookupByLibrary.simpleMessage("Low"),
