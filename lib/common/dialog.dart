@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/widgets/widgets.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -218,6 +219,16 @@ class Dialogs {
             : null,
       ),
     );
+  }
+
+  Future<void> copyToClipboard(BuildContext context, String text) async {
+    await Clipboard.setData(ClipboardData(text: text));
+    if (context.mounted) {
+      showBanner(
+        context.appLocalizations.copySuccess,
+        level: BannerLevel.success,
+      );
+    }
   }
 
   void showBanner(

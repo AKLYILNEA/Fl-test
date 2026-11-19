@@ -250,9 +250,9 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m101(value) => "ピーク ${value}";
 
-  static String m102(count) => "${count} 日";
+  static String m102(count) => "${count} 回";
 
-  static String m103(count) => "${count} 回";
+  static String m103(count) => "${count} か月";
 
   static String m104(date) => "${date} 以降の統計";
 
@@ -2053,7 +2053,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "保存されているトラフィック統計データをすべて消去しますか？",
     ),
     "trafficStatsDay": MessageLookupByLibrary.simpleMessage("日"),
-    "trafficStatsDays": m102,
     "trafficStatsDesc": MessageLookupByLibrary.simpleMessage(
       "日・週・月ごとのトラフィック内訳を確認します",
     ),
@@ -2074,10 +2073,11 @@ class MessageLookup extends MessageLookupByLibrary {
       "トラフィック統計を有効にする",
     ),
     "trafficStatsEnableAction": MessageLookupByLibrary.simpleMessage("有効化"),
-    "trafficStatsHitCount": m103,
+    "trafficStatsHitCount": m102,
     "trafficStatsHourUnit": MessageLookupByLibrary.simpleMessage("時間"),
     "trafficStatsMinuteUnit": MessageLookupByLibrary.simpleMessage("分"),
     "trafficStatsMonth": MessageLookupByLibrary.simpleMessage("月"),
+    "trafficStatsMonths": m103,
     "trafficStatsNode": MessageLookupByLibrary.simpleMessage("ノード"),
     "trafficStatsOverview": MessageLookupByLibrary.simpleMessage("概要"),
     "trafficStatsRanking": MessageLookupByLibrary.simpleMessage("トラフィックランキング"),

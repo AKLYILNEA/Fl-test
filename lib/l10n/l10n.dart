@@ -10647,11 +10647,11 @@ class AppLocalizations {
     );
   }
 
-  /// `{count} days`
-  String trafficStatsDays(Object count) {
+  /// `{count} months`
+  String trafficStatsMonths(Object count) {
     return Intl.message(
-      '$count days',
-      name: 'trafficStatsDays',
+      '$count months',
+      name: 'trafficStatsMonths',
       desc: '',
       args: [count],
     );

@@ -322,13 +322,13 @@ type GeoUpdateStatus struct {
 }
 
 type TrafficStatsConfigParams struct {
-	Enable        bool   `json:"enable"`
-	Detail        bool   `json:"detail"`
-	RetentionDays int    `json:"retention-days"`
-	TzOffset      int    `json:"tz-offset"`
-	Profile       string `json:"profile"`
-	ScreenOn      *bool  `json:"screen-on,omitempty"`
-	Suspended     *bool  `json:"suspended,omitempty"`
+	Enable          bool   `json:"enable"`
+	Detail          bool   `json:"detail"`
+	RetentionMonths int    `json:"retention-months"`
+	TzOffset        int    `json:"tz-offset"`
+	Profile         string `json:"profile"`
+	ScreenOn        *bool  `json:"screen-on,omitempty"`
+	Suspended       *bool  `json:"suspended,omitempty"`
 }
 
 type TrafficStatsQuery struct {

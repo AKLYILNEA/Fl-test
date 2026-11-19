@@ -787,7 +787,7 @@ void main() {
       const TrafficStatsSettings(
         enable: true,
         detail: false,
-        retentionDays: 14,
+        retentionMonths: 6,
       ),
       profile: 'Main',
       tzOffset: 480,
@@ -797,7 +797,7 @@ void main() {
     expect(handler.calls[CoreMethod.trafficStatsConfigure], {
       'enable': true,
       'detail': false,
-      'retention-days': 14,
+      'retention-months': 6,
       'tz-offset': 480,
       'profile': 'Main',
       'screen-on': true,

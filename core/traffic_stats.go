@@ -23,8 +23,6 @@ const (
 	trafficFlushInterval   = 5 * time.Minute
 	trafficScreenOffFlush  = 15 * time.Minute
 	trafficDayLayout       = "2006-01-02"
-	trafficDefaultRetention = 30
-	trafficMaxRetention    = 30
 	trafficHostLimit       = 200
 	trafficSubLimit        = 20
 	trafficProcessLimit    = 100
@@ -36,18 +34,20 @@ const (
 	trafficSweepThreshold  = 256
 )
 
+const trafficDefaultRetentionMonths = 3
+
 type trafficStatsOptions struct {
-	Enable        bool
-	Detail        bool
-	RetentionDays int
-	TzOffset      int
+	Enable          bool
+	Detail          bool
+	RetentionMonths int
+	TzOffset        int
 }
 
 func defaultTrafficStatsOptions() trafficStatsOptions {
 	return trafficStatsOptions{
-		Enable:        false,
-		Detail:        true,
-		RetentionDays: trafficDefaultRetention,
+		Enable:          false,
+		Detail:          true,
+		RetentionMonths: trafficDefaultRetentionMonths,
 	}
 }
 
@@ -162,10 +162,10 @@ func flushTrafficStats() {
 
 func handleConfigureTrafficStats(params TrafficStatsConfigParams) error {
 	options := trafficStatsOptions{
-		Enable:        params.Enable,
-		Detail:        params.Detail,
-		RetentionDays: params.RetentionDays,
-		TzOffset:      params.TzOffset,
+		Enable:          params.Enable,
+		Detail:          params.Detail,
+		RetentionMonths: params.RetentionMonths,
+		TzOffset:        params.TzOffset,
 	}
 	trafficStats.configure(options, params.Profile)
 	if params.ScreenOn != nil {
@@ -203,13 +203,15 @@ func (c *trafficCollector) init(dir string) {
 }
 
 func (c *trafficCollector) configure(options trafficStatsOptions, profile string) {
-	if options.RetentionDays <= 0 || options.RetentionDays > trafficMaxRetention {
-		options.RetentionDays = trafficMaxRetention
+	switch options.RetentionMonths {
+	case 3, 6, 12:
+	default:
+		options.RetentionMonths = trafficDefaultRetentionMonths
 	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.settleRunningTimeLocked(trafficNow())
-	if options.RetentionDays != c.options.RetentionDays {
+	if options.RetentionMonths != c.options.RetentionMonths {
 		c.cleaned = ""
 	}
 	c.options = options
@@ -723,7 +725,9 @@ func (c *trafficCollector) flush() {
 	cutoff := ""
 	if c.cleaned != today {
 		c.cleaned = today
-		cutoff = now.AddDate(0, 0, -c.options.RetentionDays+1).Format(trafficDayLayout)
+		// Keep full past calendar months in addition to the current month.
+		cutoff = time.Date(now.Year(), now.Month()-time.Month(c.options.RetentionMonths), 1,
+			0, 0, 0, 0, now.Location()).Format(trafficDayLayout)
 	}
 	c.mu.Unlock()
 

@@ -1252,7 +1252,7 @@
   "trafficStatsSiteIcon": "사이트 아이콘",
   "trafficStatsSiteIconDesc": "도메인 순위용 파비콘을 로컬에 캐시합니다",
   "trafficStatsRetention": "데이터 보관 기간",
-  "trafficStatsDays": "{count}일",
+  "trafficStatsMonths": "{count}개월",
   "trafficStatsSettings": "통계 설정",
   "trafficStatsClearTip": "저장된 모든 트래픽 통계 데이터를 지우시겠습니까?",
   "trafficStatsSince": "{date}부터",

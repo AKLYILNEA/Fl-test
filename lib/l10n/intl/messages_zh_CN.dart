@@ -244,9 +244,9 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m101(value) => "峰值 ${value}";
 
-  static String m102(count) => "${count} 天";
+  static String m102(count) => "${count} 次";
 
-  static String m103(count) => "${count} 次";
+  static String m103(count) => "${count} 个月";
 
   static String m104(date) => "统计自 ${date}";
 
@@ -1853,7 +1853,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "确定要清除所有已保存的流量统计数据吗？",
     ),
     "trafficStatsDay": MessageLookupByLibrary.simpleMessage("日"),
-    "trafficStatsDays": m102,
     "trafficStatsDesc": MessageLookupByLibrary.simpleMessage("按日、周、月查看流量具体去向"),
     "trafficStatsDetail": MessageLookupByLibrary.simpleMessage("详细统计"),
     "trafficStatsDetailDesc": MessageLookupByLibrary.simpleMessage(
@@ -1868,15 +1867,16 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "trafficStatsEnable": MessageLookupByLibrary.simpleMessage("启用流量统计"),
     "trafficStatsEnableAction": MessageLookupByLibrary.simpleMessage("开启"),
-    "trafficStatsHitCount": m103,
+    "trafficStatsHitCount": m102,
     "trafficStatsHourUnit": MessageLookupByLibrary.simpleMessage("小时"),
     "trafficStatsMinuteUnit": MessageLookupByLibrary.simpleMessage("分"),
     "trafficStatsMonth": MessageLookupByLibrary.simpleMessage("月"),
+    "trafficStatsMonths": m103,
     "trafficStatsNode": MessageLookupByLibrary.simpleMessage("节点"),
     "trafficStatsOverview": MessageLookupByLibrary.simpleMessage("流量概览"),
     "trafficStatsRanking": MessageLookupByLibrary.simpleMessage("流量排行"),
     "trafficStatsRefresh": MessageLookupByLibrary.simpleMessage("刷新"),
-    "trafficStatsRetention": MessageLookupByLibrary.simpleMessage("数据保留天数"),
+    "trafficStatsRetention": MessageLookupByLibrary.simpleMessage("数据保留期限"),
     "trafficStatsRuleHits": MessageLookupByLibrary.simpleMessage("规则命中"),
     "trafficStatsRunningTime": MessageLookupByLibrary.simpleMessage("累计运行"),
     "trafficStatsSettings": MessageLookupByLibrary.simpleMessage("统计设置"),

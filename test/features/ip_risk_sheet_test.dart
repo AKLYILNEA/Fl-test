@@ -63,72 +63,53 @@ const sampleRisk = IpRisk(
 );
 
 void main() {
-  testWidgets('only the small edit button opens and updates the IP', (
+  testWidgets('the IP card copies the address and shows a success banner', (
     tester,
   ) async {
-    final queried = <String>[];
+    String? copied;
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'Clipboard.setData') {
+          copied = (call.arguments as Map)['text'] as String;
+        }
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
     await tester.pumpWidget(
       TestApp(
         locale: const Locale('en'),
         overrides: [
           ipLocateProvider.overrideWith(
-            (_, ip) async => IpLocateInfo(
-              ip: ip,
-              company: sampleRisk.organization,
-              network: sampleRisk.isp,
-              asn: sampleRisk.asn,
-            ),
+            (_, ip) async => IpLocateInfo(ip: ip, asn: sampleRisk.asn),
           ),
-          ipRiskProvider.overrideWith((_, ip) async {
-            queried.add(ip);
-            return IpRisk(ip: ip, score: 0, level: IpRiskLevel.low);
-          }),
+          ipRiskProvider.overrideWith((_, ip) async => sampleRisk),
         ],
         child: const IpRiskSheet(ip: '158.247.202.50'),
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('158.247.202.50'));
-    await tester.pumpAndSettle();
-    expect(find.byType(app_ui.InputDialog), findsNothing);
-    final edit = find.byTooltip('Edit');
+
+    final l = tester.element(find.byType(IpRiskSheet)).appLocalizations;
+    final copy = find.byTooltip(l.copy);
+    expect(find.byTooltip(l.edit), findsNothing);
     expect(
-      find.ancestor(of: edit, matching: find.byType(app_ui.MinIconButtonTheme)),
+      find.ancestor(of: copy, matching: find.byType(app_ui.MinIconButtonTheme)),
       findsOneWidget,
     );
-    await tester.tap(edit);
+    await tester.tap(copy);
     await tester.pumpAndSettle();
-    expect(find.byType(app_ui.InputDialog), findsOneWidget);
-    final submit = tester
-        .element(find.byType(app_ui.InputDialog))
-        .appLocalizations
-        .submit;
-    await tester.enterText(
-      find.descendant(
-        of: find.byType(app_ui.InputDialog),
-        matching: find.byType(EditableText),
-      ),
-      '192.168.1.1',
-    );
-    await tester.tap(find.text(submit));
-    await tester.pumpAndSettle();
-    expect(find.byType(app_ui.InputDialog), findsOneWidget);
-    expect(queried, ['158.247.202.50']);
-    await tester.enterText(
-      find.descendant(
-        of: find.byType(app_ui.InputDialog),
-        matching: find.byType(EditableText),
-      ),
-      '8.8.8.8',
-    );
-    await tester.tap(find.text(submit));
-    await tester.pumpAndSettle();
-    expect(find.byType(app_ui.InputDialog), findsNothing);
-    expect(find.text('8.8.8.8'), findsOneWidget);
-    expect(queried, ['158.247.202.50', '8.8.8.8']);
-    expect(tester.takeException(), isNull);
+    expect(copied, sampleRisk.ip);
+    expect(find.text(l.copySuccess), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
   });
+
   testWidgets('unknown hosting mark shows a question, distinct from no', (
     tester,
   ) async {

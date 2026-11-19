@@ -3,7 +3,9 @@ import 'dart:math' as math;
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/ui/icons/icons.dart';
+import 'package:fl_clash/views/dashboard/layout.dart';
 import 'package:fl_clash/views/dashboard/style.dart';
+import 'package:fl_clash/views/dashboard/widgets/card.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/widgets.dart';
 
@@ -715,6 +717,8 @@ class _TrafficStatsRunningTime extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = context.appLocalizations;
     final duration = Duration(seconds: seconds);
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final headerScale = math.max(1.0, textScale);
     final numberStyle = AppTextStyle.title1
         .of(context, emphasized: true)
         .toTabular
@@ -737,28 +741,19 @@ class _TrafficStatsRunningTime extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Row(
-                spacing: 8,
-                children: [
-                  GlyphIcon(
-                    AppGlyphs.clock,
-                    size: 18,
-                    color: context.colorScheme.onSurfaceVariant,
-                  ),
-                  Expanded(
-                    child: Text(
-                      l.trafficStatsRunningTime,
-                      maxLines: 1,
-                      softWrap: false,
-                      overflow: TextOverflow.ellipsis,
-                      style: DashboardText.cardTitle(context),
-                    ),
-                  ),
-                ],
+              DashboardDensityScope(
+                density: DashboardDensity.of(
+                  MediaQuery.sizeOf(context) / headerScale,
+                ),
+                scale: headerScale,
+                child: DashboardCardHeader(
+                  glyph: AppGlyphs.clock,
+                  title: l.trafficStatsRunningTime,
+                ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 4),
               SizedBox(
-                height: 34 * MediaQuery.textScalerOf(context).scale(1),
+                height: 34 * textScale,
                 width: double.infinity,
                 child: FittedBox(
                   fit: BoxFit.scaleDown,

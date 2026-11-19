@@ -279,9 +279,9 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m101(value) => "Peak ${value}";
 
-  static String m102(count) => "${count} days";
+  static String m102(count) => "${count} hits";
 
-  static String m103(count) => "${count} hits";
+  static String m103(count) => "${count} months";
 
   static String m104(date) => "Since ${date}";
 
@@ -2387,7 +2387,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "Are you sure you want to clear all saved traffic statistics data?",
     ),
     "trafficStatsDay": MessageLookupByLibrary.simpleMessage("Day"),
-    "trafficStatsDays": m102,
     "trafficStatsDesc": MessageLookupByLibrary.simpleMessage(
       "View detailed breakdown of traffic by day, week, or month",
     ),
@@ -2410,10 +2409,11 @@ class MessageLookup extends MessageLookupByLibrary {
       "Enable Traffic Statistics",
     ),
     "trafficStatsEnableAction": MessageLookupByLibrary.simpleMessage("Enable"),
-    "trafficStatsHitCount": m103,
+    "trafficStatsHitCount": m102,
     "trafficStatsHourUnit": MessageLookupByLibrary.simpleMessage("h"),
     "trafficStatsMinuteUnit": MessageLookupByLibrary.simpleMessage("min"),
     "trafficStatsMonth": MessageLookupByLibrary.simpleMessage("Month"),
+    "trafficStatsMonths": m103,
     "trafficStatsNode": MessageLookupByLibrary.simpleMessage("Node"),
     "trafficStatsOverview": MessageLookupByLibrary.simpleMessage("Overview"),
     "trafficStatsRanking": MessageLookupByLibrary.simpleMessage(

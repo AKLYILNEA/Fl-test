@@ -508,7 +508,7 @@ abstract class CoreHandlerInterface {
     arguments: {
       'enable': settings.enable,
       'detail': settings.detail,
-      'retention-days': settings.retentionDays,
+      'retention-months': settings.retentionMonths,
       'tz-offset': tzOffset,
       'profile': profile,
       'screen-on': ?screenOn,

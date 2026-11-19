@@ -278,9 +278,10 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m101(value) => "Пик ${value}";
 
-  static String m102(count) => "${count} дн.";
+  static String m102(count) => "${count} раз";
 
-  static String m103(count) => "${count} раз";
+  static String m103(count) =>
+      "${Intl.plural(count, few: '${count} месяца', other: '${count} месяцев')}";
 
   static String m104(date) => "С ${date}";
 
@@ -2515,7 +2516,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "Очистить все сохранённые данные статистики трафика?",
     ),
     "trafficStatsDay": MessageLookupByLibrary.simpleMessage("День"),
-    "trafficStatsDays": m102,
     "trafficStatsDesc": MessageLookupByLibrary.simpleMessage(
       "Подробная разбивка трафика по дням, неделям и месяцам",
     ),
@@ -2540,10 +2540,11 @@ class MessageLookup extends MessageLookupByLibrary {
     "trafficStatsEnableAction": MessageLookupByLibrary.simpleMessage(
       "Включить",
     ),
-    "trafficStatsHitCount": m103,
+    "trafficStatsHitCount": m102,
     "trafficStatsHourUnit": MessageLookupByLibrary.simpleMessage("ч"),
     "trafficStatsMinuteUnit": MessageLookupByLibrary.simpleMessage("мин"),
     "trafficStatsMonth": MessageLookupByLibrary.simpleMessage("Месяц"),
+    "trafficStatsMonths": m103,
     "trafficStatsNode": MessageLookupByLibrary.simpleMessage("Узел"),
     "trafficStatsOverview": MessageLookupByLibrary.simpleMessage("Обзор"),
     "trafficStatsRanking": MessageLookupByLibrary.simpleMessage(

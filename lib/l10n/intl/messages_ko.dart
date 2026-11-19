@@ -254,9 +254,9 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static String m101(value) => "최고 ${value}";
 
-  static String m102(count) => "${count}일";
+  static String m102(count) => "${count}회";
 
-  static String m103(count) => "${count}회";
+  static String m103(count) => "${count}개월";
 
   static String m104(date) => "${date}부터";
 
@@ -2023,7 +2023,6 @@ class MessageLookup extends MessageLookupByLibrary {
       "저장된 모든 트래픽 통계 데이터를 지우시겠습니까?",
     ),
     "trafficStatsDay": MessageLookupByLibrary.simpleMessage("일"),
-    "trafficStatsDays": m102,
     "trafficStatsDesc": MessageLookupByLibrary.simpleMessage(
       "일, 주, 월별 트래픽 세부 내역을 확인합니다",
     ),
@@ -2040,10 +2039,11 @@ class MessageLookup extends MessageLookupByLibrary {
     ),
     "trafficStatsEnable": MessageLookupByLibrary.simpleMessage("트래픽 통계 사용"),
     "trafficStatsEnableAction": MessageLookupByLibrary.simpleMessage("켜기"),
-    "trafficStatsHitCount": m103,
+    "trafficStatsHitCount": m102,
     "trafficStatsHourUnit": MessageLookupByLibrary.simpleMessage("시간"),
     "trafficStatsMinuteUnit": MessageLookupByLibrary.simpleMessage("분"),
     "trafficStatsMonth": MessageLookupByLibrary.simpleMessage("월"),
+    "trafficStatsMonths": m103,
     "trafficStatsNode": MessageLookupByLibrary.simpleMessage("노드"),
     "trafficStatsOverview": MessageLookupByLibrary.simpleMessage("요약"),
     "trafficStatsRanking": MessageLookupByLibrary.simpleMessage("트래픽 순위"),

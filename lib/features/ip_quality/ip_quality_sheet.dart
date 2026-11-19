@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:fl_clash/common/common.dart';
-import 'package:fl_clash/common/ip.dart';
 import 'package:fl_clash/providers/config.dart';
 import 'package:fl_clash/ui/icons/icons.dart';
 import 'package:fl_clash/views/dashboard/style.dart';
@@ -44,7 +43,6 @@ class IpRiskSheet extends ConsumerStatefulWidget {
 }
 
 class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
-  String? _manualIp;
   bool _retrying = false;
   bool _retryHold = false;
   Timer? _retryTimer;
@@ -53,28 +51,6 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
   void dispose() {
     _retryTimer?.cancel();
     super.dispose();
-  }
-
-  Future<void> _editIp(String currentIp) async {
-    final l = context.appLocalizations;
-    final value = await showFloatingDialog<String>(
-      context: context,
-      child: InputDialog(
-        title: l.ipRiskHint,
-        value: ref.read(appSettingProvider).hideIp ? '' : currentIp,
-        validator: (v) => publicIpOf(v ?? '') == null ? l.ipRiskInvalid : null,
-      ),
-    );
-    if (!mounted || value == null) return;
-    final ip = publicIpOf(value);
-    if (ip != null && ip != currentIp) {
-      _retryTimer?.cancel();
-      setState(() {
-        _manualIp = ip;
-        _retrying = false;
-        _retryHold = false;
-      });
-    }
   }
 
   void _retry(
@@ -92,7 +68,7 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
       if (!mounted) return;
       setState(() => _retryHold = false);
     });
-    if (effectiveIp.isEmpty && widget.proxyName != null && _manualIp == null) {
+    if (effectiveIp.isEmpty && widget.proxyName != null) {
       ref.invalidate(proxyExitIpProvider(widget.proxyName!));
     } else if (effectiveIp.isNotEmpty) {
       if (riskFailed) refreshIpRisk(ref, effectiveIp);
@@ -103,8 +79,7 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
   @override
   Widget build(BuildContext context) {
     final l = context.appLocalizations;
-    final proxyIpState =
-        widget.ip.isEmpty && widget.proxyName != null && _manualIp == null
+    final proxyIpState = widget.ip.isEmpty && widget.proxyName != null
         ? ref.watch(proxyExitIpProvider(widget.proxyName!))
         : null;
     final resolvingIp =
@@ -114,8 +89,7 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
     final resolvedIp = proxyIpState != null && !proxyIpState.hasError
         ? (proxyIpState.value ?? '')
         : '';
-    final effectiveIp =
-        _manualIp ?? (widget.ip.isNotEmpty ? widget.ip : resolvedIp);
+    final effectiveIp = widget.ip.isNotEmpty ? widget.ip : resolvedIp;
     final state = effectiveIp.isNotEmpty
         ? ref.watch(ipRiskProvider(effectiveIp))
         : null;
@@ -138,9 +112,7 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
             ((state?.isLoading ?? false) ||
                 (attributionState?.isLoading ?? false)));
     final hidden = ref.watch(appSettingProvider.select((s) => s.hideIp));
-    final switchKey = widget.proxyName != null && _manualIp == null
-        ? widget.proxyName!
-        : effectiveIp;
+    final switchKey = widget.proxyName ?? effectiveIp;
     return Theme(
       data: Theme.of(context).copyWith(visualDensity: VisualDensity.standard),
       child: Scaffold(
@@ -204,9 +176,12 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet> {
                     ),
                     trailing: MinIconButtonTheme(
                       child: IconButton(
-                        tooltip: l.edit,
-                        onPressed: () => _editIp(effectiveIp),
-                        icon: const GlyphIcon(AppGlyphs.edit, size: 16),
+                        tooltip: l.copy,
+                        onPressed: effectiveIp.isEmpty
+                            ? null
+                            : () =>
+                                  dialogs.copyToClipboard(context, effectiveIp),
+                        icon: const GlyphIcon(AppGlyphs.copy, size: 16),
                       ),
                     ),
                   ),

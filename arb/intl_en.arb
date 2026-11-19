@@ -1252,7 +1252,7 @@
   "trafficStatsSiteIcon": "Website Icons",
   "trafficStatsSiteIconDesc": "Fetch website favicons for domain rankings locally",
   "trafficStatsRetention": "Data Retention",
-  "trafficStatsDays": "{count} days",
+  "trafficStatsMonths": "{count} months",
   "trafficStatsSettings": "Statistics Settings",
   "trafficStatsClearTip": "Are you sure you want to clear all saved traffic statistics data?",
   "trafficStatsSince": "Since {date}",

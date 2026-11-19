@@ -1252,7 +1252,7 @@
   "trafficStatsSiteIcon": "Иконки сайтов",
   "trafficStatsSiteIconDesc": "Загружать и кэшировать иконки доменов локально",
   "trafficStatsRetention": "Срок хранения",
-  "trafficStatsDays": "{count} дн.",
+  "trafficStatsMonths": "{count, plural, few{{count} месяца} other{{count} месяцев}}",
   "trafficStatsSettings": "Настройки статистики",
   "trafficStatsClearTip": "Очистить все сохранённые данные статистики трафика?",
   "trafficStatsSince": "С {date}",

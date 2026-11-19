@@ -1252,7 +1252,7 @@
   "trafficStatsSiteIcon": "サイトアイコン",
   "trafficStatsSiteIconDesc": "ドメインランキング用にファビコンを取得してキャッシュします",
   "trafficStatsRetention": "データ保持期間",
-  "trafficStatsDays": "{count} 日",
+  "trafficStatsMonths": "{count} か月",
   "trafficStatsSettings": "統計設定",
   "trafficStatsClearTip": "保存されているトラフィック統計データをすべて消去しますか？",
   "trafficStatsSince": "{date} 以降の統計",
