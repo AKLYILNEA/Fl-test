@@ -660,9 +660,9 @@ class _IpRiskHeroCard extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         scoreBlock,
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         Divider(height: 1, thickness: Divider.separatorThicknessOf(context)),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         ipColumn,
       ],
     );
@@ -743,6 +743,7 @@ class _IpRiskHeroCard extends StatelessWidget {
               padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: fillHeight ? MainAxisSize.max : MainAxisSize.min,
                 mainAxisAlignment: fillHeight
                     ? MainAxisAlignment.spaceBetween
                     : MainAxisAlignment.start,
@@ -752,12 +753,14 @@ class _IpRiskHeroCard extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       header,
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 12),
                       mainBody,
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  riskScale,
+                  Padding(
+                    padding: const EdgeInsets.only(top: 14),
+                    child: riskScale,
+                  ),
                 ],
               ),
             ),
@@ -874,7 +877,7 @@ class _IpAttributionCard extends StatelessWidget {
   final bool hidden;
   final bool isWide;
 
-  Widget _field(BuildContext context, String label, String value) {
+  Widget _field(BuildContext context, String label, Widget value) {
     final cs = context.colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -886,13 +889,63 @@ class _IpAttributionCard extends StatelessWidget {
               .of(context)
               .copyWith(color: cs.onSurfaceVariant),
         ),
-        const SizedBox(height: 4),
-        SelectableText(
-          value,
-          style: AppTextStyle.subheadline.of(context, emphasized: true),
-        ),
+        const SizedBox(height: 5),
+        value,
       ],
     );
+  }
+
+  Widget _textField(BuildContext context, String label, String value) {
+    return _field(
+      context,
+      label,
+      SelectableText(
+        value,
+        style: AppTextStyle.subheadline.of(context, emphasized: true),
+      ),
+    );
+  }
+
+  Widget _asnField(
+    BuildContext context,
+    String label, {
+    required String asn,
+    required String network,
+  }) {
+    final cs = context.colorScheme;
+    final Widget value;
+    if (asn.isNotEmpty && network.isNotEmpty) {
+      value = Wrap(
+        spacing: 6,
+        runSpacing: 2,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          SelectableText(
+            asn,
+            style: AppTextStyle.subheadline
+                .of(context, emphasized: true)
+                .toTabular,
+          ),
+          SelectableText(
+            '· $network',
+            style: AppTextStyle.footnote
+                .of(context)
+                .copyWith(color: cs.onSurfaceVariant),
+          ),
+        ],
+      );
+    } else if (asn.isNotEmpty) {
+      value = SelectableText(
+        asn,
+        style: AppTextStyle.subheadline.of(context, emphasized: true).toTabular,
+      );
+    } else {
+      value = SelectableText(
+        network,
+        style: AppTextStyle.subheadline.of(context, emphasized: true),
+      );
+    }
+    return _field(context, label, value);
   }
 
   @override
@@ -900,15 +953,19 @@ class _IpAttributionCard extends StatelessWidget {
     final l = context.appLocalizations;
     final cs = context.colorScheme;
     final colors = DashboardColors.of(context);
+    final isDark = cs.brightness == Brightness.dark;
     final country = risk.countryLabel ?? '';
     final place = risk.placeLabel ?? '';
+    final countryCode = risk.countryCode.trim().toUpperCase();
     final hasLocation = country.isNotEmpty || place.isNotEmpty;
     final info = attribution.ip == risk.ip ? attribution : null;
     final company = info?.company ?? '';
     final network = info?.network ?? '';
     final asn = info?.asn ?? '';
     final showNetwork = network.isNotEmpty && network != company;
+    final showAsnRow = asn.isNotEmpty || showNetwork;
     final showHostname = !hidden && risk.hostname.isNotEmpty;
+    final sectionGap = isWide ? 15.0 : 12.0;
 
     final sections = <Widget>[
       if (hasLocation)
@@ -919,10 +976,12 @@ class _IpAttributionCard extends StatelessWidget {
             if (country.isNotEmpty)
               EmojiText(
                 country,
-                style: AppTextStyle.title2.of(context, emphasized: true),
+                style: AppTextStyle.title2
+                    .of(context, emphasized: true)
+                    .copyWith(fontSize: 23, height: 1.22),
               ),
             if (place.isNotEmpty) ...[
-              SizedBox(height: country.isNotEmpty ? 4 : 0),
+              SizedBox(height: country.isNotEmpty ? 5 : 0),
               SelectableText(
                 place,
                 style: country.isNotEmpty
@@ -934,97 +993,155 @@ class _IpAttributionCard extends StatelessWidget {
             ],
           ],
         ),
-      if (company.isNotEmpty && showNetwork)
-        isWide
-            ? Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(flex: 13, child: _field(context, l.isp, company)),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    flex: 10,
-                    child: _field(context, l.ipRiskAsn, network),
-                  ),
-                ],
-              )
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _field(context, l.isp, company),
-                  const SizedBox(height: 12),
-                  _field(context, l.ipRiskAsn, network),
-                ],
-              )
-      else if (company.isNotEmpty)
-        _field(context, l.isp, company)
-      else if (showNetwork)
-        _field(context, l.ipRiskAsn, network),
-      if (showHostname) _field(context, l.ipRiskHostname, risk.hostname),
+      if (company.isNotEmpty) _textField(context, l.isp, company),
+      if (showAsnRow)
+        _asnField(
+          context,
+          l.ipRiskAsn,
+          asn: asn,
+          network: showNetwork ? network : '',
+        ),
+      if (showHostname) _textField(context, l.ipRiskHostname, risk.hostname),
     ];
 
     return Card(
       radius: AppCorner.xl,
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              _IpHeaderIconBadge(glyph: AppGlyphs.location, color: cs.primary),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  country.isNotEmpty || !hasLocation
-                      ? l.ipRiskLocation
-                      : l.ipRiskCity,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTextStyle.headline.of(context, emphasized: true),
+      padding: EdgeInsets.zero,
+      child: ClipPath(
+        clipper: ShapeBorderClipper(
+          shape: AppShape.xl,
+          textDirection: Directionality.of(context),
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              right: -24,
+              bottom: -26,
+              child: IgnorePointer(
+                child: CustomPaint(
+                  size: Size.square(isWide ? 164 : 144),
+                  painter: _GlobeWatermarkPainter(
+                    color: cs.primary.withValues(alpha: isDark ? 0.11 : 0.08),
+                  ),
                 ),
               ),
-              if (asn.isNotEmpty) ...[
-                const SizedBox(width: 12),
-                DecoratedBox(
-                  decoration: ShapeDecoration(
-                    color: colors.tone,
-                    shape: AppShape.full,
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      _IpHeaderIconBadge(
+                        glyph: AppGlyphs.location,
+                        color: cs.primary,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          country.isNotEmpty || !hasLocation
+                              ? l.ipRiskLocation
+                              : l.ipRiskCity,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyle.headline.of(
+                            context,
+                            emphasized: true,
+                          ),
+                        ),
+                      ),
+                      if (countryCode.isNotEmpty) ...[
+                        const SizedBox(width: 12),
+                        DecoratedBox(
+                          decoration: ShapeDecoration(
+                            color: colors.tone,
+                            shape: AppShape.full,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            child: Text(
+                              countryCode,
+                              style: AppTextStyle.footnote
+                                  .of(context, emphasized: true)
+                                  .toTabular
+                                  .copyWith(color: cs.onSurfaceVariant),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    child: Text(
-                      asn,
-                      style: AppTextStyle.footnote
-                          .of(context, emphasized: true)
-                          .toTabular
-                          .copyWith(color: cs.onSurfaceVariant),
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          ),
-          if (sections.isNotEmpty) ...[
-            const SizedBox(height: 16),
-            for (final (index, section) in sections.indexed) ...[
-              if (index > 0) ...[
-                const SizedBox(height: 14),
-                Divider(
-                  height: 1,
-                  thickness: Divider.separatorThicknessOf(context),
-                ),
-                const SizedBox(height: 14),
-              ],
-              section,
-            ],
+                  if (sections.isNotEmpty) ...[
+                    SizedBox(height: isWide ? 15 : 14),
+                    for (final (index, section) in sections.indexed) ...[
+                      if (index > 0) ...[
+                        SizedBox(height: sectionGap),
+                        Divider(
+                          height: 1,
+                          thickness: Divider.separatorThicknessOf(context),
+                        ),
+                        SizedBox(height: sectionGap),
+                      ],
+                      section,
+                    ],
+                  ],
+                ],
+              ),
+            ),
           ],
-        ],
+        ),
       ),
     );
   }
+}
+
+class _GlobeWatermarkPainter extends CustomPainter {
+  const _GlobeWatermarkPainter({required this.color});
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.shortestSide * 0.375;
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = size.shortestSide * 0.042
+      ..strokeCap = StrokeCap.round;
+
+    canvas.drawCircle(center, radius, paint);
+    canvas.drawOval(
+      Rect.fromCenter(center: center, width: radius * 0.94, height: radius * 2),
+      paint,
+    );
+    canvas.drawLine(
+      Offset(center.dx - radius, center.dy),
+      Offset(center.dx + radius, center.dy),
+      paint,
+    );
+    final latOffset = radius * 0.5;
+    final chordHalf = radius * math.sqrt(0.75);
+    canvas.drawLine(
+      Offset(center.dx - chordHalf, center.dy - latOffset),
+      Offset(center.dx + chordHalf, center.dy - latOffset),
+      paint,
+    );
+    canvas.drawLine(
+      Offset(center.dx - chordHalf, center.dy + latOffset),
+      Offset(center.dx + chordHalf, center.dy + latOffset),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_GlobeWatermarkPainter oldDelegate) =>
+      color != oldDelegate.color;
 }
 
 class _IpFlagsCard extends StatelessWidget {

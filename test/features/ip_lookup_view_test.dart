@@ -188,7 +188,9 @@ void main() {
     final l = tester.element(find.byType(IpLookupView)).appLocalizations;
     expect(find.text(_outboundIp), findsOneWidget);
     expect(find.text('28'), findsOneWidget);
+    expect(find.text('KR'), findsOneWidget);
     expect(find.text('AS20473'), findsOneWidget);
+    expect(find.text('· AS-CHOOPA'), findsOneWidget);
     expect(find.text(l.ipFlags), findsAtLeastNWidgets(1));
     expect(find.byGlyph(AppGlyphs.refresh), findsNothing);
     expect(find.byTooltip(l.hideIp), findsOneWidget);
@@ -203,6 +205,7 @@ void main() {
     await tester.tap(find.text(l.search));
     await tester.pumpAndSettle();
     expect(find.text(_customIp), findsAtLeastNWidgets(1));
+    expect(find.text('AU'), findsOneWidget);
     expect(find.text('AS13335'), findsOneWidget);
     expect(find.text('Cloudflare, Inc.'), findsOneWidget);
 
@@ -212,6 +215,67 @@ void main() {
     expect(find.text('AS20473'), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('IpLookupView renders sparse UK attribution cleanly', (
+    tester,
+  ) async {
+    const ukIp = '141.98.252.152';
+    const ukRisk = IpRisk(
+      ip: ukIp,
+      score: 100,
+      level: IpRiskLevel.veryHigh,
+      country: 'United Kingdom',
+      countryCode: 'GB',
+      region: 'England',
+      city: 'Goodmayes',
+      asn: 'AS39351',
+      checks: [
+        IpRiskCheck(group: IpRiskGroup.datacenter, name: 'Datacenter', hit: true),
+        IpRiskCheck(group: IpRiskGroup.blacklist, name: 'Firehol', hit: false),
+      ],
+    );
+    const ukLocate = IpLocateInfo(
+      ip: ukIp,
+      company: '31173 Services AB',
+      network: '31173 Services AB',
+      asn: 'AS39351',
+    );
+
+    for (final size in [const Size(1080, 760), const Size(390, 844)]) {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        TestApp(
+          locale: const Locale('zh', 'CN'),
+          overrides: [
+            outboundIpProbeProvider.overrideWith(
+              () => _FakeOutboundProbe(
+                const RoutedProbeState({
+                  routedOutbound: ProbeEntry(
+                    phase: ProbePhase.fresh,
+                    value: IpInfo(ip: ukIp, countryCode: 'GB'),
+                  ),
+                }),
+              ),
+            ),
+            ipRiskProvider.overrideWith((_, _) async => ukRisk),
+            ipLocateProvider.overrideWith((_, _) async => ukLocate),
+          ],
+          child: const IpLookupView(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('GB'), findsOneWidget);
+      expect(find.text('31173 Services AB'), findsOneWidget);
+      expect(find.text('AS39351'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    }
   });
 
   for (final scenario in [
