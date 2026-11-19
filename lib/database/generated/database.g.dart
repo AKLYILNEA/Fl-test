@@ -6332,11 +6332,10 @@ class $$ProfilesTableTableManager
                   getPrefetchedDataCallback: (items) async {
                     return [
                       if (rulesRefs)
-                        await $_getPrefetchedDataByColumns<
+                        await $_getPrefetchedData<
                           RawProfile,
                           $ProfilesTable,
-                          RawRule,
-                          $RulesTable
+                          RawRule
                         >(
                           currentTable: table,
                           referencedTable: $$ProfilesTableReferences
@@ -6347,16 +6346,17 @@ class $$ProfilesTableTableManager
                                 table,
                                 p0,
                               ).rulesRefs,
-                          currentColumn: 'id',
-                          referencedColumn: 'profile_id',
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.profileId == item.id,
+                              ),
                           typedResults: items,
                         ),
                       if (disabledRulesRefs)
-                        await $_getPrefetchedDataByColumns<
+                        await $_getPrefetchedData<
                           RawProfile,
                           $ProfilesTable,
-                          RawDisabledRule,
-                          $DisabledRulesTable
+                          RawDisabledRule
                         >(
                           currentTable: table,
                           referencedTable: $$ProfilesTableReferences
@@ -6367,16 +6367,17 @@ class $$ProfilesTableTableManager
                                 table,
                                 p0,
                               ).disabledRulesRefs,
-                          currentColumn: 'id',
-                          referencedColumn: 'profile_id',
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.profileId == item.id,
+                              ),
                           typedResults: items,
                         ),
                       if (proxyGroupsRefs)
-                        await $_getPrefetchedDataByColumns<
+                        await $_getPrefetchedData<
                           RawProfile,
                           $ProfilesTable,
-                          RawProxyGroup,
-                          $ProxyGroupsTable
+                          RawProxyGroup
                         >(
                           currentTable: table,
                           referencedTable: $$ProfilesTableReferences
@@ -6387,16 +6388,17 @@ class $$ProfilesTableTableManager
                                 table,
                                 p0,
                               ).proxyGroupsRefs,
-                          currentColumn: 'id',
-                          referencedColumn: 'profile_id',
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.profileId == item.id,
+                              ),
                           typedResults: items,
                         ),
                       if (proxyDialersRefs)
-                        await $_getPrefetchedDataByColumns<
+                        await $_getPrefetchedData<
                           RawProfile,
                           $ProfilesTable,
-                          RawProxyDialer,
-                          $ProxyDialersTable
+                          RawProxyDialer
                         >(
                           currentTable: table,
                           referencedTable: $$ProfilesTableReferences
@@ -6407,8 +6409,10 @@ class $$ProfilesTableTableManager
                                 table,
                                 p0,
                               ).proxyDialersRefs,
-                          currentColumn: 'id',
-                          referencedColumn: 'profile_id',
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.profileId == item.id,
+                              ),
                           typedResults: items,
                         ),
                     ];
@@ -7119,11 +7123,10 @@ class $$RulesTableTableManager
                   getPrefetchedDataCallback: (items) async {
                     return [
                       if (disabledRulesRefs)
-                        await $_getPrefetchedDataByColumns<
+                        await $_getPrefetchedData<
                           RawRule,
                           $RulesTable,
-                          RawDisabledRule,
-                          $DisabledRulesTable
+                          RawDisabledRule
                         >(
                           currentTable: table,
                           referencedTable: $$RulesTableReferences
@@ -7134,8 +7137,10 @@ class $$RulesTableTableManager
                                 table,
                                 p0,
                               ).disabledRulesRefs,
-                          currentColumn: 'id',
-                          referencedColumn: 'rule_id',
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.ruleId == item.id,
+                              ),
                           typedResults: items,
                         ),
                     ];
@@ -8757,11 +8762,10 @@ class $$CustomProxiesTableTableManager
               getPrefetchedDataCallback: (items) async {
                 return [
                   if (proxyDialersRefs)
-                    await $_getPrefetchedDataByColumns<
+                    await $_getPrefetchedData<
                       RawCustomProxy,
                       $CustomProxiesTable,
-                      RawProxyDialer,
-                      $ProxyDialersTable
+                      RawProxyDialer
                     >(
                       currentTable: table,
                       referencedTable: $$CustomProxiesTableReferences
@@ -8772,8 +8776,8 @@ class $$CustomProxiesTableTableManager
                             table,
                             p0,
                           ).proxyDialersRefs,
-                      currentColumn: 'id',
-                      referencedColumn: 'proxy_id',
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where((e) => e.proxyId == item.id),
                       typedResults: items,
                     ),
                 ];
