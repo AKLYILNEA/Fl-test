@@ -1430,16 +1430,16 @@ class _IpFlagsCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 11),
+          SizedBox(height: isWide ? 11 : 14),
           for (final (index, group) in groups.indexed) ...[
             if (index > 0) ...[
-              const SizedBox(height: 8),
+              SizedBox(height: isWide ? 8 : 14),
               if (isWide) const Spacer(),
               Divider(
                 height: 1,
                 thickness: Divider.separatorThicknessOf(context),
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: isWide ? 8 : 14),
               if (isWide) const Spacer(),
             ],
             _FlagGroupRow(
