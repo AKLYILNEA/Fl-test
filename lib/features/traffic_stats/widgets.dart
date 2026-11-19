@@ -6,6 +6,7 @@ import 'package:fl_clash/ui/icons/icons.dart';
 import 'package:fl_clash/views/dashboard/layout.dart';
 import 'package:fl_clash/views/dashboard/style.dart';
 import 'package:fl_clash/views/dashboard/widgets/card.dart';
+import 'package:fl_clash/widgets/text_ink.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/widgets.dart';
 
@@ -741,15 +742,9 @@ class _TrafficStatsRunningTime extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             mainAxisSize: MainAxisSize.min,
             children: [
-              DashboardDensityScope(
-                density: DashboardDensity.of(
-                  MediaQuery.sizeOf(context) / headerScale,
-                ),
+              _RunningTimeTitle(
+                title: l.trafficStatsRunningTime,
                 scale: headerScale,
-                child: DashboardCardHeader(
-                  glyph: AppGlyphs.clock,
-                  title: l.trafficStatsRunningTime,
-                ),
               ),
               const SizedBox(height: 4),
               SizedBox(
@@ -787,6 +782,109 @@ class _TrafficStatsRunningTime extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RunningTimeTitle extends StatefulWidget {
+  const _RunningTimeTitle({required this.title, required this.scale});
+
+  final String title;
+  final double scale;
+
+  @override
+  State<_RunningTimeTitle> createState() => _RunningTimeTitleState();
+}
+
+class _RunningTimeTitleState extends State<_RunningTimeTitle> {
+  (String, TextStyle, double, TextDirection, Locale?)? _inkKey;
+  Future<TextInk?>? _measurement;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = context.colorScheme.onSurfaceVariant;
+    final density = DashboardDensity.of(
+      MediaQuery.sizeOf(context) / widget.scale,
+    );
+    final style =
+        (density.isDesktop
+                ? DashboardText.cardTitle(context)
+                : DashboardText.mobileCardTitle(context))
+            .copyWith(color: color);
+    final scaler = MediaQuery.textScalerOf(context);
+    final direction = Directionality.of(context);
+    final locale = Localizations.maybeLocaleOf(context);
+    final key = (
+      widget.title,
+      style,
+      scaler.scale(style.fontSize!),
+      direction,
+      locale,
+    );
+
+    if (_inkKey != key) {
+      _inkKey = key;
+      // Capitals give an alphabetic title its visual height without descenders.
+      final capitals = widget.title.runes
+          .map(String.fromCharCode)
+          .where(
+            (letter) =>
+                letter == letter.toUpperCase() &&
+                letter != letter.toLowerCase(),
+          )
+          .join();
+      _measurement = measureTextInk(
+        capitals.isEmpty ? widget.title : capitals,
+        style,
+        scaler,
+        textDirection: direction,
+        locale: locale,
+      );
+    }
+
+    final clock = GlyphIcon(
+      AppGlyphs.clock,
+      size: DashboardCardHeader.glyphSize,
+      color: color,
+    );
+    final label = Text(
+      widget.title,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: style,
+    );
+    return SizedBox(
+      height:
+          (density.isDesktop ? DashboardCardHeader.height : 26) * widget.scale,
+      child: Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: FutureBuilder<TextInk?>(
+          key: ValueKey(key),
+          future: _measurement,
+          builder: (context, snapshot) {
+            final ink = snapshot.data;
+            return Row(
+              spacing: 8,
+              crossAxisAlignment: ink == null
+                  ? CrossAxisAlignment.center
+                  : CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              children: [
+                if (ink == null)
+                  clock
+                else
+                  BaselineAt(
+                    baseline:
+                        DashboardCardHeader.glyphSize / 2 +
+                        (ink.ascent - ink.descent) / 2,
+                    child: clock,
+                  ),
+                Expanded(child: label),
+              ],
+            );
+          },
         ),
       ),
     );

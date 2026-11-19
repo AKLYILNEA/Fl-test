@@ -268,7 +268,20 @@ void main() {
               closeTo(tester.getBottomLeft(direct).dy, .01),
             );
             final l = context.appLocalizations;
-            expect(find.text(l.trafficStatsRunningTime), findsOneWidget);
+            final title = find.descendant(
+              of: tile,
+              matching: find.text(l.trafficStatsRunningTime),
+            );
+            final clock = find.descendant(
+              of: tile,
+              matching: find.byWidgetPredicate(
+                (w) => w is GlyphIcon && w.glyph == AppGlyphs.clock,
+              ),
+            );
+            expect(
+              tester.widget<Text>(title).style!.color,
+              tester.widget<GlyphIcon>(clock).color,
+            );
             expect(
               find.text(
                 '8 ${l.trafficStatsHourUnit} 36 ${l.trafficStatsMinuteUnit}',
