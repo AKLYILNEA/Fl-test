@@ -56,12 +56,6 @@ const double _glowReach = 28;
 const double _glowGrowth = 3;
 const double _glowPeak = 0.06;
 const double _glowWash = 0.7;
-const _frostedDockGlow = LiquidGlassGlow(
-  center: Offset.zero,
-  reach: 1,
-  strength: _glowPeak,
-  wash: 1,
-);
 const double _overdrag = 0.35;
 const double _pullLimit = 7 / 32;
 const double _pullStretch = 0.5;
@@ -278,7 +272,7 @@ class _DockSurface extends StatelessWidget {
       if (activeGlow == null) {
         return LiquidGlass(
           style: style,
-          glow: _frostedDockGlow,
+          glow: LiquidGlassGlow.none,
           shadows: dockShadows(colorScheme),
           child: child,
         );

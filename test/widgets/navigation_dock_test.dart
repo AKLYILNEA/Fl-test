@@ -378,10 +378,7 @@ void main() {
       await tester.pumpAndSettle();
       final glass = find.byType(LiquidGlass);
       expect(glass, findsOneWidget);
-      final restingGlow = tester.widget<LiquidGlass>(glass).glow;
-      expect(restingGlow, isNotNull);
-      expect(restingGlow!.strength, greaterThan(0));
-      expect(restingGlow.wash, 1);
+      expect(tester.widget<LiquidGlass>(glass).glow, LiquidGlassGlow.none);
       expect(tester.widget<LiquidGlass>(glass).shadows, isNotEmpty);
       Color? lensColor() =>
           (tester.widget<DecoratedBox>(_lens).decoration as ShapeDecoration)
@@ -395,7 +392,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(glass, findsOneWidget);
-      expect(tester.widget<LiquidGlass>(glass).glow, restingGlow);
+      expect(tester.widget<LiquidGlass>(glass).glow, LiquidGlassGlow.none);
       expect(lensColor(), restingColor);
 
       await gesture.up();
