@@ -267,6 +267,41 @@ void main() {
     },
   );
 
+  for (final (name, profile) in [
+    ('local YAML', Profile.normal(label: 'Local YAML')),
+    ('custom', Profile.custom(label: 'Custom profile')),
+  ]) {
+    testWidgets('landscape $name boarding pass omits the watermark', (
+      tester,
+    ) async {
+      await pumpProfiles(
+        tester,
+        profiles: [profile],
+        size: const Size(720, 430),
+        overrides: [
+          profileGroupsCountProvider.overrideWith((_, _) => Stream.value(6)),
+        ],
+      );
+
+      final pass = find.byType(ProfileBoardingPass);
+      expect(pass, findsOneWidget);
+      expect(
+        find.descendant(of: pass, matching: find.byType(ProfileIconBadge)),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: pass,
+          matching: find.byWidgetPredicate(
+            (widget) => widget is GlyphIcon && (widget.size ?? 0) >= 80,
+          ),
+        ),
+        findsNothing,
+      );
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   testWidgets(
     'other cards show distinct anchors for remote, local YAML, custom, and updating',
     (tester) async {

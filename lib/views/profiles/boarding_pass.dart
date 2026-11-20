@@ -7,6 +7,7 @@ import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/ui/icons/icons.dart';
+import 'package:fl_clash/ui/vertical_ticket_perforation.dart';
 import 'package:fl_clash/views/dashboard/style.dart';
 import 'package:fl_clash/views/dashboard/widgets/profile_detail.dart';
 import 'package:fl_clash/views/dashboard/widgets/profiles.dart';
@@ -783,9 +784,6 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
     final dashColor = colorScheme.onSurface.withValues(
       alpha: isDark ? 0.14 : 0.11,
     );
-    final watermarkColor = profileTypeAccent(context, profile.type).withValues(
-      alpha: isDark ? 0.07 : 0.045,
-    );
     final menuItems = buildProfileMenuItems(context, ref, profile);
 
     final bodyMetrics = usage != null
@@ -801,48 +799,28 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
           children: [
             Expanded(
               flex: 12,
-              child: Stack(
-                alignment: isRemote
-                    ? Alignment.center
-                    : AlignmentDirectional.topStart,
-                clipBehavior: Clip.hardEdge,
-                children: [
-                  if (!isRemote)
-                    Positioned(
-                      right: -8,
-                      top: -12,
-                      child: IgnorePointer(
-                        child: GlyphIcon(
-                          profileDefaultGlyph(profile.type),
-                          size: 88,
-                          color: watermarkColor,
-                        ),
-                      ),
-                    ),
-                  Padding(
-                    padding: isRemote
-                        ? const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 15,
-                          )
-                        : const EdgeInsets.fromLTRB(18, 18, 12, 18),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _buildHeaderInfo(context, profile),
-                        SizedBox(height: isRemote ? 12 : 16),
-                        bodyMetrics,
-                      ],
-                    ),
-                  ),
-                ],
+              child: Padding(
+                padding: isRemote
+                    ? const EdgeInsets.symmetric(horizontal: 20, vertical: 15)
+                    : const EdgeInsets.fromLTRB(18, 18, 12, 18),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: isRemote
+                      ? MainAxisAlignment.center
+                      : MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildHeaderInfo(context, profile),
+                    SizedBox(height: isRemote ? 12 : 16),
+                    bodyMetrics,
+                  ],
+                ),
               ),
             ),
             SizedBox(
               width: 20,
               child: CustomPaint(
-                painter: _VerticalPerforationPainter(
+                painter: VerticalTicketPerforationPainter(
                   notchColor: pageColor,
                   dashColor: dashColor,
                 ),
@@ -1095,44 +1073,6 @@ class _HorizontalPerforationPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_HorizontalPerforationPainter oldDelegate) =>
-      oldDelegate.notchColor != notchColor ||
-      oldDelegate.dashColor != dashColor;
-}
-
-class _VerticalPerforationPainter extends CustomPainter {
-  const _VerticalPerforationPainter({
-    required this.notchColor,
-    required this.dashColor,
-  });
-
-  final Color notchColor;
-  final Color dashColor;
-
-  static const _notchRadius = 9.0;
-  static const _dashHeight = 5.0;
-  static const _dashGap = 4.0;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final x = size.width / 2;
-    final dashPaint = Paint()
-      ..color = dashColor
-      ..strokeWidth = 1.2
-      ..strokeCap = StrokeCap.round;
-    var y = _notchRadius + 6.0;
-    final maxY = size.height - _notchRadius - 6.0;
-    while (y < maxY) {
-      final endY = math.min(y + _dashHeight, maxY);
-      canvas.drawLine(Offset(x, y), Offset(x, endY), dashPaint);
-      y += _dashHeight + _dashGap;
-    }
-    final notchPaint = Paint()..color = notchColor;
-    canvas.drawCircle(Offset(x, 0), _notchRadius, notchPaint);
-    canvas.drawCircle(Offset(x, size.height), _notchRadius, notchPaint);
-  }
-
-  @override
-  bool shouldRepaint(_VerticalPerforationPainter oldDelegate) =>
       oldDelegate.notchColor != notchColor ||
       oldDelegate.dashColor != dashColor;
 }

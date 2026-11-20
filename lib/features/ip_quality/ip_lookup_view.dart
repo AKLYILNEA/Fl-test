@@ -8,6 +8,7 @@ import 'package:fl_clash/providers/config.dart';
 import 'package:fl_clash/providers/outbound_ip.dart';
 import 'package:fl_clash/providers/routed_probe.dart';
 import 'package:fl_clash/ui/icons/icons.dart';
+import 'package:fl_clash/ui/vertical_ticket_perforation.dart';
 import 'package:fl_clash/views/dashboard/style.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/widgets.dart';
@@ -1077,6 +1078,9 @@ class _IpAttributionCard extends StatelessWidget {
       ],
     );
 
+    const verticalPadding = EdgeInsets.symmetric(vertical: 18);
+    final left = Padding(padding: verticalPadding, child: leftZone);
+    final right = Padding(padding: verticalPadding, child: rightZone);
     return Card(
       radius: AppCorner.xl,
       padding: EdgeInsets.zero,
@@ -1102,30 +1106,28 @@ class _IpAttributionCard extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               child: specs.isEmpty
-                  ? leftZone
+                  ? left
                   : !hasLocation
-                  ? rightZone
+                  ? right
                   : IntrinsicHeight(
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Expanded(flex: 9, child: leftZone),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            child: SizedBox(
-                              width: 1.5,
-                              child: CustomPaint(
-                                painter: _DashedVerticalDividerPainter(
-                                  color: cs.outlineVariant.withValues(
-                                    alpha: isDark ? 0.55 : 0.48,
-                                  ),
+                          Expanded(flex: 9, child: left),
+                          SizedBox(
+                            width: 41.5,
+                            child: CustomPaint(
+                              painter: VerticalTicketPerforationPainter(
+                                notchColor: SurfaceLevel.page.colorOf(cs),
+                                dashColor: cs.outlineVariant.withValues(
+                                  alpha: isDark ? 0.55 : 0.48,
                                 ),
                               ),
                             ),
                           ),
-                          Expanded(flex: 13, child: rightZone),
+                          Expanded(flex: 13, child: right),
                         ],
                       ),
                     ),
@@ -1302,33 +1304,6 @@ class _IpAttributionCard extends StatelessWidget {
       ),
     );
   }
-}
-
-class _DashedVerticalDividerPainter extends CustomPainter {
-  const _DashedVerticalDividerPainter({required this.color});
-
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = size.width
-      ..strokeCap = StrokeCap.round;
-    const dash = 4.0;
-    const gap = 4.0;
-    final x = size.width / 2;
-    var y = 0.0;
-    while (y < size.height) {
-      final end = math.min(y + dash, size.height);
-      canvas.drawLine(Offset(x, y), Offset(x, end), paint);
-      y += dash + gap;
-    }
-  }
-
-  @override
-  bool shouldRepaint(_DashedVerticalDividerPainter oldDelegate) =>
-      color != oldDelegate.color;
 }
 
 class _IpFlagsCard extends StatelessWidget {
