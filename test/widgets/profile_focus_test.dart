@@ -206,7 +206,7 @@ void main() {
   );
 
   testWidgets(
-    'landscape boarding pass exposes all actions directly without overflow menu',
+    'landscape remote boarding pass fits all actions in two rows',
     (tester) async {
       final l = currentAppLocalizations;
       final active = urlProfile('Wide Sub');
@@ -214,41 +214,53 @@ void main() {
       await pumpProfiles(
         tester,
         profiles: [active, other],
-        size: const Size(960, 720),
+        size: const Size(720, 430),
       );
 
       final pass = find.byType(ProfileBoardingPass);
       expect(pass, findsOneWidget);
-      final watermarkPositioned = tester.widget<Positioned>(
-        find.ancestor(
-          of: find.byWidgetPredicate(
-            (w) => w is GlyphIcon && w.glyph == AppGlyphs.cloud && w.size == 88,
-          ),
-          matching: find.byType(Positioned),
+      final cloudIcons = find.descendant(
+        of: pass,
+        matching: find.byWidgetPredicate(
+          (w) => w is GlyphIcon && w.glyph == AppGlyphs.cloud,
         ),
       );
-      expect(watermarkPositioned.top, isNotNull);
-      expect(watermarkPositioned.bottom, isNull);
+      expect(cloudIcons, findsOneWidget);
+      expect(tester.widget<GlyphIcon>(cloudIcons).size, lessThan(80));
+      expect(
+        find.descendant(
+          of: pass,
+          matching: find.byWidgetPredicate(
+            (w) => w is GlyphIcon && (w.size ?? 0) >= 80,
+          ),
+        ),
+        findsNothing,
+      );
       expect(
         find.descendant(of: pass, matching: find.byTooltip(l.more)),
         findsNothing,
       );
+      double labelY(String label) {
+        final text = find.descendant(of: pass, matching: find.text(label));
+        expect(text, findsOneWidget);
+        return tester.getCenter(text).dy;
+      }
+
+      final pillY = labelY(l.sync);
+      expect(labelY(l.edit), pillY);
+      expect(labelY(l.extend), pillY);
+      final circleY = labelY(l.icon);
+      expect(circleY, greaterThan(pillY));
       for (final label in [
-        l.sync,
-        l.edit,
-        l.extend,
-        l.icon,
         l.preview,
         l.copyLink,
         l.qrcode,
         l.exportFile,
         l.delete,
       ]) {
-        expect(
-          find.descendant(of: pass, matching: find.text(label)),
-          findsOneWidget,
-        );
+        expect(labelY(label), circleY);
       }
+      expect(tester.takeException(), isNull);
 
       // Non-active long-term remote profile still shows traffic progress ring.
       expect(find.byType(ProfileTrafficRing), findsOneWidget);

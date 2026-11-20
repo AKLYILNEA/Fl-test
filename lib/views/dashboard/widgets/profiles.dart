@@ -439,7 +439,7 @@ class _UsageMeter extends StatelessWidget {
               active: usage.share >= _nearlyUsedShare
                   ? DashboardColors.of(context).warn
                   : context.colorScheme.primary,
-              track: DashboardColors.of(context).tone2,
+              track: DashboardColors.of(context).tone,
             ),
           ),
         ),

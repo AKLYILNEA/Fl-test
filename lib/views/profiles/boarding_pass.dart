@@ -451,6 +451,7 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
       _ => null,
     };
 
+    final waveSpacing = widget.isWide ? 4.0 : 8.0;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -461,6 +462,7 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
           spacing: 12,
           children: [
             Flexible(
+              fit: widget.isWide ? FlexFit.tight : FlexFit.loose,
               child: Text.rich(
                 TextSpan(
                   children: [
@@ -481,7 +483,7 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: waveSpacing),
         SizedBox(
           height: 12,
           child: CustomPaint(
@@ -492,7 +494,7 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
             ),
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: waveSpacing),
         Row(
           spacing: 12,
           children: [
@@ -588,7 +590,7 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
     );
   }
 
-  ({List<_PillAction> pills, List<List<_StubAction>> rows}) _landscapeStubPlan(
+  ({List<_PillAction> pills, List<_StubAction> actions}) _landscapeStubPlan(
     BuildContext context,
     Profile profile,
     bool isUpdating,
@@ -608,53 +610,53 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
                 ? null
                 : () => handleSyncProfile(ref, profile),
           ),
+          _PillAction(
+            glyph: AppGlyphs.edit,
+            label: l.edit,
+            accent: accent,
+            tinted: false,
+            onPressed: () => handleEditProfile(context, profile),
+          ),
+          _PillAction(
+            glyph: AppGlyphs.puzzle,
+            label: l.extend,
+            accent: accent,
+            tinted: false,
+            onPressed: () => handleExtendProfile(context, profile),
+          ),
         ],
-        rows: [
-          [
-            _StubAction(
-              glyph: AppGlyphs.edit,
-              label: l.edit,
-              onPressed: () => handleEditProfile(context, profile),
-            ),
-            _StubAction(
-              glyph: AppGlyphs.puzzle,
-              label: l.extend,
-              onPressed: () => handleExtendProfile(context, profile),
-            ),
-            _StubAction(
-              glyph: AppGlyphs.photos,
-              label: l.icon,
-              onPressed: () => openProfileIconPicker(context, ref, profile),
-            ),
-            _StubAction(
-              glyph: AppGlyphs.eye,
-              label: l.preview,
-              onPressed: () => handlePreviewProfile(context, profile),
-            ),
-          ],
-          [
-            _StubAction(
-              glyph: AppGlyphs.copy,
-              label: l.copyLink,
-              onPressed: () => handleCopyProfileLink(context, profile),
-            ),
-            _StubAction(
-              glyph: AppGlyphs.qrCode,
-              label: l.qrcode,
-              onPressed: () => handleShowProfileQrCode(context, profile),
-            ),
-            _StubAction(
-              glyph: AppGlyphs.export,
-              label: l.exportFile,
-              onPressed: () => handleExportProfileFile(context, profile),
-            ),
-            _StubAction(
-              glyph: AppGlyphs.delete,
-              label: l.delete,
-              danger: true,
-              onPressed: () => handleDeleteProfile(context, ref, profile),
-            ),
-          ],
+        actions: [
+          _StubAction(
+            glyph: AppGlyphs.photos,
+            label: l.icon,
+            onPressed: () => openProfileIconPicker(context, ref, profile),
+          ),
+          _StubAction(
+            glyph: AppGlyphs.eye,
+            label: l.preview,
+            onPressed: () => handlePreviewProfile(context, profile),
+          ),
+          _StubAction(
+            glyph: AppGlyphs.copy,
+            label: l.copyLink,
+            onPressed: () => handleCopyProfileLink(context, profile),
+          ),
+          _StubAction(
+            glyph: AppGlyphs.qrCode,
+            label: l.qrcode,
+            onPressed: () => handleShowProfileQrCode(context, profile),
+          ),
+          _StubAction(
+            glyph: AppGlyphs.export,
+            label: l.exportFile,
+            onPressed: () => handleExportProfileFile(context, profile),
+          ),
+          _StubAction(
+            glyph: AppGlyphs.delete,
+            label: l.delete,
+            danger: true,
+            onPressed: () => handleDeleteProfile(context, ref, profile),
+          ),
         ],
       ),
       ProfileType.file => (
@@ -674,30 +676,28 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
             onPressed: () => handleExtendProfile(context, profile),
           ),
         ],
-        rows: [
-          [
-            _StubAction(
-              glyph: AppGlyphs.photos,
-              label: l.icon,
-              onPressed: () => openProfileIconPicker(context, ref, profile),
-            ),
-            _StubAction(
-              glyph: AppGlyphs.eye,
-              label: l.preview,
-              onPressed: () => handlePreviewProfile(context, profile),
-            ),
-            _StubAction(
-              glyph: AppGlyphs.export,
-              label: l.exportFile,
-              onPressed: () => handleExportProfileFile(context, profile),
-            ),
-            _StubAction(
-              glyph: AppGlyphs.delete,
-              label: l.delete,
-              danger: true,
-              onPressed: () => handleDeleteProfile(context, ref, profile),
-            ),
-          ],
+        actions: [
+          _StubAction(
+            glyph: AppGlyphs.photos,
+            label: l.icon,
+            onPressed: () => openProfileIconPicker(context, ref, profile),
+          ),
+          _StubAction(
+            glyph: AppGlyphs.eye,
+            label: l.preview,
+            onPressed: () => handlePreviewProfile(context, profile),
+          ),
+          _StubAction(
+            glyph: AppGlyphs.export,
+            label: l.exportFile,
+            onPressed: () => handleExportProfileFile(context, profile),
+          ),
+          _StubAction(
+            glyph: AppGlyphs.delete,
+            label: l.delete,
+            danger: true,
+            onPressed: () => handleDeleteProfile(context, ref, profile),
+          ),
         ],
       ),
       ProfileType.custom => (
@@ -710,30 +710,28 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
             onPressed: () => handleEditProfile(context, profile),
           ),
         ],
-        rows: [
-          [
-            _StubAction(
-              glyph: AppGlyphs.textShort,
-              label: l.rename,
-              onPressed: () => renameProfile(context, ref, profile),
-            ),
-            _StubAction(
-              glyph: AppGlyphs.photos,
-              label: l.icon,
-              onPressed: () => openProfileIconPicker(context, ref, profile),
-            ),
-            _StubAction(
-              glyph: AppGlyphs.eye,
-              label: l.preview,
-              onPressed: () => handlePreviewProfile(context, profile),
-            ),
-            _StubAction(
-              glyph: AppGlyphs.delete,
-              label: l.delete,
-              danger: true,
-              onPressed: () => handleDeleteProfile(context, ref, profile),
-            ),
-          ],
+        actions: [
+          _StubAction(
+            glyph: AppGlyphs.textShort,
+            label: l.rename,
+            onPressed: () => renameProfile(context, ref, profile),
+          ),
+          _StubAction(
+            glyph: AppGlyphs.photos,
+            label: l.icon,
+            onPressed: () => openProfileIconPicker(context, ref, profile),
+          ),
+          _StubAction(
+            glyph: AppGlyphs.eye,
+            label: l.preview,
+            onPressed: () => handlePreviewProfile(context, profile),
+          ),
+          _StubAction(
+            glyph: AppGlyphs.delete,
+            label: l.delete,
+            danger: true,
+            onPressed: () => handleDeleteProfile(context, ref, profile),
+          ),
         ],
       ),
     };
@@ -748,23 +746,21 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
-      spacing: 12,
+      spacing: profile.type == ProfileType.url ? 10 : 12,
       children: [
-        if (plan.pills.isNotEmpty)
-          Row(
-            spacing: 8,
-            children: [
-              for (final pill in plan.pills)
-                Expanded(child: _ActionPillButton(action: pill)),
-            ],
-          ),
-        for (final row in plan.rows)
-          Row(
-            children: [
-              for (final action in row)
-                Expanded(child: _LabeledCircleAction(action: action)),
-            ],
-          ),
+        Row(
+          spacing: 8,
+          children: [
+            for (final pill in plan.pills)
+              Expanded(child: _ActionPillButton(action: pill)),
+          ],
+        ),
+        Row(
+          children: [
+            for (final action in plan.actions)
+              Expanded(child: _LabeledCircleAction(action: action)),
+          ],
+        ),
       ],
     );
   }
@@ -798,6 +794,7 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
 
     final Widget passContent;
     if (widget.isWide) {
+      final isRemote = profile.type == ProfileType.url;
       passContent = IntrinsicHeight(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -805,27 +802,36 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
             Expanded(
               flex: 12,
               child: Stack(
+                alignment: isRemote
+                    ? Alignment.center
+                    : AlignmentDirectional.topStart,
                 clipBehavior: Clip.hardEdge,
                 children: [
-                  Positioned(
-                    right: -8,
-                    top: -12,
-                    child: IgnorePointer(
-                      child: GlyphIcon(
-                        profileDefaultGlyph(profile.type),
-                        size: 88,
-                        color: watermarkColor,
+                  if (!isRemote)
+                    Positioned(
+                      right: -8,
+                      top: -12,
+                      child: IgnorePointer(
+                        child: GlyphIcon(
+                          profileDefaultGlyph(profile.type),
+                          size: 88,
+                          color: watermarkColor,
+                        ),
                       ),
                     ),
-                  ),
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(18, 18, 12, 18),
+                    padding: isRemote
+                        ? const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 15,
+                          )
+                        : const EdgeInsets.fromLTRB(18, 18, 12, 18),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         _buildHeaderInfo(context, profile),
-                        const SizedBox(height: 16),
+                        SizedBox(height: isRemote ? 12 : 16),
                         bodyMetrics,
                       ],
                     ),
@@ -846,7 +852,9 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
             Expanded(
               flex: 10,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(10, 16, 16, 16),
+                padding: isRemote
+                    ? const EdgeInsets.fromLTRB(10, 12, 16, 12)
+                    : const EdgeInsets.fromLTRB(10, 16, 16, 16),
                 child: _buildLandscapeActionMatrix(
                   context,
                   profile,
@@ -1012,14 +1020,12 @@ class _StubAction {
     required this.label,
     required this.onPressed,
     this.danger = false,
-    this.loading = false,
   });
 
   final Glyph glyph;
   final String label;
   final VoidCallback? onPressed;
   final bool danger;
-  final bool loading;
 }
 
 class _LabeledCircleAction extends StatelessWidget {
@@ -1040,9 +1046,7 @@ class _LabeledCircleAction extends StatelessWidget {
           tooltip: action.label,
           danger: action.danger,
           onPressed: action.onPressed,
-          child: action.loading
-              ? const ActivityIndicator(size: 16)
-              : GlyphIcon(action.glyph, size: 17),
+          child: GlyphIcon(action.glyph, size: 17),
         ),
         const SizedBox(height: 5),
         Text(
