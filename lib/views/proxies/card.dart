@@ -274,14 +274,15 @@ class ProxyCard extends ConsumerWidget {
           ),
           child: Card(
             radius: AppCorner.lg,
-            side: inUse
-                ? BorderSide(color: colorScheme.primary, width: 1.5)
-                : BorderSide.none,
             enterActionsOnRight: true,
             key: key,
             onPressed: () => _handleSelect(ref),
             isSelected: showTint,
-            selectionTint: showTint ? colorScheme.primary.opacity15 : null,
+            selectionTint: showTint
+                ? SurfaceLevel.floatingOf(
+                    colorScheme,
+                  ).next.colorOf(colorScheme)
+                : null,
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Column(
               mainAxisSize: MainAxisSize.min,
