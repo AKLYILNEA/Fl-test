@@ -441,8 +441,13 @@ void main() {
         imageCache.clear();
         expect(imageCache.currentSize, 0);
 
-        // AppLifecycleState.resumed triggers precacheTargetIcons again.
-        await tester.runAsync(() => precacheTargetIcons([pngSrc, svgSrc]));
+        await tester.runAsync(
+          () => precacheTargetIcons([
+            'https://example.com/not-cached-yet.png',
+            pngSrc,
+            svgSrc,
+          ], cachedOnly: true),
+        );
         expect(imageCache.currentSize, 2);
         verifyNoMoreInteractions(manager);
 

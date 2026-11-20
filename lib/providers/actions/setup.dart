@@ -191,6 +191,14 @@ class SetupAction extends _$SetupAction {
     _resumeOnRestart = true;
   }
 
+  void applyAndroidServiceStopped() {
+    _latestRunRequest = null;
+    _resumeOnRestart = false;
+    _setLocalRunning(false);
+    ref.read(runningVpnOptionsProvider.notifier).value = null;
+    _clearDisplayedTraffic();
+  }
+
   Future<bool> setRunning(bool running, {bool initialize = false}) {
     if (running && !initialize && !ref.read(initProvider)) {
       return Future.value(true);
@@ -273,13 +281,17 @@ class SetupAction extends _$SetupAction {
       return true;
     }
     resetCoreTraffic();
-    ref.read(trafficsProvider.notifier).clear();
-    ref.read(totalTrafficProvider.notifier).value = const Traffic();
+    _clearDisplayedTraffic();
     // A silent Core is gone or hung; running again would proxy traffic to it.
     if (unanswered case (final error, final stackTrace)) {
       Error.throwWithStackTrace(error, stackTrace);
     }
     return true;
+  }
+
+  void _clearDisplayedTraffic() {
+    ref.read(trafficsProvider.notifier).clear();
+    ref.read(totalTrafficProvider.notifier).value = const Traffic();
   }
 
   Future<void> _setCoreRunning(_RunRequest request) {
@@ -294,18 +306,21 @@ class SetupAction extends _$SetupAction {
   }
 
   Future<void> _setListening(bool running) async {
+    final request = _latestRunRequest;
     final vpnOptions = await ref.read(vpnOptionsProvider.future);
     try {
       await setCoreRunning(running);
     } catch (error) {
-      if (_isUnanswered(error)) {
+      if (_isCurrent(request) && _isUnanswered(error)) {
         ref.read(runningVpnOptionsProvider.notifier).value = null;
       }
       rethrow;
     }
-    ref.read(runningVpnOptionsProvider.notifier).value = running
-        ? vpnOptions
-        : null;
+    if (_isCurrent(request)) {
+      ref.read(runningVpnOptionsProvider.notifier).value = running
+          ? vpnOptions
+          : null;
+    }
   }
 
   bool _isUnanswered(Object error) =>
@@ -346,7 +361,8 @@ class SetupAction extends _$SetupAction {
     _setLocalRunning(!request.running);
   }
 
-  bool _isCurrent(_RunRequest? request) => identical(_latestRunRequest, request);
+  bool _isCurrent(_RunRequest? request) =>
+      identical(_latestRunRequest, request);
 
   Future<void> updateConfigDebounce() async {
     debouncer.call(FunctionTag.updateConfig, updateConfig);
@@ -873,7 +889,9 @@ class SetupAction extends _$SetupAction {
               rethrow;
             }
             globalState.lastConfigCounts = configCountsOf(const {});
-            unawaited(preferences.saveAppliedConfigCounts(globalState.lastConfigCounts));
+            unawaited(
+              preferences.saveAppliedConfigCounts(globalState.lastConfigCounts),
+            );
             await globalState.safeRun(() => onUpdated?.call());
             throw MessageException(error.message);
           }
@@ -887,7 +905,9 @@ class SetupAction extends _$SetupAction {
         globalState.lastConfigMd5 = yamlMd5;
         globalState.lastConfigCounts =
             realProfile?.counts ?? configCountsOf(const {});
-        unawaited(preferences.saveAppliedConfigCounts(globalState.lastConfigCounts));
+        unawaited(
+          preferences.saveAppliedConfigCounts(globalState.lastConfigCounts),
+        );
         _appliedInputs = inputs;
         if (system.isAndroid) {
           await preferences.saveAppliedConfigMd5(yamlMd5);

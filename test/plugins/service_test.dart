@@ -202,7 +202,13 @@ void main() {
           );
     }
 
-    int lastRevision() => calls.last.arguments as int;
+    int lastRevision() =>
+        calls
+                .lastWhere(
+                  (call) => call.method == 'start' || call.method == 'stop',
+                )
+                .arguments
+            as int;
 
     final startedAt = DateTime(2026, 8, 16);
     final runningReply = <String, Object?>{
@@ -211,7 +217,7 @@ void main() {
     };
 
     setUp(() {
-      mockChannel((_) async => true);
+      mockChannel((call) async => call.method != 'isRunRequested');
       listener = _RecordingStopListener();
       Service().addListener(listener);
     });
@@ -257,22 +263,59 @@ void main() {
       expect(listener.stops, 0);
     });
 
-    test('adopts the native run and receives stops without a start command', () async {
-      await Service().stop();
+    test('a delayed report does not stop a newer native run', () async {
+      await Service().start();
       final revision = lastRevision();
-      calls.clear();
-      mockChannel((_) async => runningReply);
-
-      expect(
-        await Service().adoptRunningService(),
-        (startedAt: startedAt, options: _vpnOptions),
-      );
-      expect(calls.map((call) => call.method), ['getRunningService']);
+      var nativeRunning = true;
+      mockChannel((_) async => nativeRunning);
 
       await reportStopped(revision);
+      expect(listener.stops, 0);
+
+      nativeRunning = false;
       await reportStopped(revision);
       expect(listener.stops, 1);
     });
+
+    test('a newer Flutter start supersedes a stop being checked', () async {
+      await Service().start();
+      final revision = lastRevision();
+      final nativeState = Completer<bool>();
+      mockChannel(
+        (call) async =>
+            call.method == 'isRunRequested' ? await nativeState.future : true,
+      );
+
+      final report = reportStopped(revision);
+      await Service().start();
+      nativeState.complete(false);
+      await report;
+
+      expect(listener.stops, 0);
+    });
+
+    test(
+      'adopts the native run and receives stops without a start command',
+      () async {
+        await Service().stop();
+        final revision = lastRevision();
+        calls.clear();
+        mockChannel(
+          (call) async =>
+              call.method == 'getRunningService' ? runningReply : false,
+        );
+
+        expect(await Service().adoptRunningService(), (
+          startedAt: startedAt,
+          options: _vpnOptions,
+        ));
+        expect(calls.map((call) => call.method), ['getRunningService']);
+
+        await reportStopped(revision);
+        await reportStopped(revision);
+        expect(listener.stops, 1);
+      },
+    );
 
     test('a stop report supersedes an outstanding adoption read', () async {
       await Service().stop();
@@ -291,9 +334,8 @@ void main() {
     test('a newer command supersedes an outstanding adoption read', () async {
       final pending = Completer<Map<String, Object?>>();
       mockChannel(
-        (call) async => call.method == 'getRunningService'
-            ? await pending.future
-            : true,
+        (call) async =>
+            call.method == 'getRunningService' ? await pending.future : true,
       );
 
       final adoption = Service().adoptRunningService();

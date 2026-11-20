@@ -23,9 +23,11 @@ class AppStateManager extends ConsumerStatefulWidget {
 
 class _AppStateManagerState extends ConsumerState<AppStateManager>
     with WidgetsBindingObserver {
-  Set<String>? _proxyIconSources;
+  Set<String> _proxyIconSources = const {};
+  var _proxyIconSourcesDirty = true;
   var _proxyIconPrecachePending = false;
   var _proxyIconPrecacheRunning = false;
+  Future<void>? _restoringProxyIcons;
 
   @override
   void initState() {
@@ -103,7 +105,7 @@ class _AppStateManagerState extends ConsumerState<AppStateManager>
 
   void _queueProxyIconPrecache({bool sourcesChanged = false}) {
     if (sourcesChanged) {
-      _proxyIconSources = null;
+      _proxyIconSourcesDirty = true;
     }
     _proxyIconPrecachePending = true;
     if (!_proxyIconPrecacheRunning && ref.read(appVisibleProvider)) {
@@ -125,13 +127,17 @@ class _AppStateManagerState extends ConsumerState<AppStateManager>
     try {
       while (_proxyIconPrecachePending && await _waitForProxyIconIdle()) {
         _proxyIconPrecachePending = false;
-        final sources = _proxyIconSources ??= _resolveProxyIconSources();
+        if (_proxyIconSourcesDirty) {
+          _proxyIconSources = _resolveProxyIconSources();
+          _proxyIconSourcesDirty = false;
+        }
+        final sources = _proxyIconSources;
+        bool isCurrent() =>
+            !_proxyIconSourcesDirty && identical(sources, _proxyIconSources);
         await precacheTargetIcons(
           sources,
           waitToPrecache: () async =>
-              identical(sources, _proxyIconSources) &&
-              await _waitForProxyIconIdle() &&
-              identical(sources, _proxyIconSources),
+              isCurrent() && await _waitForProxyIconIdle() && isCurrent(),
         );
       }
     } finally {
@@ -139,10 +145,22 @@ class _AppStateManagerState extends ConsumerState<AppStateManager>
     }
   }
 
+  void _restoreCachedProxyIcons() {
+    final sources = _proxyIconSources;
+    if (sources.isEmpty || _restoringProxyIcons != null) {
+      return;
+    }
+    _restoringProxyIcons = precacheTargetIcons(sources, cachedOnly: true)
+        .whenComplete(() {
+          _restoringProxyIcons = null;
+        });
+  }
+
   @override
   Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
     _updateVisible(state);
     if (state == AppLifecycleState.resumed) {
+      _restoreCachedProxyIcons();
       _queueProxyIconPrecache();
       unawaited(ref.read(locationPermissionsProvider.notifier).refresh());
       // A certificate removed meanwhile stops decryption before the next start.

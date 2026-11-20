@@ -265,6 +265,22 @@ void main() {
   });
 
   group('run failures', () {
+    test(
+      'a native stop clears the run without sending another Core command',
+      () async {
+        markInitialized();
+        await action.setRunning(true);
+        expect(container.read(runTimeProvider), isNotNull);
+
+        action.applyAndroidServiceStopped();
+
+        expect(container.read(runTimeProvider), isNull);
+        expect(container.read(runningVpnOptionsProvider), isNull);
+        expect(action.coreRunningCalls, [true]);
+        expect(action.trafficResets, 0);
+      },
+    );
+
     test('a start the core rejects stops reporting a run time', () async {
       markInitialized();
       action.coreRunningError = StateError('start failed');

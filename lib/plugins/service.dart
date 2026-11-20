@@ -82,6 +82,16 @@ class Service {
           if (!_startRequested) {
             break;
           }
+          final stopReport = _stopReportCount;
+          // Native starts can advance without a new Flutter revision.
+          final runRequested = await methodChannel.invokeMethod<bool>(
+            'isRunRequested',
+          );
+          if (runRequested != false ||
+              report['revision'] != _commandRevision ||
+              stopReport != _stopReportCount) {
+            break;
+          }
           _startRequested = false;
           final failure = ServiceStartFailure.fromCode(report['failure']);
           _dispatch(

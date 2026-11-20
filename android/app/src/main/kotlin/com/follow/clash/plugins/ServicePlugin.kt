@@ -60,6 +60,7 @@ class ServicePlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
             "init" -> initialize(result)
             "shutdown" -> shutdown(result)
             "getRunningService" -> getRunningService(result)
+            "isRunRequested" -> result.success(ServiceState.isRunRequested)
             "syncState" -> syncState(call, result)
             "start" -> start(call, result)
             "stop" -> stop(call, result)

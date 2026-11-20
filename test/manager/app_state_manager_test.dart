@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:fl_clash/enum/enum.dart';
@@ -19,6 +20,70 @@ class _TestIconRules extends IconRulesNotifier {
 }
 
 void main() {
+  testWidgets(
+    'warm proxy icons start restoring before a foreground animation ends',
+    (tester) async {
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      final animation = AnimationController(
+        vsync: tester,
+        duration: const Duration(milliseconds: 300),
+      );
+      addTearDown(animation.dispose);
+
+      const src = 'https://example.com/cached-on-resume.svg';
+      final bytes = Uint8List.fromList(
+        utf8.encode(
+          '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">'
+          '<rect width="16" height="16" fill="blue"/></svg>',
+        ),
+      );
+      var reads = 0;
+      readRemoteIcon = (_) {
+        reads++;
+        return Stream.value(bytes);
+      };
+      addTearDown(() => readRemoteIcon = null);
+      await tester.runAsync(() => precacheTargetIcons([src]));
+      expect(reads, 1);
+
+      final container = ProviderContainer(
+        overrides: [
+          safeModeProvider.overrideWithValue(true),
+          iconSetsProvider.overrideWith(TestIconSets.new),
+          iconRulesProvider.overrideWith(_TestIconRules.new),
+        ],
+      );
+      addTearDown(container.dispose);
+      container.read(groupsProvider.notifier).value = const [
+        Group(name: 'Group', type: GroupType.Selector, icon: src),
+      ];
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const AppStateManager(child: SizedBox.shrink()),
+        ),
+      );
+      await tester.pumpAndSettle();
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      container.read(groupsProvider.notifier).value = const [
+        Group(name: 'Updated group', type: GroupType.Selector, icon: src),
+      ];
+      imageCache.clear();
+      imageCache.clearLiveImages();
+      expect(imageCache.currentSize, 0);
+
+      animation.forward();
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      expect(animation.isAnimating, isTrue);
+      expect(imageCache.pendingImageCount + imageCache.currentSize, 1);
+      expect(reads, 1);
+
+      animation.stop();
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
+
   testWidgets('proxy icons warm the latest sources after foreground motion', (
     tester,
   ) async {
