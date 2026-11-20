@@ -12,7 +12,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 Glyph profileDefaultGlyph(ProfileType type) => switch (type) {
-  ProfileType.url => AppGlyphs.cloudSync,
+  ProfileType.url => AppGlyphs.cloud,
   ProfileType.file => AppGlyphs.profiles,
   ProfileType.custom => AppGlyphs.puzzle,
 };
@@ -76,8 +76,7 @@ class ProfileIconBadge extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final customSrc = ref.watch(profileIconProvider(profile.id));
-    final colorScheme = context.colorScheme;
-    final fill = SurfaceLevel.block.colorOf(colorScheme);
+    final fill = DashboardColors.of(context).tone;
     final accent = profileTypeAccent(context, profile.type);
     final cornerRadius = radius ?? (size >= 44 ? AppCorner.xl - 10 : AppCorner.xl - 12);
     final glyphSize = size * 0.48;
@@ -155,7 +154,7 @@ class ProfileTrafficRing extends StatelessWidget {
         painter: _TrafficRingPainter(
           share: share.clamp(0.0, 1.0),
           active: active,
-          track: colors.tone2,
+          track: colors.tone,
           strokeWidth: strokeWidth,
         ),
       ),

@@ -2,6 +2,8 @@ import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
+import 'package:fl_clash/ui/icons/icons.dart';
+import 'package:fl_clash/views/dashboard/style.dart';
 import 'package:fl_clash/views/dashboard/widgets/profiles.dart';
 import 'package:fl_clash/views/profiles/boarding_pass.dart';
 import 'package:fl_clash/views/profiles/profile_icon.dart';
@@ -166,12 +168,36 @@ void main() {
         find.text('75% ${l.usedShort}', findRichText: true),
         findsOneWidget,
       );
+      final header = find.byType(ListHeader);
+      expect(header, findsOneWidget);
       expect(
-        find.byWidgetPredicate(
-          (w) => w is CustomPaint && w.painter is WavyProgressPainter,
-        ),
+        find.descendant(of: header, matching: find.text(l.otherProfiles)),
         findsOneWidget,
       );
+      expect(
+        find.descendant(of: header, matching: find.text('1')),
+        findsNothing,
+      );
+      final wavyFinder = find.byWidgetPredicate(
+        (w) => w is CustomPaint && w.painter is WavyProgressPainter,
+      );
+      expect(wavyFinder, findsOneWidget);
+      final wavyPainter =
+          tester.widget<CustomPaint>(wavyFinder).painter! as WavyProgressPainter;
+      expect(
+        wavyPainter.track,
+        DashboardColors.of(tester.element(wavyFinder)).tone,
+      );
+      final watermarkPositioned = tester.widget<Positioned>(
+        find.ancestor(
+          of: find.byWidgetPredicate(
+            (w) => w is GlyphIcon && w.glyph == AppGlyphs.cloud && w.size == 84,
+          ),
+          matching: find.byType(Positioned),
+        ),
+      );
+      expect(watermarkPositioned.top, isNotNull);
+      expect(watermarkPositioned.bottom, isNull);
       expect(find.byTooltip(l.more), findsOneWidget);
       expect(find.text(l.copyLink), findsNothing);
 
@@ -295,6 +321,8 @@ void main() {
       profiles: [active, local, custom],
     );
 
+    expect(profileDefaultGlyph(active.type), AppGlyphs.cloud);
+    expect(AppGlyphs.cloud.shapes.length, 1);
     expect(profileDefaultGlyph(active.type), isNot(profileDefaultGlyph(local.type)));
     expect(profileDefaultGlyph(local.type), isNot(profileDefaultGlyph(custom.type)));
     expect(profileDefaultGlyph(active.type), isNot(profileDefaultGlyph(custom.type)));

@@ -263,32 +263,14 @@ class _ProfilesContentState extends ConsumerState<_ProfilesContent> {
               ),
             if (otherProfiles.isNotEmpty) ...[
               SliverPadding(
-                padding: EdgeInsets.fromLTRB(
-                  _horizontalPadding + 4,
-                  activeProfile != null ? 18 : topPadding,
-                  _horizontalPadding + 4,
-                  10,
+                padding: EdgeInsets.only(
+                  left: _horizontalPadding,
+                  right: _horizontalPadding,
+                  top: activeProfile != null ? 0 : topPadding,
                 ),
                 sliver: SliverToBoxAdapter(
-                  child: Row(
-                    children: [
-                      Text(
-                        context.appLocalizations.otherProfiles,
-                        style: AppTextStyle.footnote
-                            .of(context, emphasized: true)
-                            .copyWith(
-                              color: context.colorScheme.onSurfaceVariant,
-                            ),
-                      ),
-                      const Spacer(),
-                      Text(
-                        '${otherProfiles.length}',
-                        style: AppTextStyle.footnote
-                            .of(context)
-                            .toTabular
-                            .toLighter,
-                      ),
-                    ],
+                  child: ListHeader(
+                    title: context.appLocalizations.otherProfiles,
                   ),
                 ),
               ),

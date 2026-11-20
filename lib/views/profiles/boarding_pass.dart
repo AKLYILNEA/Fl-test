@@ -301,7 +301,7 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
     final colorScheme = context.colorScheme;
     return DecoratedBox(
       decoration: ShapeDecoration(
-        color: SurfaceLevel.block.colorOf(colorScheme),
+        color: DashboardColors.of(context).tone,
         shape: AppShape.all(AppCorner.sm),
       ),
       child: Padding(
@@ -489,7 +489,7 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
             painter: WavyProgressPainter(
               value: usage.share,
               active: waveColor,
-              track: colors.tone2,
+              track: colors.tone,
             ),
           ),
         ),
@@ -530,7 +530,7 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
   ) {
     final l = context.appLocalizations;
     final colorScheme = context.colorScheme;
-    final tileFill = SurfaceLevel.block.colorOf(colorScheme);
+    final tileFill = DashboardColors.of(context).tone;
     final figureStyle = AppTextStyle.title3
         .of(context, emphasized: true)
         .toTabular
@@ -865,12 +865,13 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
                 clipBehavior: Clip.hardEdge,
                 children: [
                   Positioned(
-                    right: -14,
-                    bottom: -18,
+                    right: widget.isWide ? -14 : -10,
+                    top: widget.isWide ? null : -14,
+                    bottom: widget.isWide ? -18 : null,
                     child: IgnorePointer(
                       child: GlyphIcon(
                         profileDefaultGlyph(profile.type),
-                        size: 96,
+                        size: widget.isWide ? 96 : 84,
                         color: watermarkColor,
                       ),
                     ),
@@ -904,7 +905,7 @@ class _CircleIconButton extends StatelessWidget {
     final colorScheme = context.colorScheme;
     final fill = danger
         ? colorScheme.error.withValues(alpha: 0.12)
-        : SurfaceLevel.block.colorOf(colorScheme);
+        : DashboardColors.of(context).tone;
     final foreground = danger ? colorScheme.error : colorScheme.onSurface;
     return Tooltip(
       message: tooltip,
