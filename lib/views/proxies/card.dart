@@ -11,6 +11,7 @@ import 'package:fl_clash/ui/icons/icons.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:prism_ui/hct/hct.dart';
 
 void selectGroupProxy(
   WidgetRef ref, {
@@ -224,6 +225,22 @@ class ProxyCard extends ConsumerWidget {
           ),
         );
         final colorScheme = context.colorScheme;
+        // The selected card's fill mirrors the bottom dock's selection
+        // lens: the secondary hue at tone 90 in light mode, tone 4 in
+        // dark mode. A surface grey is wrong here: in list mode the rows
+        // already sit one level up, so the grey equals the card's normal
+        // fill and the selection becomes invisible.
+        final selectionTone =
+            colorScheme.brightness == Brightness.dark ? 4.0 : 90.0;
+        final selectionSecondary =
+            Hct.fromInt(colorScheme.secondary.toARGB32());
+        final selectionPlatter = Color(
+          Hct.from(
+            selectionSecondary.hue,
+            selectionSecondary.chroma,
+            selectionTone,
+          ).toInt(),
+        );
         final delayText = _DelayText(
           proxy: proxy,
           testUrl: testUrl,
@@ -278,11 +295,7 @@ class ProxyCard extends ConsumerWidget {
             key: key,
             onPressed: () => _handleSelect(ref),
             isSelected: showTint,
-            selectionTint: showTint
-                ? SurfaceLevel.floatingOf(
-                    colorScheme,
-                  ).next.colorOf(colorScheme)
-                : null,
+            selectionTint: showTint ? selectionPlatter : null,
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Column(
               mainAxisSize: MainAxisSize.min,
