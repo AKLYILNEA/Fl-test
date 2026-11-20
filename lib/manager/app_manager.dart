@@ -8,6 +8,7 @@ import 'package:fl_clash/providers/mitm.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/ui/ui.dart';
 import 'package:fl_clash/widgets/icon.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -22,6 +23,10 @@ class AppStateManager extends ConsumerStatefulWidget {
 
 class _AppStateManagerState extends ConsumerState<AppStateManager>
     with WidgetsBindingObserver {
+  Set<String>? _proxyIconSources;
+  var _proxyIconPrecachePending = false;
+  var _proxyIconPrecacheRunning = false;
+
   @override
   void initState() {
     super.initState();
@@ -40,12 +45,12 @@ class _AppStateManagerState extends ConsumerState<AppStateManager>
     });
     ref.listenManual(groupsProvider, (prev, next) {
       if (prev != next) {
-        _precacheProxyIcons();
+        _queueProxyIconPrecache(sourcesChanged: true);
       }
     }, fireImmediately: true);
     ref.listenManual(iconRulesProvider, (prev, next) {
       if (prev != next) {
-        _precacheProxyIcons();
+        _queueProxyIconPrecache(sourcesChanged: true);
       }
     }, fireImmediately: true);
     ref.listenManual(iconSetsProvider, (_, next) {
@@ -85,25 +90,60 @@ class _AppStateManagerState extends ConsumerState<AppStateManager>
     };
   }
 
-  Iterable<String> _proxyIconSources() {
+  Set<String> _resolveProxyIconSources() {
     final groups = ref.read(groupsProvider);
     final rules = ref.read(iconRulesProvider);
-    return [
+    return {
       for (final group in groups)
-        resolveProxyGroupIcon(group.name, group.icon, rules),
+        if (group.icon.isNotEmpty)
+          resolveProxyGroupIcon(group.name, group.icon, rules),
       for (final rule in rules) rule.icon,
-    ];
+    };
   }
 
-  void _precacheProxyIcons() {
-    unawaited(precacheTargetIcons(_proxyIconSources()));
+  void _queueProxyIconPrecache({bool sourcesChanged = false}) {
+    if (sourcesChanged) {
+      _proxyIconSources = null;
+    }
+    _proxyIconPrecachePending = true;
+    if (!_proxyIconPrecacheRunning && ref.read(appVisibleProvider)) {
+      unawaited(_precacheProxyIcons());
+    }
+  }
+
+  Future<bool> _waitForProxyIconIdle() async {
+    if (!mounted || !ref.read(appVisibleProvider)) {
+      return false;
+    }
+    await SchedulerBinding.instance.endOfFrame;
+    await whenNothingAnimates();
+    return mounted && ref.read(appVisibleProvider);
+  }
+
+  Future<void> _precacheProxyIcons() async {
+    _proxyIconPrecacheRunning = true;
+    try {
+      while (_proxyIconPrecachePending && await _waitForProxyIconIdle()) {
+        _proxyIconPrecachePending = false;
+        final sources = _proxyIconSources ??= _resolveProxyIconSources();
+        await precacheTargetIcons(
+          sources,
+          waitToPrecache: () async =>
+              identical(sources, _proxyIconSources) &&
+              await _waitForProxyIconIdle() &&
+              identical(sources, _proxyIconSources),
+        );
+      }
+    } finally {
+      _proxyIconPrecacheRunning = false;
+    }
   }
 
   @override
   Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
     _updateVisible(state);
     if (state == AppLifecycleState.resumed) {
-      _precacheProxyIcons();
+      _queueProxyIconPrecache();
       unawaited(ref.read(locationPermissionsProvider.notifier).refresh());
       // A certificate removed meanwhile stops decryption before the next start.
       if (rsFeature && ref.read(patchClashConfigProvider).mitm.enable) {
