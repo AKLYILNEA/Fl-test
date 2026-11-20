@@ -1325,5 +1325,8 @@
   "customIcon": "사용자 지정 아이콘",
   "remainingShort": "남음",
   "expired": "만료됨",
-  "localFile": "로컬 파일"
+  "localFile": "로컬 파일",
+  "lastEdited": "최근 편집",
+  "builtIn": "내장",
+  "projectUrl": "프로젝트 주소"
 }

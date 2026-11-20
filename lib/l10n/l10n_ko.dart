@@ -4431,4 +4431,13 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get localFile => '로컬 파일';
+
+  @override
+  String get lastEdited => '최근 편집';
+
+  @override
+  String get builtIn => '내장';
+
+  @override
+  String get projectUrl => '프로젝트 주소';
 }

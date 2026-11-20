@@ -7315,6 +7315,12 @@ abstract class AppLocalizations {
   String get expired;
 
   String get localFile;
+
+  String get lastEdited;
+
+  String get builtIn;
+
+  String get projectUrl;
 }
 
 class _AppLocalizationsDelegate

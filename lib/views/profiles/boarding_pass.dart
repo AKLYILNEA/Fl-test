@@ -65,8 +65,7 @@ String profileSubtitleText(BuildContext context, Profile profile) {
       final date? => l.profileDaysLeft(profileDaysLeft(date)),
       null => l.infiniteTime,
     },
-    ProfileType.file => l.localFile,
-    ProfileType.custom => l.custom,
+    ProfileType.file || ProfileType.custom => l.lastEdited,
   };
   return time == null || time.isEmpty ? lead : '$lead · $time';
 }
@@ -589,137 +588,154 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
     );
   }
 
-  List<List<_StubAction>> _landscapeActionRows(
+  ({List<_PillAction> pills, List<List<_StubAction>> rows}) _landscapeStubPlan(
     BuildContext context,
     Profile profile,
     bool isUpdating,
   ) {
     final l = context.appLocalizations;
+    final accent = profileTypeAccent(context, profile.type);
     return switch (profile.type) {
-      ProfileType.url => [
-        [
-          _StubAction(
+      ProfileType.url => (
+        pills: [
+          _PillAction(
             glyph: AppGlyphs.sync,
             label: l.sync,
+            accent: accent,
+            tinted: true,
             loading: isUpdating,
             onPressed: isUpdating
                 ? null
                 : () => handleSyncProfile(ref, profile),
           ),
-          _StubAction(
+        ],
+        rows: [
+          [
+            _StubAction(
+              glyph: AppGlyphs.edit,
+              label: l.edit,
+              onPressed: () => handleEditProfile(context, profile),
+            ),
+            _StubAction(
+              glyph: AppGlyphs.puzzle,
+              label: l.extend,
+              onPressed: () => handleExtendProfile(context, profile),
+            ),
+            _StubAction(
+              glyph: AppGlyphs.photos,
+              label: l.icon,
+              onPressed: () => openProfileIconPicker(context, ref, profile),
+            ),
+            _StubAction(
+              glyph: AppGlyphs.eye,
+              label: l.preview,
+              onPressed: () => handlePreviewProfile(context, profile),
+            ),
+          ],
+          [
+            _StubAction(
+              glyph: AppGlyphs.copy,
+              label: l.copyLink,
+              onPressed: () => handleCopyProfileLink(context, profile),
+            ),
+            _StubAction(
+              glyph: AppGlyphs.qrCode,
+              label: l.qrcode,
+              onPressed: () => handleShowProfileQrCode(context, profile),
+            ),
+            _StubAction(
+              glyph: AppGlyphs.export,
+              label: l.exportFile,
+              onPressed: () => handleExportProfileFile(context, profile),
+            ),
+            _StubAction(
+              glyph: AppGlyphs.delete,
+              label: l.delete,
+              danger: true,
+              onPressed: () => handleDeleteProfile(context, ref, profile),
+            ),
+          ],
+        ],
+      ),
+      ProfileType.file => (
+        pills: [
+          _PillAction(
             glyph: AppGlyphs.edit,
             label: l.edit,
+            accent: accent,
+            tinted: true,
             onPressed: () => handleEditProfile(context, profile),
           ),
-          _StubAction(
+          _PillAction(
             glyph: AppGlyphs.puzzle,
             label: l.extend,
+            accent: accent,
+            tinted: false,
             onPressed: () => handleExtendProfile(context, profile),
           ),
-          _StubAction(
-            glyph: AppGlyphs.photos,
-            label: l.icon,
-            onPressed: () => openProfileIconPicker(context, ref, profile),
-          ),
-          _StubAction(
-            glyph: AppGlyphs.eye,
-            label: l.preview,
-            onPressed: () => handlePreviewProfile(context, profile),
-          ),
         ],
-        [
-          _StubAction(
-            glyph: AppGlyphs.copy,
-            label: l.copyLink,
-            onPressed: () => handleCopyProfileLink(context, profile),
-          ),
-          _StubAction(
-            glyph: AppGlyphs.qrCode,
-            label: l.qrcode,
-            onPressed: () => handleShowProfileQrCode(context, profile),
-          ),
-          _StubAction(
-            glyph: AppGlyphs.export,
-            label: l.exportFile,
-            onPressed: () => handleExportProfileFile(context, profile),
-          ),
-          _StubAction(
-            glyph: AppGlyphs.delete,
-            label: l.delete,
-            danger: true,
-            onPressed: () => handleDeleteProfile(context, ref, profile),
-          ),
+        rows: [
+          [
+            _StubAction(
+              glyph: AppGlyphs.photos,
+              label: l.icon,
+              onPressed: () => openProfileIconPicker(context, ref, profile),
+            ),
+            _StubAction(
+              glyph: AppGlyphs.eye,
+              label: l.preview,
+              onPressed: () => handlePreviewProfile(context, profile),
+            ),
+            _StubAction(
+              glyph: AppGlyphs.export,
+              label: l.exportFile,
+              onPressed: () => handleExportProfileFile(context, profile),
+            ),
+            _StubAction(
+              glyph: AppGlyphs.delete,
+              label: l.delete,
+              danger: true,
+              onPressed: () => handleDeleteProfile(context, ref, profile),
+            ),
+          ],
         ],
-      ],
-      ProfileType.file => [
-        [
-          _StubAction(
-            glyph: AppGlyphs.edit,
-            label: l.edit,
-            onPressed: () => handleEditProfile(context, profile),
-          ),
-          _StubAction(
-            glyph: AppGlyphs.puzzle,
-            label: l.extend,
-            onPressed: () => handleExtendProfile(context, profile),
-          ),
-          _StubAction(
-            glyph: AppGlyphs.photos,
-            label: l.icon,
-            onPressed: () => openProfileIconPicker(context, ref, profile),
-          ),
-        ],
-        [
-          _StubAction(
-            glyph: AppGlyphs.eye,
-            label: l.preview,
-            onPressed: () => handlePreviewProfile(context, profile),
-          ),
-          _StubAction(
-            glyph: AppGlyphs.export,
-            label: l.exportFile,
-            onPressed: () => handleExportProfileFile(context, profile),
-          ),
-          _StubAction(
-            glyph: AppGlyphs.delete,
-            label: l.delete,
-            danger: true,
-            onPressed: () => handleDeleteProfile(context, ref, profile),
-          ),
-        ],
-      ],
-      ProfileType.custom => [
-        [
-          _StubAction(
+      ),
+      ProfileType.custom => (
+        pills: [
+          _PillAction(
             glyph: AppGlyphs.customize,
             label: l.edit,
+            accent: accent,
+            tinted: true,
             onPressed: () => handleEditProfile(context, profile),
           ),
-          _StubAction(
-            glyph: AppGlyphs.textShort,
-            label: l.rename,
-            onPressed: () => renameProfile(context, ref, profile),
-          ),
-          _StubAction(
-            glyph: AppGlyphs.photos,
-            label: l.icon,
-            onPressed: () => openProfileIconPicker(context, ref, profile),
-          ),
         ],
-        [
-          _StubAction(
-            glyph: AppGlyphs.eye,
-            label: l.preview,
-            onPressed: () => handlePreviewProfile(context, profile),
-          ),
-          _StubAction(
-            glyph: AppGlyphs.delete,
-            label: l.delete,
-            danger: true,
-            onPressed: () => handleDeleteProfile(context, ref, profile),
-          ),
+        rows: [
+          [
+            _StubAction(
+              glyph: AppGlyphs.textShort,
+              label: l.rename,
+              onPressed: () => renameProfile(context, ref, profile),
+            ),
+            _StubAction(
+              glyph: AppGlyphs.photos,
+              label: l.icon,
+              onPressed: () => openProfileIconPicker(context, ref, profile),
+            ),
+            _StubAction(
+              glyph: AppGlyphs.eye,
+              label: l.preview,
+              onPressed: () => handlePreviewProfile(context, profile),
+            ),
+            _StubAction(
+              glyph: AppGlyphs.delete,
+              label: l.delete,
+              danger: true,
+              onPressed: () => handleDeleteProfile(context, ref, profile),
+            ),
+          ],
         ],
-      ],
+      ),
     };
   }
 
@@ -728,13 +744,21 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
     Profile profile,
     bool isUpdating,
   ) {
-    final rows = _landscapeActionRows(context, profile, isUpdating);
+    final plan = _landscapeStubPlan(context, profile, isUpdating);
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
       spacing: 12,
       children: [
-        for (final row in rows)
+        if (plan.pills.isNotEmpty)
+          Row(
+            spacing: 8,
+            children: [
+              for (final pill in plan.pills)
+                Expanded(child: _ActionPillButton(action: pill)),
+            ],
+          ),
+        for (final row in plan.rows)
           Row(
             children: [
               for (final action in row)
@@ -763,6 +787,9 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
     final dashColor = colorScheme.onSurface.withValues(
       alpha: isDark ? 0.14 : 0.11,
     );
+    final watermarkColor = profileTypeAccent(context, profile.type).withValues(
+      alpha: isDark ? 0.07 : 0.045,
+    );
     final menuItems = buildProfileMenuItems(context, ref, profile);
 
     final bodyMetrics = usage != null
@@ -777,17 +804,33 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
           children: [
             Expanded(
               flex: 12,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(18, 18, 12, 18),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildHeaderInfo(context, profile),
-                    const SizedBox(height: 16),
-                    bodyMetrics,
-                  ],
-                ),
+              child: Stack(
+                clipBehavior: Clip.hardEdge,
+                children: [
+                  Positioned(
+                    right: -8,
+                    top: -12,
+                    child: IgnorePointer(
+                      child: GlyphIcon(
+                        profileDefaultGlyph(profile.type),
+                        size: 88,
+                        color: watermarkColor,
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(18, 18, 12, 18),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _buildHeaderInfo(context, profile),
+                        const SizedBox(height: 16),
+                        bodyMetrics,
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
             SizedBox(
@@ -848,10 +891,6 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
       );
     }
 
-    final watermarkColor = profileTypeAccent(context, profile.type).withValues(
-      alpha: isDark ? 0.07 : 0.045,
-    );
-
     return ContextMenuRegion(
       menuItems: isUpdating ? null : menuItems,
       child: Focus(
@@ -861,27 +900,73 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
             color: cardColor,
             child: SurfaceScope(
               level: SurfaceLevel.card,
-              child: Stack(
-                clipBehavior: Clip.hardEdge,
-                children: [
-                  Positioned(
-                    right: widget.isWide ? -14 : -10,
-                    top: widget.isWide ? null : -14,
-                    bottom: widget.isWide ? -18 : null,
-                    child: IgnorePointer(
-                      child: GlyphIcon(
-                        profileDefaultGlyph(profile.type),
-                        size: widget.isWide ? 96 : 84,
-                        color: watermarkColor,
-                      ),
-                    ),
-                  ),
-                  passContent,
-                ],
-              ),
+              child: passContent,
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _PillAction {
+  const _PillAction({
+    required this.glyph,
+    required this.label,
+    required this.accent,
+    required this.tinted,
+    required this.onPressed,
+    this.loading = false,
+  });
+
+  final Glyph glyph;
+  final String label;
+  final Color accent;
+  final bool tinted;
+  final VoidCallback? onPressed;
+  final bool loading;
+}
+
+class _ActionPillButton extends StatelessWidget {
+  const _ActionPillButton({required this.action});
+
+  final _PillAction action;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = context.colorScheme;
+    final isDark = colorScheme.brightness == Brightness.dark;
+    final fill = action.tinted
+        ? action.accent.withValues(alpha: isDark ? 0.18 : 0.11)
+        : DashboardColors.of(context).tone;
+    final foreground = action.tinted ? action.accent : colorScheme.onSurface;
+    return PressSurface(
+      fill: fill,
+      foreground: foreground,
+      shape: AppShape.full,
+      minimum: const BoxConstraints(minHeight: 36),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      onPressed: action.onPressed,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        spacing: 6,
+        children: [
+          if (action.loading)
+            const ActivityIndicator(size: 15)
+          else
+            GlyphIcon(action.glyph, size: 16),
+          Flexible(
+            child: Text(
+              action.label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTextStyle.footnote
+                  .of(context, emphasized: true)
+                  .copyWith(color: foreground),
+            ),
+          ),
+        ],
       ),
     );
   }

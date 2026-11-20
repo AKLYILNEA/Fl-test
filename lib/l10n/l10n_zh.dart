@@ -4307,4 +4307,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get localFile => '本地文件';
+
+  @override
+  String get lastEdited => '上次编辑';
+
+  @override
+  String get builtIn => '内置';
+
+  @override
+  String get projectUrl => '项目地址';
 }

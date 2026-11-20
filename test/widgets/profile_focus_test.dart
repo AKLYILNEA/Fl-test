@@ -188,16 +188,11 @@ void main() {
         wavyPainter.track,
         DashboardColors.of(tester.element(wavyFinder)).tone,
       );
-      final watermarkPositioned = tester.widget<Positioned>(
-        find.ancestor(
-          of: find.byWidgetPredicate(
-            (w) => w is GlyphIcon && w.glyph == AppGlyphs.cloud && w.size == 84,
-          ),
-          matching: find.byType(Positioned),
-        ),
+      expect(
+        find.byWidgetPredicate((w) => w is GlyphIcon && (w.size ?? 0) >= 80),
+        findsNothing,
       );
-      expect(watermarkPositioned.top, isNotNull);
-      expect(watermarkPositioned.bottom, isNull);
+      expect(find.text(l.lastEdited), findsOneWidget);
       expect(find.byTooltip(l.more), findsOneWidget);
       expect(find.text(l.copyLink), findsNothing);
 
@@ -224,6 +219,16 @@ void main() {
 
       final pass = find.byType(ProfileBoardingPass);
       expect(pass, findsOneWidget);
+      final watermarkPositioned = tester.widget<Positioned>(
+        find.ancestor(
+          of: find.byWidgetPredicate(
+            (w) => w is GlyphIcon && w.glyph == AppGlyphs.cloud && w.size == 88,
+          ),
+          matching: find.byType(Positioned),
+        ),
+      );
+      expect(watermarkPositioned.top, isNotNull);
+      expect(watermarkPositioned.bottom, isNull);
       expect(
         find.descendant(of: pass, matching: find.byTooltip(l.more)),
         findsNothing,

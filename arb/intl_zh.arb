@@ -1325,5 +1325,8 @@
   "customIcon": "自定义图标",
   "remainingShort": "剩余",
   "expired": "已过期",
-  "localFile": "本地文件"
+  "localFile": "本地文件",
+  "lastEdited": "上次编辑",
+  "builtIn": "内置",
+  "projectUrl": "项目地址"
 }

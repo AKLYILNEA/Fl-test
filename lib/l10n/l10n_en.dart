@@ -4535,4 +4535,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get localFile => 'Local file';
+
+  @override
+  String get lastEdited => 'Last edited';
+
+  @override
+  String get builtIn => 'Built-in';
+
+  @override
+  String get projectUrl => 'Project URL';
 }

@@ -4529,4 +4529,13 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get localFile => 'Локальный файл';
+
+  @override
+  String get lastEdited => 'Изменено';
+
+  @override
+  String get builtIn => 'Встроенный';
+
+  @override
+  String get projectUrl => 'Адрес проекта';
 }

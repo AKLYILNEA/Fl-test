@@ -1325,5 +1325,8 @@
   "customIcon": "Свой значок",
   "remainingShort": "Осталось",
   "expired": "Истекло",
-  "localFile": "Локальный файл"
+  "localFile": "Локальный файл",
+  "lastEdited": "Изменено",
+  "builtIn": "Встроенный",
+  "projectUrl": "Адрес проекта"
 }

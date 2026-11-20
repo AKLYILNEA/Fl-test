@@ -4356,4 +4356,13 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get localFile => 'ローカルファイル';
+
+  @override
+  String get lastEdited => '最終編集';
+
+  @override
+  String get builtIn => '内蔵';
+
+  @override
+  String get projectUrl => 'プロジェクト URL';
 }

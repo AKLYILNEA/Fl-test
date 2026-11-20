@@ -1440,5 +1440,8 @@
   "customIcon": "Custom icon",
   "remainingShort": "Left",
   "expired": "Expired",
-  "localFile": "Local file"
+  "localFile": "Local file",
+  "lastEdited": "Last edited",
+  "builtIn": "Built-in",
+  "projectUrl": "Project URL"
 }

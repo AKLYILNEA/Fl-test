@@ -1325,5 +1325,8 @@
   "customIcon": "カスタムアイコン",
   "remainingShort": "残り",
   "expired": "期限切れ",
-  "localFile": "ローカルファイル"
+  "localFile": "ローカルファイル",
+  "lastEdited": "最終編集",
+  "builtIn": "内蔵",
+  "projectUrl": "プロジェクト URL"
 }
