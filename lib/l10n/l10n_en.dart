@@ -4520,4 +4520,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ipQuery => 'IP Lookup';
+
+  @override
+  String get otherProfiles => 'Other profiles';
+
+  @override
+  String get customIcon => 'Custom icon';
+
+  @override
+  String get remainingShort => 'Left';
+
+  @override
+  String get expired => 'Expired';
+
+  @override
+  String get localFile => 'Local file';
 }

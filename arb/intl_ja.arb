@@ -1320,5 +1320,10 @@
   "trafficStatsSince": "{date} 以降の統計",
   "trafficStatsDetailOffTip": "詳細統計がオフのため、合計と時間帯別の推移のみ記録されます。",
   "trafficStatsRefresh": "更新",
-  "ipQuery": "IPクエリ"
+  "ipQuery": "IPクエリ",
+  "otherProfiles": "その他のプロファイル",
+  "customIcon": "カスタムアイコン",
+  "remainingShort": "残り",
+  "expired": "期限切れ",
+  "localFile": "ローカルファイル"
 }

@@ -170,4 +170,49 @@ void main() {
       await tester.pump();
     },
   );
+
+  testWidgets(
+    'scrolling about page across bar alpha threshold keeps scroll position',
+    (tester) async {
+      final container = containerFor(tester, const Size(430, 560));
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const TestApp(
+            locale: Locale('en'),
+            child: AboutView(dynamicBackground: false),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final scrollView = find.byType(CustomScrollView);
+      final scrollable = tester.state<ScrollableState>(
+        find.descendant(of: scrollView, matching: find.byType(Scrollable)),
+      );
+      expect(scrollable.position.pixels, 0);
+
+      // Step through the progress == 0.35 bar-background alpha transition so
+      // any Surface subtree remount would detach and reset ScrollPosition.
+      final gesture = await tester.startGesture(const Offset(215, 420));
+      for (var i = 0; i < 6; i++) {
+        await gesture.moveBy(const Offset(0, -35));
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      final midPixels = scrollable.position.pixels;
+      expect(midPixels, greaterThan(120));
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      final settledScrollable = tester.state<ScrollableState>(
+        find.descendant(of: scrollView, matching: find.byType(Scrollable)),
+      );
+      expect(identical(settledScrollable, scrollable), isTrue);
+      expect(settledScrollable.position.pixels, greaterThan(100));
+      expect(tester.takeException(), isNull);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+    },
+  );
 }

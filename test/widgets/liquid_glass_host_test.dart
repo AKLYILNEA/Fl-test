@@ -887,4 +887,53 @@ void main() {
       expect(_capture().snapshots, 0);
     },
   );
+
+  testWidgets('Surface preserves child state when alpha crosses zero', (
+    tester,
+  ) async {
+    final alpha = ValueNotifier<double>(0);
+    addTearDown(alpha.dispose);
+    var initCount = 0;
+
+    await tester.pumpWidget(
+      _app(
+        ValueListenableBuilder<double>(
+          valueListenable: alpha,
+          builder: (_, value, _) => Surface(
+            color: _red.withValues(alpha: value),
+            child: _CountingChild(onInit: () => initCount++),
+          ),
+        ),
+      ),
+    );
+    expect(initCount, 1);
+
+    alpha.value = 0.5;
+    await tester.pump();
+    expect(initCount, 1);
+
+    alpha.value = 0;
+    await tester.pump();
+    expect(initCount, 1);
+  });
+}
+
+class _CountingChild extends StatefulWidget {
+  const _CountingChild({required this.onInit});
+
+  final VoidCallback onInit;
+
+  @override
+  State<_CountingChild> createState() => _CountingChildState();
+}
+
+class _CountingChildState extends State<_CountingChild> {
+  @override
+  void initState() {
+    super.initState();
+    widget.onInit();
+  }
+
+  @override
+  Widget build(BuildContext context) => const SizedBox.expand();
 }

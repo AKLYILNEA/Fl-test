@@ -257,9 +257,6 @@ class Surface extends StatelessWidget {
     final shadow = shadowColor ?? context.colorScheme.shadow;
     if (shape == null) {
       if (elevation == 0 && clipBehavior == Clip.none) {
-        if (color.a == 0) {
-          return contents;
-        }
         return Stack(
           fit: StackFit.passthrough,
           clipBehavior: Clip.none,
@@ -283,7 +280,7 @@ class Surface extends StatelessWidget {
       shape: shape,
       textDirection: textDirection,
     );
-    if (elevation == 0 && color.a > 0) {
+    if (elevation == 0) {
       final layered = Stack(
         fit: StackFit.passthrough,
         clipBehavior: Clip.none,

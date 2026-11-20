@@ -4416,4 +4416,19 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get ipQuery => 'IP 조회';
+
+  @override
+  String get otherProfiles => '기타 프로필';
+
+  @override
+  String get customIcon => '사용자 지정 아이콘';
+
+  @override
+  String get remainingShort => '남음';
+
+  @override
+  String get expired => '만료됨';
+
+  @override
+  String get localFile => '로컬 파일';
 }

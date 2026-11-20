@@ -1320,5 +1320,10 @@
   "trafficStatsSince": "统计自 {date}",
   "trafficStatsDetailOffTip": "当前未开启详细统计，仅记录总流量与时段趋势。",
   "trafficStatsRefresh": "刷新",
-  "ipQuery": "IP 查询"
+  "ipQuery": "IP 查询",
+  "otherProfiles": "其他配置",
+  "customIcon": "自定义图标",
+  "remainingShort": "剩余",
+  "expired": "已过期",
+  "localFile": "本地文件"
 }

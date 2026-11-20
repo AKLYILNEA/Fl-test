@@ -1320,5 +1320,10 @@
   "trafficStatsSince": "С {date}",
   "trafficStatsDetailOffTip": "Подробный учёт выключен. Записывается только общий трафик и динамика.",
   "trafficStatsRefresh": "Обновить",
-  "ipQuery": "IP-запрос"
+  "ipQuery": "IP-запрос",
+  "otherProfiles": "Другие профили",
+  "customIcon": "Свой значок",
+  "remainingShort": "Осталось",
+  "expired": "Истекло",
+  "localFile": "Локальный файл"
 }

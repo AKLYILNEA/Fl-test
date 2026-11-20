@@ -4341,4 +4341,19 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get ipQuery => 'IPクエリ';
+
+  @override
+  String get otherProfiles => 'その他のプロファイル';
+
+  @override
+  String get customIcon => 'カスタムアイコン';
+
+  @override
+  String get remainingShort => '残り';
+
+  @override
+  String get expired => '期限切れ';
+
+  @override
+  String get localFile => 'ローカルファイル';
 }

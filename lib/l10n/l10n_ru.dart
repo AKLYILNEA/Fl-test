@@ -4514,4 +4514,19 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get ipQuery => 'IP-запрос';
+
+  @override
+  String get otherProfiles => 'Другие профили';
+
+  @override
+  String get customIcon => 'Свой значок';
+
+  @override
+  String get remainingShort => 'Осталось';
+
+  @override
+  String get expired => 'Истекло';
+
+  @override
+  String get localFile => 'Локальный файл';
 }

@@ -7305,6 +7305,16 @@ abstract class AppLocalizations {
   String get trafficStatsRefresh;
 
   String get ipQuery;
+
+  String get otherProfiles;
+
+  String get customIcon;
+
+  String get remainingShort;
+
+  String get expired;
+
+  String get localFile;
 }
 
 class _AppLocalizationsDelegate

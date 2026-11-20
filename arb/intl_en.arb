@@ -1435,5 +1435,10 @@
   "trafficStatsSince": "Since {date}",
   "trafficStatsDetailOffTip": "Detailed breakdown is turned off. Only total and hourly traffic are recorded.",
   "trafficStatsRefresh": "Refresh",
-  "ipQuery": "IP Lookup"
+  "ipQuery": "IP Lookup",
+  "otherProfiles": "Other profiles",
+  "customIcon": "Custom icon",
+  "remainingShort": "Left",
+  "expired": "Expired",
+  "localFile": "Local file"
 }

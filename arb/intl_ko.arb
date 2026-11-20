@@ -1320,5 +1320,10 @@
   "trafficStatsSince": "{date}부터",
   "trafficStatsDetailOffTip": "세부 통계가 꺼져 있어 총량과 시간별 추이만 기록됩니다.",
   "trafficStatsRefresh": "새로고침",
-  "ipQuery": "IP 조회"
+  "ipQuery": "IP 조회",
+  "otherProfiles": "기타 프로필",
+  "customIcon": "사용자 지정 아이콘",
+  "remainingShort": "남음",
+  "expired": "만료됨",
+  "localFile": "로컬 파일"
 }

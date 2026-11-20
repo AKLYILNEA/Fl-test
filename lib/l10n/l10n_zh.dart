@@ -4292,4 +4292,19 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get ipQuery => 'IP 查询';
+
+  @override
+  String get otherProfiles => '其他配置';
+
+  @override
+  String get customIcon => '自定义图标';
+
+  @override
+  String get remainingShort => '剩余';
+
+  @override
+  String get expired => '已过期';
+
+  @override
+  String get localFile => '本地文件';
 }
