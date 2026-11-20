@@ -838,7 +838,7 @@ class ScaffoldState extends State<Scaffold>
                 form,
               ))
                 _presentAction(
-                  FadeTransition(
+                  LiquidGlassFade(
                     opacity: uncovered,
                     child: underSearch(
                       action,

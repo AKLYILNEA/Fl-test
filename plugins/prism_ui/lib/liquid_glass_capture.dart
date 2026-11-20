@@ -46,10 +46,12 @@ class LiquidGlassHost extends StatelessWidget {
   const LiquidGlassHost({
     super.key,
     required this.enabled,
+    this.isolated = false,
     required this.child,
   });
 
   final bool enabled;
+  final bool isolated;
   final Widget child;
 
   @visibleForTesting
@@ -69,6 +71,7 @@ class LiquidGlassHost extends StatelessWidget {
   Widget build(BuildContext context) {
     return _LiquidGlassHostBox(
       enabled: enabled,
+      isolated: isolated,
       devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
       quality: LiquidGlassScope.qualityOf(context),
       child: child,
@@ -275,12 +278,14 @@ class _LiquidGlassVeilLayer extends ContainerLayer {
 class _LiquidGlassHostBox extends SingleChildRenderObjectWidget {
   const _LiquidGlassHostBox({
     required this.enabled,
+    required this.isolated,
     required this.devicePixelRatio,
     required this.quality,
     super.child,
   });
 
   final bool enabled;
+  final bool isolated;
   final double devicePixelRatio;
   final LiquidGlassQuality quality;
 
@@ -288,6 +293,7 @@ class _LiquidGlassHostBox extends SingleChildRenderObjectWidget {
   _RenderLiquidGlassHost createRenderObject(BuildContext context) {
     return _RenderLiquidGlassHost(
       enabled: enabled,
+      isolated: isolated,
       devicePixelRatio: devicePixelRatio,
       quality: quality,
     );
@@ -300,6 +306,7 @@ class _LiquidGlassHostBox extends SingleChildRenderObjectWidget {
   ) {
     renderObject
       ..enabled = enabled
+      ..isolated = isolated
       ..devicePixelRatio = devicePixelRatio
       ..quality = quality;
   }
@@ -308,9 +315,11 @@ class _LiquidGlassHostBox extends SingleChildRenderObjectWidget {
 class _RenderLiquidGlassHost extends RenderProxyBox {
   _RenderLiquidGlassHost({
     required bool enabled,
+    required bool isolated,
     required double devicePixelRatio,
     required LiquidGlassQuality quality,
   }) : _enabled = enabled,
+       _isolated = isolated,
        _devicePixelRatio = devicePixelRatio,
        _quality = quality;
 
@@ -323,6 +332,15 @@ class _RenderLiquidGlassHost extends RenderProxyBox {
     }
     _enabled = value;
     markNeedsCompositingBitsUpdate();
+    markNeedsPaint();
+  }
+
+  bool _isolated;
+  set isolated(bool value) {
+    if (value == _isolated) {
+      return;
+    }
+    _isolated = value;
     markNeedsPaint();
   }
 
@@ -356,6 +374,7 @@ class _RenderLiquidGlassHost extends RenderProxyBox {
     }
     final layer = _layer.layer ??= _LiquidGlassHostLayer();
     layer
+      ..isolated = _isolated
       ..devicePixelRatio = _devicePixelRatio
       ..quality = _quality
       ..bounds = offset & size;
@@ -366,7 +385,7 @@ class _RenderLiquidGlassHost extends RenderProxyBox {
   void _release() {
     if (_layer.layer != null) {
       _layer.layer = null;
-      _LiquidGlassHostLayer._pass++;
+      _LiquidGlassHostLayer._pass = ++_LiquidGlassHostLayer._nextPass;
     }
   }
 
@@ -378,8 +397,10 @@ class _RenderLiquidGlassHost extends RenderProxyBox {
 }
 
 class _LiquidGlassHostLayer extends ContainerLayer {
+  static int _nextPass = 0;
   static int _pass = 0;
 
+  bool isolated = false;
   double devicePixelRatio = 1;
   LiquidGlassQuality quality = LiquidGlassQuality.ultra;
   Rect bounds = Rect.zero;
@@ -392,6 +413,13 @@ class _LiquidGlassHostLayer extends ContainerLayer {
 
   @override
   void addToScene(ui.SceneBuilder builder) {
+    if (isolated) {
+      final outerPass = _pass;
+      _capture();
+      super.addToScene(builder);
+      _pass = outerPass;
+      return;
+    }
     if (!_hasHostAbove) {
       _capture();
     }
@@ -424,7 +452,7 @@ class _LiquidGlassHostLayer extends ContainerLayer {
   /// own group, sits a level above it, and reads a capture with that one drawn
   /// as glass.
   void _capture() {
-    _pass++;
+    _pass = ++_nextPass;
     final found = <_Behind>[];
     _gather(this, Matrix4.identity(), this, Matrix4.identity(), [], found);
     final panes = {for (final entry in found) entry.pane};
@@ -535,6 +563,8 @@ class _LiquidGlassHostLayer extends ContainerLayer {
               chain.toSet(),
             ),
           );
+        case final _LiquidGlassHostLayer host when host.isolated:
+          break;
         case final ContainerLayer container:
           final offscreen = _drawsOffscreen(container);
           _gather(
