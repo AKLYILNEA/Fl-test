@@ -580,18 +580,10 @@ Future<void> _decodeAhead(Uint8List bytes, {required bool isSvg}) {
   return completer.future;
 }
 
-Future<void> precacheTargetIcons(
-  Iterable<String> srcs, {
-  bool cachedOnly = false,
-  Future<bool> Function()? waitToPrecache,
-}) async {
+Future<void> precacheTargetIcons(Iterable<String> srcs) async {
   final unique = <String>{
     for (final src in srcs)
-      if (src.isNotEmpty &&
-          (!cachedOnly ||
-              _remoteIcons.contains(src) ||
-              _decodedIcons.contains(src)))
-        src,
+      if (src.isNotEmpty) src,
   };
   if (unique.isEmpty) {
     return;
@@ -601,16 +593,6 @@ Future<void> precacheTargetIcons(
     for (final src in unique)
       pool.run(() async {
         try {
-          if (cachedOnly) {
-            final bytes = _remoteIcons[src] ?? _decodedIcons[src];
-            if (bytes != null) {
-              await _decodeAhead(bytes, isSvg: src.isSvg);
-            }
-            return;
-          }
-          if (waitToPrecache != null && !await waitToPrecache()) {
-            return;
-          }
           if (src.contains('base64,')) {
             final bytes = _decodeIcon(src);
             if (bytes != null) {
@@ -623,9 +605,6 @@ Future<void> precacheTargetIcons(
             return;
           }
           await for (final bytes in _loadRemoteIcon(src)) {
-            if (waitToPrecache != null && !await waitToPrecache()) {
-              break;
-            }
             await _decodeAhead(bytes, isSvg: src.isSvg);
           }
         } catch (error) {

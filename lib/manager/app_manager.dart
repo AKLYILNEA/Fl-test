@@ -8,7 +8,6 @@ import 'package:fl_clash/providers/mitm.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/ui/ui.dart';
 import 'package:fl_clash/widgets/icon.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -23,12 +22,6 @@ class AppStateManager extends ConsumerStatefulWidget {
 
 class _AppStateManagerState extends ConsumerState<AppStateManager>
     with WidgetsBindingObserver {
-  Set<String> _proxyIconSources = const {};
-  var _proxyIconSourcesDirty = true;
-  var _proxyIconPrecachePending = false;
-  var _proxyIconPrecacheRunning = false;
-  Future<void>? _restoringProxyIcons;
-
   @override
   void initState() {
     super.initState();
@@ -47,12 +40,12 @@ class _AppStateManagerState extends ConsumerState<AppStateManager>
     });
     ref.listenManual(groupsProvider, (prev, next) {
       if (prev != next) {
-        _queueProxyIconPrecache(sourcesChanged: true);
+        _precacheProxyIcons();
       }
     }, fireImmediately: true);
     ref.listenManual(iconRulesProvider, (prev, next) {
       if (prev != next) {
-        _queueProxyIconPrecache(sourcesChanged: true);
+        _precacheProxyIcons();
       }
     }, fireImmediately: true);
     ref.listenManual(iconSetsProvider, (_, next) {
@@ -92,76 +85,25 @@ class _AppStateManagerState extends ConsumerState<AppStateManager>
     };
   }
 
-  Set<String> _resolveProxyIconSources() {
+  Iterable<String> _proxyIconSources() {
     final groups = ref.read(groupsProvider);
     final rules = ref.read(iconRulesProvider);
-    return {
+    return [
       for (final group in groups)
-        if (group.icon.isNotEmpty)
-          resolveProxyGroupIcon(group.name, group.icon, rules),
+        resolveProxyGroupIcon(group.name, group.icon, rules),
       for (final rule in rules) rule.icon,
-    };
+    ];
   }
 
-  void _queueProxyIconPrecache({bool sourcesChanged = false}) {
-    if (sourcesChanged) {
-      _proxyIconSourcesDirty = true;
-    }
-    _proxyIconPrecachePending = true;
-    if (!_proxyIconPrecacheRunning && ref.read(appVisibleProvider)) {
-      unawaited(_precacheProxyIcons());
-    }
-  }
-
-  Future<bool> _waitForProxyIconIdle() async {
-    if (!mounted || !ref.read(appVisibleProvider)) {
-      return false;
-    }
-    await SchedulerBinding.instance.endOfFrame;
-    await whenNothingAnimates();
-    return mounted && ref.read(appVisibleProvider);
-  }
-
-  Future<void> _precacheProxyIcons() async {
-    _proxyIconPrecacheRunning = true;
-    try {
-      while (_proxyIconPrecachePending && await _waitForProxyIconIdle()) {
-        _proxyIconPrecachePending = false;
-        if (_proxyIconSourcesDirty) {
-          _proxyIconSources = _resolveProxyIconSources();
-          _proxyIconSourcesDirty = false;
-        }
-        final sources = _proxyIconSources;
-        bool isCurrent() =>
-            !_proxyIconSourcesDirty && identical(sources, _proxyIconSources);
-        await precacheTargetIcons(
-          sources,
-          waitToPrecache: () async =>
-              isCurrent() && await _waitForProxyIconIdle() && isCurrent(),
-        );
-      }
-    } finally {
-      _proxyIconPrecacheRunning = false;
-    }
-  }
-
-  void _restoreCachedProxyIcons() {
-    final sources = _proxyIconSources;
-    if (sources.isEmpty || _restoringProxyIcons != null) {
-      return;
-    }
-    _restoringProxyIcons = precacheTargetIcons(sources, cachedOnly: true)
-        .whenComplete(() {
-          _restoringProxyIcons = null;
-        });
+  void _precacheProxyIcons() {
+    unawaited(precacheTargetIcons(_proxyIconSources()));
   }
 
   @override
   Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
     _updateVisible(state);
     if (state == AppLifecycleState.resumed) {
-      _restoreCachedProxyIcons();
-      _queueProxyIconPrecache();
+      _precacheProxyIcons();
       unawaited(ref.read(locationPermissionsProvider.notifier).refresh());
       // A certificate removed meanwhile stops decryption before the next start.
       if (rsFeature && ref.read(patchClashConfigProvider).mitm.enable) {
