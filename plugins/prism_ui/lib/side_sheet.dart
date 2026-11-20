@@ -4,6 +4,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:prism_ui/l10n.dart';
 import 'package:prism_ui/color.dart';
+import 'package:prism_ui/deferred_push.dart';
 import 'package:prism_ui/drag_back.dart';
 import 'package:prism_ui/liquid_glass.dart';
 import 'package:prism_ui/shape.dart';
@@ -321,7 +322,10 @@ class _ModalSideSheetState<T> extends State<_ModalSideSheet<T>> {
 }
 
 class ModalSideSheetRoute<T> extends PopupRoute<T>
-    with DragBackRouteMixin<T>, SheetCoverRouteMixin<T> {
+    with
+        DragBackRouteMixin<T>,
+        SheetCoverRouteMixin<T>,
+        DeferredPushRouteMixin<T> {
   ModalSideSheetRoute({
     required this.builder,
     this.barrierLabel,
@@ -369,11 +373,6 @@ class ModalSideSheetRoute<T> extends PopupRoute<T>
 
   @override
   Color get barrierColor => modalBarrierColor ?? Colors.black54;
-
-  @override
-  AnimationController createAnimationController() {
-    return SideSheet.createAnimationController(navigator!);
-  }
 
   @override
   Widget buildPage(

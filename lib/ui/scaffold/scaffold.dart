@@ -838,13 +838,17 @@ class ScaffoldState extends State<Scaffold>
                 form,
               ))
                 _presentAction(
-                  LiquidGlassFade(
-                    opacity: uncovered,
-                    child: underSearch(
-                      action,
-                      action.key == _searchButtonKey
-                          ? _leadUnderSearch
-                          : _actionsUnderSearch,
+                  RepaintBoundary(
+                    child: LiquidGlassFade(
+                      opacity: uncovered,
+                      child: RepaintBoundary(
+                        child: underSearch(
+                          action,
+                          action.key == _searchButtonKey
+                              ? _leadUnderSearch
+                              : _actionsUnderSearch,
+                        ),
+                      ),
                     ),
                   ),
                   gap: action is SizedBox || action is ActionEdgeGap,

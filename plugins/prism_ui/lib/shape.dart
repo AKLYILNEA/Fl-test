@@ -118,7 +118,9 @@ class SuperellipseBorder extends RoundedSuperellipseBorder {
     Paint paint, {
     TextDirection? textDirection,
   }) {
-    if (!_isDesktop || borderRadius == BorderRadius.zero) {
+    if (!_isDesktop ||
+        borderRadius == BorderRadius.zero ||
+        paint.maskFilter != null) {
       super.paintInterior(canvas, rect, paint, textDirection: textDirection);
       return;
     }
