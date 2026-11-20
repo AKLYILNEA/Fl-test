@@ -108,7 +108,7 @@ object ServiceController {
 
         Core.startListener()
         runtime = ServiceRuntime(
-            vpn = options.enable,
+            options = options,
             startedAtMillis = runtime?.startedAtMillis ?: System.currentTimeMillis(),
         )
         true

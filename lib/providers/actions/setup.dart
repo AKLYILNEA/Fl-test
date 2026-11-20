@@ -20,14 +20,11 @@ class _RunRequest {
   final bool running;
   final bool initialize;
 
-  /// Adopts a run the Android service has, config and groups alike.
-  final bool resume;
   final DateTime? previousStartTime;
 
   const _RunRequest({
     required this.running,
     required this.initialize,
-    required this.resume,
     required this.previousStartTime,
   });
 }
@@ -46,8 +43,6 @@ class SetupAction extends _$SetupAction {
   _SetupInputs? _appliedInputs;
   var _lastPushDuration = Duration.zero;
   var _pendingForceApply = false;
-
-  bool get _isRunning => _startTime != null && _startTime!.isBeforeNow;
 
   @override
   void build() {
@@ -143,17 +138,35 @@ class SetupAction extends _$SetupAction {
   }
 
   @protected
-  Future<DateTime?> serviceStartTime() async => service?.getRunTime();
+  Future<AndroidServiceRun?> adoptRunningService() async =>
+      service?.adoptRunningService();
 
   Future<void> initStatus() async {
     if (!globalState.needInitStatus) {
       return;
     }
-    _startTime = await serviceStartTime();
-    if (_isRunning) {
-      globalState.lastConfigMd5 = await preferences.getAppliedConfigMd5();
-      globalState.lastConfigCounts = await preferences.getAppliedConfigCounts();
-      await _run(true, initialize: true, resume: true);
+    final request = _latestRunRequest;
+    final run = await adoptRunningService();
+    if (!globalState.needInitStatus || !_isCurrent(request)) {
+      return;
+    }
+    if (run != null) {
+      globalState.needInitStatus = false;
+      _resumeOnRestart = false;
+      _startTime = run.startedAt;
+      ref.read(runningVpnOptionsProvider.notifier).value = run.options;
+      _setLocalRunning(true);
+      final saved = await globalState.safeRun(
+        () => (
+          preferences.getAppliedConfigMd5(),
+          preferences.getAppliedConfigCounts(),
+        ).wait,
+      );
+      if (saved != null && _isCurrent(request) && _startTime == run.startedAt) {
+        final (md5, counts) = saved;
+        globalState.lastConfigMd5 = md5;
+        globalState.lastConfigCounts = counts;
+      }
     } else if (ref.read(appSettingProvider).autoRun) {
       await setRunning(true, initialize: true);
     } else {
@@ -185,15 +198,10 @@ class SetupAction extends _$SetupAction {
     return _run(running, initialize: running && initialize);
   }
 
-  Future<bool> _run(
-    bool running, {
-    required bool initialize,
-    bool resume = false,
-  }) {
+  Future<bool> _run(bool running, {required bool initialize}) {
     final request = _RunRequest(
       running: running,
       initialize: initialize,
-      resume: resume,
       previousStartTime: _startTime,
     );
     _latestRunRequest = request;
@@ -210,7 +218,7 @@ class SetupAction extends _$SetupAction {
       var applied = false;
       try {
         applied = await applyProfile(
-          force: !request.resume,
+          force: true,
           preloadInvoke: () => _startCoreRunning(request),
         );
       } catch (error) {
@@ -338,7 +346,7 @@ class SetupAction extends _$SetupAction {
     _setLocalRunning(!request.running);
   }
 
-  bool _isCurrent(_RunRequest request) => identical(_latestRunRequest, request);
+  bool _isCurrent(_RunRequest? request) => identical(_latestRunRequest, request);
 
   Future<void> updateConfigDebounce() async {
     debouncer.call(FunctionTag.updateConfig, updateConfig);

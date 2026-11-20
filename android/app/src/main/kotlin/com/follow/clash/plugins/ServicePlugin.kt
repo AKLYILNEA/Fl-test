@@ -59,7 +59,7 @@ class ServicePlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
         when (call.method) {
             "init" -> initialize(result)
             "shutdown" -> shutdown(result)
-            "getRunTime" -> getRunTime(result)
+            "getRunningService" -> getRunningService(result)
             "syncState" -> syncState(call, result)
             "start" -> start(call, result)
             "stop" -> stop(call, result)
@@ -99,9 +99,15 @@ class ServicePlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
         }
     }
 
-    private fun getRunTime(result: MethodChannel.Result) {
+    private fun getRunningService(result: MethodChannel.Result) {
         scope.launch {
-            result.success(ServiceState.awaitRunTime())
+            val runtime = ServiceState.awaitRunningService()
+            result.success(runtime?.let {
+                mapOf(
+                    "startedAt" to it.startedAtMillis,
+                    "options" to gson.toJson(it.options),
+                )
+            })
         }
     }
 

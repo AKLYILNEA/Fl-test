@@ -36,6 +36,8 @@ abstract mixin class ServiceListener {
   void onServiceStopped([ServiceStartFailure? failure]) {}
 }
 
+typedef AndroidServiceRun = ({DateTime startedAt, VpnOptions options});
+
 class Service {
   static Service? _instance;
   late MethodChannel methodChannel;
@@ -45,6 +47,7 @@ class Service {
       ObserverList<ServiceListener>();
 
   int _commandRevision = 0;
+  int _stopReportCount = 0;
   bool _startRequested = false;
 
   factory Service() {
@@ -72,7 +75,11 @@ class Service {
         case 'stopped':
           final report = call.arguments as Map<Object?, Object?>;
           // A report stamped before the newest command no longer describes it.
-          if (report['revision'] != _commandRevision || !_startRequested) {
+          if (report['revision'] != _commandRevision) {
+            break;
+          }
+          _stopReportCount++;
+          if (!_startRequested) {
             break;
           }
           _startRequested = false;
@@ -153,12 +160,25 @@ class Service {
     return await methodChannel.invokeMethod<bool>('shutdown') ?? true;
   }
 
-  Future<DateTime?> getRunTime() async {
-    final ms = await methodChannel.invokeMethod<int>('getRunTime') ?? 0;
-    if (ms == 0) {
+  Future<AndroidServiceRun?> adoptRunningService() async {
+    final revision = _commandRevision;
+    final stopReports = _stopReportCount;
+    final run = await methodChannel.invokeMapMethod<String, Object?>(
+      'getRunningService',
+    );
+    if (run == null ||
+        revision != _commandRevision ||
+        stopReports != _stopReportCount) {
       return null;
     }
-    return DateTime.fromMillisecondsSinceEpoch(ms);
+    final startedAt = DateTime.fromMillisecondsSinceEpoch(
+      run['startedAt']! as int,
+    );
+    final options = VpnOptions.fromJson(
+      json.decode(run['options']! as String) as Map<String, Object?>,
+    );
+    _startRequested = true;
+    return (startedAt: startedAt, options: options);
   }
 
   bool get hasListeners {
