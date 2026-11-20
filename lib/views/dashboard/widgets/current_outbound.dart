@@ -711,27 +711,10 @@ double _measureTextWidth(BuildContext context, String text, TextStyle style) {
   return painter.width;
 }
 
-final Map<Object, double> _runTimeSlotWidthCache = <Object, double>{};
-
 double _runTimeSlotWidth(BuildContext context, int hourDigits) {
   final style = _cellStyle(context);
   final labelStyle = DashboardText.label(context);
   final count = math.max(2, hourDigits);
-  final label = context.appLocalizations.runTime;
-  final scaler = MediaQuery.textScalerOf(context);
-  final direction = Directionality.of(context);
-  final cacheKey = Object.hash(
-    count,
-    style,
-    labelStyle,
-    label,
-    scaler,
-    direction,
-  );
-  final cached = _runTimeSlotWidthCache[cacheKey];
-  if (cached != null) {
-    return cached;
-  }
   final template8 = '${'8' * count}:88:88';
   final template0 = '${'0' * count}:00:00';
   final template4 = '${'4' * count}:44:44';
@@ -741,13 +724,12 @@ double _runTimeSlotWidth(BuildContext context, int hourDigits) {
   final w4 = _measureTextWidth(context, template4, style);
   final w9 = _measureTextWidth(context, template9, style);
   final valueWidth = math.max(math.max(w8, w0), math.max(w4, w9));
-  final labelWidth = _measureTextWidth(context, label, labelStyle);
-  final result = math.max(valueWidth, labelWidth) + 1.0;
-  if (_runTimeSlotWidthCache.length >= 32) {
-    _runTimeSlotWidthCache.remove(_runTimeSlotWidthCache.keys.first);
-  }
-  _runTimeSlotWidthCache[cacheKey] = result;
-  return result;
+  final labelWidth = _measureTextWidth(
+    context,
+    context.appLocalizations.runTime,
+    labelStyle,
+  );
+  return math.max(valueWidth, labelWidth) + 1.0;
 }
 
 class _RunTimeCell extends ConsumerWidget {

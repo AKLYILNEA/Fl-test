@@ -83,11 +83,9 @@ class DashboardCard extends StatelessWidget {
             ),
     );
     if (onTap != null) {
-      return RepaintBoundary(child: card);
+      return card;
     }
-    return RepaintBoundary(
-      child: Semantics(container: true, label: semanticLabel, child: card),
-    );
+    return Semantics(container: true, label: semanticLabel, child: card);
   }
 }
 

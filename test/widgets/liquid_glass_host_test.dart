@@ -800,59 +800,89 @@ void main() {
     expect(LiquidGlassHost.debugHeldCaptures, held);
   });
 
+  testWidgets('repainting a sibling on a Surface keeps a static glass capture', (
+    tester,
+  ) async {
+    final tick = ValueNotifier(0);
+    addTearDown(tick.dispose);
+
+    await tester.pumpWidget(
+      _app(
+        Surface(
+          color: _red,
+          child: Stack(
+            children: [
+              Positioned(
+                left: 0,
+                top: 0,
+                width: 40,
+                height: 40,
+                child: ValueListenableBuilder<int>(
+                  valueListenable: tick,
+                  builder: (_, value, _) => ColoredBox(
+                    color: value.isEven ? _green : _blue,
+                  ),
+                ),
+              ),
+              _pane(const Rect.fromLTWH(100, 300, 200, 100)),
+            ],
+          ),
+        ),
+      ),
+    );
+    expect(_capture().snapshots, 1);
+
+    tick.value = 1;
+    await tester.pump();
+    expect(_capture().snapshots, 0);
+  });
+
   testWidgets(
-    'an isolated host sliding inside a RepaintBoundary takes no extra captures',
+    'repainting a sibling over FloatingHeader keeps a static glass capture',
     (tester) async {
-      final offset = ValueNotifier<double>(300);
-      addTearDown(offset.dispose);
+      final tick = ValueNotifier(0);
+      addTearDown(tick.dispose);
 
       await tester.pumpWidget(
         _app(
-          Stack(
-            children: [
-              const Positioned.fill(
-                child: RepaintBoundary(child: ColoredBox(color: _red)),
-              ),
-              _pane(const Rect.fromLTWH(20, 20, 80, 40)),
-              ValueListenableBuilder<double>(
-                valueListenable: offset,
-                builder: (_, dx, child) => Positioned(
-                  left: dx,
+          Surface(
+            color: _red,
+            child: Stack(
+              children: [
+                Positioned(
+                  left: 0,
                   top: 0,
-                  width: 300,
-                  height: 600,
-                  child: child!,
-                ),
-                child: RepaintBoundary(
-                  child: LiquidGlassHost(
-                    enabled: true,
-                    isolated: true,
+                  right: 0,
+                  height: 80,
+                  child: FloatingHeader(
+                    backgroundColor: _red,
                     child: Stack(
                       children: [
-                        const Positioned.fill(
-                          child: RepaintBoundary(
-                            child: ColoredBox(color: _green),
+                        Positioned(
+                          left: 0,
+                          top: 10,
+                          width: 40,
+                          height: 40,
+                          child: ValueListenableBuilder<int>(
+                            valueListenable: tick,
+                            builder: (_, value, _) => ColoredBox(
+                              color: value.isEven ? _green : _blue,
+                            ),
                           ),
                         ),
-                        _pane(const Rect.fromLTWH(20, 20, 80, 40)),
+                        _pane(const Rect.fromLTWH(240, 10, 120, 40)),
                       ],
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       );
       expect(_capture().snapshots, 1);
 
-      final before = LiquidGlassHost.debugCaptures;
-      offset.value = 180;
-      await tester.pump();
-      expect(LiquidGlassHost.debugCaptures - before, 2);
-      expect(_capture().snapshots, 0);
-
-      offset.value = 60;
+      tick.value = 1;
       await tester.pump();
       expect(_capture().snapshots, 0);
     },

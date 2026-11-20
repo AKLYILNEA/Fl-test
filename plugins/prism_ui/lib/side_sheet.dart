@@ -4,9 +4,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:prism_ui/l10n.dart';
 import 'package:prism_ui/color.dart';
-import 'package:prism_ui/deferred_push.dart';
 import 'package:prism_ui/drag_back.dart';
-import 'package:prism_ui/liquid_glass.dart';
 import 'package:prism_ui/shape.dart';
 import 'package:prism_ui/sheet_navigator.dart';
 import 'package:prism_ui/surface.dart';
@@ -49,17 +47,13 @@ class _SideSheetState extends State<SideSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return LiquidGlassHost(
-      enabled: LiquidGlassScope.of(context),
-      isolated: true,
-      child: Surface(
-        key: _childKey,
-        color:
-            widget.backgroundColor ??
-            SurfaceLevel.page.colorOf(Theme.of(context).colorScheme),
-        shape: AppShape.none,
-        child: widget.builder(context),
-      ),
+    return Surface(
+      key: _childKey,
+      color:
+          widget.backgroundColor ??
+          SurfaceLevel.page.colorOf(Theme.of(context).colorScheme),
+      shape: AppShape.none,
+      child: widget.builder(context),
     );
   }
 }
@@ -134,13 +128,6 @@ class _RenderSideSheetLayoutWithSizeListener extends RenderShiftedBox {
     }
 
     _animationValue = newValue;
-    if (hasSize && child != null && child!.hasSize) {
-      final BoxParentData childParentData = child!.parentData! as BoxParentData;
-      childParentData.offset = _getPositionForChild(size, child!.size);
-      markNeedsPaint();
-      markNeedsSemanticsUpdate();
-      return;
-    }
     markNeedsLayout();
   }
 
@@ -287,12 +274,10 @@ class _ModalSideSheetState<T> extends State<_ModalSideSheet<T>> {
     final route = widget.route;
     return AnimatedBuilder(
       animation: route.animation!,
-      child: RepaintBoundary(
-        child: route.dragBackDetector(
-          SideSheet(
-            builder: route.builder,
-            backgroundColor: widget.backgroundColor,
-          ),
+      child: route.dragBackDetector(
+        SideSheet(
+          builder: route.builder,
+          backgroundColor: widget.backgroundColor,
         ),
       ),
       builder: (BuildContext context, Widget? child) {
@@ -322,10 +307,7 @@ class _ModalSideSheetState<T> extends State<_ModalSideSheet<T>> {
 }
 
 class ModalSideSheetRoute<T> extends PopupRoute<T>
-    with
-        DragBackRouteMixin<T>,
-        SheetCoverRouteMixin<T>,
-        DeferredPushRouteMixin<T> {
+    with DragBackRouteMixin<T>, SheetCoverRouteMixin<T> {
   ModalSideSheetRoute({
     required this.builder,
     this.barrierLabel,
@@ -373,6 +355,11 @@ class ModalSideSheetRoute<T> extends PopupRoute<T>
 
   @override
   Color get barrierColor => modalBarrierColor ?? Colors.black54;
+
+  @override
+  AnimationController createAnimationController() {
+    return SideSheet.createAnimationController(navigator!);
+  }
 
   @override
   Widget buildPage(
