@@ -255,30 +255,21 @@ class _DockSurface extends StatelessWidget {
   const _DockSurface({
     required this.glass,
     required this.style,
-    this.glow,
+    required this.glow,
     required this.child,
   });
 
   final bool glass;
   final LiquidGlassStyle style;
-  final ValueListenable<LiquidGlassGlow>? glow;
+  final ValueListenable<LiquidGlassGlow> glow;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = context.colorScheme;
     if (glass) {
-      final activeGlow = glow;
-      if (activeGlow == null) {
-        return LiquidGlass(
-          style: style,
-          glow: LiquidGlassGlow.none,
-          shadows: dockShadows(colorScheme),
-          child: child,
-        );
-      }
       return ValueListenableBuilder(
-        valueListenable: activeGlow,
+        valueListenable: glow,
         builder: (_, glow, child) =>
             LiquidGlass(style: style, glow: glow, child: child),
         child: child,
@@ -323,16 +314,11 @@ class NavigationDock extends StatelessWidget {
     required this.destinations,
     required this.selectedIndex,
     required this.onSelected,
-    this.frosted = false,
   });
 
   final List<NavigationDockDestination> destinations;
   final int selectedIndex;
   final ValueChanged<int> onSelected;
-
-  /// Blurs the outer pill with standard liquid glass even when
-  /// [LiquidGlassScope] is off, without press glow or lifted glass lens effects.
-  final bool frosted;
 
   static double heightOf(BuildContext context) {
     return _barHeight +
@@ -377,7 +363,6 @@ class NavigationDock extends StatelessWidget {
                       destinations: destinations,
                       selectedIndex: selectedIndex,
                       onSelected: onSelected,
-                      frosted: frosted,
                     ),
                   ),
                 ),
@@ -892,13 +877,11 @@ class FloatingNavigationBar extends StatefulWidget {
     required this.destinations,
     required this.selectedIndex,
     required this.onSelected,
-    this.frosted = false,
   });
 
   final List<NavigationDockDestination> destinations;
   final int selectedIndex;
   final ValueChanged<int> onSelected;
-  final bool frosted;
 
   @override
   State<FloatingNavigationBar> createState() => _FloatingNavigationBarState();
@@ -1284,15 +1267,14 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar>
       (height, label) => math.max(height, label.height),
     );
     final glass = LiquidGlassScope.of(context);
-    final useGlassBar = glass || widget.frosted;
     final ultra =
         LiquidGlassScope.qualityOf(context) == LiquidGlassQuality.ultra;
     final bar = _DockSurface(
-      glass: useGlassBar,
+      glass: glass,
       style: LiquidGlassStyle.pill(colorScheme),
-      glow: glass ? _touchGlow : null,
+      glow: _touchGlow,
       child: Surface(
-        color: useGlassBar
+        color: glass
             ? Colors.transparent
             : SurfaceLevel.floatingOf(colorScheme).colorOf(colorScheme),
         shape: AppShape.full,
@@ -1369,8 +1351,8 @@ class _FloatingNavigationBarState extends State<FloatingNavigationBar>
                             animation: _motion,
                             builder: (_, _) => _Lens(
                               rect: lensRect(),
-                              lift: !glass && widget.frosted ? 0 : _lift.value,
-                              glass: useGlassBar,
+                              lift: _lift.value,
+                              glass: glass,
                             ),
                           ),
                         if (widget.destinations.isNotEmpty)
@@ -1479,7 +1461,8 @@ class _Lens extends StatelessWidget {
     final tone = colorScheme.brightness == Brightness.dark ? 4.0 : 90.0;
     final secondary = Hct.fromInt(colorScheme.secondary.toARGB32());
     final hct = Hct.from(secondary.hue, secondary.chroma, tone);
-    final platter = Color(hct.toInt()).withValues(alpha: 0.85);
+    final solidPlatter = Color(hct.toInt());
+    final platter = solidPlatter.withValues(alpha: 0.85);
     return PositionedDirectional(
       start: rect.left,
       top: rect.top,
@@ -1489,12 +1472,7 @@ class _Lens extends StatelessWidget {
         decoration: ShapeDecoration(
           color: glass
               ? platter.withValues(alpha: platter.a * (1 - lifted))
-              : Color.alphaBlend(
-                  colorScheme.onSurface.withValues(alpha: 0.08 * lifted),
-                  SurfaceLevel.floatingOf(
-                    colorScheme,
-                  ).next.colorOf(colorScheme),
-                ),
+              : solidPlatter,
           shape: AppShape.full,
         ),
       ),

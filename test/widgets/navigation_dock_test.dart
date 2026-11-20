@@ -341,8 +341,7 @@ void main() {
   }
 
   testWidgets(
-    'a frosted dock blurs the outer pill when liquid glass is off without '
-    'press glow or lifted glass lenses',
+    'without liquid glass the dock keeps an opaque tinted selection pill',
     (tester) async {
       tester.view.physicalSize = _mobileSize;
       tester.view.devicePixelRatio = 1;
@@ -351,21 +350,9 @@ void main() {
         TestApp(
           wrapInProviderScope: true,
           homeBuilder: (child) => HostScaffold(
-            body: Align(
-              alignment: Alignment.bottomCenter,
-              child: LiquidGlassScope(
-                enabled: false,
-                quality: LiquidGlassQuality.standard,
-                child: LiquidGlassHost(
-                  enabled: true,
-                  quality: LiquidGlassQuality.standard,
-                  child: child,
-                ),
-              ),
-            ),
+            body: Align(alignment: Alignment.bottomCenter, child: child),
           ),
           child: NavigationDock(
-            frosted: true,
             destinations: const [
               NavigationDockDestination(glyph: AppGlyphs.dashboard, label: 'a'),
               NavigationDockDestination(glyph: AppGlyphs.tools, label: 'b'),
@@ -376,28 +363,23 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      final glass = find.byType(LiquidGlass);
-      expect(glass, findsOneWidget);
-      expect(tester.widget<LiquidGlass>(glass).glow, LiquidGlassGlow.none);
-      expect(tester.widget<LiquidGlass>(glass).shadows, isNotEmpty);
+      expect(find.byType(LiquidGlass), findsNothing);
       Color? lensColor() =>
           (tester.widget<DecoratedBox>(_lens).decoration as ShapeDecoration)
               .color;
       final restingColor = lensColor();
       expect(restingColor, isNotNull);
-      expect(restingColor!.a, closeTo(0.85, 0.02));
+      expect(restingColor!.a, 1.0);
 
       final gesture = await tester.startGesture(
         tester.getCenter(find.text('b')),
       );
       await tester.pumpAndSettle();
-      expect(glass, findsOneWidget);
-      expect(tester.widget<LiquidGlass>(glass).glow, LiquidGlassGlow.none);
+      expect(find.byType(LiquidGlass), findsNothing);
       expect(lensColor(), restingColor);
 
       await gesture.up();
       await tester.pumpAndSettle();
-      expect(glass, findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );
