@@ -2431,6 +2431,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get outboundIp => 'Исходящий IP';
 
   @override
+  String get outboundIpAddress => 'Исходящий IP-адрес';
+
+  @override
   String get ipAddress => 'IP-адрес';
 
   @override

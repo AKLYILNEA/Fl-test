@@ -2357,6 +2357,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get outboundIp => '아웃바운드 IP';
 
   @override
+  String get outboundIpAddress => '아웃바운드 IP 주소';
+
+  @override
   String get ipAddress => 'IP 주소';
 
   @override

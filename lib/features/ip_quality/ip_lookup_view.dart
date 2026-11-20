@@ -559,37 +559,11 @@ class _IpRiskHeroCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Row(
-          children: [
-            Text(
-              l.ipAddress,
-              style: AppTextStyle.footnote
-                  .of(context)
-                  .copyWith(color: cs.onSurfaceVariant),
-            ),
-            if (isOutbound) ...[
-              const SizedBox(width: 8),
-              DecoratedBox(
-                decoration: ShapeDecoration(
-                  color: riskGradient.first.withValues(alpha: 0.13),
-                  shape: AppShape.full,
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 2,
-                  ),
-                  child: Text(
-                    l.outboundIp,
-                    maxLines: 1,
-                    style: AppTextStyle.caption2
-                        .of(context, emphasized: true)
-                        .copyWith(color: riskGradient.first),
-                  ),
-                ),
-              ),
-            ],
-          ],
+        Text(
+          isOutbound ? l.outboundIpAddress : l.ipAddress,
+          style: AppTextStyle.footnote
+              .of(context)
+              .copyWith(color: cs.onSurfaceVariant),
         ),
         const SizedBox(height: 4),
         Row(

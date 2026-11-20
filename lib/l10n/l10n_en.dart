@@ -2421,6 +2421,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get outboundIp => 'Outbound IP';
 
   @override
+  String get outboundIpAddress => 'Outbound IP address';
+
+  @override
   String get ipAddress => 'IP address';
 
   @override

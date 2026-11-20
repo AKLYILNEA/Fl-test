@@ -119,4 +119,55 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
   });
+
+  testWidgets(
+    'about page defers frosted card blur during route push and enables it on settle',
+    (tester) async {
+      final container = containerFor(tester, const Size(430, 840));
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: TestApp(
+            locale: const Locale('en'),
+            child: Builder(
+              builder: (context) => FilledButton(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    PageRouteBuilder<void>(
+                      transitionDuration: const Duration(milliseconds: 300),
+                      pageBuilder: (_, _, _) => const AboutView(),
+                    ),
+                  );
+                },
+                child: const Text('Open About'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Open About'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      final duringCards = tester
+          .widgetList<MiuixFrostedCard>(find.byType(MiuixFrostedCard))
+          .toList();
+      expect(duringCards, isNotEmpty);
+      expect(duringCards.every((c) => !c.blurEnabled), isTrue);
+
+      await tester.pump(const Duration(milliseconds: 250));
+      await tester.pump();
+      final settledCards = tester
+          .widgetList<MiuixFrostedCard>(find.byType(MiuixFrostedCard))
+          .toList();
+      expect(settledCards, isNotEmpty);
+      expect(settledCards.every((c) => c.blurEnabled), isTrue);
+      expect(tester.takeException(), isNull);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+    },
+  );
 }

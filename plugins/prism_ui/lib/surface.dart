@@ -256,6 +256,21 @@ class Surface extends StatelessWidget {
     }
     final shadow = shadowColor ?? context.colorScheme.shadow;
     if (shape == null) {
+      if (elevation == 0 && clipBehavior == Clip.none) {
+        if (color.a == 0) {
+          return contents;
+        }
+        return Stack(
+          fit: StackFit.passthrough,
+          clipBehavior: Clip.none,
+          children: [
+            Positioned.fill(
+              child: RepaintBoundary(child: ColoredBox(color: color)),
+            ),
+            contents,
+          ],
+        );
+      }
       return PhysicalModel(
         clipBehavior: clipBehavior,
         elevation: elevation,
@@ -264,8 +279,40 @@ class Surface extends StatelessWidget {
         child: contents,
       );
     }
+    final clipper = ShapeBorderClipper(
+      shape: shape,
+      textDirection: textDirection,
+    );
+    if (elevation == 0 && color.a > 0) {
+      final layered = Stack(
+        fit: StackFit.passthrough,
+        clipBehavior: Clip.none,
+        children: [
+          Positioned.fill(
+            child: RepaintBoundary(
+              child: PhysicalShape(
+                clipper: clipper,
+                clipBehavior: Clip.none,
+                elevation: 0,
+                color: color,
+                shadowColor: shadow,
+                child: const SizedBox.expand(),
+              ),
+            ),
+          ),
+          contents,
+        ],
+      );
+      return clipBehavior == Clip.none
+          ? layered
+          : ClipPath(
+              clipper: clipper,
+              clipBehavior: clipBehavior,
+              child: layered,
+            );
+    }
     return PhysicalShape(
-      clipper: ShapeBorderClipper(shape: shape, textDirection: textDirection),
+      clipper: clipper,
       clipBehavior: clipBehavior,
       elevation: elevation,
       color: color,

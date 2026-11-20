@@ -2310,6 +2310,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get outboundIp => 'アウトバウンド IP';
 
   @override
+  String get outboundIpAddress => 'アウトバウンド IP アドレス';
+
+  @override
   String get ipAddress => 'IP アドレス';
 
   @override

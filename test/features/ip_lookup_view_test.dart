@@ -186,6 +186,7 @@ void main() {
     await tester.pumpAndSettle();
 
     final l = tester.element(find.byType(IpLookupView)).appLocalizations;
+    expect(find.text(l.outboundIpAddress), findsOneWidget);
     expect(find.text(_outboundIp), findsOneWidget);
     expect(find.text('28'), findsOneWidget);
     expect(find.text('KR'), findsOneWidget);
@@ -204,6 +205,8 @@ void main() {
     await tester.enterText(find.byType(app_ui.SearchField), '$_customIp:443');
     await tester.tap(find.text(l.search));
     await tester.pumpAndSettle();
+    expect(find.text(l.ipAddress), findsOneWidget);
+    expect(find.text(l.outboundIpAddress), findsNothing);
     expect(find.text(_customIp), findsAtLeastNWidgets(1));
     expect(find.text('AU'), findsOneWidget);
     expect(find.textContaining('AS13335'), findsOneWidget);
@@ -300,7 +303,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('IP查询'), findsOneWidget);
+      expect(find.text('IP 查询'), findsOneWidget);
+      expect(find.text('出站 IP 地址'), findsOneWidget);
       expect(find.text(_outboundIp), findsOneWidget);
       expect(find.text('28'), findsOneWidget);
       expect(find.text('数据中心'), findsOneWidget);
