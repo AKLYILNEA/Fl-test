@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:fl_clash/common/app_localizations.dart';
+import 'package:fl_clash/common/vpn_trace.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/plugins/app.dart';
 import 'package:fl_clash/plugins/tile.dart';
@@ -27,7 +28,12 @@ class _TileContainerState extends ConsumerState<TileManager> with TileListener {
 
   @override
   Future<void> onStart() async {
-    if (isStart && ref.read(coreStatusProvider) == CoreStatus.connected) {
+    final coreStatus = ref.read(coreStatusProvider);
+    vpnTrace.record(
+      'tile_mgr.on_start',
+      fields: {'isStart': isStart, 'coreStatus': coreStatus.name},
+    );
+    if (isStart && coreStatus == CoreStatus.connected) {
       return;
     }
     unawaited(ref.read(setupActionProvider.notifier).setRunning(true));

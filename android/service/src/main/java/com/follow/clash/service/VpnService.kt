@@ -10,6 +10,7 @@ import android.os.IBinder
 import androidx.core.content.getSystemService
 import com.follow.clash.common.AccessControlMode
 import com.follow.clash.common.GlobalState
+import com.follow.clash.common.VpnTrace
 import com.follow.clash.common.R as CommonR
 import com.follow.clash.core.Core
 import com.follow.clash.service.models.CIDR
@@ -31,6 +32,7 @@ class VpnService : SystemVpnService(), ManagedService {
     private var tunRunning = false
 
     override fun onDestroy() {
+        VpnTrace.record("vpn_service.onDestroy", "tunRunning=${isTunRunning()}")
         try {
             cleanup()
         } finally {
@@ -89,11 +91,13 @@ class VpnService : SystemVpnService(), ManagedService {
         }
 
     override fun onLowMemory() {
+        VpnTrace.record("vpn_service.onLowMemory", "tunRunning=${isTunRunning()}")
         lowCoreMemory()
         super.onLowMemory()
     }
 
     override fun onTrimMemory(level: Int) {
+        VpnTrace.record("vpn_service.onTrimMemory", "level=$level tunRunning=${isTunRunning()}")
         trimCoreMemory(level)
         super.onTrimMemory(level)
     }
@@ -113,13 +117,19 @@ class VpnService : SystemVpnService(), ManagedService {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         // Android starts always-on VPN or sticky restarts through this callback.
         // Skip the broadcast when the tunnel is already running from the bound start path.
-        if (!isTunRunning()) {
+        val running = isTunRunning()
+        VpnTrace.record(
+            "vpn_service.onStartCommand",
+            "tunRunning=$running flags=$flags startId=$startId action=${intent?.action}",
+        )
+        if (!running) {
             notifyVpnStartRequested()
         }
         return START_STICKY
     }
 
     override fun onRevoke() {
+        VpnTrace.record("vpn_service.onRevoke", "tunRunning=${isTunRunning()}")
         stop()
         notifyVpnRevoked()
     }
@@ -291,16 +301,23 @@ class VpnService : SystemVpnService(), ManagedService {
     }
 
     override fun start() {
+        VpnTrace.record(
+            "vpn_service.start",
+            "vpn=${ServiceConfig.vpnOptions?.enable} stack=${ServiceConfig.vpnOptions?.stack} tunRunning=${isTunRunning()}",
+        )
         try {
             modules.start()
             handleStart(requireNotNull(ServiceConfig.vpnOptions) { "VPN options are missing" })
+            VpnTrace.record("vpn_service.start.ok", "tunRunning=${isTunRunning()}")
         } catch (error: Exception) {
+            VpnTrace.record("vpn_service.start.fail", "error=$error")
             stop()
             throw error
         }
     }
 
     override fun stop() {
+        VpnTrace.record("vpn_service.stop", "tunRunning=${isTunRunning()}")
         try {
             cleanup()
         } finally {

@@ -8,12 +8,14 @@ import android.os.Looper
 import com.follow.clash.common.BroadcastAction
 import com.follow.clash.common.BroadcastLease
 import com.follow.clash.common.GlobalState
+import com.follow.clash.common.VpnTrace
 import com.follow.clash.common.action
 import kotlinx.coroutines.launch
 
 class ServiceBroadcastReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         val action = intent?.action ?: return
+        VpnTrace.record("broadcast.receive", "action=$action")
         val pendingResult = goAsync()
         val lease = BroadcastLease { pendingResult.finish() }
         val timeout = Runnable {

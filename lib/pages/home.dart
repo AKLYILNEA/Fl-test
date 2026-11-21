@@ -58,6 +58,16 @@ class _HomeShell extends ConsumerWidget {
   final Widget child;
 
   void _handleToPage(PageLabel pageLabel, WidgetRef ref) {
+    vpnTrace.record(
+      'ui.tab_switch',
+      fields: {
+        'from': ref.read(currentPageLabelProvider).name,
+        'to': pageLabel.name,
+        'isStart': ref.read(isStartProvider),
+        'init': ref.read(initProvider),
+      },
+      level: LogLevel.info,
+    );
     ref.read(currentPageLabelProvider.notifier).toPage(pageLabel);
   }
 

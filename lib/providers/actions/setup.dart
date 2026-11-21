@@ -75,6 +75,11 @@ class SetupAction extends _$SetupAction {
     ref.read(delayDataSourceProvider.notifier).value = {};
     final setupResult = applyProfile(force: true);
     ref.read(logsProvider.notifier).value = FixedList(maxLogsLength);
+    vpnTrace.record(
+      'setup.full_setup',
+      fields: {'isStart': ref.read(isStartProvider)},
+    );
+    vpnTrace.flushToLogs(all: true);
     ref.read(requestsProvider.notifier).value = FixedList(maxRequestsLength);
     ref.read(dnsQueriesProvider.notifier).value = FixedList(
       maxDnsQueriesLength,
@@ -90,18 +95,31 @@ class SetupAction extends _$SetupAction {
   }
 
   void _setLocalRunning(bool running) {
+    final prevStartTime = _startTime?.millisecondsSinceEpoch;
     _stopRuntimeTicker();
     if (!running) {
       _startTime = null;
       debouncer.cancel(FunctionTag.applyProfile);
       _pendingForceApply = false;
       _updateRunTime();
+      vpnTrace.record(
+        'setup.local_running',
+        fields: {'running': false, 'prevStartTime': prevStartTime},
+      );
       return;
     }
 
     _startTime ??= DateTime.now();
     _updateRunTime();
     _syncRuntimeTicker();
+    vpnTrace.record(
+      'setup.local_running',
+      fields: {
+        'running': true,
+        'prevStartTime': prevStartTime,
+        'newStartTime': _startTime?.millisecondsSinceEpoch,
+      },
+    );
   }
 
   void _syncRuntimeTicker() {
@@ -146,8 +164,25 @@ class SetupAction extends _$SetupAction {
       return;
     }
     final request = _latestRunRequest;
+    final autoRun = ref.read(appSettingProvider).autoRun;
+    vpnTrace.record(
+      'setup.init_status.start',
+      fields: {'needInitStatus': globalState.needInitStatus, 'autoRun': autoRun},
+    );
     final run = await adoptRunningService();
-    if (!globalState.needInitStatus || !_isCurrent(request)) {
+    final stillCurrent = _isCurrent(request);
+    vpnTrace.record(
+      'setup.init_status.result',
+      fields: {
+        'adopted': run != null,
+        'startedAt': run?.startedAt.millisecondsSinceEpoch,
+        'vpnEnable': run?.options.enable,
+        'stillCurrent': stillCurrent,
+        'needInitStatus': globalState.needInitStatus,
+        'autoRun': ref.read(appSettingProvider).autoRun,
+      },
+    );
+    if (!globalState.needInitStatus || !stillCurrent) {
       return;
     }
     if (run != null) {
@@ -181,6 +216,14 @@ class SetupAction extends _$SetupAction {
     if (_startTime == null) {
       return;
     }
+    vpnTrace.record(
+      'setup.on_core_lost',
+      fields: {
+        'prevStartTime': _startTime?.millisecondsSinceEpoch,
+        'page': ref.read(currentPageLabelProvider).name,
+        'appVisible': ref.read(appVisibleProvider),
+      },
+    );
     _resumeOnRestart = true;
     _latestRunRequest = null;
     _setLocalRunning(false);
@@ -192,6 +235,15 @@ class SetupAction extends _$SetupAction {
   }
 
   void applyAndroidServiceStopped() {
+    vpnTrace.record(
+      'setup.apply_android_stopped',
+      fields: {
+        'prevStartTime': _startTime?.millisecondsSinceEpoch,
+        'hadRequest': _latestRunRequest != null,
+        'page': ref.read(currentPageLabelProvider).name,
+        'appVisible': ref.read(appVisibleProvider),
+      },
+    );
     _latestRunRequest = null;
     _resumeOnRestart = false;
     _setLocalRunning(false);
@@ -200,7 +252,20 @@ class SetupAction extends _$SetupAction {
   }
 
   Future<bool> setRunning(bool running, {bool initialize = false}) {
-    if (running && !initialize && !ref.read(initProvider)) {
+    final init = ref.read(initProvider);
+    vpnTrace.record(
+      'setup.set_running',
+      fields: {
+        'running': running,
+        'initialize': initialize,
+        'init': init,
+        'prevStartTime': _startTime?.millisecondsSinceEpoch,
+        'page': ref.read(currentPageLabelProvider).name,
+        'appVisible': ref.read(appVisibleProvider),
+      },
+      stack: StackTrace.current,
+    );
+    if (running && !initialize && !init) {
       return Future.value(true);
     }
     return _run(running, initialize: running && initialize);
@@ -238,6 +303,7 @@ class SetupAction extends _$SetupAction {
         }
       }
       if (!applied && _isCurrent(request)) {
+        vpnTrace.record('setup.start_init_failed_stopping');
         await globalState.safeRun(() => setRunning(false));
       }
       return applied;
@@ -296,9 +362,19 @@ class SetupAction extends _$SetupAction {
 
   Future<void> _setCoreRunning(_RunRequest request) {
     return _listenerScheduler.run(() async {
-      if (!_isCurrent(request) ||
-          request.running && ref.read(suspendProvider) ||
-          ref.read(safeModeProvider)) {
+      final isCurrent = _isCurrent(request);
+      final suspend = ref.read(suspendProvider);
+      final safeMode = ref.read(safeModeProvider);
+      if (!isCurrent || request.running && suspend || safeMode) {
+        vpnTrace.record(
+          'setup.set_core_running.skip',
+          fields: {
+            'running': request.running,
+            'isCurrent': isCurrent,
+            'suspend': suspend,
+            'safeMode': safeMode,
+          },
+        );
         return;
       }
       await _setListening(request.running);
@@ -308,9 +384,26 @@ class SetupAction extends _$SetupAction {
   Future<void> _setListening(bool running) async {
     final request = _latestRunRequest;
     final vpnOptions = await ref.read(vpnOptionsProvider.future);
+    vpnTrace.record(
+      'setup.set_listening',
+      fields: {
+        'running': running,
+        'vpnEnable': vpnOptions.enable,
+        'suspend': ref.read(suspendProvider),
+        'safeMode': ref.read(safeModeProvider),
+      },
+    );
     try {
       await setCoreRunning(running);
     } catch (error) {
+      vpnTrace.record(
+        'setup.set_listening.error',
+        fields: {
+          'running': running,
+          'error': compactError(error),
+          'unanswered': _isUnanswered(error),
+        },
+      );
       if (_isCurrent(request) && _isUnanswered(error)) {
         ref.read(runningVpnOptionsProvider.notifier).value = null;
       }
@@ -331,11 +424,24 @@ class SetupAction extends _$SetupAction {
   void syncSuspend() {
     debouncer.call(FunctionTag.suspend, () {
       return _listenerScheduler.run(() async {
-        if (!ref.read(isStartProvider) || ref.read(safeModeProvider)) {
+        final isStart = ref.read(isStartProvider);
+        final safeMode = ref.read(safeModeProvider);
+        final suspend = ref.read(suspendProvider);
+        vpnTrace.record(
+          'setup.sync_suspend',
+          fields: {
+            'isStart': isStart,
+            'suspend': suspend,
+            'safeMode': safeMode,
+            'currentSsid': ref.read(currentSSIDProvider),
+            'excludeCount': ref.read(excludeSSIDsProvider).length,
+          },
+        );
+        if (!isStart || safeMode) {
           return;
         }
         try {
-          await _setListening(!ref.read(suspendProvider));
+          await _setListening(!suspend);
         } catch (error) {
           if (!_isUnanswered(error)) {
             rethrow;
@@ -346,7 +452,13 @@ class SetupAction extends _$SetupAction {
   }
 
   Future<void> restartVpn() async {
-    if (!ref.read(isStartProvider)) {
+    final isStart = ref.read(isStartProvider);
+    vpnTrace.record(
+      'setup.restart_vpn',
+      fields: {'isStart': isStart},
+      stack: StackTrace.current,
+    );
+    if (!isStart) {
       return;
     }
     await setRunning(false);
@@ -354,7 +466,16 @@ class SetupAction extends _$SetupAction {
   }
 
   void _rollbackRunning(_RunRequest request) {
-    if (!_isCurrent(request)) {
+    final isCurrent = _isCurrent(request);
+    vpnTrace.record(
+      'setup.rollback_running',
+      fields: {
+        'requestRunning': request.running,
+        'isCurrent': isCurrent,
+        'previousStartTime': request.previousStartTime?.millisecondsSinceEpoch,
+      },
+    );
+    if (!isCurrent) {
       return;
     }
     _startTime = request.previousStartTime;

@@ -79,6 +79,15 @@ class _AndroidContainerState extends ConsumerState<AndroidManager>
 
   @override
   void onServiceStopped([ServiceStartFailure? failure]) {
+    vpnTrace.record(
+      'android_mgr.on_service_stopped',
+      fields: {
+        'failure': failure?.name,
+        'isStart': ref.read(isStartProvider),
+        'page': ref.read(currentPageLabelProvider).name,
+        'appVisible': ref.read(appVisibleProvider),
+      },
+    );
     ref.read(setupActionProvider.notifier).applyAndroidServiceStopped();
     if (failure != null) {
       dialogs.showBanner(failure.label, level: BannerLevel.error);

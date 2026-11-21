@@ -8,6 +8,7 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import com.follow.clash.common.GlobalState
+import com.follow.clash.common.VpnTrace
 import com.follow.clash.common.intent
 import com.follow.clash.core.Core
 import com.follow.clash.service.ManagedService
@@ -43,6 +44,10 @@ object ServiceController {
 
     // The Core listens exactly while a run exists, so every path that ends one closes it.
     private fun release() {
+        VpnTrace.record(
+            "controller.release",
+            "hadBinding=${binding != null} hadRuntime=${runtime != null}",
+        )
         clearBinding()
         runtime = null
         Core.stopListener()
@@ -71,6 +76,10 @@ object ServiceController {
     }
 
     suspend fun start(options: VpnOptions): Boolean = lock.withLock {
+        VpnTrace.record(
+            "controller.start",
+            "vpn=${options.enable} stack=${options.stack} existingBinding=${binding?.component?.shortClassName} hasRuntime=${runtime != null}",
+        )
         ServiceConfig.updateVpnOptions(options)
         val nextIntent = if (options.enable) {
             VpnService::class.intent
@@ -89,6 +98,7 @@ object ServiceController {
             binding = nextBinding
             nextBinding.bind().onFailure { error ->
                 GlobalState.log("Unable to bind background service: $error")
+                VpnTrace.record("controller.start.bind_fail", "error=$error")
                 release()
                 return@withLock false
             }
@@ -98,6 +108,10 @@ object ServiceController {
         val result = currentBinding.useService { service -> service.start() }
         if (result.isFailure) {
             GlobalState.log("Unable to start background service: ${result.exceptionOrNull()}")
+            VpnTrace.record(
+                "controller.start.service_fail",
+                "error=${result.exceptionOrNull()}",
+            )
             currentBinding.stopIfConnected()
                 .onFailure { error ->
                     GlobalState.log("Unable to clean up failed background service start: $error")
@@ -117,10 +131,18 @@ object ServiceController {
             options = options,
             startedAtMillis = runtime?.startedAtMillis ?: System.currentTimeMillis(),
         )
+        VpnTrace.record(
+            "controller.start.ok",
+            "vpn=${options.enable} startedAt=${runtime?.startedAtMillis}",
+        )
         true
     }
 
     suspend fun stop() = lock.withLock {
+        VpnTrace.record(
+            "controller.stop",
+            "hasBinding=${binding != null} hasRuntime=${runtime != null}",
+        )
         tearDownServices()
         release()
     }
@@ -151,9 +173,17 @@ object ServiceController {
         message: String,
     ) {
         val token = ServiceState.captureRequestToken()
+        VpnTrace.record(
+            "controller.service_disconnected",
+            "msg=$message token=$token component=${disconnectedBinding.component?.shortClassName}",
+        )
         GlobalState.launch {
             val wasCurrent = lock.withLock {
                 if (binding !== disconnectedBinding) {
+                    VpnTrace.record(
+                        "controller.service_disconnected.ignored",
+                        "msg=$message reason=stale_binding",
+                    )
                     return@withLock false
                 }
                 GlobalState.log("Background service disconnected: $message")

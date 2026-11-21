@@ -1,5 +1,6 @@
 package com.follow.clash
 
+import com.follow.clash.common.VpnTrace
 import com.follow.clash.plugins.AppPlugin
 import com.follow.clash.plugins.BatteryPlugin
 import com.follow.clash.plugins.LinkPlugin
@@ -12,6 +13,10 @@ import io.flutter.embedding.engine.FlutterEngine
 class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        VpnTrace.record(
+            "activity.configure_engine",
+            "engine=${System.identityHashCode(flutterEngine)} runtime=${ServiceController.runtime != null} runRequested=${ServiceState.isRunRequested}",
+        )
         flutterEngine.plugins.add(AppPlugin())
         flutterEngine.plugins.add(BatteryPlugin())
         flutterEngine.plugins.add(LinkPlugin())
@@ -22,6 +27,10 @@ class MainActivity : FlutterActivity() {
     }
 
     override fun onDestroy() {
+        VpnTrace.record(
+            "activity.destroy",
+            "finishing=$isFinishing configChange=$isChangingConfigurations runtime=${ServiceController.runtime != null} runRequested=${ServiceState.isRunRequested}",
+        )
         flutterEngine?.let(ServiceState::detachFlutterEngine)
         super.onDestroy()
     }
