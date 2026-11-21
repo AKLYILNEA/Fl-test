@@ -1,4 +1,5 @@
 import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
@@ -309,6 +310,51 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+
+  testWidgets(
+    'landscape custom boarding pass pairs edit and rename above three tiles and derives accents from theme',
+    (tester) async {
+      final l = currentAppLocalizations;
+      final custom = Profile.custom(label: 'Custom profile');
+      await pumpProfiles(
+        tester,
+        profiles: [custom],
+        size: const Size(820, 430),
+        overrides: [
+          profileGroupsCountProvider.overrideWith((_, _) => Stream.value(6)),
+        ],
+      );
+
+      final pass = find.byType(ProfileBoardingPass);
+      double labelY(String label) {
+        final text = find.descendant(of: pass, matching: find.text(label));
+        expect(text, findsOneWidget);
+        return tester.getCenter(text).dy;
+      }
+
+      final topY = labelY(l.edit);
+      expect(labelY(l.rename), topY);
+      final bottomY = labelY(l.icon);
+      expect(bottomY, greaterThan(topY));
+      expect(labelY(l.preview), bottomY);
+      expect(labelY(l.delete), bottomY);
+
+      final ctx = tester.element(pass);
+      expect(
+        profileTypeAccent(ctx, ProfileType.url),
+        ctx.colorScheme.primary,
+      );
+      expect(
+        profileTypeAccent(ctx, ProfileType.file),
+        DashboardColors.of(ctx).complement,
+      );
+      expect(
+        profileTypeAccent(ctx, ProfileType.custom),
+        ctx.colorScheme.tertiary,
+      );
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets(
     'other cards show distinct anchors for remote, local YAML, custom, and updating',

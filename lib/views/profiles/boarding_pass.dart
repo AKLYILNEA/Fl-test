@@ -321,53 +321,56 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
     final colorScheme = context.colorScheme;
     final expired = profileIsExpired(profile);
     final subtitle = profileSubtitleText(context, profile);
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        ProfileIconBadge(
-          profile: profile,
-          size: 46,
-          onTap: () => openProfileIconPicker(context, ref, profile),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Flexible(
-                    child: EmojiText(
-                      profile.realLabel,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTextStyle.headline.of(
-                        context,
-                        emphasized: true,
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 46),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          ProfileIconBadge(
+            profile: profile,
+            size: 46,
+            onTap: () => openProfileIconPicker(context, ref, profile),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: EmojiText(
+                        profile.realLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyle.headline.of(
+                          context,
+                          emphasized: true,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 6),
-                  _buildTypeStamp(context, profile),
-                ],
-              ),
-              const SizedBox(height: 3),
-              Text(
-                subtitle,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: expired
-                    ? AppTextStyle.footnote
-                          .of(context, emphasized: true)
-                          .copyWith(color: colorScheme.error)
-                    : AppTextStyle.footnote.of(context).toLighter,
-              ),
-            ],
+                    const SizedBox(width: 6),
+                    _buildTypeStamp(context, profile),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: expired
+                      ? AppTextStyle.footnote
+                            .of(context, emphasized: true)
+                            .copyWith(color: colorScheme.error)
+                      : AppTextStyle.footnote.of(context).toLighter,
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -378,9 +381,11 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
     List<PopupMenuItem> menuItems,
   ) {
     final l = context.appLocalizations;
+    final accent = profileTypeAccent(context, profile.type);
     final Widget primaryButton = switch (profile.type) {
       ProfileType.url => _CircleIconButton(
         tooltip: l.sync,
+        accent: accent,
         onPressed: isUpdating ? null : () => handleSyncProfile(ref, profile),
         child: isUpdating
             ? const ActivityIndicator(size: 16)
@@ -388,11 +393,13 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
       ),
       ProfileType.file => _CircleIconButton(
         tooltip: l.edit,
+        accent: accent,
         onPressed: () => handleEditProfile(context, profile),
         child: const GlyphIcon(AppGlyphs.edit, size: 18),
       ),
       ProfileType.custom => _CircleIconButton(
         tooltip: l.edit,
+        accent: accent,
         onPressed: () => handleEditProfile(context, profile),
         child: const GlyphIcon(AppGlyphs.customize, size: 18),
       ),
@@ -452,75 +459,78 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
       _ => null,
     };
 
-    final waveSpacing = widget.isWide ? 4.0 : 8.0;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.baseline,
-          textBaseline: TextBaseline.alphabetic,
-          spacing: 12,
-          children: [
-            Flexible(
-              fit: widget.isWide ? FlexFit.tight : FlexFit.loose,
-              child: Text.rich(
-                TextSpan(
-                  children: [
-                    TextSpan(text: percentText, style: percentStyle),
-                    TextSpan(text: ' ${l.usedShort}', style: unitStyle),
-                  ],
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            Text(
-              trafficText,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.end,
-              style: trafficStyle,
-            ),
-          ],
-        ),
-        SizedBox(height: waveSpacing),
-        SizedBox(
-          height: 12,
-          child: CustomPaint(
-            painter: WavyProgressPainter(
-              value: usage.share,
-              active: waveColor,
-              track: colors.tone2,
-            ),
-          ),
-        ),
-        SizedBox(height: waveSpacing),
-        Row(
-          spacing: 12,
-          children: [
-            Text(
-              leftFoot,
-              maxLines: 1,
-              style: expired
-                  ? AppTextStyle.caption1
-                        .of(context, emphasized: true)
-                        .copyWith(color: colorScheme.error)
-                  : DashboardText.label(context),
-            ),
-            if (rightFoot != null)
-              Expanded(
-                child: Text(
-                  rightFoot,
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 58),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            spacing: 12,
+            children: [
+              Flexible(
+                fit: widget.isWide ? FlexFit.tight : FlexFit.loose,
+                child: Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(text: percentText, style: percentStyle),
+                      TextSpan(text: ' ${l.usedShort}', style: unitStyle),
+                    ],
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.end,
-                  style: DashboardText.label(context),
                 ),
               ),
-          ],
-        ),
-      ],
+              Text(
+                trafficText,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.end,
+                style: trafficStyle,
+              ),
+            ],
+          ),
+          const SizedBox(height: 5),
+          SizedBox(
+            height: 12,
+            child: CustomPaint(
+              painter: WavyProgressPainter(
+                value: usage.share,
+                active: waveColor,
+                track: colors.tone2,
+              ),
+            ),
+          ),
+          const SizedBox(height: 5),
+          Row(
+            spacing: 12,
+            children: [
+              Text(
+                leftFoot,
+                maxLines: 1,
+                style: expired
+                    ? AppTextStyle.caption1
+                          .of(context, emphasized: true)
+                          .copyWith(color: colorScheme.error)
+                    : DashboardText.label(context),
+              ),
+              if (rightFoot != null)
+                Expanded(
+                  child: Text(
+                    rightFoot,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.end,
+                    style: DashboardText.label(context),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -554,11 +564,11 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
     Widget tile(int? value, String label) {
       return Expanded(
         child: Container(
-          height: 58,
+          constraints: const BoxConstraints(minHeight: 58),
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           decoration: ShapeDecoration(
             color: tileFill,
-            shape: AppShape.all(AppCorner.lg),
+            shape: AppShape.all(14),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -710,13 +720,15 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
             tinted: true,
             onPressed: () => handleEditProfile(context, profile),
           ),
-        ],
-        actions: [
-          _StubAction(
+          _PillAction(
             glyph: AppGlyphs.textShort,
             label: l.rename,
+            accent: accent,
+            tinted: false,
             onPressed: () => renameProfile(context, ref, profile),
           ),
+        ],
+        actions: [
           _StubAction(
             glyph: AppGlyphs.photos,
             label: l.icon,
@@ -744,22 +756,24 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
     bool isUpdating,
   ) {
     final plan = _landscapeStubPlan(context, profile, isUpdating);
+    final secondaryGap = plan.actions.length >= 6 ? 6.0 : 8.0;
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
-      spacing: profile.type == ProfileType.url ? 10 : 12,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Row(
           spacing: 8,
           children: [
             for (final pill in plan.pills)
-              Expanded(child: _ActionPillButton(action: pill)),
+              Expanded(child: _PrimaryActionTile(action: pill)),
           ],
         ),
+        const SizedBox(height: 14),
         Row(
+          spacing: secondaryGap,
           children: [
             for (final action in plan.actions)
-              Expanded(child: _LabeledCircleAction(action: action)),
+              Expanded(child: _SecondaryActionTile(action: action)),
           ],
         ),
       ],
@@ -792,7 +806,6 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
 
     final Widget passContent;
     if (widget.isWide) {
-      final isRemote = profile.type == ProfileType.url;
       passContent = IntrinsicHeight(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -800,18 +813,13 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
             Expanded(
               flex: 12,
               child: Padding(
-                padding: isRemote
-                    ? const EdgeInsets.symmetric(horizontal: 20, vertical: 15)
-                    : const EdgeInsets.fromLTRB(18, 18, 12, 18),
+                padding: const EdgeInsets.fromLTRB(20, 20, 10, 20),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: isRemote
-                      ? MainAxisAlignment.center
-                      : MainAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _buildHeaderInfo(context, profile),
-                    SizedBox(height: isRemote ? 12 : 16),
+                    const SizedBox(height: 14),
                     bodyMetrics,
                   ],
                 ),
@@ -828,11 +836,9 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
               ),
             ),
             Expanded(
-              flex: 10,
+              flex: 11,
               child: Padding(
-                padding: isRemote
-                    ? const EdgeInsets.fromLTRB(10, 12, 16, 12)
-                    : const EdgeInsets.fromLTRB(10, 16, 16, 16),
+                padding: const EdgeInsets.fromLTRB(10, 20, 20, 20),
                 child: _buildLandscapeActionMatrix(
                   context,
                   profile,
@@ -849,7 +855,7 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 10),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               spacing: 10,
@@ -913,8 +919,8 @@ class _PillAction {
   final bool loading;
 }
 
-class _ActionPillButton extends StatelessWidget {
-  const _ActionPillButton({required this.action});
+class _PrimaryActionTile extends StatelessWidget {
+  const _PrimaryActionTile({required this.action});
 
   final _PillAction action;
 
@@ -929,9 +935,9 @@ class _ActionPillButton extends StatelessWidget {
     return PressSurface(
       fill: fill,
       foreground: foreground,
-      shape: AppShape.full,
-      minimum: const BoxConstraints(minHeight: 36),
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      shape: AppShape.all(14),
+      minimum: const BoxConstraints(minHeight: 46),
+      padding: const EdgeInsets.symmetric(horizontal: 10),
       onPressed: action.onPressed,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -963,28 +969,35 @@ class _CircleIconButton extends StatelessWidget {
     required this.tooltip,
     required this.onPressed,
     required this.child,
+    this.accent,
     this.danger = false,
   });
 
   final String tooltip;
   final VoidCallback? onPressed;
   final Widget child;
+  final Color? accent;
   final bool danger;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = context.colorScheme;
+    final isDark = colorScheme.brightness == Brightness.dark;
     final fill = danger
-        ? colorScheme.error.withValues(alpha: 0.12)
-        : DashboardColors.of(context).tone;
-    final foreground = danger ? colorScheme.error : colorScheme.onSurface;
+        ? colorScheme.error.withValues(alpha: isDark ? 0.16 : 0.10)
+        : accent != null
+            ? accent!.withValues(alpha: isDark ? 0.18 : 0.11)
+            : DashboardColors.of(context).tone;
+    final foreground = danger
+        ? colorScheme.error
+        : accent ?? colorScheme.onSurface;
     return Tooltip(
       message: tooltip,
       child: PressSurface(
         fill: fill,
         foreground: foreground,
         shape: AppShape.full,
-        minimum: const BoxConstraints.tightFor(width: 34, height: 34),
+        minimum: const BoxConstraints.tightFor(width: 36, height: 36),
         onPressed: onPressed,
         child: Center(child: child),
       ),
@@ -1006,35 +1019,49 @@ class _StubAction {
   final bool danger;
 }
 
-class _LabeledCircleAction extends StatelessWidget {
-  const _LabeledCircleAction({required this.action});
+class _SecondaryActionTile extends StatelessWidget {
+  const _SecondaryActionTile({required this.action});
 
   final _StubAction action;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = context.colorScheme;
+    final isDark = colorScheme.brightness == Brightness.dark;
+    final fill = action.danger
+        ? colorScheme.error.withValues(alpha: isDark ? 0.16 : 0.10)
+        : DashboardColors.of(context).tone;
+    final iconColor = action.danger ? colorScheme.error : colorScheme.onSurface;
     final labelColor = action.danger
         ? colorScheme.error
         : colorScheme.onSurfaceVariant;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _CircleIconButton(
-          tooltip: action.label,
-          danger: action.danger,
-          onPressed: action.onPressed,
-          child: GlyphIcon(action.glyph, size: 17),
+    return Tooltip(
+      message: action.label,
+      child: PressSurface(
+        fill: fill,
+        foreground: iconColor,
+        shape: AppShape.all(14),
+        minimum: const BoxConstraints(minHeight: 58),
+        padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 8),
+        onPressed: action.onPressed,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          spacing: 5,
+          children: [
+            GlyphIcon(action.glyph, size: 17, color: iconColor),
+            Text(
+              action.label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: AppTextStyle.caption2
+                  .of(context)
+                  .copyWith(color: labelColor, height: 1.0),
+            ),
+          ],
         ),
-        const SizedBox(height: 5),
-        Text(
-          action.label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          textAlign: TextAlign.center,
-          style: AppTextStyle.caption2.of(context).copyWith(color: labelColor),
-        ),
-      ],
+      ),
     );
   }
 }
