@@ -122,11 +122,13 @@
             </intent-filter>
         </receiver>
 
-        <!-- Use Impeller's OpenGL ES backend on Android to avoid Qualcomm Adreno
-             Vulkan driver SIGSEGV in vkDestroyFramebuffer on offscreen teardown. -->
+        <!-- Disable Impeller on Android (use Skia OpenGL ES) to avoid Qualcomm Adreno
+             Vulkan driver SIGSEGV in vkDestroyFramebuffer. In Flutter 3.50.0 release
+             builds, ImpellerBackend=opengles is compiled out under #ifndef FLUTTER_RELEASE,
+             so EnableImpeller=false is the only working release switch away from Vulkan. -->
         <meta-data
-            android:name="io.flutter.embedding.android.ImpellerBackend"
-            android:value="opengles" />
+            android:name="io.flutter.embedding.android.EnableImpeller"
+            android:value="false" />
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
