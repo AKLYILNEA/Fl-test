@@ -122,6 +122,11 @@
             </intent-filter>
         </receiver>
 
+        <!-- Use Impeller's OpenGL ES backend on Android to avoid Qualcomm Adreno
+             Vulkan driver SIGSEGV in vkDestroyFramebuffer on offscreen teardown. -->
+        <meta-data
+            android:name="io.flutter.embedding.android.ImpellerBackend"
+            android:value="opengles" />
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
