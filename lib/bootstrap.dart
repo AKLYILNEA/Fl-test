@@ -152,15 +152,6 @@ class Bootstrap {
     }
     await _initApp();
     globalState.isAttach = true;
-    vpnTrace.record(
-      'bootstrap.attached',
-      fields: {
-        'recovery': _bootDecision.recovery.name,
-        'isStart': _container.read(isStartProvider),
-        'needInitStatus': globalState.needInitStatus,
-      },
-    );
-    vpnTrace.flushToLogs(all: true);
   }
 
   ProviderContainer get _container => globalState.container;
@@ -191,14 +182,6 @@ class Bootstrap {
         _container.read(patchClashConfigProvider).mixedPort,
       );
     }
-    vpnTrace.record(
-      'bootstrap.init_app',
-      fields: {
-        'recovery': _bootDecision.recovery.name,
-        'degraded': _bootDecision.isDegraded,
-        'needInitStatus': globalState.needInitStatus,
-      },
-    );
     await _container.read(coreActionProvider.notifier).startCore();
     if (!_bootDecision.isDegraded) {
       await _container.read(setupActionProvider.notifier).initStatus();

@@ -34,8 +34,6 @@ abstract mixin class ServiceListener {
   void onServiceEvent(CoreEvent event) {}
 
   void onServiceStopped([ServiceStartFailure? failure]) {}
-
-  void onServiceTrace(String line) {}
 }
 
 typedef AndroidServiceRun = ({DateTime startedAt, VpnOptions options});
@@ -76,33 +74,12 @@ class Service {
           break;
         case 'stopped':
           final report = call.arguments as Map<Object?, Object?>;
-          final reportRev = report['revision'];
-          final reportFailure = report['failure'];
           // A report stamped before the newest command no longer describes it.
-          if (reportRev != _commandRevision) {
-            vpnTrace.record(
-              'service.stopped_report',
-              fields: {
-                'decision': 'drop_stale_rev',
-                'reportRev': reportRev,
-                'localRev': _commandRevision,
-                'startRequested': _startRequested,
-                'failure': reportFailure,
-              },
-            );
+          if (report['revision'] != _commandRevision) {
             break;
           }
           _stopReportCount++;
           if (!_startRequested) {
-            vpnTrace.record(
-              'service.stopped_report',
-              fields: {
-                'decision': 'drop_not_start_requested',
-                'reportRev': reportRev,
-                'localRev': _commandRevision,
-                'failure': reportFailure,
-              },
-            );
             break;
           }
           final stopReport = _stopReportCount;
@@ -111,47 +88,16 @@ class Service {
             'isRunRequested',
           );
           if (runRequested != false ||
-              reportRev != _commandRevision ||
+              report['revision'] != _commandRevision ||
               stopReport != _stopReportCount) {
-            vpnTrace.record(
-              'service.stopped_report',
-              fields: {
-                'decision': 'drop_superseded',
-                'reportRev': reportRev,
-                'localRev': _commandRevision,
-                'runRequested': runRequested,
-                'stopReportMatch': stopReport == _stopReportCount,
-                'failure': reportFailure,
-              },
-            );
             break;
           }
           _startRequested = false;
-          final failure = ServiceStartFailure.fromCode(reportFailure);
-          vpnTrace.record(
-            'service.stopped_report',
-            fields: {
-              'decision': 'dispatch',
-              'reportRev': reportRev,
-              'localRev': _commandRevision,
-              'runRequested': runRequested,
-              'failure': failure?.name ?? reportFailure,
-            },
-          );
+          final failure = ServiceStartFailure.fromCode(report['failure']);
           _dispatch(
             'stop report',
             (listener) => listener.onServiceStopped(failure),
           );
-          break;
-        case 'trace':
-          final line = call.arguments as String?;
-          if (line != null && line.isNotEmpty) {
-            vpnTrace.recordNative(line);
-            _dispatch(
-              'service trace',
-              (listener) => listener.onServiceTrace(line),
-            );
-          }
           break;
         default:
           throw MissingPluginException();
@@ -195,30 +141,17 @@ class Service {
 
   Future<bool> start() async {
     _startRequested = true;
-    final rev = ++_commandRevision;
-    vpnTrace.record('service.start', fields: {'rev': rev});
-    final res = await methodChannel.invokeMethod<bool>('start', rev) ?? false;
-    vpnTrace.record(
-      'service.start.result',
-      fields: {'rev': rev, 'result': res},
-    );
-    return res;
+    return await methodChannel.invokeMethod<bool>(
+          'start',
+          ++_commandRevision,
+        ) ??
+        false;
   }
 
   Future<bool> stop() async {
     _startRequested = false;
-    final rev = ++_commandRevision;
-    vpnTrace.record(
-      'service.stop',
-      fields: {'rev': rev},
-      stack: StackTrace.current,
-    );
-    final res = await methodChannel.invokeMethod<bool>('stop', rev) ?? false;
-    vpnTrace.record(
-      'service.stop.result',
-      fields: {'rev': rev, 'result': res},
-    );
-    return res;
+    return await methodChannel.invokeMethod<bool>('stop', ++_commandRevision) ??
+        false;
   }
 
   Future<String> init() async {
@@ -246,15 +179,6 @@ class Service {
     if (run == null ||
         revision != _commandRevision ||
         stopReports != _stopReportCount) {
-      vpnTrace.record(
-        'service.adopt',
-        fields: {
-          'adopted': false,
-          'hasRun': run != null,
-          'revMatch': revision == _commandRevision,
-          'stopMatch': stopReports == _stopReportCount,
-        },
-      );
       return null;
     }
     final startedAt = DateTime.fromMillisecondsSinceEpoch(
@@ -264,14 +188,6 @@ class Service {
       json.decode(run['options']! as String) as Map<String, Object?>,
     );
     _startRequested = true;
-    vpnTrace.record(
-      'service.adopt',
-      fields: {
-        'adopted': true,
-        'startedAt': startedAt.millisecondsSinceEpoch,
-        'vpnEnable': options.enable,
-      },
-    );
     return (startedAt: startedAt, options: options);
   }
 

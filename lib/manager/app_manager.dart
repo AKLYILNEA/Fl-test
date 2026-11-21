@@ -62,14 +62,6 @@ class _AppStateManagerState extends ConsumerState<AppStateManager>
     });
     ref.listenManual(suspendProvider, (prev, next) {
       if (prev != next) {
-        vpnTrace.record(
-          'app_mgr.suspend_changed',
-          fields: {
-            'prev': prev,
-            'next': next,
-            'isStart': ref.read(isStartProvider),
-          },
-        );
         ref.read(setupActionProvider.notifier).syncSuspend();
       }
     });
@@ -109,15 +101,6 @@ class _AppStateManagerState extends ConsumerState<AppStateManager>
 
   @override
   Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
-    vpnTrace.record(
-      'lifecycle.state',
-      fields: {
-        'state': state.name,
-        'isStart': ref.read(isStartProvider),
-        'page': ref.read(currentPageLabelProvider).name,
-      },
-      level: LogLevel.info,
-    );
     _updateVisible(state);
     if (state == AppLifecycleState.resumed) {
       _precacheProxyIcons();

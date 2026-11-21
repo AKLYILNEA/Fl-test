@@ -49,6 +49,5 @@ export 'system.dart';
 export 'system_fonts.dart';
 export 'task.dart';
 export 'task_pool.dart';
-export 'vpn_trace.dart';
 export 'webdav.dart';
 export 'yaml.dart';

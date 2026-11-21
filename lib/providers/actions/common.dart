@@ -10,22 +10,8 @@ class CommonAction extends _$CommonAction {
   void build() {}
 
   void toggleRunning() {
-    final currentIsStart = ref.read(isStartProvider);
-    final running = !currentIsStart;
-    final coreStatus = ref.read(coreStatusProvider);
-    final init = ref.read(initProvider);
-    vpnTrace.record(
-      'action.toggle_running',
-      fields: {
-        'targetRunning': running,
-        'currentIsStart': currentIsStart,
-        'coreStatus': coreStatus.name,
-        'init': init,
-        'page': ref.read(currentPageLabelProvider).name,
-      },
-      stack: StackTrace.current,
-    );
-    if (running && coreStatus == CoreStatus.disconnected) {
+    final running = !ref.read(isStartProvider);
+    if (running && ref.read(coreStatusProvider) == CoreStatus.disconnected) {
       ref.read(setupActionProvider.notifier).resumeOnRestart();
       unawaited(
         globalState.safeRun(ref.read(coreActionProvider.notifier).restartCore),
@@ -38,7 +24,7 @@ class CommonAction extends _$CommonAction {
             .read(setupActionProvider.notifier)
             .setRunning(
               running,
-              initialize: running && !init,
+              initialize: running && !ref.read(initProvider),
             ),
       ),
     );

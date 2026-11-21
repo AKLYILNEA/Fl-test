@@ -829,19 +829,6 @@ class _StartToggleState extends ConsumerState<_StartToggle>
   }
 
   void _toggle() {
-    vpnTrace.record(
-      'ui.start_toggle_tap',
-      fields: {
-        'running': widget.running,
-        'enabled': widget.enabled,
-        'suspended': widget.suspended,
-        'isStart': ref.read(isStartProvider),
-        'page': ref.read(currentPageLabelProvider).name,
-        'shownPage': ref.read(shownPageLabelProvider).name,
-        'appVisible': ref.read(appVisibleProvider),
-      },
-      stack: StackTrace.current,
-    );
     ref.read(commonActionProvider.notifier).toggleRunning();
   }
 

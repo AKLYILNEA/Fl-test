@@ -6,7 +6,6 @@ import android.net.VpnService
 import android.os.Build
 import androidx.core.content.ContextCompat
 import com.follow.clash.common.GlobalState
-import com.follow.clash.common.VpnTrace
 import com.follow.clash.models.SharedState
 import com.follow.clash.plugins.AppPlugin
 import com.follow.clash.plugins.ServicePlugin
@@ -100,12 +99,7 @@ internal object AndroidServiceStateHost : ServiceStateHost {
         }
     }
 
-    override fun log(message: String) {
-        GlobalState.log(message)
-        if (message.startsWith("[VPN-TRACE]")) {
-            VpnTrace.record("state_machine", message.removePrefix("[VPN-TRACE]").trim())
-        }
-    }
+    override fun log(message: String) = GlobalState.log(message)
 
     override fun showToast(message: String) = GlobalState.application.showToast(message)
 

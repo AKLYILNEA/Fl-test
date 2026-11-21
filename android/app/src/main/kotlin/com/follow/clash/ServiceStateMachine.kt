@@ -68,7 +68,6 @@ internal class ServiceStateMachine(private val host: ServiceStateHost) {
         get() = arbiter.isRunningRequested
 
     suspend fun handleToggleAction() {
-        host.log("[VPN-TRACE] handleToggleAction runRequested=$isRunRequested runState=${runState.value}")
         if (isRunRequested) {
             handleStopAction()
         } else {
@@ -87,21 +86,18 @@ internal class ServiceStateMachine(private val host: ServiceStateHost) {
      * when the loss was observed, so a start that raced ahead of this callback keeps its intent.
      */
     suspend fun handleServiceLost(token: RunRequest) {
-        host.log("[VPN-TRACE] handleServiceLost enter token=$token runtime=${host.runtime != null} runRequested=$isRunRequested runState=${runState.value}")
         val dropped = transitionLock.withLock {
             if (host.runtime != null) {
                 return@withLock false
             }
             arbiter.resetToStopped(token).also { publish() }
         }
-        host.log("[VPN-TRACE] handleServiceLost done dropped=$dropped runState=${runState.value}")
         if (dropped) {
             host.notifyStopped()
         }
     }
 
     suspend fun handleStartAction() {
-        host.log("[VPN-TRACE] handleStartAction runRequested=$isRunRequested hasTile=${host.tile() != null} runState=${runState.value}")
         if (isRunRequested) {
             return
         }
@@ -114,7 +110,6 @@ internal class ServiceStateMachine(private val host: ServiceStateHost) {
     }
 
     suspend fun handleStopAction() {
-        host.log("[VPN-TRACE] handleStopAction runRequested=$isRunRequested runState=${runState.value}")
         if (!isRunRequested) {
             return
         }
@@ -124,7 +119,6 @@ internal class ServiceStateMachine(private val host: ServiceStateHost) {
     }
 
     suspend fun handleVpnRevokeAction() {
-        host.log("[VPN-TRACE] handleVpnRevokeAction runtimeVpn=${host.runtime?.vpn} runRequested=$isRunRequested")
         if (host.runtime?.vpn != true) {
             return
         }
@@ -132,9 +126,7 @@ internal class ServiceStateMachine(private val host: ServiceStateHost) {
     }
 
     fun requestStart(): Deferred<Boolean> {
-        val alreadyStarted = isStartedAs(sharedState.vpnOptions)
-        host.log("[VPN-TRACE] requestStart alreadyStarted=$alreadyStarted runState=${runState.value} vpn=${sharedState.vpnOptions?.enable} runtimeVpn=${host.runtime?.vpn}")
-        if (alreadyStarted) {
+        if (isStartedAs(sharedState.vpnOptions)) {
             return CompletableDeferred(true)
         }
         val outcome = launchStart(createRequest(running = true))
@@ -142,7 +134,6 @@ internal class ServiceStateMachine(private val host: ServiceStateHost) {
     }
 
     fun requestStop(): Deferred<Boolean> {
-        host.log("[VPN-TRACE] requestStop runState=${runState.value} runtime=${host.runtime != null} runRequested=$isRunRequested")
         val request = createRequest(running = false)
         return host.scope.async { stop(request) }
     }
@@ -176,7 +167,6 @@ internal class ServiceStateMachine(private val host: ServiceStateHost) {
     private fun launchStart(request: RunRequest): Deferred<StartOutcome> {
         val result = CompletableDeferred<StartOutcome>()
         val launch: (Boolean) -> Unit = { permitted ->
-            host.log("[VPN-TRACE] launchStart permitted=$permitted runState=${runState.value} isCurrent=${isCurrent(request)}")
             host.scope.launch {
                 result.complete(if (permitted) start(request) else abandon(request))
             }
@@ -242,7 +232,6 @@ internal class ServiceStateMachine(private val host: ServiceStateHost) {
 
     private suspend fun abandon(request: RunRequest, failure: StartFailure? = null): StartOutcome {
         val dropped = arbiter.resetToStopped(request)
-        host.log("[VPN-TRACE] abandon failure=${failure?.code} dropped=$dropped runState=${runState.value} runtime=${host.runtime != null}")
         reconcileStopped()
         if (!dropped) {
             return StartOutcome.SUPERSEDED
@@ -254,15 +243,10 @@ internal class ServiceStateMachine(private val host: ServiceStateHost) {
     /** Null once the service runs as asked; a request no longer current is never reported. */
     private suspend fun runStart(request: RunRequest): StartFailure? {
         if (!isCurrent(request)) {
-            host.log("[VPN-TRACE] runStart skipped: not current before prepare")
             return StartFailure.SERVICE
         }
-        val options = sharedState.vpnOptions ?: run {
-            host.log("[VPN-TRACE] runStart failed: vpnOptions null")
-            return StartFailure.SERVICE
-        }
+        val options = sharedState.vpnOptions ?: return StartFailure.SERVICE
         if (!prepareVpn(options)) {
-            host.log("[VPN-TRACE] runStart failed: prepareVpn denied hasApp=${host.app() != null} isCurrent=${isCurrent(request)}")
             if (host.app() == null && isCurrent(request)) {
                 host.showToast(VPN_PERMISSION_MESSAGE)
             }
@@ -270,19 +254,12 @@ internal class ServiceStateMachine(private val host: ServiceStateHost) {
         }
         return transitionLock.withLock {
             when {
-                !isCurrent(request) -> {
-                    host.log("[VPN-TRACE] runStart skipped: not current in transitionLock")
-                    StartFailure.SERVICE
-                }
-                host.runtime?.vpn == options.enable -> {
-                    host.log("[VPN-TRACE] runStart already running vpn=${options.enable}")
-                    null
-                }
+                !isCurrent(request) -> StartFailure.SERVICE
+                host.runtime?.vpn == options.enable -> null
                 else -> transitioning(RunState.STARTING) {
-                    val started = host.startService(withLocalNetworkFallback(options))
-                    val stillCurrent = isCurrent(request)
-                    host.log("[VPN-TRACE] runStart startService=$started stillCurrent=$stillCurrent")
-                    StartFailure.SERVICE.takeUnless { started && stillCurrent }
+                    StartFailure.SERVICE.takeUnless {
+                        host.startService(withLocalNetworkFallback(options)) && isCurrent(request)
+                    }
                 }
             }
         }
@@ -302,7 +279,6 @@ internal class ServiceStateMachine(private val host: ServiceStateHost) {
     // Flutter's startListener and the native quickSetup both open the Core's listeners before any
     // service exists to answer for them, and Flutter may be gone before it hears of the failure.
     private suspend fun reconcileStopped() = transitionLock.withLock {
-        host.log("[VPN-TRACE] reconcileStopped runRequested=$isRunRequested runtime=${host.runtime != null}")
         when {
             isRunRequested -> publish()
             host.runtime != null -> stopLocked()
@@ -314,9 +290,7 @@ internal class ServiceStateMachine(private val host: ServiceStateHost) {
     }
 
     private suspend fun stop(request: RunRequest): Boolean = transitionLock.withLock {
-        val current = isCurrent(request)
-        host.log("[VPN-TRACE] stop isCurrent=$current runtime=${host.runtime != null}")
-        if (!current) {
+        if (!isCurrent(request)) {
             return@withLock false
         }
         abandonVpnPreparation()

@@ -236,14 +236,6 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
 
   Future<void> _stop() async {
     final id = _request;
-    vpnTrace.record(
-      'ui.speedtest_stop',
-      fields: {
-        'isStart': ref.read(isStartProvider),
-        'proxy': _proxy,
-        'requestId': id,
-      },
-    );
     _request = null;
     setState(() {
       _testing = false;

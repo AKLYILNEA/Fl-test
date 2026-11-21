@@ -5,7 +5,6 @@ import com.follow.clash.ServiceState
 import com.follow.clash.StartFailure
 import com.follow.clash.common.Components
 import com.follow.clash.common.GlobalState
-import com.follow.clash.common.VpnTrace
 import com.follow.clash.core.Core
 import com.follow.clash.models.SharedState
 import com.follow.clash.service.NetworkObserver
@@ -28,7 +27,6 @@ class ServicePlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
     private lateinit var scope: CoroutineScope
     private val gson = Gson()
     private var commandRevision = 0
-    private val traceSink: (String) -> Unit = ::sendTrace
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -51,11 +49,6 @@ class ServicePlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
     }
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
-        VpnTrace.detachSink(traceSink)
-        VpnTrace.record(
-            "plugin.detach",
-            "rev=$commandRevision runtime=${ServiceController.runtime != null} runRequested=${ServiceState.isRunRequested}",
-        )
         channel.setMethodCallHandler(null)
         coreChannel.setMethodCallHandler(null)
         scope.cancel()
@@ -83,11 +76,6 @@ class ServicePlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
     }
 
     private fun initialize(result: MethodChannel.Result) {
-        VpnTrace.record(
-            "plugin.init",
-            "rev=$commandRevision runtime=${ServiceController.runtime != null} runRequested=${ServiceState.isRunRequested}",
-        )
-        VpnTrace.attachSink(traceSink)
         NetworkObserver.start()
         ServiceController.setEventListener(::sendEvent)
             .onSuccess { result.success("") }
@@ -95,10 +83,6 @@ class ServicePlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
     }
 
     private fun shutdown(result: MethodChannel.Result) {
-        VpnTrace.record(
-            "plugin.shutdown",
-            "rev=$commandRevision runtime=${ServiceController.runtime != null} runRequested=${ServiceState.isRunRequested}",
-        )
         ServiceController.setEventListener(null)
         result.success(true)
     }
@@ -119,10 +103,6 @@ class ServicePlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
     private fun getRunningService(result: MethodChannel.Result) {
         scope.launch {
             val runtime = ServiceState.awaitRunningService()
-            VpnTrace.record(
-                "plugin.get_running_service",
-                "hasRuntime=${runtime != null} vpn=${runtime?.vpn} startedAt=${runtime?.startedAtMillis} runRequested=${ServiceState.isRunRequested}",
-            )
             result.success(runtime?.let {
                 mapOf(
                     "startedAt" to it.startedAtMillis,
@@ -149,20 +129,12 @@ class ServicePlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
 
     private fun start(call: MethodCall, result: MethodChannel.Result) {
         commandRevision = call.arguments as? Int ?: commandRevision
-        VpnTrace.record(
-            "plugin.start",
-            "rev=$commandRevision runtime=${ServiceController.runtime != null} runRequested=${ServiceState.isRunRequested}",
-        )
         ServiceState.requestStart()
         result.success(true)
     }
 
     private fun stop(call: MethodCall, result: MethodChannel.Result) {
         commandRevision = call.arguments as? Int ?: commandRevision
-        VpnTrace.record(
-            "plugin.stop",
-            "rev=$commandRevision runtime=${ServiceController.runtime != null} runRequested=${ServiceState.isRunRequested}",
-        )
         ServiceState.requestStop()
         result.success(true)
     }
@@ -170,23 +142,12 @@ class ServicePlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
     // Read on the platform thread, where start and stop arrive: revision and intent are one instant.
     internal fun notifyStopped(failure: StartFailure?) {
         scope.launch(Dispatchers.Main) {
-            val runRequested = ServiceState.isRunRequested
-            VpnTrace.record(
-                "plugin.notify_stopped",
-                "rev=$commandRevision failure=${failure?.code} runRequested=$runRequested willSend=${!runRequested}",
-            )
-            if (!runRequested) {
+            if (!ServiceState.isRunRequested) {
                 channel.invokeMethod(
                     "stopped",
                     mapOf("revision" to commandRevision, "failure" to failure?.code),
                 )
             }
-        }
-    }
-
-    private fun sendTrace(line: String) {
-        scope.launch(Dispatchers.Main) {
-            runCatching { channel.invokeMethod("trace", line) }
         }
     }
 
