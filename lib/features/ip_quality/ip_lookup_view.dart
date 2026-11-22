@@ -22,6 +22,81 @@ import 'risk_view.dart';
 const _wideLeftFlex = 9;
 const _wideRightFlex = 13;
 const _wideCardGap = 12.0;
+const _wideMinLeftWidth = 228.0;
+const _flagCardHorizontalPadding = 20.0;
+const _flagPillSpacing = 6.0;
+const _flagPillHorizontalPadding = 9.0;
+const _flagPillIconGap = 6.0;
+
+double _measureSingleLineFlagsCardWidth(BuildContext context, IpRisk risk) {
+  final l = context.appLocalizations;
+  final textDirection = Directionality.of(context);
+  final textScaler = MediaQuery.textScalerOf(context);
+  final locale = Localizations.maybeLocaleOf(context);
+
+  double measurePill(String label, {required bool emphasized, required double iconSize}) {
+    final painter = TextPainter(
+      text: TextSpan(
+        text: label,
+        style: AppTextStyle.caption1.of(context, emphasized: emphasized),
+      ),
+      textDirection: textDirection,
+      textScaler: textScaler,
+      locale: locale,
+      maxLines: 1,
+    )..layout();
+    final width =
+        _flagPillHorizontalPadding * 2 +
+        iconSize +
+        _flagPillIconGap +
+        painter.width.ceilToDouble();
+    painter.dispose();
+    return width;
+  }
+
+  var maxRowWidth = 0.0;
+  for (final group in IpRiskGroup.values) {
+    final groupChecks = risk.checks.where((c) => c.group == group).toList();
+    if (groupChecks.isEmpty) continue;
+    final homeBroadband =
+        risk.isHomeBroadband && group == IpRiskGroup.datacenter;
+    final pillWidths = <double>[
+      if (homeBroadband)
+        measurePill(l.ipRiskHomeBroadband, emphasized: true, iconSize: 13.0)
+      else
+        for (final check in groupChecks)
+          measurePill(
+            riskCheckLabel(context, check.name),
+            emphasized: check.hit == true,
+            iconSize: check.hit == false ? 11.0 : 13.0,
+          ),
+    ];
+    final rowWidth =
+        pillWidths.fold<double>(0.0, (sum, w) => sum + w) +
+        math.max(0, pillWidths.length - 1) * _flagPillSpacing;
+    if (rowWidth > maxRowWidth) {
+      maxRowWidth = rowWidth;
+    }
+  }
+  return maxRowWidth + _flagCardHorizontalPadding * 2 + 2.0;
+}
+
+({double left, double right}) _wideColumnWidths(
+  BuildContext context,
+  double contentWidth,
+  IpRisk risk,
+) {
+  final usable = math.max(0.0, contentWidth - _wideCardGap);
+  final defaultRight =
+      usable * _wideRightFlex / (_wideLeftFlex + _wideRightFlex);
+  if (risk.checks.isEmpty) {
+    return (left: usable - defaultRight, right: defaultRight);
+  }
+  final requiredRight = _measureSingleLineFlagsCardWidth(context, risk);
+  final maxRight = math.max(defaultRight, usable - _wideMinLeftWidth);
+  final right = requiredRight.clamp(defaultRight, maxRight);
+  return (left: usable - right, right: right);
+}
 
 class IpLookupView extends ConsumerStatefulWidget {
   const IpLookupView({super.key, this.initialIp = ''});
@@ -251,6 +326,10 @@ class _IpLookupViewState extends ConsumerState<IpLookupView>
                     child: _buildContent(
                       context,
                       isWide: isWide,
+                      contentWidth: math.max(
+                        0.0,
+                        constraints.maxWidth - sidePadding * 2,
+                      ),
                       activeIp: activeIp,
                       isOutbound: isOutbound,
                       hidden: hidden,
@@ -277,6 +356,7 @@ class _IpLookupViewState extends ConsumerState<IpLookupView>
   Widget _buildContent(
     BuildContext context, {
     required bool isWide,
+    required double contentWidth,
     required String activeIp,
     required bool isOutbound,
     required bool hidden,
@@ -297,6 +377,9 @@ class _IpLookupViewState extends ConsumerState<IpLookupView>
 
     if (!isLoading && risk != null && attribution != null) {
       final hasChecks = risk.checks.isNotEmpty;
+      final wideWidths = isWide
+          ? _wideColumnWidths(context, contentWidth, risk)
+          : null;
       final heroCard = RepaintBoundary(
         child: _IpRiskHeroCard(
           ip: activeIp,
@@ -312,6 +395,8 @@ class _IpLookupViewState extends ConsumerState<IpLookupView>
           attribution: attribution,
           hidden: hidden,
           isWide: isWide,
+          wideLeftWidth: wideWidths?.left,
+          wideRightWidth: wideWidths?.right,
         ),
       );
       final flagsCard = hasChecks
@@ -324,14 +409,14 @@ class _IpLookupViewState extends ConsumerState<IpLookupView>
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (isWide) ...[
-            if (flagsCard != null)
+            if (flagsCard != null && wideWidths != null)
               IntrinsicHeight(
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Expanded(flex: _wideLeftFlex, child: heroCard),
+                    SizedBox(width: wideWidths.left, child: heroCard),
                     const SizedBox(width: _wideCardGap),
-                    Expanded(flex: _wideRightFlex, child: flagsCard),
+                    SizedBox(width: wideWidths.right, child: flagsCard),
                   ],
                 ),
               )
@@ -858,12 +943,16 @@ class _IpAttributionCard extends StatelessWidget {
     required this.attribution,
     required this.hidden,
     required this.isWide,
+    this.wideLeftWidth,
+    this.wideRightWidth,
   });
 
   final IpRisk risk;
   final IpLocateInfo attribution;
   final bool hidden;
   final bool isWide;
+  final double? wideLeftWidth;
+  final double? wideRightWidth;
 
   Widget _field(BuildContext context, String label, Widget value) {
     final cs = context.colorScheme;
@@ -1149,18 +1238,32 @@ class _IpAttributionCard extends StatelessWidget {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Expanded(
-                        flex: _wideLeftFlex,
-                        child: Padding(
-                          padding: const EdgeInsetsDirectional.fromSTEB(
-                            20,
-                            18,
-                            15,
-                            18,
+                      if (wideLeftWidth != null)
+                        SizedBox(
+                          width: wideLeftWidth,
+                          child: Padding(
+                            padding: const EdgeInsetsDirectional.fromSTEB(
+                              20,
+                              18,
+                              15,
+                              18,
+                            ),
+                            child: leftZone,
                           ),
-                          child: leftZone,
+                        )
+                      else
+                        Expanded(
+                          flex: _wideLeftFlex,
+                          child: Padding(
+                            padding: const EdgeInsetsDirectional.fromSTEB(
+                              20,
+                              18,
+                              15,
+                              18,
+                            ),
+                            child: leftZone,
+                          ),
                         ),
-                      ),
                       SizedBox(
                         width: _wideCardGap,
                         child: OverflowBox(
@@ -1176,18 +1279,32 @@ class _IpAttributionCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      Expanded(
-                        flex: _wideRightFlex,
-                        child: Padding(
-                          padding: const EdgeInsetsDirectional.fromSTEB(
-                            15,
-                            18,
-                            20,
-                            18,
+                      if (wideRightWidth != null)
+                        SizedBox(
+                          width: wideRightWidth,
+                          child: Padding(
+                            padding: const EdgeInsetsDirectional.fromSTEB(
+                              15,
+                              18,
+                              20,
+                              18,
+                            ),
+                            child: rightZone,
                           ),
-                          child: rightZone,
+                        )
+                      else
+                        Expanded(
+                          flex: _wideRightFlex,
+                          child: Padding(
+                            padding: const EdgeInsetsDirectional.fromSTEB(
+                              15,
+                              18,
+                              20,
+                              18,
+                            ),
+                            child: rightZone,
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),
@@ -1465,7 +1582,6 @@ class _IpFlagsCard extends StatelessWidget {
               checks: risk.checks.where((c) => c.group == group).toList(),
               homeBroadband:
                   risk.isHomeBroadband && group == IpRiskGroup.datacenter,
-              singleLine: isWide,
             ),
           ],
         ],
@@ -1479,13 +1595,11 @@ class _FlagGroupRow extends StatelessWidget {
     required this.title,
     required this.checks,
     required this.homeBroadband,
-    required this.singleLine,
   });
 
   final String title;
   final List<IpRiskCheck> checks;
   final bool homeBroadband;
-  final bool singleLine;
 
   @override
   Widget build(BuildContext context) {
@@ -1511,38 +1625,23 @@ class _FlagGroupRow extends StatelessWidget {
           .of(context, emphasized: true)
           .copyWith(color: cs.onSurfaceVariant),
     );
-    final pillWidgets = <Widget>[
-      if (homeBroadband)
-        _LookupFlagPill(
-          check: const IpRiskCheck(
-            group: IpRiskGroup.datacenter,
-            name: 'Home Broadband',
-            hit: false,
-          ),
-          home: true,
-          singleLine: singleLine,
-        )
-      else
-        for (final check in checks)
-          _LookupFlagPill(check: check, singleLine: singleLine),
-    ];
-    final Widget pills = singleLine
-        ? ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 26),
-            child: Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: AlignmentDirectional.centerStart,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  spacing: 5,
-                  children: pillWidgets,
-                ),
-              ),
+    final pills = Wrap(
+      spacing: _flagPillSpacing,
+      runSpacing: _flagPillSpacing,
+      children: [
+        if (homeBroadband)
+          const _LookupFlagPill(
+            check: IpRiskCheck(
+              group: IpRiskGroup.datacenter,
+              name: 'Home Broadband',
+              hit: false,
             ),
+            home: true,
           )
-        : Wrap(spacing: 6, runSpacing: 6, children: pillWidgets);
+        else
+          for (final check in checks) _LookupFlagPill(check: check),
+      ],
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1563,15 +1662,10 @@ class _FlagGroupRow extends StatelessWidget {
 }
 
 class _LookupFlagPill extends StatelessWidget {
-  const _LookupFlagPill({
-    required this.check,
-    this.home = false,
-    this.singleLine = false,
-  });
+  const _LookupFlagPill({required this.check, this.home = false});
 
   final IpRiskCheck check;
   final bool home;
-  final bool singleLine;
 
   @override
   Widget build(BuildContext context) {
@@ -1597,20 +1691,10 @@ class _LookupFlagPill extends StatelessWidget {
             ),
             child: const SizedBox.square(dimension: 11),
           );
-    final label = Text(
-      home
-          ? context.appLocalizations.ipRiskHomeBroadband
-          : riskCheckLabel(context, check.name),
-      maxLines: singleLine ? 1 : null,
-      softWrap: !singleLine,
-      style: AppTextStyle.caption1
-          .of(context, emphasized: hit || home)
-          .copyWith(color: color),
-    );
     return Container(
       constraints: const BoxConstraints(minHeight: 26),
-      padding: EdgeInsets.symmetric(
-        horizontal: singleLine ? 8 : 9,
+      padding: const EdgeInsets.symmetric(
+        horizontal: _flagPillHorizontalPadding,
         vertical: 3,
       ),
       decoration: ShapeDecoration(
@@ -1619,8 +1703,20 @@ class _LookupFlagPill extends StatelessWidget {
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
-        spacing: singleLine ? 5 : 6,
-        children: [leading, if (singleLine) label else Flexible(child: label)],
+        spacing: _flagPillIconGap,
+        children: [
+          leading,
+          Flexible(
+            child: Text(
+              home
+                  ? context.appLocalizations.ipRiskHomeBroadband
+                  : riskCheckLabel(context, check.name),
+              style: AppTextStyle.caption1
+                  .of(context, emphasized: hit || home)
+                  .copyWith(color: color),
+            ),
+          ),
+        ],
       ),
     );
   }

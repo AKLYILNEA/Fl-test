@@ -432,7 +432,7 @@ void main() {
         ],
       );
 
-      for (final width in [760.0, 800.0, 1080.0]) {
+      for (final width in [900.0, 960.0, 1080.0]) {
         tester.view.physicalSize = Size(width, 760);
         tester.view.devicePixelRatio = 1;
         addTearDown(tester.view.resetPhysicalSize);

@@ -232,7 +232,8 @@ void main() {
         );
         container.read(runTimeProvider.notifier).value = running ? 1 : null;
         await tester.pump();
-        expect(find.text('0 \u00b7 Low risk'), findsOneWidget);
+        expect(find.text('0/100'), findsOneWidget);
+        expect(find.text('Low risk'), findsOneWidget);
         expect(find.byType(RiskLevelBadge), findsNothing);
         expect(tester.takeException(), isNull);
       });
@@ -243,7 +244,8 @@ void main() {
 
       expect(find.text(_ip), findsOneWidget);
       expect(find.text('GB'), findsOneWidget);
-      expect(find.text('1 \u00b7 Low risk'), findsOneWidget);
+      expect(find.text('1/100'), findsOneWidget);
+      expect(find.text('Low risk'), findsOneWidget);
       expect(_chip(tester, 'Not running').tone, DashboardChipTone.idle);
       expect(find.text('Fraud score'), findsOneWidget);
       expect(find.text('Type'), findsNothing);
@@ -277,18 +279,35 @@ void main() {
     });
 
     testWidgets(
-      'shows a neutral score and separator beside colored risk text',
+      'shows colored score with muted denominator and outlined risk pill aligned with runtime',
       (tester) async {
         const risk = IpRisk(ip: _ip, score: 50, level: IpRiskLevel.medium);
         await tester.pumpWidget(_app((_, _) async => risk));
         await tester.pump();
-        final context = tester.element(find.byType(CurrentOutboundCard));
-        final score = tester.widget<Text>(find.text('50 \u00b7 Medium risk'));
-        expect(score.style!.color, context.colorScheme.onSurface);
+        final scoreColor = riskScoreColor(50);
+        final score = tester.widget<Text>(find.text('50/100'));
         final spans = (score.textSpan! as TextSpan).children!.cast<TextSpan>();
-        expect(spans.first.text, '50 \u00b7 ');
-        expect(spans.first.style?.color, isNull);
-        expect(spans.last.style!.color, riskScoreColor(50));
+        expect(spans.first.text, '50');
+        expect(spans.first.style!.color, scoreColor);
+        expect(spans.last.text, '/100');
+        expect(spans.last.style!.color, isNot(scoreColor));
+        final level = tester.widget<Text>(find.text('Medium risk'));
+        expect(level.style!.color, scoreColor);
+        final pill = tester.widget<DecoratedBox>(
+          find.ancestor(
+            of: find.text('Medium risk'),
+            matching: find.byType(DecoratedBox),
+          ).first,
+        );
+        final decoration = pill.decoration as ShapeDecoration;
+        expect(decoration.color, isNull);
+        final border = decoration.shape as RoundedSuperellipseBorder;
+        expect(border.side.width, 1);
+        expect(border.side.color.toARGB32() & 0x00FFFFFF, scoreColor.toARGB32() & 0x00FFFFFF);
+        final runtimeRect = tester.getRect(find.text('00:00:00'));
+        final scoreRect = tester.getRect(find.text('50/100'));
+        expect(scoreRect.top, closeTo(runtimeRect.top, 0.5));
+        expect(scoreRect.height, closeTo(runtimeRect.height, 0.5));
         expect(find.byType(RiskLevelBadge), findsNothing);
         expect(find.text('Type'), findsNothing);
         expect(tester.takeException(), isNull);
@@ -339,7 +358,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(SkeletonPill), findsNothing);
-      expect(find.text('1 \u00b7 Low risk'), findsOneWidget);
+      expect(find.text('1/100'), findsOneWidget);
+      expect(find.text('Low risk'), findsOneWidget);
       expect(_cloverTurn(tester) % (math.pi / 2), closeTo(0, 1e-9));
       expect(tester.widget<PressRegion>(_clover()).onTap, isNotNull);
     });
@@ -421,7 +441,8 @@ void main() {
       await tester.pump();
 
       expect(find.text(_ip), findsOneWidget);
-      expect(find.text('1 \u00b7 Low risk'), findsOneWidget);
+      expect(find.text('1/100'), findsOneWidget);
+      expect(find.text('Low risk'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 

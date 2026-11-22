@@ -263,7 +263,7 @@ class _OutboundMetrics {
       padding: EdgeInsetsDirectional.fromSTEB(20, 18, 16, 18),
       gap: 10,
       ipTop: 12,
-      cellGap: 24,
+      cellGap: 18,
       badgeSize: 48,
       ip: AppTextStyle.title2,
       buttonSize: 88,
@@ -362,17 +362,14 @@ class _ExitRow extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Transform.translate(
-                offset: const Offset(0, -2.5),
-                child: SizedBox(
-                  height: ipHeight,
-                  child: Align(
-                    alignment: AlignmentDirectional.centerStart,
-                    child: ip,
-                  ),
+              SizedBox(
+                height: ipHeight,
+                child: Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: ip,
                 ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 3),
               _IpLocationSubText(
                 quality: quality,
                 loading: loading,
@@ -423,13 +420,16 @@ class _IpLocationSubText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = _cellStyle(context).copyWith(
-      fontSize: 14,
-      height: 1.1,
-      color: active
-          ? context.colorScheme.onSurfaceVariant
-          : context.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
-    );
+    final isDesktop = DashboardDensityScope.of(context).isDesktop;
+    final style = AppTextStyle.footnote
+        .of(context, emphasized: true)
+        .copyWith(
+          fontSize: isDesktop ? 13.5 : 13,
+          height: 1.2,
+          color: active
+              ? context.colorScheme.onSurfaceVariant
+              : context.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+        );
     final subHeight = MediaQuery.textScalerOf(context).scale(18.0);
     return SizedBox(
       height: subHeight,
@@ -606,30 +606,13 @@ class _Cells extends StatelessWidget {
     final appLocalizations = context.appLocalizations;
     final risk = quality;
     final Widget scoreValue = risk != null
-        ? FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: AlignmentDirectional.centerStart,
-            child: Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(text: '${risk.displayScore} \u00b7 '),
-                  TextSpan(
-                    text: risk.levelLabel(context),
-                    style: TextStyle(color: riskScoreColor(risk.displayScore)),
-                  ),
-                ],
-              ),
-              maxLines: 1,
-              style: _cellStyle(
-                context,
-              ).copyWith(color: context.colorScheme.onSurface),
-            ),
-          )
+        ? _FraudScoreValue(risk: risk)
         : loading
-        ? SkeletonText(width: 48, style: _cellStyle(context))
+        ? SkeletonText(width: 56, style: _cellStyle(context))
         : const _Placeholder();
 
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _RunTimeCell(active: active),
         SizedBox(width: gap),
@@ -637,6 +620,76 @@ class _Cells extends StatelessWidget {
           child: _Cell(label: appLocalizations.ipRiskScore, value: scoreValue),
         ),
       ],
+    );
+  }
+}
+
+class _FraudScoreValue extends StatelessWidget {
+  const _FraudScoreValue({required this.risk});
+
+  final IpRisk risk;
+
+  @override
+  Widget build(BuildContext context) {
+    final scoreColor = riskScoreColor(risk.displayScore);
+    final scoreStyle = _cellStyle(context);
+    final colorScheme = context.colorScheme;
+    final isDark = colorScheme.brightness == Brightness.dark;
+    final denominatorStyle = scoreStyle.copyWith(
+      fontSize: 11.5,
+      fontWeight: FontWeight.w600,
+      height: 1.0,
+      letterSpacing: 0,
+      color: colorScheme.onSurfaceVariant.withValues(alpha: 0.72),
+    );
+    final pillTextStyle = AppTextStyle.caption2
+        .of(context, emphasized: true)
+        .copyWith(fontWeight: FontWeight.w700, color: scoreColor);
+
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: AlignmentDirectional.centerStart,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: '${risk.displayScore}',
+                  style: scoreStyle.copyWith(color: scoreColor),
+                ),
+                TextSpan(text: '/100', style: denominatorStyle),
+              ],
+            ),
+            maxLines: 1,
+            style: scoreStyle,
+          ),
+          const SizedBox(width: 8),
+          DecoratedBox(
+            decoration: ShapeDecoration(
+              shape: AppShape.full.copyWith(
+                side: BorderSide(
+                  color: scoreColor.withValues(alpha: isDark ? 0.42 : 0.36),
+                  width: 1,
+                ),
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 7.5,
+                vertical: 3,
+              ),
+              child: Text(
+                risk.levelLabel(context),
+                maxLines: 1,
+                style: pillTextStyle,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -649,7 +702,7 @@ class _Cell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cellHeight = MediaQuery.textScalerOf(context).scale(20.0);
+    final cellHeight = MediaQuery.textScalerOf(context).scale(22.0);
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -660,7 +713,7 @@ class _Cell extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: DashboardText.label(context),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: 3),
         SizedBox(
           height: cellHeight,
           child: Align(
@@ -673,8 +726,19 @@ class _Cell extends StatelessWidget {
   }
 }
 
-TextStyle _cellStyle(BuildContext context) =>
-    AppTextStyle.subheadline.of(context, emphasized: true).toTabular;
+TextStyle _cellStyle(BuildContext context) {
+  final isDesktop = DashboardDensityScope.of(context).isDesktop;
+  final size = isDesktop ? 16.5 : 15.5;
+  return AppTextStyle.callout
+      .of(context, emphasized: true)
+      .toTabular
+      .copyWith(
+        fontSize: size,
+        fontWeight: FontWeight.w700,
+        height: 22 / size,
+        letterSpacing: -0.01 * size,
+      );
+}
 
 class _CellText extends StatelessWidget {
   const _CellText(this.text);
