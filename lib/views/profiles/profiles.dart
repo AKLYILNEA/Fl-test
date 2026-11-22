@@ -258,6 +258,7 @@ class _ProfilesContentState extends ConsumerState<_ProfilesContent> {
                     key: ValueKey('hero-${activeProfile.id}'),
                     profile: activeProfile,
                     isWide: isWide,
+                    spacing: widget.spacing,
                   ),
                 ),
               ),

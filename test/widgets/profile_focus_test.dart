@@ -261,6 +261,19 @@ void main() {
       ]) {
         expect(labelY(label), circleY);
       }
+
+      // Landscape renders two equal-width independent cards and aligns top 3
+      // primary seams with bottom 6 secondary seams (0px drift).
+      Rect tileRect(String label) => tester.getRect(
+        find.ancestor(
+          of: find.descendant(of: pass, matching: find.text(label)),
+          matching: find.byType(PressSurface),
+        ),
+      );
+      expect(tileRect(l.sync).right, moreOrLessEquals(tileRect(l.preview).right, epsilon: 0.5));
+      expect(tileRect(l.edit).left, moreOrLessEquals(tileRect(l.copyLink).left, epsilon: 0.5));
+      expect(tileRect(l.edit).right, moreOrLessEquals(tileRect(l.qrcode).right, epsilon: 0.5));
+      expect(tileRect(l.extend).left, moreOrLessEquals(tileRect(l.exportFile).left, epsilon: 0.5));
       expect(tester.takeException(), isNull);
 
       // Non-active long-term remote profile still shows traffic progress ring.
@@ -338,6 +351,18 @@ void main() {
       expect(bottomY, greaterThan(topY));
       expect(labelY(l.preview), bottomY);
       expect(labelY(l.delete), bottomY);
+
+      Rect tileRect(String label) => tester.getRect(
+        find.ancestor(
+          of: find.descendant(of: pass, matching: find.text(label)),
+          matching: find.byType(PressSurface),
+        ),
+      );
+      // Custom top row uses 2:1 span so edit aligns with preview's right edge
+      // and rename aligns with delete.
+      expect(tileRect(l.edit).right, moreOrLessEquals(tileRect(l.preview).right, epsilon: 0.5));
+      expect(tileRect(l.rename).left, moreOrLessEquals(tileRect(l.delete).left, epsilon: 0.5));
+      expect(tileRect(l.rename).right, moreOrLessEquals(tileRect(l.delete).right, epsilon: 0.5));
 
       final ctx = tester.element(pass);
       expect(

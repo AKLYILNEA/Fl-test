@@ -7,13 +7,14 @@ import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/ui/icons/icons.dart';
-import 'package:fl_clash/ui/vertical_ticket_perforation.dart';
 import 'package:fl_clash/views/dashboard/style.dart';
 import 'package:fl_clash/views/dashboard/widgets/profile_detail.dart';
 import 'package:fl_clash/views/dashboard/widgets/profiles.dart';
 import 'package:fl_clash/views/profiles/custom/custom.dart';
 import 'package:fl_clash/views/profiles/extend/extend.dart';
 import 'package:fl_clash/widgets/widgets.dart';
+import 'package:flutter/foundation.dart' show listEquals;
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -253,22 +254,25 @@ List<PopupMenuItem> buildProfileMenuItems(
   ];
 }
 
-/// Active profile hero styled as a boarding pass ("飞机票"):
-/// - Portrait (`!isWide`): vertical pass with top info + 2 circular actions
-///   (primary + `⋯` PopupAnchor morph menu), horizontal perforated tear-line
-///   with semicircular notches, and bottom traffic wavy bar or 3 stat tiles.
-/// - Landscape (`isWide`): horizontal pass with left ticket body, vertical
-///   perforated tear-line with top/bottom semicircular notches, and right stub
-///   exposing all profile actions directly as a 2-row circular button matrix.
+/// Active profile hero:
+/// - Portrait (`!isWide`): vertical boarding pass with top info + 2 circular
+///   actions (primary + `⋯` PopupAnchor morph menu), horizontal perforated
+///   tear-line with semicircular notches, and bottom traffic wavy bar or 3
+///   stat tiles.
+/// - Landscape (`isWide`): two independent 50/50 rounded superellipse cards
+///   separated by [spacing] — left info & metrics card paired with right
+///   2-row aligned action grid (unified 8dp horizontal gap, 14dp vertical gap).
 class ProfileBoardingPass extends ConsumerStatefulWidget {
   const ProfileBoardingPass({
     super.key,
     required this.profile,
     required this.isWide,
+    this.spacing = 16.0,
   });
 
   final Profile profile;
   final bool isWide;
+  final double spacing;
 
   @override
   ConsumerState<ProfileBoardingPass> createState() =>
@@ -718,6 +722,7 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
             label: l.edit,
             accent: accent,
             tinted: true,
+            span: 2,
             onPressed: () => handleEditProfile(context, profile),
           ),
           _PillAction(
@@ -756,21 +761,21 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
     bool isUpdating,
   ) {
     final plan = _landscapeStubPlan(context, profile, isUpdating);
-    final secondaryGap = plan.actions.length >= 6 ? 6.0 : 8.0;
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
+        _GridSpanRow(
+          spans: [for (final pill in plan.pills) pill.span],
           spacing: 8,
+          textDirection: Directionality.of(context),
           children: [
-            for (final pill in plan.pills)
-              Expanded(child: _PrimaryActionTile(action: pill)),
+            for (final pill in plan.pills) _PrimaryActionTile(action: pill),
           ],
         ),
         const SizedBox(height: 14),
         Row(
-          spacing: secondaryGap,
+          spacing: 8,
           children: [
             for (final action in plan.actions)
               Expanded(child: _SecondaryActionTile(action: action)),
@@ -792,57 +797,55 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
     final stats = _statsOf(providers);
     final usage = profileUsageOf(profile);
     final colorScheme = context.colorScheme;
-    final isDark = colorScheme.brightness == Brightness.dark;
     final cardColor = SurfaceLevel.card.colorOf(colorScheme);
-    final pageColor = SurfaceLevel.page.colorOf(colorScheme);
-    final dashColor = colorScheme.onSurface.withValues(
-      alpha: isDark ? 0.14 : 0.11,
-    );
     final menuItems = buildProfileMenuItems(context, ref, profile);
 
     final bodyMetrics = usage != null
         ? _buildUsageStub(context, profile, usage, stats)
         : _buildStatsStub(context, profile, stats, customGroupsCount);
 
+    Widget cardShell({required Widget child}) {
+      return ClipPath(
+        clipper: ShapeBorderClipper(shape: AppShape.all(AppCorner.xl)),
+        child: ColoredBox(
+          color: cardColor,
+          child: SurfaceScope(level: SurfaceLevel.card, child: child),
+        ),
+      );
+    }
+
     final Widget passContent;
     if (widget.isWide) {
       passContent = IntrinsicHeight(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: widget.spacing,
           children: [
             Expanded(
-              flex: 12,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 20, 10, 20),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildHeaderInfo(context, profile),
-                    const SizedBox(height: 14),
-                    bodyMetrics,
-                  ],
+              child: cardShell(
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildHeaderInfo(context, profile),
+                      const SizedBox(height: 14),
+                      bodyMetrics,
+                    ],
+                  ),
                 ),
-              ),
-            ),
-            SizedBox(
-              width: 20,
-              child: CustomPaint(
-                painter: VerticalTicketPerforationPainter(
-                  notchColor: pageColor,
-                  dashColor: dashColor,
-                ),
-                child: const SizedBox.expand(),
               ),
             ),
             Expanded(
-              flex: 11,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(10, 20, 20, 20),
-                child: _buildLandscapeActionMatrix(
-                  context,
-                  profile,
-                  isUpdating,
+              child: cardShell(
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: _buildLandscapeActionMatrix(
+                    context,
+                    profile,
+                    isUpdating,
+                  ),
                 ),
               ),
             ),
@@ -850,53 +853,49 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
         ),
       );
     } else {
-      passContent = Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              spacing: 10,
-              children: [
-                Expanded(child: _buildHeaderInfo(context, profile)),
-                _buildPortraitActions(context, profile, isUpdating, menuItems),
-              ],
-            ),
-          ),
-          SizedBox(
-            height: 18,
-            child: CustomPaint(
-              painter: _HorizontalPerforationPainter(
-                notchColor: pageColor,
-                dashColor: dashColor,
+      final isDark = colorScheme.brightness == Brightness.dark;
+      final pageColor = SurfaceLevel.page.colorOf(colorScheme);
+      final dashColor = colorScheme.onSurface.withValues(
+        alpha: isDark ? 0.14 : 0.11,
+      );
+      passContent = cardShell(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                spacing: 10,
+                children: [
+                  Expanded(child: _buildHeaderInfo(context, profile)),
+                  _buildPortraitActions(context, profile, isUpdating, menuItems),
+                ],
               ),
-              child: const SizedBox.expand(),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-            child: bodyMetrics,
-          ),
-        ],
+            SizedBox(
+              height: 18,
+              child: CustomPaint(
+                painter: _HorizontalPerforationPainter(
+                  notchColor: pageColor,
+                  dashColor: dashColor,
+                ),
+                child: const SizedBox.expand(),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              child: bodyMetrics,
+            ),
+          ],
+        ),
       );
     }
 
     return ContextMenuRegion(
       menuItems: isUpdating ? null : menuItems,
-      child: Focus(
-        child: ClipPath(
-          clipper: ShapeBorderClipper(shape: AppShape.all(AppCorner.xl)),
-          child: ColoredBox(
-            color: cardColor,
-            child: SurfaceScope(
-              level: SurfaceLevel.card,
-              child: passContent,
-            ),
-          ),
-        ),
-      ),
+      child: Focus(child: passContent),
     );
   }
 }
@@ -908,6 +907,7 @@ class _PillAction {
     required this.accent,
     required this.tinted,
     required this.onPressed,
+    this.span = 1,
     this.loading = false,
   });
 
@@ -916,7 +916,215 @@ class _PillAction {
   final Color accent;
   final bool tinted;
   final VoidCallback? onPressed;
+  final int span;
   final bool loading;
+}
+
+class _GridSpanRowParentData extends ContainerBoxParentData<RenderBox> {}
+
+/// Single-row grid whose items occupy integer column spans over an equal-unit
+/// track with uniform [spacing], so a `span: 2` item matches `2 * unit + spacing`
+/// exactly and works cleanly inside [IntrinsicHeight].
+class _GridSpanRow extends MultiChildRenderObjectWidget {
+  const _GridSpanRow({
+    required this.spans,
+    required this.spacing,
+    required this.textDirection,
+    required super.children,
+  }) : assert(spans.length == children.length);
+
+  final List<int> spans;
+  final double spacing;
+  final TextDirection textDirection;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) => _RenderGridSpanRow(
+    spans: spans,
+    spacing: spacing,
+    textDirection: textDirection,
+  );
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    _RenderGridSpanRow renderObject,
+  ) {
+    renderObject
+      ..spans = spans
+      ..spacing = spacing
+      ..textDirection = textDirection;
+  }
+}
+
+class _RenderGridSpanRow extends RenderBox
+    with
+        ContainerRenderObjectMixin<RenderBox, _GridSpanRowParentData>,
+        RenderBoxContainerDefaultsMixin<RenderBox, _GridSpanRowParentData> {
+  _RenderGridSpanRow({
+    required List<int> spans,
+    required double spacing,
+    required TextDirection textDirection,
+  }) : _spans = spans,
+       _spacing = spacing,
+       _textDirection = textDirection;
+
+  List<int> _spans;
+  List<int> get spans => _spans;
+  set spans(List<int> value) {
+    if (listEquals(_spans, value)) return;
+    _spans = value;
+    markNeedsLayout();
+  }
+
+  double _spacing;
+  double get spacing => _spacing;
+  set spacing(double value) {
+    if (_spacing == value) return;
+    _spacing = value;
+    markNeedsLayout();
+  }
+
+  TextDirection _textDirection;
+  TextDirection get textDirection => _textDirection;
+  set textDirection(TextDirection value) {
+    if (_textDirection == value) return;
+    _textDirection = value;
+    markNeedsLayout();
+  }
+
+  int get _totalUnits => _spans.fold(0, (sum, span) => sum + span);
+
+  double _widthForSpan(double totalWidth, int span) {
+    final units = _totalUnits;
+    if (units <= 0 || !totalWidth.isFinite) {
+      return 0;
+    }
+    final unitWidth = math.max(
+      0.0,
+      (totalWidth - (units - 1) * _spacing) / units,
+    );
+    return unitWidth * span + (span - 1) * _spacing;
+  }
+
+  @override
+  void setupParentData(RenderBox child) {
+    if (child.parentData is! _GridSpanRowParentData) {
+      child.parentData = _GridSpanRowParentData();
+    }
+  }
+
+  @override
+  double computeMinIntrinsicWidth(double height) {
+    var total = 0.0;
+    var count = 0;
+    var child = firstChild;
+    while (child != null) {
+      total += child.getMinIntrinsicWidth(height);
+      count++;
+      child = childAfter(child);
+    }
+    return count > 1 ? total + (count - 1) * _spacing : total;
+  }
+
+  @override
+  double computeMaxIntrinsicWidth(double height) {
+    var total = 0.0;
+    var count = 0;
+    var child = firstChild;
+    while (child != null) {
+      total += child.getMaxIntrinsicWidth(height);
+      count++;
+      child = childAfter(child);
+    }
+    return count > 1 ? total + (count - 1) * _spacing : total;
+  }
+
+  double _computeIntrinsicHeight(double width, {required bool maxMode}) {
+    var result = 0.0;
+    var index = 0;
+    var child = firstChild;
+    while (child != null) {
+      final span = index < _spans.length ? _spans[index] : 1;
+      final childWidth = width.isFinite
+          ? _widthForSpan(width, span)
+          : double.infinity;
+      final h = maxMode
+          ? child.getMaxIntrinsicHeight(childWidth)
+          : child.getMinIntrinsicHeight(childWidth);
+      if (h > result) {
+        result = h;
+      }
+      index++;
+      child = childAfter(child);
+    }
+    return result;
+  }
+
+  @override
+  double computeMinIntrinsicHeight(double width) =>
+      _computeIntrinsicHeight(width, maxMode: false);
+
+  @override
+  double computeMaxIntrinsicHeight(double width) =>
+      _computeIntrinsicHeight(width, maxMode: true);
+
+  @override
+  void performLayout() {
+    final totalWidth = constraints.maxWidth.isFinite
+        ? constraints.maxWidth
+        : computeMaxIntrinsicWidth(constraints.maxHeight);
+    var maxHeight = constraints.minHeight;
+    final widths = <double>[];
+    var index = 0;
+    var child = firstChild;
+    while (child != null) {
+      final span = index < _spans.length ? _spans[index] : 1;
+      final w = _widthForSpan(totalWidth, span);
+      widths.add(w);
+      child.layout(
+        BoxConstraints(
+          minWidth: w,
+          maxWidth: w,
+          minHeight: constraints.minHeight,
+          maxHeight: constraints.maxHeight,
+        ),
+        parentUsesSize: true,
+      );
+      if (child.size.height > maxHeight) {
+        maxHeight = child.size.height;
+      }
+      index++;
+      child = childAfter(child);
+    }
+    final resolvedHeight = constraints.constrainHeight(maxHeight);
+    final isRtl = _textDirection == TextDirection.rtl;
+    var cursor = isRtl ? totalWidth : 0.0;
+    index = 0;
+    child = firstChild;
+    while (child != null) {
+      final w = widths[index];
+      if (child.size.height != resolvedHeight) {
+        child.layout(
+          BoxConstraints.tightFor(width: w, height: resolvedHeight),
+          parentUsesSize: true,
+        );
+      }
+      final dx = isRtl ? cursor - w : cursor;
+      (child.parentData! as _GridSpanRowParentData).offset = Offset(dx, 0);
+      cursor = isRtl ? dx - _spacing : dx + w + _spacing;
+      index++;
+      child = childAfter(child);
+    }
+    size = constraints.constrain(Size(totalWidth, resolvedHeight));
+  }
+
+  @override
+  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) =>
+      defaultHitTestChildren(result, position: position);
+
+  @override
+  void paint(PaintingContext context, Offset offset) =>
+      defaultPaint(context, offset);
 }
 
 class _PrimaryActionTile extends StatelessWidget {
