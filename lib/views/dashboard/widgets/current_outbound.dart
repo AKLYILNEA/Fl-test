@@ -523,11 +523,11 @@ class _CountryCodePill extends StatelessWidget {
             maxLines: 1,
             style: AppTextStyle.caption1
                 .of(context, emphasized: true)
+                .toTabular
                 .copyWith(
-                  fontFamily: FontFamily.mapleMono.value,
                   fontSize: 10.5,
                   fontWeight: FontWeight.w700,
-                  letterSpacing: 0.6,
+                  letterSpacing: 0.4,
                   color: foreground,
                 ),
           ),
@@ -824,7 +824,6 @@ class _CountryBadgeMorphPainter extends CustomPainter {
     required this.ring,
   });
 
-  static const _glowOffset = Offset(0, 2);
   static const _glowBlur = 7.0;
 
   final double morphProgress;
@@ -844,19 +843,15 @@ class _CountryBadgeMorphPainter extends CustomPainter {
       ..scale(size.width, size.height)
       ..translate(-0.5, -0.5);
     if (glow.a > 0) {
-      canvas
-        ..save()
-        ..translate(_glowOffset.dx / size.width, _glowOffset.dy / size.height)
-        ..drawPath(
-          path,
-          Paint()
-            ..color = glow
-            ..maskFilter = MaskFilter.blur(
-              BlurStyle.normal,
-              _glowBlur / 2 / size.width,
-            ),
-        )
-        ..restore();
+      canvas.drawPath(
+        path,
+        Paint()
+          ..color = glow
+          ..maskFilter = MaskFilter.blur(
+            BlurStyle.normal,
+            _glowBlur / 2 / size.width,
+          ),
+      );
     }
     canvas.drawPath(path, Paint()..color = color);
     if (ring case final ring?) {
