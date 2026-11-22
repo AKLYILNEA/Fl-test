@@ -232,7 +232,7 @@ void main() {
         );
         container.read(runTimeProvider.notifier).value = running ? 1 : null;
         await tester.pump();
-        expect(find.text('0/100'), findsOneWidget);
+        expect(find.text('0 / 100'), findsOneWidget);
         expect(find.text('Low risk'), findsOneWidget);
         expect(find.byType(RiskLevelBadge), findsNothing);
         expect(tester.takeException(), isNull);
@@ -244,7 +244,7 @@ void main() {
 
       expect(find.text(_ip), findsOneWidget);
       expect(find.text('GB'), findsOneWidget);
-      expect(find.text('1/100'), findsOneWidget);
+      expect(find.text('1 / 100'), findsOneWidget);
       expect(find.text('Low risk'), findsOneWidget);
       expect(_chip(tester, 'Not running').tone, DashboardChipTone.idle);
       expect(find.text('Fraud score'), findsOneWidget);
@@ -285,11 +285,11 @@ void main() {
         await tester.pumpWidget(_app((_, _) async => risk));
         await tester.pump();
         final scoreColor = riskScoreColor(50);
-        final score = tester.widget<Text>(find.text('50/100'));
+        final score = tester.widget<Text>(find.text('50 / 100'));
         final spans = (score.textSpan! as TextSpan).children!.cast<TextSpan>();
         expect(spans.first.text, '50');
         expect(spans.first.style!.color, scoreColor);
-        expect(spans.last.text, '/100');
+        expect(spans.last.text, ' / 100');
         expect(spans.last.style!.color, isNot(scoreColor));
         final level = tester.widget<Text>(find.text('Medium risk'));
         expect(level.style!.color, scoreColor);
@@ -305,7 +305,7 @@ void main() {
         expect(border.side.width, 1);
         expect(border.side.color.toARGB32() & 0x00FFFFFF, scoreColor.toARGB32() & 0x00FFFFFF);
         final runtimeRect = tester.getRect(find.text('00:00:00'));
-        final scoreRect = tester.getRect(find.text('50/100'));
+        final scoreRect = tester.getRect(find.text('50 / 100'));
         expect(scoreRect.top, closeTo(runtimeRect.top, 0.5));
         expect(scoreRect.height, closeTo(runtimeRect.height, 0.5));
         expect(find.byType(RiskLevelBadge), findsNothing);
@@ -358,7 +358,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(SkeletonPill), findsNothing);
-      expect(find.text('1/100'), findsOneWidget);
+      expect(find.text('1 / 100'), findsOneWidget);
       expect(find.text('Low risk'), findsOneWidget);
       expect(_cloverTurn(tester) % (math.pi / 2), closeTo(0, 1e-9));
       expect(tester.widget<PressRegion>(_clover()).onTap, isNotNull);
@@ -441,7 +441,7 @@ void main() {
       await tester.pump();
 
       expect(find.text(_ip), findsOneWidget);
-      expect(find.text('1/100'), findsOneWidget);
+      expect(find.text('1 / 100'), findsOneWidget);
       expect(find.text('Low risk'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });

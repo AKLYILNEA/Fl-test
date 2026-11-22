@@ -642,9 +642,11 @@ class _FraudScoreValue extends StatelessWidget {
       letterSpacing: 0,
       color: colorScheme.onSurfaceVariant.withValues(alpha: 0.72),
     );
-    final pillTextStyle = AppTextStyle.caption2
+    final pillTextStyle = AppTextStyle.caption1
         .of(context, emphasized: true)
-        .copyWith(fontWeight: FontWeight.w700, color: scoreColor);
+        .toTabular
+        .copyWith(color: scoreColor);
+    final pillHeight = MediaQuery.textScalerOf(context).scale(22.0);
 
     return FittedBox(
       fit: BoxFit.scaleDown,
@@ -660,14 +662,16 @@ class _FraudScoreValue extends StatelessWidget {
                   text: '${risk.displayScore}',
                   style: scoreStyle.copyWith(color: scoreColor),
                 ),
-                TextSpan(text: '/100', style: denominatorStyle),
+                TextSpan(text: ' / 100', style: denominatorStyle),
               ],
             ),
             maxLines: 1,
             style: scoreStyle,
           ),
           const SizedBox(width: 8),
-          DecoratedBox(
+          Container(
+            height: pillHeight,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
             decoration: ShapeDecoration(
               shape: AppShape.full.copyWith(
                 side: BorderSide(
@@ -676,16 +680,15 @@ class _FraudScoreValue extends StatelessWidget {
                 ),
               ),
             ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 7.5,
-                vertical: 3,
-              ),
-              child: Text(
-                risk.levelLabel(context),
-                maxLines: 1,
-                style: pillTextStyle,
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  risk.levelLabel(context),
+                  maxLines: 1,
+                  style: pillTextStyle,
+                ),
+              ],
             ),
           ),
         ],
