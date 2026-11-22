@@ -412,7 +412,7 @@ void main() {
     });
 
     testWidgets(
-      'shows country name with grey ISO pill below IP and full country-region-city tooltip from ipRiskProvider',
+      'shows location pin with country name below IP and full country-region-city tooltip from ipRiskProvider',
       (tester) async {
         const located = IpRisk(
           ip: _ip,
@@ -426,8 +426,9 @@ void main() {
         await tester.pumpWidget(_app((_, _) async => located));
         await tester.pump();
 
+        expect(find.byGlyph(AppGlyphs.location), findsOneWidget);
         expect(find.text('China'), findsOneWidget);
-        expect(find.text('CN'), findsOneWidget);
+        expect(find.text('CN'), findsNothing);
         expect(find.byType(SvgPicture), findsOneWidget);
         expect(
           find.byTooltip(
@@ -438,8 +439,11 @@ void main() {
         expect(countryFlagTone('JP'), CountryFlagTone.grey);
         expect(countryFlagTone('KR'), CountryFlagTone.grey);
         expect(countryFlagTone('HK'), CountryFlagTone.red);
-        expect(countryFlagTone('US'), CountryFlagTone.red);
+        expect(countryFlagTone('GB'), CountryFlagTone.red);
         expect(countryFlagTone('QA'), CountryFlagTone.red);
+        expect(countryFlagTone('FR'), CountryFlagTone.blue);
+        expect(countryFlagTone('RU'), CountryFlagTone.blue);
+        expect(countryFlagTone('US'), CountryFlagTone.blue);
         expect(countryFlagTone('SE'), CountryFlagTone.blue);
         expect(countryFlagTone('MO'), CountryFlagTone.green);
         expect(countryFlagTone('CO'), CountryFlagTone.yellow);

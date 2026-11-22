@@ -30,25 +30,25 @@ const _availableCountryFlags = <String>{
 };
 
 const _redFlags = <String>{
-  'ad', 'ae', 'af', 'ag', 'al', 'an', 'ao', 'at', 'be', 'bg', 'bh', 'bi',
-  'bm', 'bv', 'by', 'ca', 'cg', 'ch', 'cl', 'cm', 'cn', 'cq', 'cz', 'dk',
-  'do', 'es', 'et', 'fr', 'fx', 'gb', 'gl', 'gq', 'gw', 'hk', 'ht', 'id',
-  'im', 'ir', 'it', 'kg', 'ki', 'kn', 'kw', 'la', 'lb', 'li', 'lr', 'lt',
-  'lv', 'ly', 'ma', 'mc', 'md', 'me', 'mk', 'ml', 'mm', 'mn', 'mr', 'mt',
-  'mv', 'mx', 'my', 'no', 'np', 'om', 'pe', 'pf', 'pg', 'ph', 'pl', 'pr',
-  'pt', 'py', 'qa', 'ro', 'rs', 'ru', 'sd', 'sg', 'si', 'sj', 'sk', 'sn',
-  'su', 'sx', 'td', 'th', 'tj', 'tl', 'tn', 'to', 'tr', 'tt', 'tw', 'ug',
-  'uk', 'um', 'us', 've', 'vn', 'wf', 'ws', 'yu',
+  'ad', 'ae', 'af', 'ag', 'al', 'ao', 'at', 'be', 'bg', 'bh', 'bi', 'bm',
+  'by', 'ca', 'cg', 'ch', 'cl', 'cm', 'cn', 'cq', 'dk', 'es', 'et', 'gb',
+  'gl', 'gw', 'hk', 'id', 'im', 'ir', 'it', 'kg', 'kn', 'kw', 'lb', 'li',
+  'lt', 'lv', 'ly', 'ma', 'mc', 'md', 'me', 'mk', 'ml', 'mm', 'mn', 'mr',
+  'mt', 'mv', 'mx', 'np', 'om', 'pe', 'pf', 'pg', 'pl', 'pt', 'qa', 'ro',
+  'sd', 'sg', 'sn', 'su', 'td', 'tj', 'tl', 'tn', 'to', 'tr', 'tt', 'tw',
+  'ug', 'uk', 'vn', 'wf', 'ws',
 };
 
 const _blueFlags = <String>{
-  'ac', 'ai', 'aq', 'ar', 'as', 'au', 'aw', 'ax', 'az', 'ba', 'bb', 'bq',
-  'bs', 'bw', 'bz', 'cd', 'ck', 'cp', 'cr', 'cu', 'cv', 'cw', 'cx', 'dg',
-  'er', 'eu', 'fj', 'fk', 'fm', 'fo', 'ga', 'gp', 'gr', 'gs', 'gt', 'gu',
-  'hm', 'hn', 'hr', 'io', 'is', 'kh', 'km', 'kp', 'ky', 'kz', 'lc', 'ls',
-  'lu', 'mf', 'mh', 'mp', 'ms', 'ni', 'nl', 'nr', 'nz', 'pa', 'pm', 'pn',
-  'pw', 're', 'rw', 'se', 'sh', 'sl', 'sm', 'so', 'sv', 'sz', 'ta', 'tc',
-  'tf', 'tk', 'tv', 'tz', 'un', 'vg', 'xk', 'za',
+  'ac', 'ai', 'an', 'aq', 'ar', 'as', 'au', 'aw', 'ax', 'az', 'ba', 'bb',
+  'bq', 'bs', 'bv', 'bw', 'bz', 'cd', 'ck', 'cp', 'cr', 'cu', 'cv', 'cw',
+  'cx', 'cz', 'dg', 'do', 'er', 'eu', 'fj', 'fk', 'fm', 'fo', 'fr', 'fx',
+  'ga', 'gp', 'gq', 'gr', 'gs', 'gt', 'gu', 'hm', 'hn', 'hr', 'ht', 'io',
+  'is', 'kh', 'ki', 'km', 'kp', 'ky', 'kz', 'la', 'lc', 'lr', 'ls', 'lu',
+  'mf', 'mh', 'mp', 'ms', 'my', 'ni', 'nl', 'no', 'nr', 'nz', 'pa', 'ph',
+  'pm', 'pn', 'pr', 'pw', 'py', 're', 'rs', 'ru', 'rw', 'se', 'sh', 'si',
+  'sj', 'sk', 'sl', 'sm', 'so', 'sv', 'sx', 'sz', 'ta', 'tc', 'tf', 'th',
+  'tk', 'tv', 'tz', 'um', 'un', 'us', 've', 'vg', 'xk', 'yu', 'za',
 };
 
 const _yellowFlags = <String>{
@@ -74,7 +74,8 @@ String? countryFlagAsset(String? countryCode) {
 /// Returns the curated 5-tone border category for [countryCode].
 ///
 /// White-rim or neutral flags (such as JP, KR, FI) resolve to
-/// [CountryFlagTone.grey].
+/// [CountryFlagTone.grey], and blue/white/red flags where white + blue exceed
+/// red (such as FR, RU, US) resolve to [CountryFlagTone.blue].
 CountryFlagTone countryFlagTone(String? countryCode) {
   if (countryCode == null) return CountryFlagTone.grey;
   final code = countryCode.trim().toLowerCase();

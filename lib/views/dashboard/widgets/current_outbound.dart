@@ -433,7 +433,7 @@ class _IpLocationSubText extends StatelessWidget {
     final style = AppTextStyle.footnote
         .of(context, emphasized: true)
         .copyWith(
-          fontSize: isDesktop ? 13.5 : 13,
+          fontSize: isDesktop ? 13 : 12.5,
           height: 1.2,
           color: active
               ? context.colorScheme.onSurfaceVariant
@@ -454,86 +454,42 @@ class _IpLocationSubText extends StatelessWidget {
       return SkeletonText(width: 80, style: style);
     }
     final riskCountry = quality?.country.trim();
-    final name = (riskCountry != null && riskCountry.isNotEmpty)
-        ? riskCountry
-        : quality?.placeLabel;
     final rawCode = (quality?.countryCode.trim().isNotEmpty ?? false)
         ? quality!.countryCode.trim()
         : countryCode?.trim();
-    final iso = (rawCode != null && rawCode.isNotEmpty)
+    final fallbackCode = (rawCode != null && rawCode.isNotEmpty)
         ? rawCode.toUpperCase()
         : null;
-    if ((name == null || name.isEmpty) && iso == null) {
+    final display = (riskCountry != null && riskCountry.isNotEmpty)
+        ? riskCountry
+        : (quality?.placeLabel?.isNotEmpty ?? false)
+        ? quality!.placeLabel
+        : fallbackCode;
+    if (display == null || display.isEmpty) {
       return Text('\u2014', maxLines: 1, style: style);
     }
+    final pinColor = active
+        ? context.colorScheme.onSurfaceVariant.withValues(alpha: 0.72)
+        : context.colorScheme.onSurfaceVariant.withValues(alpha: 0.48);
     final row = Row(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        if (name != null && name.isNotEmpty)
-          Flexible(
-            child: Text(
-              name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: style.copyWith(
-                color: active
-                    ? context.colorScheme.onSurface
-                    : context.colorScheme.onSurfaceVariant,
-              ),
-            ),
+        GlyphIcon(AppGlyphs.location, size: 13, color: pinColor),
+        const SizedBox(width: 5),
+        Flexible(
+          child: Text(
+            display,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: style,
           ),
-        if (name != null && name.isNotEmpty && iso != null)
-          const SizedBox(width: 6),
-        if (iso != null) _CountryCodePill(code: iso, active: active),
+        ),
       ],
     );
     final tooltip = quality?.fullLocationLabel;
     if (tooltip == null || tooltip.isEmpty) return row;
     return Tooltip(message: tooltip, child: row);
-  }
-}
-
-class _CountryCodePill extends StatelessWidget {
-  const _CountryCodePill({required this.code, required this.active});
-
-  final String code;
-  final bool active;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = context.colorScheme;
-    final isDark = colorScheme.brightness == Brightness.dark;
-    final background = isDark
-        ? colorScheme.onSurface.withValues(alpha: 0.09)
-        : colorScheme.onSurface.withValues(alpha: 0.065);
-    final foreground = active
-        ? colorScheme.onSurfaceVariant
-        : colorScheme.onSurfaceVariant.withValues(alpha: 0.72);
-    final pillHeight = MediaQuery.textScalerOf(context).scale(18.0);
-    return Container(
-      height: pillHeight,
-      padding: const EdgeInsets.symmetric(horizontal: 7),
-      decoration: ShapeDecoration(color: background, shape: AppShape.full),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            code,
-            maxLines: 1,
-            style: AppTextStyle.caption1
-                .of(context, emphasized: true)
-                .toTabular
-                .copyWith(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.4,
-                  color: foreground,
-                ),
-          ),
-        ],
-      ),
-    );
   }
 }
 
