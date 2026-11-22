@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/common/country_flags.dart';
 import 'package:fl_clash/common/service_probe.dart';
 import 'package:fl_clash/features/features.dart';
 import 'package:fl_clash/models/models.dart';
@@ -16,6 +17,7 @@ import 'package:fl_clash/views/dashboard/style.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:prism_ui/shapes/shapes.dart';
 
 import 'card.dart';
@@ -346,12 +348,16 @@ class _ExitRow extends StatelessWidget {
     final ipHeight = MediaQuery.textScalerOf(
       context,
     ).scale((style.fontSize ?? metrics.ip.size) * (style.height ?? 1.15));
+    final effectiveCountryCode =
+        (quality?.countryCode.trim().isNotEmpty ?? false)
+        ? quality!.countryCode
+        : info?.countryCode;
     return Row(
       spacing: 12,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         _CountryBadge(
-          countryCode: info?.countryCode,
+          countryCode: effectiveCountryCode,
           size: metrics.badgeSize,
           active: active,
           checking: checking,
@@ -372,6 +378,7 @@ class _ExitRow extends StatelessWidget {
               const SizedBox(height: 3),
               _IpLocationSubText(
                 quality: quality,
+                countryCode: effectiveCountryCode,
                 loading: loading,
                 active: active,
               ),
@@ -410,11 +417,13 @@ class _IpText extends ConsumerWidget {
 class _IpLocationSubText extends StatelessWidget {
   const _IpLocationSubText({
     required this.quality,
+    required this.countryCode,
     required this.loading,
     required this.active,
   });
 
   final IpRisk? quality;
+  final String? countryCode;
   final bool loading;
   final bool active;
 
@@ -444,30 +453,98 @@ class _IpLocationSubText extends StatelessWidget {
     if (loading) {
       return SkeletonText(width: 80, style: style);
     }
-    final display = quality?.countryLabel ?? quality?.placeLabel;
-    final tooltip = quality?.fullLocationLabel;
-    if (display == null || display.isEmpty) {
+    final riskCountry = quality?.country.trim();
+    final name = (riskCountry != null && riskCountry.isNotEmpty)
+        ? riskCountry
+        : quality?.placeLabel;
+    final rawCode = (quality?.countryCode.trim().isNotEmpty ?? false)
+        ? quality!.countryCode.trim()
+        : countryCode?.trim();
+    final iso = (rawCode != null && rawCode.isNotEmpty)
+        ? rawCode.toUpperCase()
+        : null;
+    if ((name == null || name.isEmpty) && iso == null) {
       return Text('\u2014', maxLines: 1, style: style);
     }
-    final text = EmojiText(
-      display,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: style.copyWith(
-        color: active
-            ? context.colorScheme.onSurface
-            : context.colorScheme.onSurfaceVariant,
+    final row = Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        if (name != null && name.isNotEmpty)
+          Flexible(
+            child: Text(
+              name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: style.copyWith(
+                color: active
+                    ? context.colorScheme.onSurface
+                    : context.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        if (name != null && name.isNotEmpty && iso != null)
+          const SizedBox(width: 6),
+        if (iso != null) _CountryCodePill(code: iso, active: active),
+      ],
+    );
+    final tooltip = quality?.fullLocationLabel;
+    if (tooltip == null || tooltip.isEmpty) return row;
+    return Tooltip(message: tooltip, child: row);
+  }
+}
+
+class _CountryCodePill extends StatelessWidget {
+  const _CountryCodePill({required this.code, required this.active});
+
+  final String code;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = context.colorScheme;
+    final isDark = colorScheme.brightness == Brightness.dark;
+    final background = isDark
+        ? colorScheme.onSurface.withValues(alpha: 0.09)
+        : colorScheme.onSurface.withValues(alpha: 0.065);
+    final foreground = active
+        ? colorScheme.onSurfaceVariant
+        : colorScheme.onSurfaceVariant.withValues(alpha: 0.72);
+    final pillHeight = MediaQuery.textScalerOf(context).scale(18.0);
+    return Container(
+      height: pillHeight,
+      padding: const EdgeInsets.symmetric(horizontal: 7),
+      decoration: ShapeDecoration(color: background, shape: AppShape.full),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            code,
+            maxLines: 1,
+            style: AppTextStyle.caption1
+                .of(context, emphasized: true)
+                .copyWith(
+                  fontFamily: FontFamily.mapleMono.value,
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.6,
+                  color: foreground,
+                ),
+          ),
+        ],
       ),
     );
-    if (tooltip == null || tooltip.isEmpty) return text;
-    return Tooltip(message: tooltip, child: text);
   }
 }
 
 const _spinPeriod = Duration(milliseconds: 1500);
 
-/// The exit's country on a clover that checks the exit again when tapped and
-/// turns while it is being checked.
+final _badgeMorph = Morph(MaterialShapes.circle, MaterialShapes.clover4Leaf);
+
+Path _badgeMorphPath(double progress) => _badgeMorph.toPath(progress: progress);
+
+/// The exit's circular flag framed by a curated 5-tone halo ring that smoothly
+/// morphs into a spinning 4-leaf clover while checking, mirroring [_StartToggle].
 class _CountryBadge extends StatefulWidget {
   const _CountryBadge({
     required this.countryCode,
@@ -488,43 +565,97 @@ class _CountryBadge extends StatefulWidget {
 }
 
 class _CountryBadgeState extends State<_CountryBadge>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final AnimationController _turns = AnimationController(
     vsync: this,
     duration: _spinPeriod,
   );
+  late final AnimationController _morph = AnimationController(
+    vsync: this,
+    duration: _morphDuration,
+    value: _targetMorph,
+  );
+  late final CurvedAnimation _morphCurve = CurvedAnimation(
+    parent: _morph,
+    curve: Curves.easeOutBack,
+    reverseCurve: Curves.easeInCubic,
+  );
   var _hovered = false;
   var _focused = false;
+  var _initialized = false;
+  String? _displayedFlagAsset;
+  CountryFlagTone _displayedTone = CountryFlagTone.grey;
+
+  bool get _showsFlag =>
+      !widget.checking && countryFlagAsset(widget.countryCode) != null;
+
+  double get _targetMorph => _showsFlag ? 0 : 1;
+
+  @override
+  void initState() {
+    super.initState();
+    _syncFlagCache();
+  }
+
+  void _syncFlagCache() {
+    final asset = countryFlagAsset(widget.countryCode);
+    if (asset != null) {
+      _displayedFlagAsset = asset;
+      _displayedTone = countryFlagTone(widget.countryCode);
+    }
+  }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _spin();
+    final first = !_initialized;
+    _initialized = true;
+    _syncAnimations(initial: first);
   }
 
   @override
   void didUpdateWidget(_CountryBadge oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.checking != widget.checking) {
-      _spin();
+    if (oldWidget.countryCode != widget.countryCode) {
+      _syncFlagCache();
+    }
+    if (oldWidget.checking != widget.checking ||
+        oldWidget.countryCode != widget.countryCode) {
+      _syncAnimations();
     }
   }
 
   @override
   void dispose() {
+    _morphCurve.dispose();
+    _morph.dispose();
     _turns.dispose();
     super.dispose();
   }
 
-  void _spin() {
+  void _syncAnimations({bool initial = false}) {
     if (context.disableAnimations) {
       _turns.value = 0;
-    } else if (widget.checking) {
+      _morph.value = _targetMorph;
+      return;
+    }
+    if (widget.checking) {
       _turns.repeat();
     } else {
       // A clover looks the same every quarter turn, so it stops on the next.
       final rest = (_turns.value * 4).ceil() / 4;
-      _turns.animateTo(rest, duration: _spinPeriod * (rest - _turns.value));
+      if (rest == _turns.value) {
+        _turns.stop();
+      } else {
+        _turns.animateTo(rest, duration: _spinPeriod * (rest - _turns.value));
+      }
+    }
+    if (initial) {
+      _morph.value = _targetMorph;
+    } else if (_showsFlag) {
+      _morph.reverse();
+    } else {
+      _morph.forward();
     }
   }
 
@@ -538,10 +669,37 @@ class _CountryBadgeState extends State<_CountryBadge>
     final size = widget.size;
     final code = widget.countryCode;
     final tooltip = context.appLocalizations.retry;
-    final color = Color.alphaBlend(
+    final cloverColor = Color.alphaBlend(
       foreground.withValues(alpha: enabled && _hovered ? 0.08 : 0),
       DashboardColors.of(context).tone2,
     );
+    final ringPalette = countryFlagRingColors(
+      _displayedTone,
+      colorScheme.brightness,
+    );
+    final ringColor = Color.alphaBlend(
+      foreground.withValues(alpha: enabled && _hovered ? 0.08 : 0),
+      ringPalette.ring,
+    );
+    final ringPadding = size >= 44 ? 3.0 : 2.5;
+    final flagAsset = _displayedFlagAsset;
+    final cloverChild = code == null || code.isEmpty
+        ? GlyphIcon(
+            AppGlyphs.proxies,
+            size: size * 0.42,
+            color: foreground,
+          )
+        : Text(
+            code.toUpperCase(),
+            maxLines: 1,
+            style: AppTextStyle.footnote
+                .of(context, emphasized: true)
+                .copyWith(
+                  color: foreground,
+                  letterSpacing: 0.04 * AppTextStyle.footnote.size,
+                ),
+          );
+
     return Tooltip(
       message: tooltip,
       child: Semantics(
@@ -555,37 +713,165 @@ class _CountryBadgeState extends State<_CountryBadge>
           child: ElasticPress(
             enabled: enabled,
             child: AnimatedBuilder(
-              animation: _turns,
-              builder: (_, child) => ShapeBadge(
-                shape: MaterialShapes.clover4Leaf,
-                color: color,
-                size: size,
-                rotation: _turns.value * 2 * math.pi,
-                ring: _focused ? focusRingSide(colorScheme) : null,
-                child: child,
-              ),
-              child: code == null || code.isEmpty
-                  ? GlyphIcon(
-                      AppGlyphs.proxies,
-                      size: size * 0.42,
-                      color: foreground,
-                    )
-                  : Text(
-                      code.toUpperCase(),
-                      maxLines: 1,
-                      style: AppTextStyle.footnote
-                          .of(context, emphasized: true)
-                          .copyWith(
-                            color: foreground,
-                            letterSpacing: 0.04 * AppTextStyle.footnote.size,
+              animation: Listenable.merge([_turns, _morphCurve]),
+              builder: (_, _) {
+                final morph = _morphCurve.value;
+                final t = morph.clamp(0.0, 1.0);
+                final fill = Color.lerp(ringColor, cloverColor, t)!;
+                final glowAlpha = ringPalette.glow.a * (1 - t);
+                final glow = glowAlpha > 0.005
+                    ? ringPalette.glow.withValues(alpha: glowAlpha)
+                    : const Color(0x00000000);
+                final flagOpacity = flagAsset == null
+                    ? 0.0
+                    : (1 - t * 1.45).clamp(0.0, 1.0);
+                final cloverOpacity = ((t - 0.35) / 0.65).clamp(0.0, 1.0);
+                final rotation = _turns.value * 2 * math.pi;
+
+                return CountryBadgeShape(
+                  morphProgress: morph,
+                  rotation: rotation,
+                  color: fill,
+                  glow: glow,
+                  size: size,
+                  ring: _focused ? focusRingSide(colorScheme) : null,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      if (flagAsset != null && flagOpacity > 0)
+                        Opacity(
+                          opacity: flagOpacity,
+                          child: Transform.scale(
+                            scale: 1 - 0.24 * t,
+                            child: Padding(
+                              padding: EdgeInsets.all(ringPadding),
+                              child: ClipOval(
+                                child: SvgPicture.asset(
+                                  flagAsset,
+                                  width: size - ringPadding * 2,
+                                  height: size - ringPadding * 2,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
                           ),
-                    ),
+                        ),
+                      if (cloverOpacity > 0)
+                        Opacity(
+                          opacity: cloverOpacity,
+                          child: Transform.scale(
+                            scale: 0.82 + 0.18 * cloverOpacity,
+                            child: cloverChild,
+                          ),
+                        ),
+                    ],
+                  ),
+                );
+              },
             ),
           ),
         ),
       ),
     );
   }
+}
+
+/// Paints the circular-flag-to-clover4Leaf morph for [_CountryBadge].
+class CountryBadgeShape extends StatelessWidget {
+  const CountryBadgeShape({
+    super.key,
+    required this.morphProgress,
+    required this.rotation,
+    required this.color,
+    required this.glow,
+    required this.size,
+    this.ring,
+    this.child,
+  });
+
+  final double morphProgress;
+  final double rotation;
+  final Color color;
+  final Color glow;
+  final double size;
+  final BorderSide? ring;
+  final Widget? child;
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      painter: _CountryBadgeMorphPainter(
+        morphProgress: morphProgress,
+        rotation: rotation,
+        color: color,
+        glow: glow,
+        ring: ring,
+      ),
+      child: SizedBox.square(
+        dimension: size,
+        child: child == null ? null : Center(child: child),
+      ),
+    );
+  }
+}
+
+class _CountryBadgeMorphPainter extends CustomPainter {
+  const _CountryBadgeMorphPainter({
+    required this.morphProgress,
+    required this.rotation,
+    required this.color,
+    required this.glow,
+    required this.ring,
+  });
+
+  static const _glowOffset = Offset(0, 2);
+  static const _glowBlur = 7.0;
+
+  final double morphProgress;
+  final double rotation;
+  final Color color;
+  final Color glow;
+  final BorderSide? ring;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path = _badgeMorphPath(morphProgress);
+    final morphTurn = morphProgress * math.pi / 4;
+    canvas
+      ..save()
+      ..translate(size.width / 2, size.height / 2)
+      ..rotate(rotation + morphTurn)
+      ..scale(size.width, size.height)
+      ..translate(-0.5, -0.5);
+    if (glow.a > 0) {
+      canvas
+        ..save()
+        ..translate(_glowOffset.dx / size.width, _glowOffset.dy / size.height)
+        ..drawPath(
+          path,
+          Paint()
+            ..color = glow
+            ..maskFilter = MaskFilter.blur(
+              BlurStyle.normal,
+              _glowBlur / 2 / size.width,
+            ),
+        )
+        ..restore();
+    }
+    canvas.drawPath(path, Paint()..color = color);
+    if (ring case final ring?) {
+      strokeUnitShape(canvas, path, size.width, ring);
+    }
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(_CountryBadgeMorphPainter oldDelegate) =>
+      oldDelegate.morphProgress != morphProgress ||
+      oldDelegate.rotation != rotation ||
+      oldDelegate.color != color ||
+      oldDelegate.glow != glow ||
+      oldDelegate.ring != ring;
 }
 
 class _Cells extends StatelessWidget {

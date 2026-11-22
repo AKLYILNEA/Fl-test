@@ -1,4 +1,5 @@
 import 'package:fl_clash/common/common.dart';
+import 'package:fl_clash/common/country_flags.dart';
 import 'package:fl_clash/features/ip_quality/ip_locate.dart';
 import 'package:fl_clash/features/ip_quality/risk_model.dart';
 import 'package:fl_clash/features/ip_quality/risk_view.dart';
@@ -23,6 +24,7 @@ import 'dart:math' as math;
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -165,15 +167,17 @@ void _useTallView(WidgetTester tester) {
 }
 
 Finder _clover() => find.ancestor(
-  of: find.byType(ShapeBadge),
+  of: find.byType(CountryBadgeShape),
   matching: find.byWidgetPredicate((widget) => widget is PressRegion),
 );
 
-double _cloverTurn(WidgetTester tester) => tester
-    .widget<ShapeBadge>(
-      find.descendant(of: _clover(), matching: find.byType(ShapeBadge)),
-    )
-    .rotation;
+CountryBadgeShape _badgeShape(WidgetTester tester) => tester.widget<CountryBadgeShape>(
+  find.descendant(of: _clover(), matching: find.byType(CountryBadgeShape)),
+);
+
+double _cloverTurn(WidgetTester tester) => _badgeShape(tester).rotation;
+
+double _cloverMorph(WidgetTester tester) => _badgeShape(tester).morphProgress;
 
 DashboardChip _chip(WidgetTester tester, String label) =>
     tester.widget<DashboardChip>(
@@ -350,6 +354,7 @@ void main() {
       expect(find.byType(SkeletonPill), findsNWidgets(2));
       expect(find.byType(SkeletonText), findsNWidgets(2));
       expect(tester.widget<PressRegion>(_clover()).onTap, isNull);
+      expect(_cloverMorph(tester), closeTo(1, 1e-6));
       final turn = _cloverTurn(tester);
       await tester.pump(const Duration(milliseconds: 300));
       expect(_cloverTurn(tester), isNot(turn));
@@ -360,6 +365,8 @@ void main() {
       expect(find.byType(SkeletonPill), findsNothing);
       expect(find.text('1 / 100'), findsOneWidget);
       expect(find.text('Low risk'), findsOneWidget);
+      expect(_cloverMorph(tester), closeTo(0, 1e-6));
+      expect(find.byType(SvgPicture), findsOneWidget);
       expect(_cloverTurn(tester) % (math.pi / 2), closeTo(0, 1e-9));
       expect(tester.widget<PressRegion>(_clover()).onTap, isNotNull);
     });
@@ -405,7 +412,7 @@ void main() {
     });
 
     testWidgets(
-      'shows country below IP and full country-region-city tooltip from ipRiskProvider',
+      'shows country name with grey ISO pill below IP and full country-region-city tooltip from ipRiskProvider',
       (tester) async {
         const located = IpRisk(
           ip: _ip,
@@ -419,18 +426,23 @@ void main() {
         await tester.pumpWidget(_app((_, _) async => located));
         await tester.pump();
 
-        expect(
-          find.byWidgetPredicate(
-            (w) => w is EmojiText && w.text == '\u{1F1E8}\u{1F1F3} China',
-          ),
-          findsOneWidget,
-        );
+        expect(find.text('China'), findsOneWidget);
+        expect(find.text('CN'), findsOneWidget);
+        expect(find.byType(SvgPicture), findsOneWidget);
         expect(
           find.byTooltip(
             '\u{1F1E8}\u{1F1F3} China \u00b7 Shanghai \u00b7 Hongkou (Hongkou Qu)',
           ),
           findsOneWidget,
         );
+        expect(countryFlagTone('JP'), CountryFlagTone.grey);
+        expect(countryFlagTone('KR'), CountryFlagTone.grey);
+        expect(countryFlagTone('HK'), CountryFlagTone.red);
+        expect(countryFlagTone('US'), CountryFlagTone.red);
+        expect(countryFlagTone('QA'), CountryFlagTone.red);
+        expect(countryFlagTone('SE'), CountryFlagTone.blue);
+        expect(countryFlagTone('MO'), CountryFlagTone.green);
+        expect(countryFlagTone('CO'), CountryFlagTone.yellow);
       },
     );
 
