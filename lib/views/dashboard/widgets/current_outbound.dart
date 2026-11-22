@@ -14,6 +14,7 @@ import 'package:fl_clash/providers/routed_probe.dart';
 import 'package:fl_clash/ui/icons/icons.dart';
 import 'package:fl_clash/views/dashboard/layout.dart';
 import 'package:fl_clash/views/dashboard/style.dart';
+import 'package:fl_clash/widgets/text_ink.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -468,28 +469,109 @@ class _IpLocationSubText extends StatelessWidget {
     if (display == null || display.isEmpty) {
       return Text('\u2014', maxLines: 1, style: style);
     }
-    final pinColor = active
-        ? context.colorScheme.onSurfaceVariant.withValues(alpha: 0.72)
-        : context.colorScheme.onSurfaceVariant.withValues(alpha: 0.48);
-    final row = Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        GlyphIcon(AppGlyphs.location, size: 13, color: pinColor),
-        const SizedBox(width: 5),
-        Flexible(
-          child: Text(
-            display,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: style,
-          ),
-        ),
-      ],
+    final foreground = active
+        ? context.colorScheme.onSurface
+        : context.colorScheme.onSurfaceVariant;
+    final row = _LocationLabelRow(
+      text: display,
+      style: style.copyWith(color: foreground),
+      iconSize: 13,
     );
     final tooltip = quality?.fullLocationLabel;
     if (tooltip == null || tooltip.isEmpty) return row;
     return Tooltip(message: tooltip, child: row);
+  }
+}
+
+class _LocationLabelRow extends StatefulWidget {
+  const _LocationLabelRow({
+    required this.text,
+    required this.style,
+    required this.iconSize,
+  });
+
+  final String text;
+  final TextStyle style;
+  final double iconSize;
+
+  @override
+  State<_LocationLabelRow> createState() => _LocationLabelRowState();
+}
+
+class _LocationLabelRowState extends State<_LocationLabelRow> {
+  (String, TextStyle, double, TextDirection, Locale?)? _inkKey;
+  Future<TextInk?>? _measurement;
+
+  @override
+  Widget build(BuildContext context) {
+    final scaler = MediaQuery.textScalerOf(context);
+    final direction = Directionality.of(context);
+    final locale = Localizations.maybeLocaleOf(context);
+    final measureStyle = widget.style.copyWith(color: const Color(0xFF000000));
+    final key = (
+      widget.text,
+      measureStyle,
+      scaler.scale(measureStyle.fontSize ?? 13),
+      direction,
+      locale,
+    );
+
+    if (_inkKey != key) {
+      _inkKey = key;
+      final capitals = widget.text.runes
+          .map(String.fromCharCode)
+          .where(
+            (letter) =>
+                letter == letter.toUpperCase() &&
+                letter != letter.toLowerCase(),
+          )
+          .join();
+      _measurement = measureTextInk(
+        capitals.isEmpty ? widget.text : capitals,
+        measureStyle,
+        scaler,
+        textDirection: direction,
+        locale: locale,
+      );
+    }
+
+    final pin = GlyphIcon(
+      AppGlyphs.location,
+      size: widget.iconSize,
+      color: widget.style.color,
+    );
+    final label = Text(
+      widget.text,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: widget.style,
+    );
+    return FutureBuilder<TextInk?>(
+      key: ValueKey(key),
+      future: _measurement,
+      builder: (context, snapshot) {
+        final ink = snapshot.data;
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          spacing: 5,
+          crossAxisAlignment: ink == null
+              ? CrossAxisAlignment.center
+              : CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          children: [
+            if (ink == null)
+              pin
+            else
+              BaselineAt(
+                baseline:
+                    widget.iconSize / 2 + (ink.ascent - ink.descent) / 2,
+                child: pin,
+              ),
+            Flexible(child: label),
+          ],
+        );
+      },
+    );
   }
 }
 

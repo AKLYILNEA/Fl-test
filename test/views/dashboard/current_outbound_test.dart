@@ -429,6 +429,22 @@ void main() {
         expect(find.byGlyph(AppGlyphs.location), findsOneWidget);
         expect(find.text('China'), findsOneWidget);
         expect(find.text('CN'), findsNothing);
+        final cardContext = tester.element(find.byType(CurrentOutboundCard));
+        final stoppedColor = cardContext.colorScheme.onSurfaceVariant;
+        expect(tester.widget<Text>(find.text('China')).style!.color, stoppedColor);
+        expect(
+          tester.widget<GlyphIcon>(find.byGlyph(AppGlyphs.location)).color,
+          stoppedColor,
+        );
+        final container = ProviderScope.containerOf(cardContext);
+        container.read(runTimeProvider.notifier).value = 1;
+        await tester.pump();
+        final runningColor = cardContext.colorScheme.onSurface;
+        expect(tester.widget<Text>(find.text('China')).style!.color, runningColor);
+        expect(
+          tester.widget<GlyphIcon>(find.byGlyph(AppGlyphs.location)).color,
+          runningColor,
+        );
         expect(find.byType(SvgPicture), findsOneWidget);
         expect(
           find.byTooltip(
