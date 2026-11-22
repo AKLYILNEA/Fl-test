@@ -274,79 +274,130 @@ class _IpLookupViewState extends ConsumerState<IpLookupView>
           ),
         ],
         body: Builder(
-          builder: (context) => LayoutBuilder(
-            builder: (context, constraints) {
-              const sidePadding = 16.0;
-              final isWide = constraints.maxWidth >= 760;
-              return ListView(
-                padding: EdgeInsets.fromLTRB(
-                  sidePadding,
-                  context.contentTopPadding,
-                  sidePadding,
-                  24 + context.bottomInset,
-                ),
-                children: [
-                  _IpSearchBar(
-                    controller: _controller,
-                    focusNode: _focusNode,
-                    showOutboundShortcut: isCustom,
-                    isWide: constraints.maxWidth >= 600,
-                    onSubmitted: _submitSearch,
-                    onUseOutbound: _useOutboundIp,
-                  ),
-                  const SizedBox(height: 12),
-                  AnimatedSwitcher(
-                    duration: context.motionDuration(commonDuration),
-                    reverseDuration: context.motionDuration(
-                      const Duration(milliseconds: 160),
-                    ),
-                    switchInCurve: Easing.emphasizedDecelerate,
-                    switchOutCurve: Curves.easeIn,
-                    layoutBuilder: (currentChild, previousChildren) => Align(
-                      alignment: Alignment.topCenter,
-                      child: Stack(
-                        alignment: Alignment.topCenter,
-                        children: <Widget>[...previousChildren, ?currentChild],
+          builder: (context) => NullStatusSwitcher(
+            holdsArrival: false,
+            isLoading: !_retrying && isLoading,
+            isEmpty: false,
+            loadingStatus: const Center(child: ActivityIndicator.page()),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                const sidePadding = 16.0;
+                final isWide = constraints.maxWidth >= 760;
+                final showSubsequentLoading = !_retrying && isLoading;
+                return Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    ListView(
+                      padding: EdgeInsets.fromLTRB(
+                        sidePadding,
+                        context.contentTopPadding,
+                        sidePadding,
+                        24 + context.bottomInset,
                       ),
-                    ),
-                    transitionBuilder: (child, animation) => FadeTransition(
-                      opacity: animation,
-                      child: child.key is ValueKey<String> &&
-                              (child.key as ValueKey<String>).value.startsWith(
-                                'data:',
-                              )
-                          ? ScaleTransition(
-                              scale: animation.drive(
-                                Tween(begin: 0.96, end: 1.0),
+                      children: [
+                        _IpSearchBar(
+                          controller: _controller,
+                          focusNode: _focusNode,
+                          showOutboundShortcut: isCustom,
+                          isWide: constraints.maxWidth >= 600,
+                          onSubmitted: _submitSearch,
+                          onUseOutbound: _useOutboundIp,
+                        ),
+                        const SizedBox(height: 12),
+                        AnimatedSwitcher(
+                          duration: context.motionDuration(commonDuration),
+                          reverseDuration: context.motionDuration(
+                            const Duration(milliseconds: 160),
+                          ),
+                          switchInCurve: Easing.emphasizedDecelerate,
+                          switchOutCurve: Curves.easeIn,
+                          layoutBuilder: (currentChild, previousChildren) =>
+                              Align(
+                                alignment: Alignment.topCenter,
+                                child: Stack(
+                                  alignment: Alignment.topCenter,
+                                  children: <Widget>[
+                                    ...previousChildren,
+                                    ?currentChild,
+                                  ],
+                                ),
                               ),
-                              child: child,
-                            )
-                          : child,
+                          transitionBuilder: (child, animation) =>
+                              FadeTransition(
+                                opacity: animation,
+                                child:
+                                    child.key is ValueKey<String> &&
+                                            (child.key as ValueKey<String>)
+                                                .value
+                                                .startsWith('data:')
+                                        ? ScaleTransition(
+                                            scale: animation.drive(
+                                              Tween(begin: 0.96, end: 1.0),
+                                            ),
+                                            child: child,
+                                          )
+                                        : child,
+                              ),
+                          child: _buildContent(
+                            context,
+                            isWide: isWide,
+                            contentWidth: math.max(
+                              0.0,
+                              constraints.maxWidth - sidePadding * 2,
+                            ),
+                            activeIp: activeIp,
+                            isOutbound: isOutbound,
+                            hidden: hidden,
+                            isLoading: isLoading,
+                            outboundFailed: outboundFailed,
+                            risk: risk,
+                            attribution: attribution,
+                            onRetry: () => _retryFailed(
+                              activeIp,
+                              riskFailed: riskFailed,
+                              attributionFailed: attributionFailed,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    child: _buildContent(
-                      context,
-                      isWide: isWide,
-                      contentWidth: math.max(
-                        0.0,
-                        constraints.maxWidth - sidePadding * 2,
-                      ),
-                      activeIp: activeIp,
-                      isOutbound: isOutbound,
-                      hidden: hidden,
-                      isLoading: isLoading,
-                      outboundFailed: outboundFailed,
-                      risk: risk,
-                      attribution: attribution,
-                      onRetry: () => _retryFailed(
-                        activeIp,
-                        riskFailed: riskFailed,
-                        attributionFailed: attributionFailed,
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: AnimatedSwitcher(
+                          duration: context.motionDuration(commonDuration),
+                          reverseDuration: context.motionDuration(
+                            const Duration(milliseconds: 150),
+                          ),
+                          switchInCurve: Easing.emphasizedDecelerate,
+                          switchOutCurve: Curves.easeIn,
+                          transitionBuilder: (child, animation) =>
+                              ActivityPresence(
+                                animation: animation,
+                                child: FadeTransition(
+                                  opacity: animation,
+                                  child: ScaleTransition(
+                                    scale: animation.drive(
+                                      Tween(begin: 0.92, end: 1.0),
+                                    ),
+                                    child: child,
+                                  ),
+                                ),
+                              ),
+                          child: showSubsequentLoading
+                              ? Center(
+                                  key: ValueKey('loading:$activeIp'),
+                                  child: const ActivityIndicator.page(),
+                                )
+                              : const SizedBox.shrink(
+                                  key: ValueKey('loading:idle'),
+                                ),
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              );
-            },
+                  ],
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -368,11 +419,7 @@ class _IpLookupViewState extends ConsumerState<IpLookupView>
   }) {
     final l = context.appLocalizations;
     if (!_retrying && isLoading) {
-      return SizedBox(
-        key: ValueKey('loading:$activeIp'),
-        height: 280,
-        child: const Center(child: ActivityIndicator.page()),
-      );
+      return SizedBox.shrink(key: ValueKey('loading-slot:$activeIp'));
     }
 
     if (!isLoading && risk != null && attribution != null) {
