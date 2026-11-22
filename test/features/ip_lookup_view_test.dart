@@ -364,4 +364,158 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     });
   }
+
+  testWidgets(
+    'IpLookupView keeps every flag group on one line in narrow landscape and aligns the ticket notch',
+    (tester) async {
+      const denseRisk = IpRisk(
+        ip: _outboundIp,
+        score: 28,
+        level: IpRiskLevel.medium,
+        country: 'South Korea',
+        countryCode: 'KR',
+        region: 'Seoul',
+        city: 'Mapo-gu',
+        organization: 'The Constant Company, LLC',
+        asn: 'AS20473',
+        hostname: '158.247.202.50.vultrusercontent.com',
+        checks: [
+          IpRiskCheck(
+            group: IpRiskGroup.datacenter,
+            name: 'Datacenter',
+            hit: true,
+          ),
+          IpRiskCheck(
+            group: IpRiskGroup.datacenter,
+            name: 'Residential Proxy',
+            hit: false,
+          ),
+          IpRiskCheck(group: IpRiskGroup.blacklist, name: 'Firehol', hit: false),
+          IpRiskCheck(
+            group: IpRiskGroup.blacklist,
+            name: 'IP2ProxyLite',
+            hit: false,
+          ),
+          IpRiskCheck(group: IpRiskGroup.blacklist, name: 'IPsum', hit: false),
+          IpRiskCheck(
+            group: IpRiskGroup.blacklist,
+            name: 'Spamhaus',
+            hit: false,
+          ),
+          IpRiskCheck(
+            group: IpRiskGroup.blacklist,
+            name: 'X4Bnet Spambot',
+            hit: false,
+          ),
+          IpRiskCheck(
+            group: IpRiskGroup.proxy,
+            name: 'Anonymizing VPN',
+            hit: false,
+          ),
+          IpRiskCheck(
+            group: IpRiskGroup.proxy,
+            name: 'Tor Exit Node',
+            hit: false,
+          ),
+          IpRiskCheck(group: IpRiskGroup.proxy, name: 'Server', hit: true),
+          IpRiskCheck(
+            group: IpRiskGroup.proxy,
+            name: 'Public Proxy',
+            hit: false,
+          ),
+          IpRiskCheck(group: IpRiskGroup.proxy, name: 'Web Proxy', hit: false),
+          IpRiskCheck(
+            group: IpRiskGroup.proxy,
+            name: 'Search Engine Robot',
+            hit: false,
+          ),
+        ],
+      );
+
+      for (final width in [760.0, 800.0, 1080.0]) {
+        tester.view.physicalSize = Size(width, 760);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        await tester.pumpWidget(
+          TestApp(
+            locale: const Locale('zh', 'CN'),
+            overrides: [
+              outboundIpProbeProvider.overrideWith(
+                () => _FakeOutboundProbe(
+                  const RoutedProbeState({
+                    routedOutbound: ProbeEntry(
+                      phase: ProbePhase.fresh,
+                      value: IpInfo(ip: _outboundIp, countryCode: 'KR'),
+                    ),
+                  }),
+                ),
+              ),
+              ipRiskProvider.overrideWith((_, _) async => denseRisk),
+              ipLocateProvider.overrideWith(
+                (_, _) async => const IpLocateInfo(
+                  ip: _outboundIp,
+                  company: 'The Constant Company, LLC',
+                  network: 'AS-CHOOPA',
+                  asn: 'AS20473',
+                ),
+              ),
+            ],
+            child: const IpLookupView(),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final proxyLabels = [
+          '匿名 VPN',
+          'Tor 出口节点',
+          '服务器',
+          '公共代理',
+          'Web 代理',
+          '搜索引擎爬虫',
+        ];
+        final firstProxyY = tester.getCenter(find.text(proxyLabels.first)).dy;
+        for (final label in proxyLabels.skip(1)) {
+          expect(
+            tester.getCenter(find.text(label)).dy,
+            closeTo(firstProxyY, 1.0),
+          );
+        }
+
+        final blacklistLabels = [
+          'Firehol',
+          'IP2ProxyLite',
+          'IPsum',
+          'Spamhaus',
+          'X4Bnet Spambot',
+        ];
+        final firstBlacklistY =
+            tester.getCenter(find.text(blacklistLabels.first)).dy;
+        for (final label in blacklistLabels.skip(1)) {
+          expect(
+            tester.getCenter(find.text(label)).dy,
+            closeTo(firstBlacklistY, 1.0),
+          );
+        }
+
+        final perforation = find.byWidgetPredicate(
+          (widget) =>
+              widget is CustomPaint &&
+              widget.painter is VerticalTicketPerforationPainter,
+        );
+        Rect cardAround(Finder child) => tester.getRect(
+          find.ancestor(of: child, matching: find.byType(app_ui.Card)),
+        );
+        final riskCard = cardAround(find.text('28'));
+        final flagsCard = cardAround(find.byGlyph(AppGlyphs.target));
+        expect(
+          tester.getRect(perforation).center.dx,
+          closeTo((riskCard.right + flagsCard.left) / 2, 0.01),
+        );
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+      }
+    },
+  );
 }

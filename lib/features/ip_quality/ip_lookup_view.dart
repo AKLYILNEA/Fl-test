@@ -32,10 +32,12 @@ class IpLookupView extends ConsumerStatefulWidget {
   ConsumerState<IpLookupView> createState() => _IpLookupViewState();
 }
 
-class _IpLookupViewState extends ConsumerState<IpLookupView> {
+class _IpLookupViewState extends ConsumerState<IpLookupView>
+    with RouteSettledMixin<IpLookupView> {
   late final OutboundIpProbe _probe;
   late final TextEditingController _controller;
   final _focusNode = FocusNode();
+  bool _watchingProbe = false;
   String? _queriedIp;
   bool _retrying = false;
   bool _retryHold = false;
@@ -44,16 +46,27 @@ class _IpLookupViewState extends ConsumerState<IpLookupView> {
   @override
   void initState() {
     super.initState();
-    _probe = ref.read(outboundIpProbeProvider.notifier)..watch(routedOutbound);
+    _probe = ref.read(outboundIpProbeProvider.notifier);
     final initial = publicIpOf(widget.initialIp);
     _queriedIp = initial;
     _controller = TextEditingController(text: initial ?? '');
   }
 
   @override
+  void didSettleRoute() {
+    if (!_watchingProbe) {
+      _watchingProbe = true;
+      _probe.watch(routedOutbound);
+    }
+    setState(() {});
+  }
+
+  @override
   void dispose() {
     _retryTimer?.cancel();
-    _probe.unwatch(routedOutbound);
+    if (_watchingProbe) {
+      _probe.unwatch(routedOutbound);
+    }
     _controller.dispose();
     _focusNode.dispose();
     super.dispose();
@@ -144,10 +157,10 @@ class _IpLookupViewState extends ConsumerState<IpLookupView> {
         outboundIp.isEmpty &&
         entry.phase == ProbePhase.failed;
 
-    final riskState = activeIp.isNotEmpty
+    final riskState = routeSettled && activeIp.isNotEmpty
         ? ref.watch(ipRiskProvider(activeIp))
         : null;
-    final locateState = activeIp.isNotEmpty
+    final locateState = routeSettled && activeIp.isNotEmpty
         ? ref.watch(ipLocateProvider(activeIp))
         : null;
 
@@ -163,6 +176,7 @@ class _IpLookupViewState extends ConsumerState<IpLookupView> {
         locateState != null && !locateState.isLoading && attribution == null;
 
     final isLoading =
+        !routeSettled ||
         probingOutbound ||
         (!riskFailed &&
             !attributionFailed &&
@@ -283,21 +297,27 @@ class _IpLookupViewState extends ConsumerState<IpLookupView> {
 
     if (!isLoading && risk != null && attribution != null) {
       final hasChecks = risk.checks.isNotEmpty;
-      final heroCard = _IpRiskHeroCard(
-        ip: activeIp,
-        risk: risk,
-        hidden: hidden,
-        isOutbound: isOutbound,
-        fillHeight: isWide && hasChecks,
+      final heroCard = RepaintBoundary(
+        child: _IpRiskHeroCard(
+          ip: activeIp,
+          risk: risk,
+          hidden: hidden,
+          isOutbound: isOutbound,
+          fillHeight: isWide && hasChecks,
+        ),
       );
-      final attributionCard = _IpAttributionCard(
-        risk: risk,
-        attribution: attribution,
-        hidden: hidden,
-        isWide: isWide,
+      final attributionCard = RepaintBoundary(
+        child: _IpAttributionCard(
+          risk: risk,
+          attribution: attribution,
+          hidden: hidden,
+          isWide: isWide,
+        ),
       );
       final flagsCard = hasChecks
-          ? _IpFlagsCard(risk: risk, isWide: isWide)
+          ? RepaintBoundary(
+              child: _IpFlagsCard(risk: risk, isWide: isWide),
+            )
           : null;
       return Column(
         key: ValueKey('data:$activeIp'),
@@ -494,7 +514,6 @@ class _IpRiskHeroCard extends StatelessWidget {
     final hitCount = risk.checks.where((c) => c.hit == true).length;
     final totalChecks = risk.checks.length;
     final typeText = risk.typeLabel(context) ?? risk.levelLabel(context);
-    final typeColor = risk.isHomeBroadband ? riskGradient.first : scoreColor;
     final flagColor = totalChecks == 0
         ? cs.onSurfaceVariant
         : hitCount == 0
@@ -610,7 +629,6 @@ class _IpRiskHeroCard extends StatelessWidget {
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             _InlineMetric(
-              dotColor: typeColor,
               label: l.ipType,
               value: typeText,
               valueColor: risk.isHomeBroadband ? riskGradient.first : null,
@@ -633,20 +651,22 @@ class _IpRiskHeroCard extends StatelessWidget {
       children: [
         Semantics(
           label: '${l.ipRiskScore} ${risk.displayScore} / 100',
-          child: SizedBox(
-            height: 24,
-            width: double.infinity,
-            child: TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0, end: risk.displayScore.toDouble()),
-              duration: context.motionDuration(
-                const Duration(milliseconds: 520),
-              ),
-              curve: Curves.easeOutCubic,
-              builder: (_, animatedScore, _) => CustomPaint(
-                painter: _RiskScaleBarPainter(
-                  score: animatedScore,
-                  surface: colors.card,
-                  track: colors.tone2,
+          child: RepaintBoundary(
+            child: SizedBox(
+              height: 24,
+              width: double.infinity,
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: risk.displayScore.toDouble()),
+                duration: context.motionDuration(
+                  const Duration(milliseconds: 520),
+                ),
+                curve: Curves.easeOutCubic,
+                builder: (_, animatedScore, _) => CustomPaint(
+                  painter: _RiskScaleBarPainter(
+                    score: animatedScore,
+                    surface: colors.card,
+                    track: colors.tone2,
+                  ),
                 ),
               ),
             ),
@@ -733,14 +753,14 @@ class _IpRiskHeroCard extends StatelessWidget {
 
 class _InlineMetric extends StatelessWidget {
   const _InlineMetric({
-    required this.dotColor,
+    this.dotColor,
     required this.label,
     required this.value,
     this.valueColor,
     this.tabular = false,
   });
 
-  final Color dotColor;
+  final Color? dotColor;
   final String label;
   final String value;
   final Color? valueColor;
@@ -759,10 +779,14 @@ class _InlineMetric extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       spacing: 6,
       children: [
-        DecoratedBox(
-          decoration: ShapeDecoration(color: dotColor, shape: AppShape.circle),
-          child: const SizedBox.square(dimension: 7),
-        ),
+        if (dotColor != null)
+          DecoratedBox(
+            decoration: ShapeDecoration(
+              color: dotColor!,
+              shape: AppShape.circle,
+            ),
+            child: const SizedBox.square(dimension: 7),
+          ),
         Text(
           label,
           style: AppTextStyle.footnote
@@ -860,7 +884,7 @@ class _IpAttributionCard extends StatelessWidget {
   }
 
   Widget _textValue(BuildContext context, String value) {
-    return SelectableText(
+    return Text(
       value,
       style: AppTextStyle.subheadline.of(context, emphasized: true),
     );
@@ -873,7 +897,7 @@ class _IpAttributionCard extends StatelessWidget {
   }) {
     final cs = context.colorScheme;
     if (asn.isNotEmpty && network.isNotEmpty) {
-      return SelectableText.rich(
+      return Text.rich(
         TextSpan(
           children: [
             TextSpan(
@@ -893,12 +917,12 @@ class _IpAttributionCard extends StatelessWidget {
       );
     }
     if (asn.isNotEmpty) {
-      return SelectableText(
+      return Text(
         asn,
         style: AppTextStyle.subheadline.of(context, emphasized: true).toTabular,
       );
     }
-    return SelectableText(
+    return Text(
       network,
       style: AppTextStyle.subheadline.of(context, emphasized: true),
     );
@@ -1030,7 +1054,7 @@ class _IpAttributionCard extends StatelessWidget {
             ),
           if (place.isNotEmpty) ...[
             SizedBox(height: country.isNotEmpty ? placeGap : 0),
-            SelectableText(
+            Text(
               place,
               style: country.isNotEmpty
                   ? AppTextStyle.subheadline
@@ -1088,83 +1112,87 @@ class _IpAttributionCard extends StatelessWidget {
     );
 
     const singleZonePadding = EdgeInsets.symmetric(horizontal: 20, vertical: 18);
-    return Card(
-      radius: AppCorner.xl,
-      padding: EdgeInsets.zero,
-      child: ClipPath(
-        clipper: ShapeBorderClipper(
-          shape: AppShape.xl,
-          textDirection: Directionality.of(context),
-        ),
-        child: Stack(
-          children: [
-            Positioned(
-              right: -24,
-              top: 0,
-              bottom: 0,
-              child: Center(
-                child: IgnorePointer(
-                  child: GlyphIcon(
-                    AppGlyphs.proxies,
-                    size: 124,
-                    color: cs.primary.withValues(alpha: isDark ? 0.09 : 0.065),
+    return SelectionArea(
+      child: Card(
+        radius: AppCorner.xl,
+        padding: EdgeInsets.zero,
+        child: ClipPath(
+          clipper: ShapeBorderClipper(
+            shape: AppShape.xl,
+            textDirection: Directionality.of(context),
+          ),
+          child: Stack(
+            children: [
+              Positioned(
+                right: -24,
+                top: 0,
+                bottom: 0,
+                child: Center(
+                  child: IgnorePointer(
+                    child: GlyphIcon(
+                      AppGlyphs.proxies,
+                      size: 124,
+                      color: cs.primary.withValues(
+                        alpha: isDark ? 0.09 : 0.065,
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
-            if (specs.isEmpty || !hasLocation)
-              Padding(
-                padding: singleZonePadding,
-                child: specs.isEmpty ? leftZone : rightZone,
-              )
-            else
-              IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(
-                      flex: _wideLeftFlex,
-                      child: Padding(
-                        padding: const EdgeInsetsDirectional.fromSTEB(
-                          20,
-                          18,
-                          15,
-                          18,
+              if (specs.isEmpty || !hasLocation)
+                Padding(
+                  padding: singleZonePadding,
+                  child: specs.isEmpty ? leftZone : rightZone,
+                )
+              else
+                IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        flex: _wideLeftFlex,
+                        child: Padding(
+                          padding: const EdgeInsetsDirectional.fromSTEB(
+                            20,
+                            18,
+                            15,
+                            18,
+                          ),
+                          child: leftZone,
                         ),
-                        child: leftZone,
                       ),
-                    ),
-                    SizedBox(
-                      width: _wideCardGap,
-                      child: OverflowBox(
-                        minWidth: 20,
-                        maxWidth: 20,
-                        child: CustomPaint(
-                          painter: VerticalTicketPerforationPainter(
-                            notchColor: SurfaceLevel.page.colorOf(cs),
-                            dashColor: cs.outlineVariant.withValues(
-                              alpha: isDark ? 0.55 : 0.48,
+                      SizedBox(
+                        width: _wideCardGap,
+                        child: OverflowBox(
+                          minWidth: 20,
+                          maxWidth: 20,
+                          child: CustomPaint(
+                            painter: VerticalTicketPerforationPainter(
+                              notchColor: SurfaceLevel.page.colorOf(cs),
+                              dashColor: cs.outlineVariant.withValues(
+                                alpha: isDark ? 0.55 : 0.48,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    Expanded(
-                      flex: _wideRightFlex,
-                      child: Padding(
-                        padding: const EdgeInsetsDirectional.fromSTEB(
-                          15,
-                          18,
-                          20,
-                          18,
+                      Expanded(
+                        flex: _wideRightFlex,
+                        child: Padding(
+                          padding: const EdgeInsetsDirectional.fromSTEB(
+                            15,
+                            18,
+                            20,
+                            18,
+                          ),
+                          child: rightZone,
                         ),
-                        child: rightZone,
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -1220,7 +1248,7 @@ class _IpAttributionCard extends StatelessWidget {
               ),
             if (place.isNotEmpty) ...[
               SizedBox(height: country.isNotEmpty ? 3 : 0),
-              SelectableText(
+              Text(
                 place,
                 style: country.isNotEmpty
                     ? AppTextStyle.subheadline
@@ -1243,95 +1271,100 @@ class _IpAttributionCard extends StatelessWidget {
         _field(context, l.ipRiskHostname, _textValue(context, risk.hostname)),
     ];
 
-    return Card(
-      radius: AppCorner.xl,
-      padding: EdgeInsets.zero,
-      child: ClipPath(
-        clipper: ShapeBorderClipper(
-          shape: AppShape.xl,
-          textDirection: Directionality.of(context),
-        ),
-        child: Stack(
-          children: [
-            Positioned(
-              right: -24,
-              bottom: -22,
-              child: IgnorePointer(
-                child: GlyphIcon(
-                  AppGlyphs.proxies,
-                  size: 128,
-                  color: cs.primary.withValues(alpha: isDark ? 0.10 : 0.07),
+    return SelectionArea(
+      child: Card(
+        radius: AppCorner.xl,
+        padding: EdgeInsets.zero,
+        child: ClipPath(
+          clipper: ShapeBorderClipper(
+            shape: AppShape.xl,
+            textDirection: Directionality.of(context),
+          ),
+          child: Stack(
+            children: [
+              Positioned(
+                right: -24,
+                bottom: -22,
+                child: IgnorePointer(
+                  child: GlyphIcon(
+                    AppGlyphs.proxies,
+                    size: 128,
+                    color: cs.primary.withValues(alpha: isDark ? 0.10 : 0.07),
+                  ),
                 ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      _IpHeaderIconBadge(
-                        glyph: AppGlyphs.location,
-                        color: cs.primary,
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          country.isNotEmpty || !hasLocation
-                              ? l.ipRiskLocation
-                              : l.ipRiskCity,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTextStyle.headline.of(
-                            context,
-                            emphasized: true,
-                          ),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 18,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        _IpHeaderIconBadge(
+                          glyph: AppGlyphs.location,
+                          color: cs.primary,
                         ),
-                      ),
-                      if (countryCode.isNotEmpty) ...[
-                        const SizedBox(width: 12),
-                        DecoratedBox(
-                          decoration: ShapeDecoration(
-                            color: colors.tone,
-                            shape: AppShape.full,
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            child: Text(
-                              countryCode,
-                              style: AppTextStyle.footnote
-                                  .of(context, emphasized: true)
-                                  .toTabular
-                                  .copyWith(color: cs.onSurfaceVariant),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            country.isNotEmpty || !hasLocation
+                                ? l.ipRiskLocation
+                                : l.ipRiskCity,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyle.headline.of(
+                              context,
+                              emphasized: true,
                             ),
                           ),
                         ),
+                        if (countryCode.isNotEmpty) ...[
+                          const SizedBox(width: 12),
+                          DecoratedBox(
+                            decoration: ShapeDecoration(
+                              color: colors.tone,
+                              shape: AppShape.full,
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              child: Text(
+                                countryCode,
+                                style: AppTextStyle.footnote
+                                    .of(context, emphasized: true)
+                                    .toTabular
+                                    .copyWith(color: cs.onSurfaceVariant),
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
-                    ],
-                  ),
-                  if (sections.isNotEmpty) ...[
-                    const SizedBox(height: 12),
-                    for (final (index, section) in sections.indexed) ...[
-                      if (index > 0) ...[
-                        const SizedBox(height: sectionGap),
-                        Divider(
-                          height: 1,
-                          thickness: Divider.separatorThicknessOf(context),
-                        ),
-                        const SizedBox(height: sectionGap),
+                    ),
+                    if (sections.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      for (final (index, section) in sections.indexed) ...[
+                        if (index > 0) ...[
+                          const SizedBox(height: sectionGap),
+                          Divider(
+                            height: 1,
+                            thickness: Divider.separatorThicknessOf(context),
+                          ),
+                          const SizedBox(height: sectionGap),
+                        ],
+                        section,
                       ],
-                      section,
                     ],
                   ],
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -1432,6 +1465,7 @@ class _IpFlagsCard extends StatelessWidget {
               checks: risk.checks.where((c) => c.group == group).toList(),
               homeBroadband:
                   risk.isHomeBroadband && group == IpRiskGroup.datacenter,
+              singleLine: isWide,
             ),
           ],
         ],
@@ -1445,11 +1479,13 @@ class _FlagGroupRow extends StatelessWidget {
     required this.title,
     required this.checks,
     required this.homeBroadband,
+    required this.singleLine,
   });
 
   final String title;
   final List<IpRiskCheck> checks;
   final bool homeBroadband;
+  final bool singleLine;
 
   @override
   Widget build(BuildContext context) {
@@ -1475,23 +1511,38 @@ class _FlagGroupRow extends StatelessWidget {
           .of(context, emphasized: true)
           .copyWith(color: cs.onSurfaceVariant),
     );
-    final pills = Wrap(
-      spacing: 6,
-      runSpacing: 6,
-      children: [
-        if (homeBroadband)
-          const _LookupFlagPill(
-            check: IpRiskCheck(
-              group: IpRiskGroup.datacenter,
-              name: 'Home Broadband',
-              hit: false,
+    final pillWidgets = <Widget>[
+      if (homeBroadband)
+        _LookupFlagPill(
+          check: const IpRiskCheck(
+            group: IpRiskGroup.datacenter,
+            name: 'Home Broadband',
+            hit: false,
+          ),
+          home: true,
+          singleLine: singleLine,
+        )
+      else
+        for (final check in checks)
+          _LookupFlagPill(check: check, singleLine: singleLine),
+    ];
+    final Widget pills = singleLine
+        ? ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 26),
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: AlignmentDirectional.centerStart,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  spacing: 5,
+                  children: pillWidgets,
+                ),
+              ),
             ),
-            home: true,
           )
-        else
-          for (final check in checks) _LookupFlagPill(check: check),
-      ],
-    );
+        : Wrap(spacing: 6, runSpacing: 6, children: pillWidgets);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1512,10 +1563,15 @@ class _FlagGroupRow extends StatelessWidget {
 }
 
 class _LookupFlagPill extends StatelessWidget {
-  const _LookupFlagPill({required this.check, this.home = false});
+  const _LookupFlagPill({
+    required this.check,
+    this.home = false,
+    this.singleLine = false,
+  });
 
   final IpRiskCheck check;
   final bool home;
+  final bool singleLine;
 
   @override
   Widget build(BuildContext context) {
@@ -1541,29 +1597,30 @@ class _LookupFlagPill extends StatelessWidget {
             ),
             child: const SizedBox.square(dimension: 11),
           );
+    final label = Text(
+      home
+          ? context.appLocalizations.ipRiskHomeBroadband
+          : riskCheckLabel(context, check.name),
+      maxLines: singleLine ? 1 : null,
+      softWrap: !singleLine,
+      style: AppTextStyle.caption1
+          .of(context, emphasized: hit || home)
+          .copyWith(color: color),
+    );
     return Container(
       constraints: const BoxConstraints(minHeight: 26),
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+      padding: EdgeInsets.symmetric(
+        horizontal: singleLine ? 8 : 9,
+        vertical: 3,
+      ),
       decoration: ShapeDecoration(
         color: hit || home ? color.withValues(alpha: 0.12) : colors.tone,
         shape: AppShape.sm,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
-        spacing: 6,
-        children: [
-          leading,
-          Flexible(
-            child: Text(
-              home
-                  ? context.appLocalizations.ipRiskHomeBroadband
-                  : riskCheckLabel(context, check.name),
-              style: AppTextStyle.caption1
-                  .of(context, emphasized: hit || home)
-                  .copyWith(color: color),
-            ),
-          ),
-        ],
+        spacing: singleLine ? 5 : 6,
+        children: [leading, if (singleLine) label else Flexible(child: label)],
       ),
     );
   }
