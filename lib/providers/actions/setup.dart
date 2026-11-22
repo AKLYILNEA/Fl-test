@@ -63,7 +63,6 @@ class SetupAction extends _$SetupAction {
   _PendingSetupSlot? _pendingSetup;
   var _switchToken = 0;
   var _switchDebouncePending = false;
-  var _switchBurstActive = false;
   final _listenerScheduler = SerialTaskScheduler();
   _RunRequest? _latestRunRequest;
   DateTime? _startTime;
@@ -79,7 +78,6 @@ class SetupAction extends _$SetupAction {
       _stopRuntimeTicker();
       debouncer.cancel(FunctionTag.switchProfile);
       _switchDebouncePending = false;
-      _switchBurstActive = false;
     });
     ref.listen(appVisibleProvider, (_, _) => _syncRuntimeTicker());
     ref.listen(
@@ -88,24 +86,16 @@ class SetupAction extends _$SetupAction {
     );
   }
 
-  /// Wait just past the 380ms profile FLIP animation on a single switch so the
-  /// animation stays locked at 120fps with near-zero perceived latency.
+  /// Short debounce that coalesces rapid profile taps before pushing to Core,
+  /// flushed immediately when navigating away or starting the VPN.
   @protected
   Duration get switchProfileDebounceDuration =>
-      const Duration(milliseconds: 420);
-
-  /// Longer window once consecutive rapid taps are detected so intermediate
-  /// profiles never leak into Go Core's non-cancellable applyConfig lock.
-  @protected
-  Duration get switchProfileBurstDebounceDuration =>
-      const Duration(milliseconds: 700);
+      const Duration(milliseconds: 250);
 
   void switchProfileDebounce() {
     if (!ref.read(initProvider)) return;
     _switchToken++;
-    final isBurst = _switchDebouncePending || _switchBurstActive;
     _switchDebouncePending = true;
-    _switchBurstActive = isBurst;
     debouncer.cancel(FunctionTag.applyProfile);
     _pendingForceApply = false;
     ref.read(proxiesActionProvider.notifier).cancelDelayTests();
@@ -113,12 +103,9 @@ class SetupAction extends _$SetupAction {
       FunctionTag.switchProfile,
       () {
         _switchDebouncePending = false;
-        _switchBurstActive = false;
         unawaited(fullSetup());
       },
-      duration: isBurst
-          ? switchProfileBurstDebounceDuration
-          : switchProfileDebounceDuration,
+      duration: switchProfileDebounceDuration,
     );
   }
 
@@ -146,7 +133,6 @@ class SetupAction extends _$SetupAction {
 
   Future<bool> fullSetup() async {
     _switchDebouncePending = false;
-    _switchBurstActive = false;
     debouncer.cancel(FunctionTag.switchProfile);
     if (!ref.read(initProvider)) return true;
     ref.read(proxiesActionProvider.notifier).cancelDelayTests();
@@ -569,7 +555,6 @@ class SetupAction extends _$SetupAction {
   }) async {
     if (_switchDebouncePending) {
       _switchDebouncePending = false;
-      _switchBurstActive = false;
       debouncer.cancel(FunctionTag.switchProfile);
       force = true;
     }
@@ -1025,7 +1010,6 @@ class SetupAction extends _$SetupAction {
       profile = recoverMissingProfile();
       if (profile != null) {
         _switchDebouncePending = false;
-        _switchBurstActive = false;
         debouncer.cancel(FunctionTag.switchProfile);
       }
     }
