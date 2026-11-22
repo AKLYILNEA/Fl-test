@@ -33,10 +33,10 @@ const _redFlags = <String>{
   'ad', 'ae', 'af', 'ag', 'al', 'ao', 'at', 'be', 'bg', 'bh', 'bi', 'bm',
   'by', 'ca', 'cg', 'ch', 'cl', 'cm', 'cn', 'cq', 'dk', 'es', 'et', 'gb',
   'gl', 'gw', 'hk', 'id', 'im', 'ir', 'it', 'kg', 'kn', 'kw', 'lb', 'li',
-  'lt', 'lv', 'ly', 'ma', 'mc', 'md', 'me', 'mk', 'ml', 'mm', 'mn', 'mr',
-  'mt', 'mv', 'mx', 'np', 'om', 'pe', 'pf', 'pg', 'pl', 'pt', 'qa', 'ro',
-  'sd', 'sg', 'sn', 'su', 'td', 'tj', 'tl', 'tn', 'to', 'tr', 'tt', 'tw',
-  'ug', 'uk', 'vn', 'wf', 'ws',
+  'lr', 'lt', 'lv', 'ly', 'ma', 'mc', 'md', 'me', 'mk', 'ml', 'mm', 'mn',
+  'mr', 'mt', 'mv', 'mx', 'my', 'np', 'om', 'pe', 'pf', 'pg', 'pl', 'pr',
+  'pt', 'qa', 'ro', 'sd', 'sg', 'sn', 'su', 'td', 'tj', 'tl', 'tn', 'to',
+  'tr', 'tt', 'tw', 'ug', 'uk', 'um', 'us', 'vn', 'wf', 'ws',
 };
 
 const _blueFlags = <String>{
@@ -44,11 +44,11 @@ const _blueFlags = <String>{
   'bq', 'bs', 'bv', 'bw', 'bz', 'cd', 'ck', 'cp', 'cr', 'cu', 'cv', 'cw',
   'cx', 'cz', 'dg', 'do', 'er', 'eu', 'fj', 'fk', 'fm', 'fo', 'fr', 'fx',
   'ga', 'gp', 'gq', 'gr', 'gs', 'gt', 'gu', 'hm', 'hn', 'hr', 'ht', 'io',
-  'is', 'kh', 'ki', 'km', 'kp', 'ky', 'kz', 'la', 'lc', 'lr', 'ls', 'lu',
-  'mf', 'mh', 'mp', 'ms', 'my', 'ni', 'nl', 'no', 'nr', 'nz', 'pa', 'ph',
-  'pm', 'pn', 'pr', 'pw', 'py', 're', 'rs', 'ru', 'rw', 'se', 'sh', 'si',
-  'sj', 'sk', 'sl', 'sm', 'so', 'sv', 'sx', 'sz', 'ta', 'tc', 'tf', 'th',
-  'tk', 'tv', 'tz', 'um', 'un', 'us', 've', 'vg', 'xk', 'yu', 'za',
+  'is', 'kh', 'ki', 'km', 'kp', 'ky', 'kz', 'la', 'lc', 'ls', 'lu', 'mf',
+  'mh', 'mp', 'ms', 'ni', 'nl', 'no', 'nr', 'nz', 'pa', 'ph', 'pm', 'pn',
+  'pw', 'py', 're', 'rs', 'ru', 'rw', 'se', 'sh', 'si', 'sj', 'sk', 'sl',
+  'sm', 'so', 'sv', 'sx', 'sz', 'ta', 'tc', 'tf', 'th', 'tk', 'tv', 'tz',
+  'un', 've', 'vg', 'xk', 'yu', 'za',
 };
 
 const _yellowFlags = <String>{
@@ -75,7 +75,7 @@ String? countryFlagAsset(String? countryCode) {
 ///
 /// White-rim or neutral flags (such as JP, KR, FI) resolve to
 /// [CountryFlagTone.grey], and blue/white/red flags where white + blue exceed
-/// red (such as FR, RU, US) resolve to [CountryFlagTone.blue].
+/// red (such as FR, RU) resolve to [CountryFlagTone.blue].
 CountryFlagTone countryFlagTone(String? countryCode) {
   if (countryCode == null) return CountryFlagTone.grey;
   final code = countryCode.trim().toLowerCase();

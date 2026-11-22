@@ -457,9 +457,12 @@ void main() {
         expect(countryFlagTone('HK'), CountryFlagTone.red);
         expect(countryFlagTone('GB'), CountryFlagTone.red);
         expect(countryFlagTone('QA'), CountryFlagTone.red);
+        expect(countryFlagTone('US'), CountryFlagTone.red);
+        expect(countryFlagTone('MY'), CountryFlagTone.red);
+        expect(countryFlagTone('LR'), CountryFlagTone.red);
+        expect(countryFlagTone('PR'), CountryFlagTone.red);
         expect(countryFlagTone('FR'), CountryFlagTone.blue);
         expect(countryFlagTone('RU'), CountryFlagTone.blue);
-        expect(countryFlagTone('US'), CountryFlagTone.blue);
         expect(countryFlagTone('SE'), CountryFlagTone.blue);
         expect(countryFlagTone('MO'), CountryFlagTone.green);
         expect(countryFlagTone('CO'), CountryFlagTone.yellow);
