@@ -436,7 +436,6 @@ enum FunctionTag {
   updateConfig,
   updateGroups,
   applyProfile,
-  switchProfile,
   savePreferences,
   changeProxy,
   updateDelay,

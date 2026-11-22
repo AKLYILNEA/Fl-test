@@ -43,7 +43,9 @@ class _CoreContainerState extends ConsumerState<CoreManager>
     // the previous one hides the error and looks like the switch was lost.
     ref.listenManual(currentProfileIdProvider, (prev, next) {
       if (prev == next) return;
-      ref.read(setupActionProvider.notifier).switchProfileDebounce();
+      runAfterFrame(() {
+        unawaited(ref.read(setupActionProvider.notifier).fullSetup());
+      });
     });
     ref.listenManual(updateParamsProvider, (prev, next) {
       if (prev != next) {
