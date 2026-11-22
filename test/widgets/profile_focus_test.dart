@@ -589,7 +589,7 @@ void main() {
   });
 
   testWidgets(
-    'switching profiles in landscape runs spatial FLIP animation and settles cleanly',
+    'switching profiles in landscape runs spatial FLIP animation repeatedly with unified hero height',
     (tester) async {
       final first = urlProfile('Main Sub');
       final second = Profile.normal(label: 'Local YAML');
@@ -605,24 +605,24 @@ void main() {
         ],
       );
 
-      expect(
-        find.descendant(
-          of: find.byType(ProfileBoardingPass),
-          matching: find.text('Main Sub'),
-        ),
-        findsOneWidget,
-      );
+      final urlHeroHeight = tester.getSize(find.byType(ProfileBoardingPass)).height;
 
+      // Swap 1: Remote URL -> Custom.
       await tester.tap(find.text('Custom Rules'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 60));
       expect(tester.takeException(), isNull);
-      await tester.pump(const Duration(milliseconds: 140));
-      expect(tester.takeException(), isNull);
+      expect(
+        find.byType(ProfileBoardingPass).evaluate().length,
+        greaterThan(1),
+      );
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
       expect(find.byType(ProfileBoardingPass), findsOneWidget);
+      final customHeroHeight =
+          tester.getSize(find.byType(ProfileBoardingPass)).height;
+      expect(customHeroHeight, moreOrLessEquals(urlHeroHeight, epsilon: 0.5));
       expect(
         find.descendant(
           of: find.byType(ProfileBoardingPass),
@@ -638,11 +638,32 @@ void main() {
         findsOneWidget,
       );
 
-      // Switch back from shorter Custom hero to taller Remote URL hero.
+      // Swap 2: Custom -> Local YAML (must animate again, not just first swap).
+      await tester.tap(find.text('Local YAML'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 60));
+      expect(tester.takeException(), isNull);
+      expect(
+        find.byType(ProfileBoardingPass).evaluate().length,
+        greaterThan(1),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(ProfileBoardingPass), findsOneWidget);
+      final yamlHeroHeight =
+          tester.getSize(find.byType(ProfileBoardingPass)).height;
+      expect(yamlHeroHeight, moreOrLessEquals(urlHeroHeight, epsilon: 0.5));
+
+      // Swap 3: Local YAML -> Remote URL.
       await tester.tap(find.text('Main Sub'));
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 90));
+      await tester.pump(const Duration(milliseconds: 60));
       expect(tester.takeException(), isNull);
+      expect(
+        find.byType(ProfileBoardingPass).evaluate().length,
+        greaterThan(1),
+      );
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
@@ -658,27 +679,39 @@ void main() {
   );
 
   testWidgets(
-    'switching profiles in portrait runs spatial FLIP animation and settles cleanly',
+    'switching profiles in portrait runs spatial FLIP animation repeatedly with unified hero height',
     (tester) async {
       final first = urlProfile('Main Sub');
       final second = Profile.normal(label: 'Local YAML');
-      final third = urlProfile('Backup Sub');
+      final third = Profile.custom(label: 'Custom Rules');
       await pumpProfiles(
         tester,
         profiles: [first, second, third],
         currentProfileId: first.id,
         size: const Size(430, 840),
+        overrides: [
+          profileGroupsCountProvider.overrideWith((_, _) => Stream.value(5)),
+        ],
       );
 
-      // Remote URL (wavy traffic bar) -> Local YAML (3 stat tiles, different height).
+      final urlHeroHeight = tester.getSize(find.byType(ProfileBoardingPass)).height;
+
+      // Swap 1: Remote URL -> Local YAML.
       await tester.tap(find.text('Local YAML'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 80));
       expect(tester.takeException(), isNull);
+      expect(
+        find.byType(ProfileBoardingPass).evaluate().length,
+        greaterThan(1),
+      );
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
       expect(find.byType(ProfileBoardingPass), findsOneWidget);
+      final yamlHeroHeight =
+          tester.getSize(find.byType(ProfileBoardingPass)).height;
+      expect(yamlHeroHeight, moreOrLessEquals(urlHeroHeight, epsilon: 0.5));
       expect(
         find.descendant(
           of: find.byType(ProfileBoardingPass),
@@ -694,19 +727,26 @@ void main() {
         findsOneWidget,
       );
 
-      // Local YAML -> Remote URL (back to wavy traffic bar).
-      await tester.tap(find.text('Backup Sub'));
+      // Swap 2: Local YAML -> Custom Rules (must animate again).
+      await tester.tap(find.text('Custom Rules'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 80));
       expect(tester.takeException(), isNull);
+      expect(
+        find.byType(ProfileBoardingPass).evaluate().length,
+        greaterThan(1),
+      );
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
       expect(find.byType(ProfileBoardingPass), findsOneWidget);
+      final customHeroHeight =
+          tester.getSize(find.byType(ProfileBoardingPass)).height;
+      expect(customHeroHeight, moreOrLessEquals(urlHeroHeight, epsilon: 0.5));
       expect(
         find.descendant(
           of: find.byType(ProfileBoardingPass),
-          matching: find.text('Backup Sub'),
+          matching: find.text('Custom Rules'),
         ),
         findsOneWidget,
       );

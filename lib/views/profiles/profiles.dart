@@ -481,8 +481,7 @@ class _ProfilesContentState extends ConsumerState<_ProfilesContent>
   }
 
   void _onSwapStatus(AnimationStatus status) {
-    if (status == AnimationStatus.completed ||
-        status == AnimationStatus.dismissed) {
+    if (status == AnimationStatus.completed) {
       if (_activeSwap != null && mounted) {
         setState(() {
           _activeSwap = null;

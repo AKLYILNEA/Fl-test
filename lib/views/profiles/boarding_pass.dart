@@ -299,6 +299,36 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
     with ConfigCountsWatch<ProfileBoardingPass> {
   static const _nearlyUsedShare = 0.9;
 
+  /// Shared height for the top band (header info ↔ landscape primary actions)
+  /// so all 3 profile types align horizontally and stay height-identical.
+  static double get _topBandHeight {
+    final measure = globalState.measure;
+    final headerText =
+        measure.textHeight(AppTextStyle.headline) +
+        3.0 +
+        measure.textHeight(AppTextStyle.footnote);
+    return math.max(46.0, (headerText + 2.0).ceilToDouble());
+  }
+
+  /// Shared height for the bottom band (usage wave ↔ 3 stat tiles ↔ landscape
+  /// secondary actions) so Remote, Local YAML, and Custom hero cards have the
+  /// exact same height in both portrait and landscape.
+  static double get _bottomBandHeight {
+    final measure = globalState.measure;
+    final usageHeight =
+        measure.textHeight(AppTextStyle.title3) +
+        4.0 +
+        12.0 +
+        4.0 +
+        measure.textHeight(AppTextStyle.caption1);
+    final secondaryTileHeight =
+        16.0 + 17.0 + 5.0 + measure.textHeight(AppTextStyle.caption2);
+    return math.max(
+      62.0,
+      math.max(usageHeight, secondaryTileHeight).ceilToDouble(),
+    );
+  }
+
   ProfileStats? _statsOf(List<ExternalProvider> providers) {
     final effectiveCounts =
         configCounts ?? cachedConfigCounts() ?? configCountsNotifier.value;
@@ -341,8 +371,8 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
     final colorScheme = context.colorScheme;
     final expired = profileIsExpired(profile);
     final subtitle = profileSubtitleText(context, profile);
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: 46),
+    return SizedBox(
+      height: _topBandHeight,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -479,10 +509,9 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
       _ => null,
     };
 
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: 58),
+    return SizedBox(
+      height: _bottomBandHeight,
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -513,7 +542,6 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
               ),
             ],
           ),
-          const SizedBox(height: 5),
           SizedBox(
             height: 12,
             child: CustomPaint(
@@ -524,7 +552,6 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
               ),
             ),
           ),
-          const SizedBox(height: 5),
           Row(
             spacing: 12,
             children: [
@@ -584,7 +611,7 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
     Widget tile(int? value, String label) {
       return Expanded(
         child: Container(
-          constraints: const BoxConstraints(minHeight: 58),
+          height: _bottomBandHeight,
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           decoration: ShapeDecoration(
             color: tileFill,
@@ -777,6 +804,8 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
     bool isUpdating,
   ) {
     final plan = _landscapeStubPlan(context, profile, isUpdating);
+    final topHeight = _topBandHeight;
+    final bottomHeight = _bottomBandHeight;
     return Column(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -787,7 +816,8 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
           spacing: 8,
           textDirection: Directionality.of(context),
           children: [
-            for (final pill in plan.pills) _PrimaryActionTile(action: pill),
+            for (final pill in plan.pills)
+              _PrimaryActionTile(action: pill, height: topHeight),
           ],
         ),
         const SizedBox(height: 14),
@@ -795,7 +825,12 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
           spacing: 8,
           children: [
             for (final action in plan.actions)
-              Expanded(child: _SecondaryActionTile(action: action)),
+              Expanded(
+                child: _SecondaryActionTile(
+                  action: action,
+                  height: bottomHeight,
+                ),
+              ),
           ],
         ),
       ],
@@ -1188,9 +1223,10 @@ class _RenderGridSpanRow extends RenderBox
 }
 
 class _PrimaryActionTile extends StatelessWidget {
-  const _PrimaryActionTile({required this.action});
+  const _PrimaryActionTile({required this.action, required this.height});
 
   final _PillAction action;
+  final double height;
 
   @override
   Widget build(BuildContext context) {
@@ -1200,33 +1236,36 @@ class _PrimaryActionTile extends StatelessWidget {
         ? action.accent.withValues(alpha: isDark ? 0.18 : 0.11)
         : DashboardColors.of(context).tone;
     final foreground = action.tinted ? action.accent : colorScheme.onSurface;
-    return PressSurface(
-      fill: fill,
-      foreground: foreground,
-      shape: AppShape.all(14),
-      minimum: const BoxConstraints(minHeight: 46),
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      onPressed: action.onPressed,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        spacing: 6,
-        children: [
-          if (action.loading)
-            const ActivityIndicator(size: 15)
-          else
-            GlyphIcon(action.glyph, size: 16),
-          Flexible(
-            child: Text(
-              action.label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTextStyle.footnote
-                  .of(context, emphasized: true)
-                  .copyWith(color: foreground),
+    return SizedBox(
+      height: height,
+      child: PressSurface(
+        fill: fill,
+        foreground: foreground,
+        shape: AppShape.all(14),
+        minimum: BoxConstraints(minHeight: height),
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        onPressed: action.onPressed,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          spacing: 6,
+          children: [
+            if (action.loading)
+              const ActivityIndicator(size: 15)
+            else
+              GlyphIcon(action.glyph, size: 16),
+            Flexible(
+              child: Text(
+                action.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTextStyle.footnote
+                    .of(context, emphasized: true)
+                    .copyWith(color: foreground),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1288,9 +1327,10 @@ class _StubAction {
 }
 
 class _SecondaryActionTile extends StatelessWidget {
-  const _SecondaryActionTile({required this.action});
+  const _SecondaryActionTile({required this.action, required this.height});
 
   final _StubAction action;
+  final double height;
 
   @override
   Widget build(BuildContext context) {
@@ -1305,29 +1345,32 @@ class _SecondaryActionTile extends StatelessWidget {
         : colorScheme.onSurfaceVariant;
     return Tooltip(
       message: action.label,
-      child: PressSurface(
-        fill: fill,
-        foreground: iconColor,
-        shape: AppShape.all(14),
-        minimum: const BoxConstraints(minHeight: 58),
-        padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 8),
-        onPressed: action.onPressed,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          spacing: 5,
-          children: [
-            GlyphIcon(action.glyph, size: 17, color: iconColor),
-            Text(
-              action.label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: AppTextStyle.caption2
-                  .of(context)
-                  .copyWith(color: labelColor, height: 1.0),
-            ),
-          ],
+      child: SizedBox(
+        height: height,
+        child: PressSurface(
+          fill: fill,
+          foreground: iconColor,
+          shape: AppShape.all(14),
+          minimum: BoxConstraints(minHeight: height),
+          padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 8),
+          onPressed: action.onPressed,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            spacing: 5,
+            children: [
+              GlyphIcon(action.glyph, size: 17, color: iconColor),
+              Text(
+                action.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: AppTextStyle.caption2
+                    .of(context)
+                    .copyWith(color: labelColor, height: 1.0),
+              ),
+            ],
+          ),
         ),
       ),
     );
