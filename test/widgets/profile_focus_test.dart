@@ -587,4 +587,129 @@ void main() {
     expect(find.text(profiles.first.label), findsOneWidget);
     expect(find.byType(AppBarActionButton), findsNothing);
   });
+
+  testWidgets(
+    'switching profiles in landscape runs spatial FLIP animation and settles cleanly',
+    (tester) async {
+      final first = urlProfile('Main Sub');
+      final second = Profile.normal(label: 'Local YAML');
+      final third = Profile.custom(label: 'Custom Rules');
+      final fourth = urlProfile('Backup Sub');
+      await pumpProfiles(
+        tester,
+        profiles: [first, second, third, fourth],
+        currentProfileId: first.id,
+        size: const Size(900, 800),
+        overrides: [
+          profileGroupsCountProvider.overrideWith((_, _) => Stream.value(5)),
+        ],
+      );
+
+      expect(
+        find.descendant(
+          of: find.byType(ProfileBoardingPass),
+          matching: find.text('Main Sub'),
+        ),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.text('Custom Rules'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 60));
+      expect(tester.takeException(), isNull);
+      await tester.pump(const Duration(milliseconds: 140));
+      expect(tester.takeException(), isNull);
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(ProfileBoardingPass), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(ProfileBoardingPass),
+          matching: find.text('Custom Rules'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.byType(ProfileItem),
+          matching: find.text('Main Sub'),
+        ),
+        findsOneWidget,
+      );
+
+      // Switch back from shorter Custom hero to taller Remote URL hero.
+      await tester.tap(find.text('Main Sub'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 90));
+      expect(tester.takeException(), isNull);
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(ProfileBoardingPass), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(ProfileBoardingPass),
+          matching: find.text('Main Sub'),
+        ),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'switching profiles in portrait runs spatial FLIP animation and settles cleanly',
+    (tester) async {
+      final first = urlProfile('Main Sub');
+      final second = Profile.normal(label: 'Local YAML');
+      final third = urlProfile('Backup Sub');
+      await pumpProfiles(
+        tester,
+        profiles: [first, second, third],
+        currentProfileId: first.id,
+        size: const Size(430, 840),
+      );
+
+      // Remote URL (wavy traffic bar) -> Local YAML (3 stat tiles, different height).
+      await tester.tap(find.text('Local YAML'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 80));
+      expect(tester.takeException(), isNull);
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(ProfileBoardingPass), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(ProfileBoardingPass),
+          matching: find.text('Local YAML'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.byType(ProfileItem),
+          matching: find.text('Main Sub'),
+        ),
+        findsOneWidget,
+      );
+
+      // Local YAML -> Remote URL (back to wavy traffic bar).
+      await tester.tap(find.text('Backup Sub'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 80));
+      expect(tester.takeException(), isNull);
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(ProfileBoardingPass), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(ProfileBoardingPass),
+          matching: find.text('Backup Sub'),
+        ),
+        findsOneWidget,
+      );
+    },
+  );
 }

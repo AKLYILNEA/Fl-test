@@ -254,6 +254,10 @@ List<PopupMenuItem> buildProfileMenuItems(
   ];
 }
 
+/// Which portion of [ProfileBoardingPass] to render. Used internally by the
+/// profile-switch FLIP overlay so each hero card can animate independently.
+enum HeroCardPart { all, primaryOnly, actionsOnly }
+
 /// Active profile hero:
 /// - Portrait (`!isWide`): vertical boarding pass with top info + 2 circular
 ///   actions (primary + `⋯` PopupAnchor morph menu), horizontal perforated
@@ -268,11 +272,23 @@ class ProfileBoardingPass extends ConsumerStatefulWidget {
     required this.profile,
     required this.isWide,
     this.spacing = 16.0,
+    this.part = HeroCardPart.all,
+    this.primaryCardKey,
+    this.actionsCardKey,
+    this.hidePrimary = false,
+    this.hideActions = false,
+    this.metricsReveal = 1.0,
   });
 
   final Profile profile;
   final bool isWide;
   final double spacing;
+  final HeroCardPart part;
+  final GlobalKey? primaryCardKey;
+  final GlobalKey? actionsCardKey;
+  final bool hidePrimary;
+  final bool hideActions;
+  final double metricsReveal;
 
   @override
   ConsumerState<ProfileBoardingPass> createState() =>
@@ -762,6 +778,7 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
   ) {
     final plan = _landscapeStubPlan(context, profile, isUpdating);
     return Column(
+      mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -803,9 +820,20 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
     final bodyMetrics = usage != null
         ? _buildUsageStub(context, profile, usage, stats)
         : _buildStatsStub(context, profile, stats, customGroupsCount);
+    final reveal = widget.metricsReveal.clamp(0.0, 1.0);
+    final Widget revealedMetrics = reveal >= 1.0
+        ? bodyMetrics
+        : Opacity(
+            opacity: reveal,
+            child: Transform.translate(
+              offset: Offset(0, 8 * (1 - reveal)),
+              child: bodyMetrics,
+            ),
+          );
 
-    Widget cardShell({required Widget child}) {
+    Widget cardShell({Key? key, required Widget child}) {
       return ClipPath(
+        key: key,
         clipper: ShapeBorderClipper(shape: AppShape.all(AppCorner.xl)),
         child: ColoredBox(
           color: cardColor,
@@ -814,51 +842,56 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
       );
     }
 
-    final Widget passContent;
-    if (widget.isWide) {
-      passContent = IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          spacing: widget.spacing,
-          children: [
-            Expanded(
-              child: cardShell(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _buildHeaderInfo(context, profile),
-                      const SizedBox(height: 14),
-                      bodyMetrics,
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            Expanded(
-              child: cardShell(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: _buildLandscapeActionMatrix(
-                    context,
-                    profile,
-                    isUpdating,
-                  ),
-                ),
-              ),
-            ),
-          ],
+    Widget buildPrimaryLandscapeCard({Key? key}) {
+      return cardShell(
+        key: key,
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildHeaderInfo(context, profile),
+              const SizedBox(height: 14),
+              revealedMetrics,
+            ],
+          ),
         ),
       );
-    } else {
+    }
+
+    Widget buildActionsLandscapeCard({Key? key}) {
+      return cardShell(
+        key: key,
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: _buildLandscapeActionMatrix(context, profile, isUpdating),
+        ),
+      );
+    }
+
+    Widget buildPortraitCard({Key? key}) {
       final isDark = colorScheme.brightness == Brightness.dark;
       final pageColor = SurfaceLevel.page.colorOf(colorScheme);
       final dashColor = colorScheme.onSurface.withValues(
         alpha: isDark ? 0.14 : 0.11,
       );
-      passContent = cardShell(
+      Widget perforation = SizedBox(
+        height: 18,
+        child: CustomPaint(
+          painter: _HorizontalPerforationPainter(
+            notchColor: pageColor,
+            dashColor: dashColor,
+          ),
+          child: const SizedBox.expand(),
+        ),
+      );
+      if (reveal < 1.0) {
+        perforation = Opacity(opacity: reveal, child: perforation);
+      }
+      return cardShell(
+        key: key,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -874,22 +907,49 @@ class _ProfileBoardingPassState extends ConsumerState<ProfileBoardingPass>
                 ],
               ),
             ),
-            SizedBox(
-              height: 18,
-              child: CustomPaint(
-                painter: _HorizontalPerforationPainter(
-                  notchColor: pageColor,
-                  dashColor: dashColor,
-                ),
-                child: const SizedBox.expand(),
-              ),
-            ),
+            perforation,
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              child: bodyMetrics,
+              child: revealedMetrics,
             ),
           ],
         ),
+      );
+    }
+
+    if (widget.part == HeroCardPart.primaryOnly) {
+      return widget.isWide ? buildPrimaryLandscapeCard() : buildPortraitCard();
+    }
+    if (widget.part == HeroCardPart.actionsOnly) {
+      return buildActionsLandscapeCard();
+    }
+
+    final Widget passContent;
+    if (widget.isWide) {
+      passContent = IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: widget.spacing,
+          children: [
+            Expanded(
+              child: Opacity(
+                opacity: widget.hidePrimary ? 0.0 : 1.0,
+                child: buildPrimaryLandscapeCard(key: widget.primaryCardKey),
+              ),
+            ),
+            Expanded(
+              child: Opacity(
+                opacity: widget.hideActions ? 0.0 : 1.0,
+                child: buildActionsLandscapeCard(key: widget.actionsCardKey),
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      passContent = Opacity(
+        opacity: widget.hidePrimary ? 0.0 : 1.0,
+        child: buildPortraitCard(key: widget.primaryCardKey),
       );
     }
 
