@@ -318,27 +318,10 @@ class _ExitRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = context.colorScheme;
-    final isDesktop = DashboardDensityScope.of(context).isDesktop;
-    final foreground = active
-        ? colorScheme.onSurface
-        : colorScheme.onSurfaceVariant;
-    final heroStyle = DashboardText.figure(
+    final style = DashboardText.figure(
       context,
       metrics.ip,
-      color: foreground,
-    ).copyWith(letterSpacing: 0, height: 1.15);
-    final ipStyle = AppTextStyle.footnote
-        .of(context, emphasized: true)
-        .toTabular
-        .copyWith(
-          fontSize: isDesktop ? 13 : 12.5,
-          height: 1.2,
-          color: foreground,
-        );
-    final mutedIpStyle = ipStyle.copyWith(
-      color: active
-          ? colorScheme.onSurfaceVariant
-          : colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+      color: active ? colorScheme.onSurface : colorScheme.onSurfaceVariant,
     );
     final info = this.info;
     final appLocalizations = context.appLocalizations;
@@ -352,17 +335,21 @@ class _ExitRow extends StatelessWidget {
                 onTap: () => showIpQualitySheet(context, ip: info.ip),
                 shape: AppShape.xs,
                 overlay: PressRegion.focusOverlay,
-                child: _IpText(ip: info.ip, style: ipStyle),
+                child: _IpText(ip: info.ip, style: style),
               ),
             ),
           )
         : failed
-        ? Text('\u2014', maxLines: 1, style: mutedIpStyle)
-        : SkeletonText(width: 120, style: mutedIpStyle);
-    final heroHeight = MediaQuery.textScalerOf(
+        ? Text(
+            appLocalizations.serviceFailed,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: style.copyWith(color: colorScheme.error),
+          )
+        : SkeletonText(width: 140, style: style);
+    final ipHeight = MediaQuery.textScalerOf(
       context,
-    ).scale((heroStyle.fontSize ?? metrics.ip.size) * (heroStyle.height ?? 1.15));
-    final ipHeight = MediaQuery.textScalerOf(context).scale(18.0);
+    ).scale((style.fontSize ?? metrics.ip.size) * (style.height ?? 1.15));
     final effectiveCountryCode =
         (quality?.countryCode.trim().isNotEmpty ?? false)
         ? quality!.countryCode
@@ -384,34 +371,21 @@ class _ExitRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(
-                height: heroHeight,
-                child: Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: info == null && failed
-                      ? Text(
-                          appLocalizations.serviceFailed,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: heroStyle.copyWith(color: colorScheme.error),
-                        )
-                      : _IpLocationHeroText(
-                          quality: quality,
-                          countryCode: effectiveCountryCode,
-                          loading: loading,
-                          style: heroStyle,
-                          onTap: info != null
-                              ? () => showIpQualitySheet(context, ip: info.ip)
-                              : null,
-                        ),
-                ),
-              ),
-              const SizedBox(height: 3),
-              SizedBox(
                 height: ipHeight,
                 child: Align(
                   alignment: AlignmentDirectional.centerStart,
                   child: ip,
                 ),
+              ),
+              const SizedBox(height: 3),
+              _IpLocationSubText(
+                quality: quality,
+                countryCode: effectiveCountryCode,
+                loading: loading,
+                active: active,
+                onTap: info != null
+                    ? () => showIpQualitySheet(context, ip: info.ip)
+                    : null,
               ),
             ],
           ),
@@ -433,39 +407,58 @@ class _IpText extends ConsumerWidget {
       appSettingProvider.select((state) => state.hideIp),
     );
     if (!hideIp) {
-      return _LocationLabelRow(text: ip, style: style, iconSize: 13);
+      return DashboardFitText(ip, style: style);
     }
-    return _LocationLabelRow(
-      text: _ipMask,
+    return DashboardFitText(
+      _ipMask,
       style: style.copyWith(
         fontFamily: FontFamily.mapleMono.value,
         color: context.colorScheme.success,
       ),
-      iconSize: 13,
-      iconColor: style.color,
     );
   }
 }
 
-class _IpLocationHeroText extends StatelessWidget {
-  const _IpLocationHeroText({
+class _IpLocationSubText extends StatelessWidget {
+  const _IpLocationSubText({
     required this.quality,
     required this.countryCode,
     required this.loading,
-    required this.style,
+    required this.active,
     this.onTap,
   });
 
   final IpRisk? quality;
   final String? countryCode;
   final bool loading;
-  final TextStyle style;
+  final bool active;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = DashboardDensityScope.of(context).isDesktop;
+    final style = AppTextStyle.footnote
+        .of(context, emphasized: true)
+        .copyWith(
+          fontSize: isDesktop ? 13 : 12.5,
+          height: 1.2,
+          color: active
+              ? context.colorScheme.onSurfaceVariant
+              : context.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+        );
+    final subHeight = MediaQuery.textScalerOf(context).scale(18.0);
+    return SizedBox(
+      height: subHeight,
+      child: Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: _buildContent(context, style),
+      ),
+    );
+  }
+
+  Widget _buildContent(BuildContext context, TextStyle style) {
     if (loading) {
-      return SkeletonText(width: 110, style: style);
+      return SkeletonText(width: 80, style: style);
     }
     final riskCountry = quality?.country.trim();
     final rawCode = (quality?.countryCode.trim().isNotEmpty ?? false)
@@ -488,14 +481,16 @@ class _IpLocationHeroText extends StatelessWidget {
     if (display == null || display.isEmpty) {
       return Text('\u2014', maxLines: 1, style: style);
     }
-    final label = Text(
-      display,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: style,
+    final foreground = active
+        ? context.colorScheme.onSurface
+        : context.colorScheme.onSurfaceVariant;
+    final row = _LocationLabelRow(
+      text: display,
+      style: style.copyWith(color: foreground),
+      iconSize: 13,
     );
     final interactive = onTap == null
-        ? label
+        ? row
         : FocusRing(
             shape: AppShape.xs,
             standsOff: true,
@@ -503,7 +498,7 @@ class _IpLocationHeroText extends StatelessWidget {
               onTap: onTap,
               shape: AppShape.xs,
               overlay: PressRegion.focusOverlay,
-              child: label,
+              child: row,
             ),
           );
     final tooltip = quality?.fullLocationLabel;
@@ -517,13 +512,11 @@ class _LocationLabelRow extends StatefulWidget {
     required this.text,
     required this.style,
     required this.iconSize,
-    this.iconColor,
   });
 
   final String text;
   final TextStyle style;
   final double iconSize;
-  final Color? iconColor;
 
   @override
   State<_LocationLabelRow> createState() => _LocationLabelRowState();
@@ -569,7 +562,7 @@ class _LocationLabelRowState extends State<_LocationLabelRow> {
     final pin = GlyphIcon(
       AppGlyphs.location,
       size: widget.iconSize,
-      color: widget.iconColor ?? widget.style.color,
+      color: widget.style.color,
     );
     final label = Text(
       widget.text,

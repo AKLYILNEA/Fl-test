@@ -249,7 +249,7 @@ void main() {
       await tester.pump();
 
       expect(find.text(_ip), findsOneWidget);
-      expect(find.text('United Kingdom'), findsOneWidget);
+      expect(find.text('GB'), findsOneWidget);
       expect(find.text('1 / 100'), findsOneWidget);
       expect(find.text('Low risk'), findsOneWidget);
       expect(_chip(tester, 'Not running').tone, DashboardChipTone.idle);
@@ -328,7 +328,7 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.text('United Kingdom'), findsOneWidget);
+      expect(find.text('GB'), findsOneWidget);
       expect(find.text('Not running'), findsOneWidget);
       expect(_chip(tester, 'Not running').tone, DashboardChipTone.idle);
       expect(find.byType(DashboardChip), findsNWidgets(1));
@@ -429,33 +429,24 @@ void main() {
         await tester.pump();
 
         expect(find.byGlyph(AppGlyphs.location), findsOneWidget);
-        expect(find.text("People's Republic of China"), findsOneWidget);
+        expect(find.text('China'), findsOneWidget);
         expect(find.text('CN'), findsNothing);
         final cardContext = tester.element(find.byType(CurrentOutboundCard));
         final stoppedColor = cardContext.colorScheme.onSurfaceVariant;
-        final countryText = tester.widget<Text>(
-          find.text("People's Republic of China"),
-        );
-        final ipText = tester.widget<Text>(find.text(_ip));
-        final pinIcon = tester.widget<GlyphIcon>(
-          find.byGlyph(AppGlyphs.location),
-        );
-        expect(countryText.style!.color, stoppedColor);
-        expect(pinIcon.color, stoppedColor);
-        expect(pinIcon.size, 13);
-        expect(countryText.style!.fontSize, greaterThan(ipText.style!.fontSize!));
+        expect(tester.widget<Text>(find.text('China')).style!.color, stoppedColor);
         expect(
-          tester.getTopLeft(find.text("People's Republic of China")).dy,
-          lessThan(tester.getTopLeft(find.text(_ip)).dy),
+          tester.widget<GlyphIcon>(find.byGlyph(AppGlyphs.location)).color,
+          stoppedColor,
+        );
+        expect(
+          tester.getTopLeft(find.text(_ip)).dy,
+          lessThan(tester.getTopLeft(find.text('China')).dy),
         );
         final container = ProviderScope.containerOf(cardContext);
         container.read(runTimeProvider.notifier).value = 1;
         await tester.pump();
         final runningColor = cardContext.colorScheme.onSurface;
-        expect(
-          tester.widget<Text>(find.text("People's Republic of China")).style!.color,
-          runningColor,
-        );
+        expect(tester.widget<Text>(find.text('China')).style!.color, runningColor);
         expect(
           tester.widget<GlyphIcon>(find.byGlyph(AppGlyphs.location)).color,
           runningColor,
@@ -467,6 +458,8 @@ void main() {
         expect(localizedCountryName('HK', const Locale('zh')), '香港特别行政区');
         expect(localizedCountryName('MO', const Locale('zh')), '澳门特别行政区');
         expect(localizedCountryName('GB', const Locale('zh')), '联合王国');
+        expect(localizedCountryName('CN', const Locale('en')), isNull);
+        expect(localizedCountryName('US', const Locale('en')), isNull);
         expect(localizedCountryName('JP', const Locale('ja')), '日本国');
         expect(localizedCountryName('KR', const Locale('ko')), '대한민국');
         expect(
@@ -665,14 +658,14 @@ void main() {
       expect(find.text('Residential proxy'), findsOneWidget);
     });
 
-    testWidgets('opens its details from the country heading too', (
+    testWidgets('opens its details from the country label too', (
       tester,
     ) async {
       _useTallView(tester);
       await tester.pumpWidget(_app((_, _) async => _residential));
       await tester.pump();
 
-      await tester.tap(find.text('United Kingdom'));
+      await tester.tap(find.text('GB'));
       await tester.pumpAndSettle();
 
       expect(
