@@ -432,16 +432,27 @@ void main() {
         expect(find.text('CN'), findsNothing);
         final cardContext = tester.element(find.byType(CurrentOutboundCard));
         final stoppedColor = cardContext.colorScheme.onSurfaceVariant;
-        expect(tester.widget<Text>(find.text('China')).style!.color, stoppedColor);
+        final countryText = tester.widget<Text>(find.text('China'));
+        final ipText = tester.widget<Text>(find.text(_ip));
+        final pinIcon = tester.widget<GlyphIcon>(
+          find.byGlyph(AppGlyphs.location),
+        );
+        expect(countryText.style!.color, stoppedColor);
+        expect(pinIcon.color, stoppedColor);
+        expect(pinIcon.size, greaterThan(18));
+        expect(countryText.style!.fontSize, greaterThan(ipText.style!.fontSize!));
         expect(
-          tester.widget<GlyphIcon>(find.byGlyph(AppGlyphs.location)).color,
-          stoppedColor,
+          tester.getTopLeft(find.text('China')).dy,
+          lessThan(tester.getTopLeft(find.text(_ip)).dy),
         );
         final container = ProviderScope.containerOf(cardContext);
         container.read(runTimeProvider.notifier).value = 1;
         await tester.pump();
         final runningColor = cardContext.colorScheme.onSurface;
-        expect(tester.widget<Text>(find.text('China')).style!.color, runningColor);
+        expect(
+          tester.widget<Text>(find.text('China')).style!.color,
+          runningColor,
+        );
         expect(
           tester.widget<GlyphIcon>(find.byGlyph(AppGlyphs.location)).color,
           runningColor,

@@ -317,11 +317,25 @@ class _ExitRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = context.colorScheme;
-    final style = DashboardText.figure(
+    final isDesktop = DashboardDensityScope.of(context).isDesktop;
+    final foreground = active
+        ? colorScheme.onSurface
+        : colorScheme.onSurfaceVariant;
+    final heroStyle = DashboardText.figure(
       context,
       metrics.ip,
-      color: active ? colorScheme.onSurface : colorScheme.onSurfaceVariant,
+      color: foreground,
     ).copyWith(letterSpacing: 0, height: 1.15);
+    final ipStyle = AppTextStyle.footnote
+        .of(context, emphasized: true)
+        .toTabular
+        .copyWith(
+          fontSize: isDesktop ? 13 : 12.5,
+          height: 1.2,
+          color: active
+              ? colorScheme.onSurfaceVariant
+              : colorScheme.onSurfaceVariant.withValues(alpha: 0.72),
+        );
     final info = this.info;
     final appLocalizations = context.appLocalizations;
     final Widget ip = info != null
@@ -334,21 +348,17 @@ class _ExitRow extends StatelessWidget {
                 onTap: () => showIpQualitySheet(context, ip: info.ip),
                 shape: AppShape.xs,
                 overlay: PressRegion.focusOverlay,
-                child: _IpText(ip: info.ip, style: style),
+                child: _IpText(ip: info.ip, style: ipStyle),
               ),
             ),
           )
         : failed
-        ? Text(
-            appLocalizations.serviceFailed,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: style.copyWith(color: colorScheme.error),
-          )
-        : SkeletonText(width: 140, style: style);
-    final ipHeight = MediaQuery.textScalerOf(
+        ? Text('\u2014', maxLines: 1, style: ipStyle)
+        : SkeletonText(width: 120, style: ipStyle);
+    final heroHeight = MediaQuery.textScalerOf(
       context,
-    ).scale((style.fontSize ?? metrics.ip.size) * (style.height ?? 1.15));
+    ).scale((heroStyle.fontSize ?? metrics.ip.size) * (heroStyle.height ?? 1.15));
+    final ipHeight = MediaQuery.textScalerOf(context).scale(18.0);
     final effectiveCountryCode =
         (quality?.countryCode.trim().isNotEmpty ?? false)
         ? quality!.countryCode
@@ -370,18 +380,33 @@ class _ExitRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(
+                height: heroHeight,
+                child: Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: info == null && failed
+                      ? Text(
+                          appLocalizations.serviceFailed,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: heroStyle.copyWith(color: colorScheme.error),
+                        )
+                      : _IpLocationHeroText(
+                          quality: quality,
+                          countryCode: effectiveCountryCode,
+                          loading: loading,
+                          style: heroStyle,
+                          iconSize:
+                              (heroStyle.fontSize ?? metrics.ip.size) * 0.86,
+                        ),
+                ),
+              ),
+              const SizedBox(height: 3),
+              SizedBox(
                 height: ipHeight,
                 child: Align(
                   alignment: AlignmentDirectional.centerStart,
                   child: ip,
                 ),
-              ),
-              const SizedBox(height: 3),
-              _IpLocationSubText(
-                quality: quality,
-                countryCode: effectiveCountryCode,
-                loading: loading,
-                active: active,
               ),
             ],
           ),
@@ -415,44 +440,25 @@ class _IpText extends ConsumerWidget {
   }
 }
 
-class _IpLocationSubText extends StatelessWidget {
-  const _IpLocationSubText({
+class _IpLocationHeroText extends StatelessWidget {
+  const _IpLocationHeroText({
     required this.quality,
     required this.countryCode,
     required this.loading,
-    required this.active,
+    required this.style,
+    required this.iconSize,
   });
 
   final IpRisk? quality;
   final String? countryCode;
   final bool loading;
-  final bool active;
+  final TextStyle style;
+  final double iconSize;
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = DashboardDensityScope.of(context).isDesktop;
-    final style = AppTextStyle.footnote
-        .of(context, emphasized: true)
-        .copyWith(
-          fontSize: isDesktop ? 13 : 12.5,
-          height: 1.2,
-          color: active
-              ? context.colorScheme.onSurfaceVariant
-              : context.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
-        );
-    final subHeight = MediaQuery.textScalerOf(context).scale(18.0);
-    return SizedBox(
-      height: subHeight,
-      child: Align(
-        alignment: AlignmentDirectional.centerStart,
-        child: _buildContent(context, style),
-      ),
-    );
-  }
-
-  Widget _buildContent(BuildContext context, TextStyle style) {
     if (loading) {
-      return SkeletonText(width: 80, style: style);
+      return SkeletonText(width: 110, style: style);
     }
     final riskCountry = quality?.country.trim();
     final rawCode = (quality?.countryCode.trim().isNotEmpty ?? false)
@@ -469,13 +475,11 @@ class _IpLocationSubText extends StatelessWidget {
     if (display == null || display.isEmpty) {
       return Text('\u2014', maxLines: 1, style: style);
     }
-    final foreground = active
-        ? context.colorScheme.onSurface
-        : context.colorScheme.onSurfaceVariant;
     final row = _LocationLabelRow(
       text: display,
-      style: style.copyWith(color: foreground),
-      iconSize: 13,
+      style: style,
+      iconSize: iconSize,
+      spacing: 6,
     );
     final tooltip = quality?.fullLocationLabel;
     if (tooltip == null || tooltip.isEmpty) return row;
@@ -488,11 +492,13 @@ class _LocationLabelRow extends StatefulWidget {
     required this.text,
     required this.style,
     required this.iconSize,
+    this.spacing = 5,
   });
 
   final String text;
   final TextStyle style;
   final double iconSize;
+  final double spacing;
 
   @override
   State<_LocationLabelRow> createState() => _LocationLabelRowState();
@@ -553,7 +559,7 @@ class _LocationLabelRowState extends State<_LocationLabelRow> {
         final ink = snapshot.data;
         return Row(
           mainAxisSize: MainAxisSize.min,
-          spacing: 5,
+          spacing: widget.spacing,
           crossAxisAlignment: ink == null
               ? CrossAxisAlignment.center
               : CrossAxisAlignment.baseline,
