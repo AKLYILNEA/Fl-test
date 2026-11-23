@@ -39,7 +39,7 @@ const _redFlags = <String>{
   'cl', 'cn', 'cq', 'dk', 'es', 'gb', 'gl', 'hk', 'id', 'im', 'kg', 'lb',
   'li', 'lr', 'lv', 'ma', 'mc', 'md', 'me', 'mk', 'mn', 'mt', 'mv', 'my',
   'np', 'om', 'pe', 'pf', 'pg', 'pl', 'pr', 'pt', 'qa', 'ro', 'sg', 'su',
-  'td', 'tl', 'tn', 'to', 'tr', 'tt', 'tw', 'ug', 'uk', 'um', 'us', 'vn',
+  'td', 'tl', 'tn', 'to', 'tr', 'tt', 'ug', 'uk', 'um', 'us', 'vn',
   'wf', 'ws',
 };
 
@@ -51,8 +51,8 @@ const _blueFlags = <String>{
   'is', 'kh', 'ki', 'km', 'kp', 'ky', 'kz', 'la', 'lc', 'ls', 'lu', 'mf',
   'mh', 'mp', 'ms', 'ni', 'nl', 'no', 'nr', 'nz', 'pa', 'ph', 'pm', 'pn',
   'pw', 'py', 're', 'rs', 'ru', 'rw', 'se', 'sh', 'si', 'sj', 'sk', 'sl',
-  'sm', 'so', 'sv', 'sx', 'sz', 'ta', 'tc', 'tf', 'th', 'tk', 'tv', 'tz',
-  'un', 've', 'vg', 'xk', 'yu', 'za',
+  'sm', 'so', 'sv', 'sx', 'sz', 'ta', 'tc', 'tf', 'th', 'tk', 'tv', 'tw',
+  'tz', 'un', 've', 'vg', 'xk', 'yu', 'za',
 };
 
 const _yellowFlags = <String>{

@@ -333,10 +333,13 @@ class _ExitRow extends StatelessWidget {
         .copyWith(
           fontSize: isDesktop ? 13 : 12.5,
           height: 1.2,
-          color: active
-              ? colorScheme.onSurfaceVariant
-              : colorScheme.onSurfaceVariant.withValues(alpha: 0.72),
+          color: foreground,
         );
+    final mutedIpStyle = ipStyle.copyWith(
+      color: active
+          ? colorScheme.onSurfaceVariant
+          : colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+    );
     final info = this.info;
     final appLocalizations = context.appLocalizations;
     final Widget ip = info != null
@@ -354,8 +357,8 @@ class _ExitRow extends StatelessWidget {
             ),
           )
         : failed
-        ? Text('\u2014', maxLines: 1, style: ipStyle)
-        : SkeletonText(width: 120, style: ipStyle);
+        ? Text('\u2014', maxLines: 1, style: mutedIpStyle)
+        : SkeletonText(width: 120, style: mutedIpStyle);
     final heroHeight = MediaQuery.textScalerOf(
       context,
     ).scale((heroStyle.fontSize ?? metrics.ip.size) * (heroStyle.height ?? 1.15));
@@ -396,8 +399,6 @@ class _ExitRow extends StatelessWidget {
                           countryCode: effectiveCountryCode,
                           loading: loading,
                           style: heroStyle,
-                          iconSize:
-                              (heroStyle.fontSize ?? metrics.ip.size) * 0.86,
                           onTap: info != null
                               ? () => showIpQualitySheet(context, ip: info.ip)
                               : null,
@@ -432,14 +433,16 @@ class _IpText extends ConsumerWidget {
       appSettingProvider.select((state) => state.hideIp),
     );
     if (!hideIp) {
-      return DashboardFitText(ip, style: style);
+      return _LocationLabelRow(text: ip, style: style, iconSize: 13);
     }
-    return DashboardFitText(
-      _ipMask,
+    return _LocationLabelRow(
+      text: _ipMask,
       style: style.copyWith(
         fontFamily: FontFamily.mapleMono.value,
         color: context.colorScheme.success,
       ),
+      iconSize: 13,
+      iconColor: style.color,
     );
   }
 }
@@ -450,7 +453,6 @@ class _IpLocationHeroText extends StatelessWidget {
     required this.countryCode,
     required this.loading,
     required this.style,
-    required this.iconSize,
     this.onTap,
   });
 
@@ -458,7 +460,6 @@ class _IpLocationHeroText extends StatelessWidget {
   final String? countryCode;
   final bool loading;
   final TextStyle style;
-  final double iconSize;
   final VoidCallback? onTap;
 
   @override
@@ -487,14 +488,14 @@ class _IpLocationHeroText extends StatelessWidget {
     if (display == null || display.isEmpty) {
       return Text('\u2014', maxLines: 1, style: style);
     }
-    final row = _LocationLabelRow(
-      text: display,
+    final label = Text(
+      display,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
       style: style,
-      iconSize: iconSize,
-      spacing: 6,
     );
     final interactive = onTap == null
-        ? row
+        ? label
         : FocusRing(
             shape: AppShape.xs,
             standsOff: true,
@@ -502,7 +503,7 @@ class _IpLocationHeroText extends StatelessWidget {
               onTap: onTap,
               shape: AppShape.xs,
               overlay: PressRegion.focusOverlay,
-              child: row,
+              child: label,
             ),
           );
     final tooltip = quality?.fullLocationLabel;
@@ -516,13 +517,13 @@ class _LocationLabelRow extends StatefulWidget {
     required this.text,
     required this.style,
     required this.iconSize,
-    this.spacing = 5,
+    this.iconColor,
   });
 
   final String text;
   final TextStyle style;
   final double iconSize;
-  final double spacing;
+  final Color? iconColor;
 
   @override
   State<_LocationLabelRow> createState() => _LocationLabelRowState();
@@ -568,7 +569,7 @@ class _LocationLabelRowState extends State<_LocationLabelRow> {
     final pin = GlyphIcon(
       AppGlyphs.location,
       size: widget.iconSize,
-      color: widget.style.color,
+      color: widget.iconColor ?? widget.style.color,
     );
     final label = Text(
       widget.text,
@@ -583,7 +584,7 @@ class _LocationLabelRowState extends State<_LocationLabelRow> {
         final ink = snapshot.data;
         return Row(
           mainAxisSize: MainAxisSize.min,
-          spacing: widget.spacing,
+          spacing: 5,
           crossAxisAlignment: ink == null
               ? CrossAxisAlignment.center
               : CrossAxisAlignment.baseline,

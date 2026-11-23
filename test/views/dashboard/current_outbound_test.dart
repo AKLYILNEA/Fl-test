@@ -442,7 +442,7 @@ void main() {
         );
         expect(countryText.style!.color, stoppedColor);
         expect(pinIcon.color, stoppedColor);
-        expect(pinIcon.size, greaterThan(18));
+        expect(pinIcon.size, 13);
         expect(countryText.style!.fontSize, greaterThan(ipText.style!.fontSize!));
         expect(
           tester.getTopLeft(find.text("People's Republic of China")).dy,
@@ -460,6 +460,7 @@ void main() {
           tester.widget<GlyphIcon>(find.byGlyph(AppGlyphs.location)).color,
           runningColor,
         );
+        expect(countryFlagTone('TW'), CountryFlagTone.blue);
         expect(localizedCountryName('CN', const Locale('zh')), '中华人民共和国');
         expect(localizedCountryName('US', const Locale('zh')), '美利坚合众国');
         expect(localizedCountryName('TW', const Locale('zh')), '中国台湾省');
