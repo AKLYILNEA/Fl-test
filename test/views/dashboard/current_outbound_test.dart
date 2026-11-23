@@ -664,6 +664,25 @@ void main() {
       expect(find.text('Residential proxy'), findsOneWidget);
     });
 
+    testWidgets('opens its details from the country heading too', (
+      tester,
+    ) async {
+      _useTallView(tester);
+      await tester.pumpWidget(_app((_, _) async => _residential));
+      await tester.pump();
+
+      await tester.tap(find.text('United Kingdom'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.descendant(
+          of: find.byType(RiskScoreCard),
+          matching: find.text('Fraud score'),
+        ),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('reports a source failure and checks again', (tester) async {
       _useTallView(tester);
       var calls = 0;

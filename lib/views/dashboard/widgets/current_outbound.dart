@@ -398,6 +398,9 @@ class _ExitRow extends StatelessWidget {
                           style: heroStyle,
                           iconSize:
                               (heroStyle.fontSize ?? metrics.ip.size) * 0.86,
+                          onTap: info != null
+                              ? () => showIpQualitySheet(context, ip: info.ip)
+                              : null,
                         ),
                 ),
               ),
@@ -448,6 +451,7 @@ class _IpLocationHeroText extends StatelessWidget {
     required this.loading,
     required this.style,
     required this.iconSize,
+    this.onTap,
   });
 
   final IpRisk? quality;
@@ -455,6 +459,7 @@ class _IpLocationHeroText extends StatelessWidget {
   final bool loading;
   final TextStyle style;
   final double iconSize;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -488,9 +493,21 @@ class _IpLocationHeroText extends StatelessWidget {
       iconSize: iconSize,
       spacing: 6,
     );
+    final interactive = onTap == null
+        ? row
+        : FocusRing(
+            shape: AppShape.xs,
+            standsOff: true,
+            child: PressRegion(
+              onTap: onTap,
+              shape: AppShape.xs,
+              overlay: PressRegion.focusOverlay,
+              child: row,
+            ),
+          );
     final tooltip = quality?.fullLocationLabel;
-    if (tooltip == null || tooltip.isEmpty) return row;
-    return Tooltip(message: tooltip, child: row);
+    if (tooltip == null || tooltip.isEmpty) return interactive;
+    return Tooltip(message: tooltip, child: interactive);
   }
 }
 
