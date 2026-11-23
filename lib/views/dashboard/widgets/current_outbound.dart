@@ -583,7 +583,7 @@ Path _badgeMorphPath(double progress) => _badgeMorph.toPath(progress: progress);
 
 /// The exit's circular flag framed by a curated 5-tone halo ring that smoothly
 /// morphs into a spinning 4-leaf clover while checking, mirroring [_StartToggle].
-class _CountryBadge extends StatefulWidget {
+class _CountryBadge extends ConsumerStatefulWidget {
   const _CountryBadge({
     required this.countryCode,
     required this.size,
@@ -599,10 +599,10 @@ class _CountryBadge extends StatefulWidget {
   final VoidCallback onRefresh;
 
   @override
-  State<_CountryBadge> createState() => _CountryBadgeState();
+  ConsumerState<_CountryBadge> createState() => _CountryBadgeState();
 }
 
-class _CountryBadgeState extends State<_CountryBadge>
+class _CountryBadgeState extends ConsumerState<_CountryBadge>
     with TickerProviderStateMixin {
   late final AnimationController _turns = AnimationController(
     vsync: this,
@@ -711,15 +711,20 @@ class _CountryBadgeState extends State<_CountryBadge>
       foreground.withValues(alpha: enabled && _hovered ? 0.08 : 0),
       DashboardColors.of(context).tone2,
     );
+    final colorStyle = ref.watch(
+      themeSettingProvider.select((state) => state.colorStyle),
+    );
     final ringPalette = countryFlagRingColors(
       _displayedTone,
-      colorScheme.brightness,
+      colorScheme,
+      colorStyle,
     );
+    final flagOverlay = countryFlagOverlayStyle(colorScheme, colorStyle);
     final ringColor = Color.alphaBlend(
       foreground.withValues(alpha: enabled && _hovered ? 0.08 : 0),
       ringPalette.ring,
     );
-    final ringPadding = size >= 44 ? 3.0 : 2.5;
+    final ringPadding = size >= 44 ? 2.5 : 2.1;
     final flagAsset = _displayedFlagAsset;
     final cloverChild = code == null || code.isEmpty
         ? GlyphIcon(
@@ -760,6 +765,10 @@ class _CountryBadgeState extends State<_CountryBadge>
                 final glow = glowAlpha > 0.005
                     ? ringPalette.glow.withValues(alpha: glowAlpha)
                     : const Color(0x00000000);
+                final innerGlowAlpha = ringPalette.innerGlow.a * (1 - t);
+                final innerGlow = innerGlowAlpha > 0.005
+                    ? ringPalette.innerGlow.withValues(alpha: innerGlowAlpha)
+                    : const Color(0x00000000);
                 final flagOpacity = flagAsset == null
                     ? 0.0
                     : (1 - t * 1.45).clamp(0.0, 1.0);
@@ -771,6 +780,7 @@ class _CountryBadgeState extends State<_CountryBadge>
                   rotation: rotation,
                   color: fill,
                   glow: glow,
+                  innerGlow: innerGlow,
                   size: size,
                   ring: _focused ? focusRingSide(colorScheme) : null,
                   child: Stack(
@@ -784,11 +794,23 @@ class _CountryBadgeState extends State<_CountryBadge>
                             child: Padding(
                               padding: EdgeInsets.all(ringPadding),
                               child: ClipOval(
-                                child: SvgPicture.asset(
-                                  flagAsset,
-                                  width: size - ringPadding * 2,
-                                  height: size - ringPadding * 2,
-                                  fit: BoxFit.cover,
+                                child: CustomPaint(
+                                  foregroundPainter: _FlagFinishPainter(
+                                    tintVeil: flagOverlay.tintVeil,
+                                    paperVeil: flagOverlay.paperVeil,
+                                    innerRim: flagOverlay.innerRim,
+                                  ),
+                                  child: ColorFiltered(
+                                    colorFilter: ColorFilter.matrix(
+                                      flagOverlay.colorMatrix,
+                                    ),
+                                    child: SvgPicture.asset(
+                                      flagAsset,
+                                      width: size - ringPadding * 2,
+                                      height: size - ringPadding * 2,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
@@ -822,6 +844,7 @@ class CountryBadgeShape extends StatelessWidget {
     required this.rotation,
     required this.color,
     required this.glow,
+    this.innerGlow = const Color(0x00000000),
     required this.size,
     this.ring,
     this.child,
@@ -831,6 +854,7 @@ class CountryBadgeShape extends StatelessWidget {
   final double rotation;
   final Color color;
   final Color glow;
+  final Color innerGlow;
   final double size;
   final BorderSide? ring;
   final Widget? child;
@@ -843,6 +867,7 @@ class CountryBadgeShape extends StatelessWidget {
         rotation: rotation,
         color: color,
         glow: glow,
+        innerGlow: innerGlow,
         ring: ring,
       ),
       child: SizedBox.square(
@@ -853,41 +878,110 @@ class CountryBadgeShape extends StatelessWidget {
   }
 }
 
+class _FlagFinishPainter extends CustomPainter {
+  const _FlagFinishPainter({
+    required this.tintVeil,
+    required this.paperVeil,
+    required this.innerRim,
+  });
+
+  static const _rimWidth = 0.75;
+
+  final Color tintVeil;
+  final Color paperVeil;
+  final Color innerRim;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = math.min(size.width, size.height) / 2;
+    if (tintVeil.a > 0) {
+      canvas.drawCircle(
+        center,
+        radius,
+        Paint()
+          ..color = tintVeil
+          ..blendMode = BlendMode.color,
+      );
+    }
+    if (paperVeil.a > 0) {
+      canvas.drawCircle(center, radius, Paint()..color = paperVeil);
+    }
+    if (innerRim.a > 0) {
+      canvas.drawCircle(
+        center,
+        radius - _rimWidth / 2,
+        Paint()
+          ..color = innerRim
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = _rimWidth,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_FlagFinishPainter oldDelegate) =>
+      oldDelegate.tintVeil != tintVeil ||
+      oldDelegate.paperVeil != paperVeil ||
+      oldDelegate.innerRim != innerRim;
+}
+
 class _CountryBadgeMorphPainter extends CustomPainter {
   const _CountryBadgeMorphPainter({
     required this.morphProgress,
     required this.rotation,
     required this.color,
     required this.glow,
+    required this.innerGlow,
     required this.ring,
   });
 
-  static const _glowBlur = 7.0;
+  static const _outerGlowBlur = 15.0;
+  static const _outerGlowSpread = 1.0;
+  static const _innerGlowBlur = 4.0;
 
   final double morphProgress;
   final double rotation;
   final Color color;
   final Color glow;
+  final Color innerGlow;
   final BorderSide? ring;
 
   @override
   void paint(Canvas canvas, Size size) {
     final path = _badgeMorphPath(morphProgress);
-    final morphTurn = morphProgress * math.pi / 4;
     canvas
       ..save()
       ..translate(size.width / 2, size.height / 2)
-      ..rotate(rotation + morphTurn)
+      ..rotate(rotation)
       ..scale(size.width, size.height)
       ..translate(-0.5, -0.5);
     if (glow.a > 0) {
+      final spreadScale = 1 + _outerGlowSpread * 2 / size.width;
+      canvas
+        ..save()
+        ..translate(0.5, 0.5)
+        ..scale(spreadScale)
+        ..translate(-0.5, -0.5)
+        ..drawPath(
+          path,
+          Paint()
+            ..color = glow
+            ..maskFilter = MaskFilter.blur(
+              BlurStyle.normal,
+              _outerGlowBlur / 2 / size.width / spreadScale,
+            ),
+        )
+        ..restore();
+    }
+    if (innerGlow.a > 0) {
       canvas.drawPath(
         path,
         Paint()
-          ..color = glow
+          ..color = innerGlow
           ..maskFilter = MaskFilter.blur(
             BlurStyle.normal,
-            _glowBlur / 2 / size.width,
+            _innerGlowBlur / 2 / size.width,
           ),
       );
     }
@@ -904,6 +998,7 @@ class _CountryBadgeMorphPainter extends CustomPainter {
       oldDelegate.rotation != rotation ||
       oldDelegate.color != color ||
       oldDelegate.glow != glow ||
+      oldDelegate.innerGlow != innerGlow ||
       oldDelegate.ring != ring;
 }
 

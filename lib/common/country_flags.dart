@@ -1,5 +1,10 @@
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart' show clampDouble;
+import 'package:prism_ui/color.dart' show ColorStyle;
+import 'package:prism_ui/hct/hct.dart';
+import 'package:prism_ui/theme_data.dart' show ColorScheme;
+
 /// The five curated halo ring tones for circular country flags.
 enum CountryFlagTone { grey, red, blue, yellow, green }
 
@@ -30,13 +35,12 @@ const _availableCountryFlags = <String>{
 };
 
 const _redFlags = <String>{
-  'ad', 'ae', 'af', 'ag', 'al', 'ao', 'at', 'be', 'bg', 'bh', 'bi', 'bm',
-  'by', 'ca', 'cg', 'ch', 'cl', 'cm', 'cn', 'cq', 'dk', 'es', 'et', 'gb',
-  'gl', 'gw', 'hk', 'id', 'im', 'ir', 'it', 'kg', 'kn', 'kw', 'lb', 'li',
-  'lr', 'lt', 'lv', 'ly', 'ma', 'mc', 'md', 'me', 'mk', 'ml', 'mm', 'mn',
-  'mr', 'mt', 'mv', 'mx', 'my', 'np', 'om', 'pe', 'pf', 'pg', 'pl', 'pr',
-  'pt', 'qa', 'ro', 'sd', 'sg', 'sn', 'su', 'td', 'tj', 'tl', 'tn', 'to',
-  'tr', 'tt', 'tw', 'ug', 'uk', 'um', 'us', 'vn', 'wf', 'ws',
+  'ad', 'af', 'ag', 'al', 'ao', 'at', 'be', 'bh', 'bm', 'by', 'ca', 'ch',
+  'cl', 'cn', 'cq', 'dk', 'es', 'gb', 'gl', 'hk', 'id', 'im', 'kg', 'lb',
+  'li', 'lr', 'lv', 'ma', 'mc', 'md', 'me', 'mk', 'mn', 'mt', 'mv', 'my',
+  'np', 'om', 'pe', 'pf', 'pg', 'pl', 'pr', 'pt', 'qa', 'ro', 'sg', 'su',
+  'td', 'tl', 'tn', 'to', 'tr', 'tt', 'tw', 'ug', 'uk', 'um', 'us', 'vn',
+  'wf', 'ws',
 };
 
 const _blueFlags = <String>{
@@ -57,10 +61,12 @@ const _yellowFlags = <String>{
 };
 
 const _greenFlags = <String>{
-  'bd', 'bf', 'bj', 'bo', 'br', 'cc', 'ci', 'dj', 'dm', 'dz', 'eh', 'gd',
-  'gh', 'gm', 'gn', 'gy', 'hu', 'in', 'jm', 'jo', 'ke', 'mg', 'mo', 'mq',
-  'mu', 'mw', 'na', 'nc', 'ne', 'nf', 'ng', 'pk', 'ps', 'sa', 'sb', 'sc',
-  'sr', 'ss', 'st', 'tg', 'tm', 'uz', 'vu', 'zm', 'zw',
+  'ae', 'bd', 'bf', 'bg', 'bi', 'bj', 'bo', 'br', 'cc', 'cg', 'ci', 'cm',
+  'dj', 'dm', 'dz', 'eh', 'et', 'gd', 'gh', 'gm', 'gn', 'gw', 'gy', 'hu',
+  'in', 'ir', 'it', 'jm', 'jo', 'ke', 'kn', 'kw', 'lt', 'ly', 'mg', 'ml',
+  'mm', 'mo', 'mq', 'mr', 'mu', 'mw', 'mx', 'na', 'nc', 'ne', 'nf', 'ng',
+  'pk', 'ps', 'sa', 'sb', 'sc', 'sd', 'sn', 'sr', 'ss', 'st', 'tg', 'tj',
+  'tm', 'uz', 'vu', 'zm', 'zw',
 };
 
 /// Returns the bundled circular SVG asset path for an ISO 3166-1 alpha-2 code.
@@ -74,8 +80,9 @@ String? countryFlagAsset(String? countryCode) {
 /// Returns the curated 5-tone border category for [countryCode].
 ///
 /// White-rim or neutral flags (such as JP, KR, FI) resolve to
-/// [CountryFlagTone.grey], and blue/white/red flags where white + blue exceed
-/// red (such as FR, RU) resolve to [CountryFlagTone.blue].
+/// [CountryFlagTone.grey]; blue/white/red flags where white + blue exceed red
+/// (such as FR, RU) resolve to [CountryFlagTone.blue]; green-heavy flags
+/// (such as IT, MX, MR, BG, IR) resolve to [CountryFlagTone.green].
 CountryFlagTone countryFlagTone(String? countryCode) {
   if (countryCode == null) return CountryFlagTone.grey;
   final code = countryCode.trim().toLowerCase();
@@ -86,27 +93,181 @@ CountryFlagTone countryFlagTone(String? countryCode) {
   return CountryFlagTone.grey;
 }
 
-/// Returns the outer ring and soft ambient glow colors for [tone].
-({Color ring, Color glow}) countryFlagRingColors(
-  CountryFlagTone tone,
-  Brightness brightness,
+double _harmonizeHue(
+  double baseHue,
+  double primaryHue,
+  double factor,
+  double maxShift,
 ) {
-  final isDark = brightness == Brightness.dark;
-  return switch (tone) {
-    CountryFlagTone.grey => isDark
-        ? (ring: const Color(0x7094A3B8), glow: const Color(0x3D94A3B8))
-        : (ring: const Color(0x5764748B), glow: const Color(0x2E64748B)),
-    CountryFlagTone.red => isDark
-        ? (ring: const Color(0x85FF5C5C), glow: const Color(0x5CFF5C5C))
-        : (ring: const Color(0x61E03131), glow: const Color(0x3DE03131)),
-    CountryFlagTone.blue => isDark
-        ? (ring: const Color(0x854DA3FF), glow: const Color(0x5C4DA3FF))
-        : (ring: const Color(0x611971C2), glow: const Color(0x3D1971C2)),
-    CountryFlagTone.yellow => isDark
-        ? (ring: const Color(0x85FFC13B), glow: const Color(0x57FFC13B))
-        : (ring: const Color(0x6BE69A00), glow: const Color(0x40E69A00)),
-    CountryFlagTone.green => isDark
-        ? (ring: const Color(0x854CD97B), glow: const Color(0x574CD97B))
-        : (ring: const Color(0x612B9348), glow: const Color(0x3D2B9348)),
+  final diff = ((primaryHue - baseHue + 540.0) % 360.0) - 180.0;
+  return (baseHue + clampDouble(diff * factor, -maxShift, maxShift)) % 360.0;
+}
+
+/// Derives the circular flag outer ring and two-layer feathered ambient bloom
+/// colors in HCT space so all 5 tones match the active theme and [ColorStyle].
+({Color ring, Color glow, Color innerGlow}) countryFlagRingColors(
+  CountryFlagTone tone,
+  ColorScheme colorScheme,
+  ColorStyle style,
+) {
+  final isDark = colorScheme.brightness == Brightness.dark;
+  final primary = Hct.fromInt(colorScheme.primary.toARGB32());
+
+  if (style == ColorStyle.monochrome || primary.chroma < 8.0) {
+    final base = Color(Hct.from(primary.hue, 0, isDark ? 68.0 : 54.0).toInt());
+    final glowAlpha = isDark ? 0.14 : 0.09;
+    return (
+      ring: base.withValues(alpha: isDark ? 0.44 : 0.34),
+      glow: base.withValues(alpha: glowAlpha),
+      innerGlow: base.withValues(alpha: glowAlpha * 0.55),
+    );
+  }
+
+  if (tone == CountryFlagTone.grey) {
+    final chroma = switch (style) {
+      ColorStyle.tinted => clampDouble(primary.chroma / 6.0, 5.0, 11.0),
+      ColorStyle.soft => 4.0,
+      ColorStyle.vivid || ColorStyle.monochrome => 3.0,
+    };
+    final base = Color(
+      Hct.from(primary.hue, chroma, isDark ? 68.0 : 56.0).toInt(),
+    );
+    final glowAlpha = isDark ? 0.15 : 0.09;
+    return (
+      ring: base.withValues(alpha: isDark ? 0.44 : 0.33),
+      glow: base.withValues(alpha: glowAlpha),
+      innerGlow: base.withValues(alpha: glowAlpha * 0.55),
+    );
+  }
+
+  final baseHue = switch (tone) {
+    CountryFlagTone.red => 20.0,
+    CountryFlagTone.blue => 230.0,
+    CountryFlagTone.green => 145.0,
+    CountryFlagTone.yellow => 85.0,
+    CountryFlagTone.grey => primary.hue,
   };
+  final (hueFactor, hueMaxShift) = style == ColorStyle.tinted
+      ? (0.08, 7.0)
+      : (0.04, 4.0);
+  final hue = _harmonizeHue(baseHue, primary.hue, hueFactor, hueMaxShift);
+
+  var targetTone = switch (style) {
+    ColorStyle.vivid || ColorStyle.tinted => isDark
+        ? clampDouble(primary.tone, 62.0, 74.0)
+        : clampDouble(primary.tone, 48.0, 60.0),
+    ColorStyle.soft => isDark
+        ? clampDouble(primary.tone - 6.0, 66.0, 76.0)
+        : clampDouble(primary.tone + 14.0, 52.0, 62.0),
+    ColorStyle.monochrome => isDark ? 68.0 : 54.0,
+  };
+  if (tone == CountryFlagTone.yellow) {
+    final yellowFloor = isDark ? 76.0 : 68.0;
+    final yellowLift = style == ColorStyle.soft ? 8.0 : 10.0;
+    targetTone = targetTone + yellowLift > yellowFloor
+        ? targetTone + yellowLift
+        : yellowFloor;
+  }
+
+  final chroma = switch (style) {
+    ColorStyle.vivid => clampDouble(primary.chroma * 0.98, 48.0, 96.0),
+    ColorStyle.tinted => clampDouble(primary.chroma * 0.80, 40.0, 70.0),
+    ColorStyle.soft => clampDouble(primary.chroma * 0.85, 28.0, 42.0),
+    ColorStyle.monochrome => 0.0,
+  };
+
+  final (ringAlpha, glowAlpha) = switch (style) {
+    ColorStyle.vivid => (isDark ? 0.54 : 0.46, isDark ? 0.22 : 0.14),
+    ColorStyle.tinted => (isDark ? 0.50 : 0.42, isDark ? 0.21 : 0.14),
+    ColorStyle.soft => (isDark ? 0.46 : 0.40, isDark ? 0.18 : 0.12),
+    ColorStyle.monochrome => (isDark ? 0.44 : 0.34, isDark ? 0.14 : 0.09),
+  };
+
+  final base = Color(Hct.from(hue, chroma, targetTone).toInt());
+  return (
+    ring: base.withValues(alpha: ringAlpha),
+    glow: base.withValues(alpha: glowAlpha),
+    innerGlow: base.withValues(alpha: glowAlpha * 0.55),
+  );
+}
+
+List<double> _flagToneMatrix(
+  double saturation,
+  double contrast,
+  double brightness,
+) {
+  final scale = brightness * contrast;
+  final offset = brightness * 127.5 * (1.0 - contrast);
+  final inv = 1.0 - saturation;
+  final r = 0.2126 * inv;
+  final g = 0.7152 * inv;
+  final b = 0.0722 * inv;
+  return [
+    scale * (r + saturation),
+    scale * g,
+    scale * b,
+    0,
+    offset,
+    scale * r,
+    scale * (g + saturation),
+    scale * b,
+    0,
+    offset,
+    scale * r,
+    scale * g,
+    scale * (b + saturation),
+    0,
+    offset,
+    0,
+    0,
+    0,
+    1,
+    0,
+  ];
+}
+
+/// Derives the adaptive recoloring matrix, subtle theme tint veil, paper veil,
+/// and inner rim hairline applied over the circular flag SVG.
+({List<double> colorMatrix, Color tintVeil, Color paperVeil, Color innerRim})
+countryFlagOverlayStyle(ColorScheme colorScheme, ColorStyle style) {
+  final isDark = colorScheme.brightness == Brightness.dark;
+  final primary = Hct.fromInt(colorScheme.primary.toARGB32());
+  final isAchromatic = style == ColorStyle.monochrome || primary.chroma < 8.0;
+
+  final (saturation, contrast, brightness) = isAchromatic
+      ? (0.04, isDark ? 0.95 : 0.94, isDark ? 0.86 : 1.0)
+      : switch (style) {
+          ColorStyle.soft => (
+            isDark ? 0.74 : 0.78,
+            isDark ? 0.94 : 0.95,
+            isDark ? 0.86 : 1.0,
+          ),
+          ColorStyle.tinted => (
+            isDark ? 0.82 : 0.86,
+            0.96,
+            isDark ? 0.87 : 1.0,
+          ),
+          ColorStyle.vivid || ColorStyle.monochrome => (
+            isDark ? 0.88 : 0.91,
+            0.97,
+            isDark ? 0.88 : 1.0,
+          ),
+        };
+
+  final tintAlpha = isAchromatic
+      ? 0.0
+      : switch (style) {
+          ColorStyle.tinted => isDark ? 0.13 : 0.10,
+          ColorStyle.soft => isDark ? 0.07 : 0.05,
+          ColorStyle.vivid || ColorStyle.monochrome => isDark ? 0.06 : 0.045,
+        };
+
+  return (
+    colorMatrix: _flagToneMatrix(saturation, contrast, brightness),
+    tintVeil: tintAlpha > 0
+        ? colorScheme.primary.withValues(alpha: tintAlpha)
+        : const Color(0x00000000),
+    paperVeil: isDark ? const Color(0x17121418) : const Color(0x0FFFFFFF),
+    innerRim: isDark ? const Color(0x1FFFFFFF) : const Color(0x14000000),
+  );
 }

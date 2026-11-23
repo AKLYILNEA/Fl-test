@@ -464,8 +464,68 @@ void main() {
         expect(countryFlagTone('FR'), CountryFlagTone.blue);
         expect(countryFlagTone('RU'), CountryFlagTone.blue);
         expect(countryFlagTone('SE'), CountryFlagTone.blue);
+        expect(countryFlagTone('IT'), CountryFlagTone.green);
+        expect(countryFlagTone('MX'), CountryFlagTone.green);
+        expect(countryFlagTone('MR'), CountryFlagTone.green);
+        expect(countryFlagTone('BG'), CountryFlagTone.green);
+        expect(countryFlagTone('IR'), CountryFlagTone.green);
         expect(countryFlagTone('MO'), CountryFlagTone.green);
         expect(countryFlagTone('CO'), CountryFlagTone.yellow);
+        final monoScheme = seededColorScheme(
+          seedColor: const Color(0xFFFF3B4A),
+          brightness: Brightness.light,
+          style: ColorStyle.monochrome,
+        );
+        final monoRed = countryFlagRingColors(
+          CountryFlagTone.red,
+          monoScheme,
+          ColorStyle.monochrome,
+        );
+        final monoBlue = countryFlagRingColors(
+          CountryFlagTone.blue,
+          monoScheme,
+          ColorStyle.monochrome,
+        );
+        expect(monoRed.ring, monoBlue.ring);
+        final vividScheme = seededColorScheme(
+          seedColor: const Color(0xFFFF3B4A),
+          brightness: Brightness.light,
+          style: ColorStyle.vivid,
+        );
+        final vividRed = countryFlagRingColors(
+          CountryFlagTone.red,
+          vividScheme,
+          ColorStyle.vivid,
+        );
+        final softScheme = seededColorScheme(
+          seedColor: const Color(0xFFFF3B4A),
+          brightness: Brightness.light,
+          style: ColorStyle.soft,
+        );
+        final softRed = countryFlagRingColors(
+          CountryFlagTone.red,
+          softScheme,
+          ColorStyle.soft,
+        );
+        expect(vividRed.ring, isNot(softRed.ring));
+        expect(vividRed.innerGlow.a, closeTo(vividRed.glow.a * 0.55, 0.01));
+        final monoOverlay = countryFlagOverlayStyle(
+          monoScheme,
+          ColorStyle.monochrome,
+        );
+        expect(monoOverlay.colorMatrix, hasLength(20));
+        expect(monoOverlay.tintVeil.a, 0);
+        final tintedScheme = seededColorScheme(
+          seedColor: const Color(0xFFFF3B4A),
+          brightness: Brightness.dark,
+          style: ColorStyle.tinted,
+        );
+        final tintedOverlay = countryFlagOverlayStyle(
+          tintedScheme,
+          ColorStyle.tinted,
+        );
+        expect(tintedOverlay.tintVeil.a, greaterThan(0));
+        expect(tintedOverlay.colorMatrix[0], lessThan(0.9));
       },
     );
 
