@@ -711,13 +711,28 @@ class _CountryBadgeState extends ConsumerState<_CountryBadge>
       foreground.withValues(alpha: enabled && _hovered ? 0.08 : 0),
       DashboardColors.of(context).tone2,
     );
-    final colorStyle = ref.watch(
-      themeSettingProvider.select((state) => state.colorStyle),
+    final themeSpec = ref.watch(
+      themeSettingProvider.select(
+        (state) => (
+          primaryColor: state.primaryColor,
+          colorStyle: state.colorStyle,
+        ),
+      ),
     );
+    final dynamicSeed = ref.watch(
+      dynamicColorProvider.select(
+        (seeds) => seeds.seedOf(colorScheme.brightness),
+      ),
+    );
+    final seedColor = themeSpec.primaryColor != null
+        ? Color(themeSpec.primaryColor!)
+        : dynamicSeed;
+    final colorStyle = themeSpec.colorStyle;
     final ringPalette = countryFlagRingColors(
       _displayedTone,
       colorScheme,
       colorStyle,
+      seedColor: seedColor,
     );
     final flagOverlay = countryFlagOverlayStyle(colorScheme, colorStyle);
     final ringColor = Color.alphaBlend(

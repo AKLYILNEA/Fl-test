@@ -30,6 +30,7 @@ import 'package:mocktail/mocktail.dart';
 
 import '../../helpers/glyph_finders.dart';
 import '../../helpers/test_app.dart';
+import 'package:prism_ui/hct/hct.dart';
 import 'package:prism_ui/prism_ui.dart';
 import '../../helpers/host_scaffold.dart';
 
@@ -526,6 +527,69 @@ void main() {
         );
         expect(tintedOverlay.tintVeil.a, greaterThan(0));
         expect(tintedOverlay.colorMatrix[0], lessThan(0.9));
+        final sameToneSeeds = <Color>[
+          const Color(0xFFADCAFF),
+          const Color(0xFFC4C4FF),
+          const Color(0xFFDEBBFF),
+          const Color(0xFFE6C900),
+          const Color(0xFF00E93D),
+        ];
+        for (final style in ColorStyle.values) {
+          for (final brightness in Brightness.values) {
+            final baseSeed = sameToneSeeds.first;
+            final baseScheme = seededColorScheme(
+              seedColor: baseSeed,
+              brightness: brightness,
+              style: style,
+            );
+            for (final tone in CountryFlagTone.values) {
+              final expected = countryFlagRingColors(
+                tone,
+                baseScheme,
+                style,
+                seedColor: baseSeed,
+              );
+              final expectedHct = Hct.fromInt(
+                expected.ring.withValues(alpha: 1).toARGB32(),
+              );
+              for (final otherSeed in sameToneSeeds.skip(1)) {
+                final otherScheme = seededColorScheme(
+                  seedColor: otherSeed,
+                  brightness: brightness,
+                  style: style,
+                );
+                final actual = countryFlagRingColors(
+                  tone,
+                  otherScheme,
+                  style,
+                  seedColor: otherSeed,
+                );
+                final actualHct = Hct.fromInt(
+                  actual.ring.withValues(alpha: 1).toARGB32(),
+                );
+                expect(actualHct.hue, closeTo(expectedHct.hue, 1.0));
+                expect(actualHct.tone, closeTo(expectedHct.tone, 0.5));
+                expect(actualHct.chroma, closeTo(expectedHct.chroma, 1.5));
+              }
+            }
+          }
+        }
+        final navySeed = const Color(0xFF003B76);
+        final navyScheme = seededColorScheme(
+          seedColor: navySeed,
+          brightness: Brightness.light,
+          style: ColorStyle.vivid,
+        );
+        final navyBlue = countryFlagRingColors(
+          CountryFlagTone.blue,
+          navyScheme,
+          ColorStyle.vivid,
+          seedColor: navySeed,
+        );
+        final navyHct = Hct.fromInt(
+          navyBlue.ring.withValues(alpha: 1).toARGB32(),
+        );
+        expect(navyHct.tone, lessThan(40));
       },
     );
 

@@ -93,28 +93,29 @@ CountryFlagTone countryFlagTone(String? countryCode) {
   return CountryFlagTone.grey;
 }
 
-double _harmonizeHue(
-  double baseHue,
-  double primaryHue,
-  double factor,
-  double maxShift,
-) {
-  final diff = ((primaryHue - baseHue + 540.0) % 360.0) - 180.0;
-  return (baseHue + clampDouble(diff * factor, -maxShift, maxShift)) % 360.0;
-}
+double _maxHctChroma(double hue, double tone) =>
+    Hct.from(hue, 150.0, tone).chroma;
 
 /// Derives the circular flag outer ring and two-layer feathered ambient bloom
-/// colors in HCT space so all 5 tones match the active theme and [ColorStyle].
+/// colors in HCT space from the active theme's perceptual tone and relative
+/// chroma ratio, so any theme colors sharing the same `(tone, chromaRatio)`
+/// (e.g. `#ADCAFF`, `#C4C4FF`, `#DEBBFF`, `#E6C900`, `#00E93D`) produce the
+/// exact same 5-color ring palette (`red`, `blue`, `yellow`, `green`, `grey`).
 ({Color ring, Color glow, Color innerGlow}) countryFlagRingColors(
   CountryFlagTone tone,
   ColorScheme colorScheme,
-  ColorStyle style,
-) {
+  ColorStyle style, {
+  Color? seedColor,
+}) {
   final isDark = colorScheme.brightness == Brightness.dark;
-  final primary = Hct.fromInt(colorScheme.primary.toARGB32());
+  final source = Hct.fromInt((seedColor ?? colorScheme.primary).toARGB32());
+  final maxSourceChroma = _maxHctChroma(source.hue, source.tone);
+  final chromaRatio = maxSourceChroma > 1.0
+      ? clampDouble(source.chroma / maxSourceChroma, 0.0, 1.0)
+      : 0.0;
 
-  if (style == ColorStyle.monochrome || primary.chroma < 8.0) {
-    final base = Color(Hct.from(primary.hue, 0, isDark ? 68.0 : 54.0).toInt());
+  if (style == ColorStyle.monochrome || source.chroma < 8.0) {
+    final base = Color(Hct.from(0.0, 0.0, isDark ? 68.0 : 54.0).toInt());
     final glowAlpha = isDark ? 0.14 : 0.09;
     return (
       ring: base.withValues(alpha: isDark ? 0.44 : 0.34),
@@ -123,69 +124,74 @@ double _harmonizeHue(
     );
   }
 
+  final targetTone = switch (style) {
+    ColorStyle.vivid => isDark
+        ? clampDouble(source.tone + 3.0, 46.0, 84.0)
+        : clampDouble(source.tone, 34.0, 82.0),
+    ColorStyle.tinted => isDark
+        ? clampDouble(source.tone + 3.0, 48.0, 84.0)
+        : clampDouble(source.tone, 36.0, 82.0),
+    ColorStyle.soft => isDark
+        ? clampDouble(source.tone * 0.45 + 78.0 * 0.55, 68.0, 82.0)
+        : clampDouble(source.tone * 0.45 + 58.0 * 0.55, 52.0, 74.0),
+    ColorStyle.monochrome => isDark ? 68.0 : 54.0,
+  };
+
+  final lightBoost = isDark
+      ? 0.0
+      : clampDouble((targetTone - 58.0) / 26.0, 0.0, 1.0) * 0.30;
+
   if (tone == CountryFlagTone.grey) {
-    final chroma = switch (style) {
-      ColorStyle.tinted => clampDouble(primary.chroma / 6.0, 5.0, 11.0),
-      ColorStyle.soft => 4.0,
-      ColorStyle.vivid || ColorStyle.monochrome => 3.0,
-    };
-    final base = Color(
-      Hct.from(primary.hue, chroma, isDark ? 68.0 : 56.0).toInt(),
-    );
+    final greyTone = isDark
+        ? clampDouble(targetTone, 56.0, 80.0)
+        : clampDouble(targetTone, 46.0, 76.0);
+    final base = Color(Hct.from(0.0, 0.0, greyTone).toInt());
     final glowAlpha = isDark ? 0.15 : 0.09;
     return (
-      ring: base.withValues(alpha: isDark ? 0.44 : 0.33),
+      ring: base.withValues(
+        alpha: clampDouble((isDark ? 0.44 : 0.36) + lightBoost * 0.7, 0.34, 0.72),
+      ),
       glow: base.withValues(alpha: glowAlpha),
       innerGlow: base.withValues(alpha: glowAlpha * 0.55),
     );
   }
 
-  final baseHue = switch (tone) {
+  final canonicalHue = switch (tone) {
     CountryFlagTone.red => 20.0,
-    CountryFlagTone.blue => 230.0,
+    CountryFlagTone.blue => 252.0,
     CountryFlagTone.green => 145.0,
-    CountryFlagTone.yellow => 85.0,
-    CountryFlagTone.grey => primary.hue,
+    CountryFlagTone.yellow => 96.0,
+    CountryFlagTone.grey => 0.0,
   };
-  final (hueFactor, hueMaxShift) = style == ColorStyle.tinted
-      ? (0.08, 7.0)
-      : (0.04, 4.0);
-  final hue = _harmonizeHue(baseHue, primary.hue, hueFactor, hueMaxShift);
 
-  var targetTone = switch (style) {
-    ColorStyle.vivid || ColorStyle.tinted => isDark
-        ? clampDouble(primary.tone, 62.0, 74.0)
-        : clampDouble(primary.tone, 48.0, 60.0),
-    ColorStyle.soft => isDark
-        ? clampDouble(primary.tone - 6.0, 66.0, 76.0)
-        : clampDouble(primary.tone + 14.0, 52.0, 62.0),
-    ColorStyle.monochrome => isDark ? 68.0 : 54.0,
-  };
-  if (tone == CountryFlagTone.yellow) {
-    final yellowFloor = isDark ? 76.0 : 68.0;
-    final yellowLift = style == ColorStyle.soft ? 8.0 : 10.0;
-    targetTone = targetTone + yellowLift > yellowFloor
-        ? targetTone + yellowLift
-        : yellowFloor;
-  }
-
+  final maxTargetChroma = _maxHctChroma(canonicalHue, targetTone);
   final chroma = switch (style) {
-    ColorStyle.vivid => clampDouble(primary.chroma * 0.98, 48.0, 96.0),
-    ColorStyle.tinted => clampDouble(primary.chroma * 0.80, 40.0, 70.0),
-    ColorStyle.soft => clampDouble(primary.chroma * 0.85, 28.0, 42.0),
+    ColorStyle.vivid => maxTargetChroma * chromaRatio,
+    ColorStyle.tinted => clampDouble(
+      maxTargetChroma * chromaRatio * 0.80,
+      0.0,
+      72.0,
+    ),
+    ColorStyle.soft => clampDouble(
+      maxTargetChroma * chromaRatio * 0.52,
+      0.0,
+      36.0,
+    ),
     ColorStyle.monochrome => 0.0,
   };
 
-  final (ringAlpha, glowAlpha) = switch (style) {
-    ColorStyle.vivid => (isDark ? 0.54 : 0.46, isDark ? 0.22 : 0.14),
-    ColorStyle.tinted => (isDark ? 0.50 : 0.42, isDark ? 0.21 : 0.14),
-    ColorStyle.soft => (isDark ? 0.46 : 0.40, isDark ? 0.18 : 0.12),
+  final (baseRingAlpha, glowAlpha) = switch (style) {
+    ColorStyle.vivid => (isDark ? 0.54 : 0.48, isDark ? 0.22 : 0.14),
+    ColorStyle.tinted => (isDark ? 0.50 : 0.44, isDark ? 0.21 : 0.14),
+    ColorStyle.soft => (isDark ? 0.46 : 0.42, isDark ? 0.18 : 0.12),
     ColorStyle.monochrome => (isDark ? 0.44 : 0.34, isDark ? 0.14 : 0.09),
   };
 
-  final base = Color(Hct.from(hue, chroma, targetTone).toInt());
+  final base = Color(Hct.from(canonicalHue, chroma, targetTone).toInt());
   return (
-    ring: base.withValues(alpha: ringAlpha),
+    ring: base.withValues(
+      alpha: clampDouble(baseRingAlpha + lightBoost, 0.34, 0.80),
+    ),
     glow: base.withValues(alpha: glowAlpha),
     innerGlow: base.withValues(alpha: glowAlpha * 0.55),
   );
