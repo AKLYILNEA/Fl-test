@@ -1,5 +1,6 @@
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/common/country_flags.dart';
+import 'package:fl_clash/common/country_names.dart';
 import 'package:fl_clash/features/ip_quality/ip_locate.dart';
 import 'package:fl_clash/features/ip_quality/risk_model.dart';
 import 'package:fl_clash/features/ip_quality/risk_view.dart';
@@ -248,7 +249,7 @@ void main() {
       await tester.pump();
 
       expect(find.text(_ip), findsOneWidget);
-      expect(find.text('GB'), findsOneWidget);
+      expect(find.text('United Kingdom'), findsOneWidget);
       expect(find.text('1 / 100'), findsOneWidget);
       expect(find.text('Low risk'), findsOneWidget);
       expect(_chip(tester, 'Not running').tone, DashboardChipTone.idle);
@@ -327,7 +328,7 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.text('GB'), findsOneWidget);
+      expect(find.text('United Kingdom'), findsOneWidget);
       expect(find.text('Not running'), findsOneWidget);
       expect(_chip(tester, 'Not running').tone, DashboardChipTone.idle);
       expect(find.byType(DashboardChip), findsNWidgets(1));
@@ -428,11 +429,13 @@ void main() {
         await tester.pump();
 
         expect(find.byGlyph(AppGlyphs.location), findsOneWidget);
-        expect(find.text('China'), findsOneWidget);
+        expect(find.text("People's Republic of China"), findsOneWidget);
         expect(find.text('CN'), findsNothing);
         final cardContext = tester.element(find.byType(CurrentOutboundCard));
         final stoppedColor = cardContext.colorScheme.onSurfaceVariant;
-        final countryText = tester.widget<Text>(find.text('China'));
+        final countryText = tester.widget<Text>(
+          find.text("People's Republic of China"),
+        );
         final ipText = tester.widget<Text>(find.text(_ip));
         final pinIcon = tester.widget<GlyphIcon>(
           find.byGlyph(AppGlyphs.location),
@@ -442,7 +445,7 @@ void main() {
         expect(pinIcon.size, greaterThan(18));
         expect(countryText.style!.fontSize, greaterThan(ipText.style!.fontSize!));
         expect(
-          tester.getTopLeft(find.text('China')).dy,
+          tester.getTopLeft(find.text("People's Republic of China")).dy,
           lessThan(tester.getTopLeft(find.text(_ip)).dy),
         );
         final container = ProviderScope.containerOf(cardContext);
@@ -450,12 +453,24 @@ void main() {
         await tester.pump();
         final runningColor = cardContext.colorScheme.onSurface;
         expect(
-          tester.widget<Text>(find.text('China')).style!.color,
+          tester.widget<Text>(find.text("People's Republic of China")).style!.color,
           runningColor,
         );
         expect(
           tester.widget<GlyphIcon>(find.byGlyph(AppGlyphs.location)).color,
           runningColor,
+        );
+        expect(localizedCountryName('CN', const Locale('zh')), '中华人民共和国');
+        expect(localizedCountryName('US', const Locale('zh')), '美利坚合众国');
+        expect(localizedCountryName('TW', const Locale('zh')), '中国台湾省');
+        expect(localizedCountryName('HK', const Locale('zh')), '香港特别行政区');
+        expect(localizedCountryName('MO', const Locale('zh')), '澳门特别行政区');
+        expect(localizedCountryName('GB', const Locale('zh')), '联合王国');
+        expect(localizedCountryName('JP', const Locale('ja')), '日本国');
+        expect(localizedCountryName('KR', const Locale('ko')), '대한민국');
+        expect(
+          localizedCountryName('RU', const Locale('ru')),
+          'Российская Федерация',
         );
         expect(find.byType(SvgPicture), findsOneWidget);
         expect(

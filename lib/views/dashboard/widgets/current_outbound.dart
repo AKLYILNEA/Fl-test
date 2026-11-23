@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/common/country_flags.dart';
+import 'package:fl_clash/common/country_names.dart';
 import 'package:fl_clash/common/service_probe.dart';
 import 'package:fl_clash/features/features.dart';
 import 'package:fl_clash/models/models.dart';
@@ -467,7 +468,13 @@ class _IpLocationHeroText extends StatelessWidget {
     final fallbackCode = (rawCode != null && rawCode.isNotEmpty)
         ? rawCode.toUpperCase()
         : null;
-    final display = (riskCountry != null && riskCountry.isNotEmpty)
+    final localized = localizedCountryName(
+      rawCode,
+      Localizations.maybeLocaleOf(context),
+    );
+    final display = (localized != null && localized.isNotEmpty)
+        ? localized
+        : (riskCountry != null && riskCountry.isNotEmpty)
         ? riskCountry
         : (quality?.placeLabel?.isNotEmpty ?? false)
         ? quality!.placeLabel
