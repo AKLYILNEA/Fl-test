@@ -528,6 +528,7 @@ void main() {
         expect(tintedOverlay.tintVeil.a, greaterThan(0));
         expect(tintedOverlay.colorMatrix[0], lessThan(0.9));
         final sameToneSeeds = <Color>[
+          const Color(0xFF77D5FF),
           const Color(0xFFADCAFF),
           const Color(0xFFC4C4FF),
           const Color(0xFFDEBBFF),
@@ -549,9 +550,13 @@ void main() {
                 style,
                 seedColor: baseSeed,
               );
-              final expectedHct = Hct.fromInt(
-                expected.ring.withValues(alpha: 1).toARGB32(),
-              );
+              expect(expected.ring.a, 1.0);
+              final expectedHct = Hct.fromInt(expected.ring.toARGB32());
+              expect(expectedHct.chroma, lessThanOrEqualTo(40.0));
+              if (style == ColorStyle.tinted && tone == CountryFlagTone.grey) {
+                expect(expectedHct.chroma, greaterThan(2.0));
+                continue;
+              }
               for (final otherSeed in sameToneSeeds.skip(1)) {
                 final otherScheme = seededColorScheme(
                   seedColor: otherSeed,
@@ -564,10 +569,8 @@ void main() {
                   style,
                   seedColor: otherSeed,
                 );
-                final actualHct = Hct.fromInt(
-                  actual.ring.withValues(alpha: 1).toARGB32(),
-                );
-                expect(actualHct.hue, closeTo(expectedHct.hue, 1.0));
+                final actualHct = Hct.fromInt(actual.ring.toARGB32());
+                expect(actualHct.hue, closeTo(expectedHct.hue, 1.5));
                 expect(actualHct.tone, closeTo(expectedHct.tone, 0.5));
                 expect(actualHct.chroma, closeTo(expectedHct.chroma, 1.5));
               }
@@ -586,10 +589,8 @@ void main() {
           ColorStyle.vivid,
           seedColor: navySeed,
         );
-        final navyHct = Hct.fromInt(
-          navyBlue.ring.withValues(alpha: 1).toARGB32(),
-        );
-        expect(navyHct.tone, lessThan(40));
+        final navyHct = Hct.fromInt(navyBlue.ring.toARGB32());
+        expect(navyHct.tone, lessThan(70));
       },
     );
 

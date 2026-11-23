@@ -739,7 +739,8 @@ class _CountryBadgeState extends ConsumerState<_CountryBadge>
       foreground.withValues(alpha: enabled && _hovered ? 0.08 : 0),
       ringPalette.ring,
     );
-    final ringPadding = size >= 44 ? 2.5 : 2.1;
+    final ringPadding = size >= 44 ? 2.8 : 2.3;
+    final flagSize = size - ringPadding * 2;
     final flagAsset = _displayedFlagAsset;
     final cloverChild = code == null || code.isEmpty
         ? GlyphIcon(
@@ -809,21 +810,28 @@ class _CountryBadgeState extends ConsumerState<_CountryBadge>
                             child: Padding(
                               padding: EdgeInsets.all(ringPadding),
                               child: ClipOval(
-                                child: CustomPaint(
-                                  foregroundPainter: _FlagFinishPainter(
-                                    tintVeil: flagOverlay.tintVeil,
-                                    paperVeil: flagOverlay.paperVeil,
-                                    innerRim: flagOverlay.innerRim,
-                                  ),
-                                  child: ColorFiltered(
-                                    colorFilter: ColorFilter.matrix(
-                                      flagOverlay.colorMatrix,
-                                    ),
-                                    child: SvgPicture.asset(
-                                      flagAsset,
-                                      width: size - ringPadding * 2,
-                                      height: size - ringPadding * 2,
-                                      fit: BoxFit.cover,
+                                child: SizedBox.square(
+                                  dimension: flagSize,
+                                  child: CustomPaint(
+                                    foregroundPainter:
+                                        flagOverlay.tintVeil.a > 0
+                                        ? _FlagTintPainter(
+                                            tintVeil: flagOverlay.tintVeil,
+                                          )
+                                        : null,
+                                    child: Transform.scale(
+                                      scale: 1.02,
+                                      child: ColorFiltered(
+                                        colorFilter: ColorFilter.matrix(
+                                          flagOverlay.colorMatrix,
+                                        ),
+                                        child: SvgPicture.asset(
+                                          flagAsset,
+                                          width: flagSize,
+                                          height: flagSize,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -893,52 +901,27 @@ class CountryBadgeShape extends StatelessWidget {
   }
 }
 
-class _FlagFinishPainter extends CustomPainter {
-  const _FlagFinishPainter({
-    required this.tintVeil,
-    required this.paperVeil,
-    required this.innerRim,
-  });
-
-  static const _rimWidth = 0.75;
+class _FlagTintPainter extends CustomPainter {
+  const _FlagTintPainter({required this.tintVeil});
 
   final Color tintVeil;
-  final Color paperVeil;
-  final Color innerRim;
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = math.min(size.width, size.height) / 2;
-    if (tintVeil.a > 0) {
-      canvas.drawCircle(
-        center,
-        radius,
-        Paint()
-          ..color = tintVeil
-          ..blendMode = BlendMode.color,
-      );
-    }
-    if (paperVeil.a > 0) {
-      canvas.drawCircle(center, radius, Paint()..color = paperVeil);
-    }
-    if (innerRim.a > 0) {
-      canvas.drawCircle(
-        center,
-        radius - _rimWidth / 2,
-        Paint()
-          ..color = innerRim
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = _rimWidth,
-      );
-    }
+    canvas.drawCircle(
+      center,
+      radius,
+      Paint()
+        ..color = tintVeil
+        ..blendMode = BlendMode.color,
+    );
   }
 
   @override
-  bool shouldRepaint(_FlagFinishPainter oldDelegate) =>
-      oldDelegate.tintVeil != tintVeil ||
-      oldDelegate.paperVeil != paperVeil ||
-      oldDelegate.innerRim != innerRim;
+  bool shouldRepaint(_FlagTintPainter oldDelegate) =>
+      oldDelegate.tintVeil != tintVeil;
 }
 
 class _CountryBadgeMorphPainter extends CustomPainter {

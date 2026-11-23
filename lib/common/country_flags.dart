@@ -96,11 +96,8 @@ CountryFlagTone countryFlagTone(String? countryCode) {
 double _maxHctChroma(double hue, double tone) =>
     Hct.from(hue, 150.0, tone).chroma;
 
-/// Derives the circular flag outer ring and two-layer feathered ambient bloom
-/// colors in HCT space from the active theme's perceptual tone and relative
-/// chroma ratio, so any theme colors sharing the same `(tone, chromaRatio)`
-/// (e.g. `#ADCAFF`, `#C4C4FF`, `#DEBBFF`, `#E6C900`, `#00E93D`) produce the
-/// exact same 5-color ring palette (`red`, `blue`, `yellow`, `green`, `grey`).
+/// Derives the solid circular backing disc and two-layer ambient bloom using
+/// FlClash's capped HCT chroma discipline across all 4 [ColorStyle]s.
 ({Color ring, Color glow, Color innerGlow}) countryFlagRingColors(
   CountryFlagTone tone,
   ColorScheme colorScheme,
@@ -115,85 +112,71 @@ double _maxHctChroma(double hue, double tone) =>
       : 0.0;
 
   if (style == ColorStyle.monochrome || source.chroma < 8.0) {
-    final base = Color(Hct.from(0.0, 0.0, isDark ? 68.0 : 54.0).toInt());
-    final glowAlpha = isDark ? 0.14 : 0.09;
+    final disc = Color(Hct.from(0.0, 0.0, isDark ? 32.0 : 86.0).toInt());
+    final glowAlpha = isDark ? 0.12 : 0.08;
     return (
-      ring: base.withValues(alpha: isDark ? 0.44 : 0.34),
-      glow: base.withValues(alpha: glowAlpha),
-      innerGlow: base.withValues(alpha: glowAlpha * 0.55),
+      ring: disc,
+      glow: disc.withValues(alpha: glowAlpha),
+      innerGlow: disc.withValues(alpha: glowAlpha * 0.55),
     );
   }
 
   final targetTone = switch (style) {
-    ColorStyle.vivid => isDark
-        ? clampDouble(source.tone + 3.0, 46.0, 84.0)
-        : clampDouble(source.tone, 34.0, 82.0),
-    ColorStyle.tinted => isDark
-        ? clampDouble(source.tone + 3.0, 48.0, 84.0)
-        : clampDouble(source.tone, 36.0, 82.0),
     ColorStyle.soft => isDark
-        ? clampDouble(source.tone * 0.45 + 78.0 * 0.55, 68.0, 82.0)
-        : clampDouble(source.tone * 0.45 + 58.0 * 0.55, 52.0, 74.0),
-    ColorStyle.monochrome => isDark ? 68.0 : 54.0,
+        ? clampDouble(source.tone * 0.25 + 34.0, 44.0, 56.0)
+        : clampDouble(source.tone * 0.30 + 56.0, 72.0, 85.0),
+    ColorStyle.vivid || ColorStyle.tinted => isDark
+        ? clampDouble(source.tone * 0.35 + 32.0, 42.0, 62.0)
+        : clampDouble(source.tone * 0.40 + 48.0, 66.0, 84.0),
+    ColorStyle.monochrome => isDark ? 32.0 : 86.0,
   };
-
-  final lightBoost = isDark
-      ? 0.0
-      : clampDouble((targetTone - 58.0) / 26.0, 0.0, 1.0) * 0.30;
 
   if (tone == CountryFlagTone.grey) {
     final greyTone = isDark
-        ? clampDouble(targetTone, 56.0, 80.0)
-        : clampDouble(targetTone, 46.0, 76.0);
-    final base = Color(Hct.from(0.0, 0.0, greyTone).toInt());
-    final glowAlpha = isDark ? 0.15 : 0.09;
+        ? clampDouble(targetTone - 4.0, 36.0, 54.0)
+        : clampDouble(targetTone + 2.0, 76.0, 88.0);
+    final isTinted = style == ColorStyle.tinted;
+    final greyChroma = isTinted
+        ? clampDouble(source.chroma / 6.0, 4.0, 10.0)
+        : 0.0;
+    final disc = Color(
+      Hct.from(isTinted ? source.hue : 0.0, greyChroma, greyTone).toInt(),
+    );
+    final glowAlpha = isDark ? 0.12 : 0.07;
     return (
-      ring: base.withValues(
-        alpha: clampDouble((isDark ? 0.44 : 0.36) + lightBoost * 0.7, 0.34, 0.72),
-      ),
-      glow: base.withValues(alpha: glowAlpha),
-      innerGlow: base.withValues(alpha: glowAlpha * 0.55),
+      ring: disc,
+      glow: disc.withValues(alpha: glowAlpha),
+      innerGlow: disc.withValues(alpha: glowAlpha * 0.55),
     );
   }
 
   final canonicalHue = switch (tone) {
-    CountryFlagTone.red => 20.0,
-    CountryFlagTone.blue => 252.0,
-    CountryFlagTone.green => 145.0,
-    CountryFlagTone.yellow => 96.0,
+    CountryFlagTone.red => 25.0,
+    CountryFlagTone.blue => 257.0,
+    CountryFlagTone.green => 142.0,
+    CountryFlagTone.yellow => 76.0,
     CountryFlagTone.grey => 0.0,
   };
 
-  final maxTargetChroma = _maxHctChroma(canonicalHue, targetTone);
-  final chroma = switch (style) {
-    ColorStyle.vivid => maxTargetChroma * chromaRatio,
-    ColorStyle.tinted => clampDouble(
-      maxTargetChroma * chromaRatio * 0.80,
-      0.0,
-      72.0,
-    ),
-    ColorStyle.soft => clampDouble(
-      maxTargetChroma * chromaRatio * 0.52,
-      0.0,
-      36.0,
-    ),
+  final chromaCap = switch (style) {
+    ColorStyle.vivid => isDark ? 36.0 : 38.0,
+    ColorStyle.tinted => isDark ? 30.0 : 32.0,
+    ColorStyle.soft => 22.0,
     ColorStyle.monochrome => 0.0,
   };
-
-  final (baseRingAlpha, glowAlpha) = switch (style) {
-    ColorStyle.vivid => (isDark ? 0.54 : 0.48, isDark ? 0.22 : 0.14),
-    ColorStyle.tinted => (isDark ? 0.50 : 0.44, isDark ? 0.21 : 0.14),
-    ColorStyle.soft => (isDark ? 0.46 : 0.42, isDark ? 0.18 : 0.12),
-    ColorStyle.monochrome => (isDark ? 0.44 : 0.34, isDark ? 0.14 : 0.09),
+  final chroma = chromaCap * (0.45 + 0.55 * chromaRatio);
+  final glowAlpha = switch (style) {
+    ColorStyle.vivid => isDark ? 0.20 : 0.15,
+    ColorStyle.tinted => isDark ? 0.18 : 0.13,
+    ColorStyle.soft => isDark ? 0.14 : 0.10,
+    ColorStyle.monochrome => isDark ? 0.12 : 0.08,
   };
 
-  final base = Color(Hct.from(canonicalHue, chroma, targetTone).toInt());
+  final disc = Color(Hct.from(canonicalHue, chroma, targetTone).toInt());
   return (
-    ring: base.withValues(
-      alpha: clampDouble(baseRingAlpha + lightBoost, 0.34, 0.80),
-    ),
-    glow: base.withValues(alpha: glowAlpha),
-    innerGlow: base.withValues(alpha: glowAlpha * 0.55),
+    ring: disc,
+    glow: disc.withValues(alpha: glowAlpha),
+    innerGlow: disc.withValues(alpha: glowAlpha * 0.55),
   );
 }
 
@@ -232,10 +215,11 @@ List<double> _flagToneMatrix(
   ];
 }
 
-/// Derives the adaptive recoloring matrix, subtle theme tint veil, paper veil,
-/// and inner rim hairline applied over the circular flag SVG.
-({List<double> colorMatrix, Color tintVeil, Color paperVeil, Color innerRim})
-countryFlagOverlayStyle(ColorScheme colorScheme, ColorStyle style) {
+/// Derives the adaptive recoloring matrix and theme tint veil for the flag SVG.
+({List<double> colorMatrix, Color tintVeil}) countryFlagOverlayStyle(
+  ColorScheme colorScheme,
+  ColorStyle style,
+) {
   final isDark = colorScheme.brightness == Brightness.dark;
   final primary = Hct.fromInt(colorScheme.primary.toARGB32());
   final isAchromatic = style == ColorStyle.monochrome || primary.chroma < 8.0;
@@ -244,28 +228,28 @@ countryFlagOverlayStyle(ColorScheme colorScheme, ColorStyle style) {
       ? (0.04, isDark ? 0.95 : 0.94, isDark ? 0.86 : 1.0)
       : switch (style) {
           ColorStyle.soft => (
-            isDark ? 0.74 : 0.78,
-            isDark ? 0.94 : 0.95,
-            isDark ? 0.86 : 1.0,
+            isDark ? 0.78 : 0.82,
+            isDark ? 0.95 : 0.96,
+            isDark ? 0.88 : 1.0,
           ),
           ColorStyle.tinted => (
-            isDark ? 0.82 : 0.86,
+            isDark ? 0.85 : 0.88,
             0.96,
-            isDark ? 0.87 : 1.0,
+            isDark ? 0.89 : 1.0,
           ),
           ColorStyle.vivid || ColorStyle.monochrome => (
-            isDark ? 0.88 : 0.91,
+            isDark ? 0.90 : 0.94,
             0.97,
-            isDark ? 0.88 : 1.0,
+            isDark ? 0.90 : 1.0,
           ),
         };
 
   final tintAlpha = isAchromatic
       ? 0.0
       : switch (style) {
-          ColorStyle.tinted => isDark ? 0.13 : 0.10,
-          ColorStyle.soft => isDark ? 0.07 : 0.05,
-          ColorStyle.vivid || ColorStyle.monochrome => isDark ? 0.06 : 0.045,
+          ColorStyle.tinted => isDark ? 0.11 : 0.08,
+          ColorStyle.soft => isDark ? 0.05 : 0.04,
+          ColorStyle.vivid || ColorStyle.monochrome => isDark ? 0.04 : 0.03,
         };
 
   return (
@@ -273,7 +257,5 @@ countryFlagOverlayStyle(ColorScheme colorScheme, ColorStyle style) {
     tintVeil: tintAlpha > 0
         ? colorScheme.primary.withValues(alpha: tintAlpha)
         : const Color(0x00000000),
-    paperVeil: isDark ? const Color(0x17121418) : const Color(0x0FFFFFFF),
-    innerRim: isDark ? const Color(0x1FFFFFFF) : const Color(0x14000000),
   );
 }
