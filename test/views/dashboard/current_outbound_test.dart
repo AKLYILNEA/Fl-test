@@ -466,6 +466,8 @@ void main() {
         expect(localizedCountryName('IN', const Locale('zh')), '干净卫生恒河国');
         expect(localizedCountryName('TH', const Locale('zh')), '萨瓦迪卡泰王国');
         expect(localizedCountryName('NZ', const Locale('zh')), '中土世界新西兰');
+        expect(localizedCountryName('SG', const Locale('zh')), '花园城市新加坡');
+        expect(localizedCountryName('PH', const Locale('zh')), '南洋碰瓷香蕉国');
         expect(localizedCountryName('CN', const Locale('en')), isNull);
         expect(localizedCountryName('US', const Locale('en')), isNull);
         expect(localizedCountryName('JP', const Locale('ja')), '日本国');
