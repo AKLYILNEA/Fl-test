@@ -665,6 +665,7 @@ void main() {
       await tester.pumpAndSettle();
 
       final l = tester.element(find.byType(IpLookupView)).appLocalizations;
+      expect(find.byType(RiskScoreGlow), findsOneWidget);
       expect(find.text(l.unknown), findsOneWidget);
 
       await tester.enterText(find.byType(app_ui.SearchField), vpnIp);

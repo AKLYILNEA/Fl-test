@@ -618,7 +618,6 @@ class _IpRiskHeroCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = context.appLocalizations;
     final cs = context.colorScheme;
-    final isDark = cs.brightness == Brightness.dark;
     final scoreColor = riskScoreColor(risk.displayScore);
 
     final header = Row(
@@ -740,23 +739,7 @@ class _IpRiskHeroCard extends StatelessWidget {
         ),
         child: Stack(
           children: [
-            Positioned.fill(
-              child: IgnorePointer(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: RadialGradient(
-                      center: const Alignment(-0.88, -1.15),
-                      radius: 1.05,
-                      colors: [
-                        scoreColor.withValues(alpha: isDark ? 0.16 : 0.13),
-                        scoreColor.withValues(alpha: 0.0),
-                      ],
-                      stops: const [0.0, 0.72],
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            RiskScoreGlow(scoreColor: scoreColor),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
               child: Column(

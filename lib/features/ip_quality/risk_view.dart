@@ -376,6 +376,84 @@ class RiskScaleBarPainter extends CustomPainter {
       score != oldDelegate.score || surface != oldDelegate.surface;
 }
 
+Color _riskGlowTint(Color scoreColor, {required bool isDark}) {
+  final hsl = HSLColor.fromColor(scoreColor);
+  return hsl
+      .withSaturation(math.min(1.0, hsl.saturation * 1.1 + 0.08))
+      .withLightness(isDark ? 0.64 : 0.56)
+      .toColor();
+}
+
+/// Elliptical badge-centered Gaussian-like glow behind [RiskScoreCard] headers.
+class RiskScoreGlow extends StatelessWidget {
+  const RiskScoreGlow({super.key, required this.scoreColor});
+
+  final Color scoreColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = context.colorScheme.brightness == Brightness.dark;
+    final textDirection = Directionality.of(context);
+    return Positioned.fill(
+      child: IgnorePointer(
+        child: CustomPaint(
+          painter: _RiskScoreGlowPainter(
+            glowColor: _riskGlowTint(scoreColor, isDark: isDark),
+            peakAlpha: isDark ? 0.36 : 0.28,
+            isRtl: textDirection == TextDirection.rtl,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RiskScoreGlowPainter extends CustomPainter {
+  const _RiskScoreGlowPainter({
+    required this.glowColor,
+    required this.peakAlpha,
+    required this.isRtl,
+  });
+
+  static const _centerX = 35.0;
+  static const _centerY = 33.0;
+  static const _radiusX = 230.0;
+  static const _radiusY = 135.0;
+  static const _stops = [0.0, 0.16, 0.34, 0.52, 0.72, 1.0];
+  static const _weights = [1.0, 0.78, 0.46, 0.22, 0.07, 0.0];
+
+  final Color glowColor;
+  final double peakAlpha;
+  final bool isRtl;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (size.isEmpty) return;
+    final cx = isRtl ? size.width - _centerX : _centerX;
+    final colors = [
+      for (final weight in _weights)
+        glowColor.withValues(alpha: peakAlpha * weight),
+    ];
+    final rect = Rect.fromCircle(center: Offset.zero, radius: _radiusY);
+    final shader = RadialGradient(
+      colors: colors,
+      stops: _stops,
+    ).createShader(rect);
+
+    canvas.save();
+    canvas.translate(cx, _centerY);
+    canvas.scale(_radiusX / _radiusY, 1.0);
+    canvas.drawCircle(Offset.zero, _radiusY, Paint()..shader = shader);
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(_RiskScoreGlowPainter oldDelegate) =>
+      glowColor != oldDelegate.glowColor ||
+      peakAlpha != oldDelegate.peakAlpha ||
+      isRtl != oldDelegate.isRtl;
+}
+
 class RiskScoreCard extends StatelessWidget {
   const RiskScoreCard({super.key, required this.risk});
   final IpRisk risk;
@@ -384,7 +462,6 @@ class RiskScoreCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = context.appLocalizations;
     final cs = context.colorScheme;
-    final isDark = cs.brightness == Brightness.dark;
     final scoreColor = riskScoreColor(risk.displayScore);
     return Card(
       radius: AppCorner.xl,
@@ -396,23 +473,7 @@ class RiskScoreCard extends StatelessWidget {
         ),
         child: Stack(
           children: [
-            Positioned.fill(
-              child: IgnorePointer(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: RadialGradient(
-                      center: const Alignment(-0.88, -1.15),
-                      radius: 1.05,
-                      colors: [
-                        scoreColor.withValues(alpha: isDark ? 0.16 : 0.13),
-                        scoreColor.withValues(alpha: 0.0),
-                      ],
-                      stops: const [0.0, 0.72],
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            RiskScoreGlow(scoreColor: scoreColor),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
               child: Column(
