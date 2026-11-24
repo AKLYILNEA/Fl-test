@@ -454,7 +454,7 @@ void main() {
         expect(countryFlagTone('TW'), CountryFlagTone.blue);
         expect(localizedCountryName('CN', const Locale('zh')), '中华人民共和国');
         expect(localizedCountryName('US', const Locale('zh')), '美利坚合众国');
-        expect(localizedCountryName('TW', const Locale('zh')), '中国宝岛台湾省');
+        expect(localizedCountryName('TW', const Locale('zh')), '中国台湾省');
         expect(localizedCountryName('HK', const Locale('zh')), '香港特别行政区');
         expect(localizedCountryName('MO', const Locale('zh')), '澳门特别行政区');
         expect(localizedCountryName('GB', const Locale('zh')), '大不列颠联合王国');
@@ -665,7 +665,7 @@ void main() {
       );
       expect(attributionQueries, 1);
       expect(find.text('Source Scamalytics and IPLocate.io'), findsOneWidget);
-      expect(find.text('Residential proxy'), findsOneWidget);
+      expect(find.text('Residential proxy'), findsNWidgets(2));
     });
 
     testWidgets('opens its details from the country label too', (

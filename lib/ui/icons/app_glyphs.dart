@@ -42,6 +42,19 @@ abstract final class AppGlyphs {
     GlyphCircle(12, 9.6, 2.35, role: GlyphRole.detail),
   ]);
 
+  static const flag = Glyph([
+    GlyphPolyline([
+      GlyphVertex(5.5, 20.5),
+      GlyphVertex(5.5, 4.5),
+    ], role: GlyphRole.line),
+    GlyphPath(
+      'M5.5 5.3C8.2 3.8 10.6 3.8 12.6 5.2'
+      'C14.6 6.6 17 6.6 19 5.2V13.6'
+      'C17 15 14.6 15 12.6 13.6'
+      'C10.6 12.2 8.2 12.2 5.5 13.7Z',
+    ),
+  ], matchTextDirection: true);
+
   static const profiles = Glyph([
     GlyphPolyline([
       GlyphVertex(5, 3, 2.5),
