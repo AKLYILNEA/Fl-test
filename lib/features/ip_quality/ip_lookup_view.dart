@@ -731,41 +731,27 @@ class _IpRiskHeroCard extends StatelessWidget {
 
     return Card(
       radius: AppCorner.xl,
-      padding: EdgeInsets.zero,
-      child: ClipPath(
-        clipper: ShapeBorderClipper(
-          shape: AppShape.xl,
-          textDirection: Directionality.of(context),
-        ),
-        child: Stack(
-          children: [
-            RiskScoreGlow(scoreColor: scoreColor),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: fillHeight ? MainAxisSize.max : MainAxisSize.min,
-                children: [
-                  header,
-                  const SizedBox(height: 8),
-                  scoreBlock,
-                  const SizedBox(height: 9),
-                  if (fillHeight) const Spacer(flex: 1),
-                  Divider(
-                    height: 1,
-                    thickness: Divider.separatorThicknessOf(context),
-                  ),
-                  const SizedBox(height: 9),
-                  if (fillHeight) const Spacer(flex: 1),
-                  ipColumn,
-                  const SizedBox(height: 11),
-                  if (fillHeight) const Spacer(flex: 2),
-                  riskScale,
-                ],
-              ),
-            ),
-          ],
-        ),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: fillHeight ? MainAxisSize.max : MainAxisSize.min,
+        children: [
+          header,
+          const SizedBox(height: 8),
+          scoreBlock,
+          const SizedBox(height: 9),
+          if (fillHeight) const Spacer(flex: 1),
+          Divider(
+            height: 1,
+            thickness: Divider.separatorThicknessOf(context),
+          ),
+          const SizedBox(height: 9),
+          if (fillHeight) const Spacer(flex: 1),
+          ipColumn,
+          const SizedBox(height: 11),
+          if (fillHeight) const Spacer(flex: 2),
+          riskScale,
+        ],
       ),
     );
   }

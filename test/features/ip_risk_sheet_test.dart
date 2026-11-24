@@ -721,7 +721,6 @@ void main() {
 
       expect(exitAttempts, 2);
       expect(find.byGlyph(AppGlyphs.location), findsOneWidget);
-      expect(find.byType(RiskScoreGlow), findsOneWidget);
       expect(find.text(sampleRisk.ip), findsOneWidget);
       expect(find.text('HK-01'), findsNothing);
       expect(find.text('${sampleRisk.displayScore}'), findsOneWidget);
