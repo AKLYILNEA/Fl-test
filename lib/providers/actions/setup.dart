@@ -582,8 +582,10 @@ class SetupAction extends _$SetupAction {
       force: force,
       silence: silence,
       preloadInvoke: combinedPreload,
-      onUpdated: () async {
-        await ref.read(proxiesActionProvider.notifier).updateGroups();
+      onUpdated: ({required shouldRetry}) async {
+        await ref
+            .read(proxiesActionProvider.notifier)
+            .updateGroups(shouldRetry: shouldRetry);
         await ref.read(providersProvider.notifier).syncProviders();
       },
     );
@@ -1003,7 +1005,7 @@ class SetupAction extends _$SetupAction {
     bool force = false,
     bool silence = false,
     Future<void> Function()? preloadInvoke,
-    FutureOr Function()? onUpdated,
+    FutureOr<void> Function({required bool Function() shouldRetry})? onUpdated,
   }) async {
     var profile = ref.read(currentProfileProvider);
     if (profile == null) {
@@ -1114,7 +1116,11 @@ class SetupAction extends _$SetupAction {
             unawaited(
               preferences.saveAppliedConfigCounts(globalState.lastConfigCounts),
             );
-            await globalState.safeRun(() => onUpdated?.call());
+            if (!isSuperseded()) {
+              await globalState.safeRun(
+                () => onUpdated?.call(shouldRetry: () => false),
+              );
+            }
             throw MessageException(error.message);
           }
         } catch (e, s) {
@@ -1135,7 +1141,7 @@ class SetupAction extends _$SetupAction {
           await preferences.saveAppliedConfigMd5(yamlMd5);
         }
         if (!isSuperseded()) {
-          await onUpdated?.call();
+          await onUpdated?.call(shouldRetry: () => !isSuperseded());
         }
       },
       silence: true,

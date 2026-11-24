@@ -117,6 +117,10 @@ jobs:
         run: |
           for patch in core/patches/*.patch; do
             [ -f "$patch" ] || continue
+            if git -C core/Clash.Meta apply --ignore-whitespace --reverse --check "../../$patch" 2>/dev/null; then
+              echo "Skipping already-applied $patch"
+              continue
+            fi
             echo "Applying $patch"
             git -C core/Clash.Meta apply --ignore-whitespace --check "../../$patch"
             git -C core/Clash.Meta apply --ignore-whitespace "../../$patch"

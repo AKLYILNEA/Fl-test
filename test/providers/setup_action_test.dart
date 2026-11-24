@@ -2402,5 +2402,62 @@ void main() {
         verify(() => core.setupConfig(any())).called(1);
       },
     );
+
+    test(
+      'a rejected setupConfig does not retry empty groups and skips refresh when superseded',
+      () async {
+        final first = Profile.normal(label: 'first');
+        final second = Profile.normal(label: 'second');
+        final core = _MockCoreHandlerInterface();
+        var getProxiesCalls = 0;
+        when(
+          () => core.getProfileBase(any()),
+        ).thenAnswer((_) async => const ProfileBase(config: {}, digest: 'd'));
+        when(() => core.getExternalProviders()).thenAnswer((_) async => []);
+        when(() => core.getProxies()).thenAnswer((_) async {
+          getProxiesCalls++;
+          return const ProxiesData(proxies: {}, all: []);
+        });
+
+        var rejectGate = Completer<void>();
+        when(() => core.setupConfig(any())).thenAnswer((_) async {
+          await rejectGate.future;
+          throw const CoreMethodException(
+            code: 'config_rejected',
+            message: 'bad config',
+          );
+        });
+
+        final scoped = ProviderContainer(
+          overrides: [
+            profilesProvider.overrideWith(() => TestProfiles([first, second])),
+            currentProfileIdProvider.overrideWithBuild((_, _) => first.id),
+            setupStateProvider.overrideWith(
+              (_, profileId) =>
+                  nullProfileSetupState.copyWith(profileId: profileId),
+            ),
+            coreHandlerProvider.overrideWithValue(CoreController.scoped(core)),
+            setupActionProvider.overrideWith(SetupAction.new),
+          ],
+        );
+        addTearDown(scoped.dispose);
+        final notifier = scoped.read(setupActionProvider.notifier);
+
+        // 1) Non-superseded rejected apply queries groups once (0 retry sleeps).
+        rejectGate.complete();
+        expect(await notifier.applyProfile(force: true), isFalse);
+        expect(getProxiesCalls, 1);
+
+        // 2) Superseded rejected apply skips onUpdated altogether.
+        getProxiesCalls = 0;
+        rejectGate = Completer<void>();
+        final inFlight = notifier.applyProfile(force: true);
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+        scoped.read(currentProfileIdProvider.notifier).value = second.id;
+        rejectGate.complete();
+        expect(await inFlight, isFalse);
+        expect(getProxiesCalls, 0);
+      },
+    );
   });
 }

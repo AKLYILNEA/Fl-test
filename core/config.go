@@ -145,6 +145,7 @@ func applyConfig(params *SetupParams) error {
 	// resolving routes while the new config is being applied.
 	cancelAllOutboundIps()
 	cancelAllServiceChecks()
+	cancelAllDelayTests()
 
 	applyOptions(params.Options)
 	cfg, err := loadSetupConfig(params)
