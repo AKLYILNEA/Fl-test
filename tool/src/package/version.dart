@@ -48,6 +48,10 @@ Future<ResolvedVersion> resolveVersion(String root, {String? tag}) async {
   ], workingDirectory: root);
   final line = detectReleaseLine(root);
   tag ??= _tagFromEnvironment() ?? await _tagAtHead(root);
+  if (tag == 'dev' && line == ReleaseLine.rs) {
+    final base = pubspecVersionOf(root).split('+').first;
+    return (version: '$base-rs.dev', commit: commit, tag: tag);
+  }
   if (tag != null) {
     final version = releaseVersionOfTag(tag);
     if (isRsReleaseVersion(version) != (line == ReleaseLine.rs)) {

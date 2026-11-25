@@ -3,6 +3,7 @@ name: Rust build
 on:
   push:
     tags:
+      - dev
       - 'v*-rs.*'
   workflow_dispatch:
 
@@ -171,7 +172,7 @@ jobs:
           if-no-files-found: error
 
   publish:
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    if: github.event_name == 'push' && github.ref_type == 'tag'
     needs: build
     runs-on: ubuntu-latest
     permissions:
@@ -183,7 +184,16 @@ jobs:
           merge-multiple: true
       - name: Write checksums
         working-directory: dist
-        run: sha256sum *.apk *.exe > "FlClash-${GITHUB_REF_NAME#v}-SHA256SUMS"
+        run: |
+          shopt -s nullglob
+          apks=(FlClash-*-android-arm64.apk)
+          exes=(FlClash-*-windows-amd64-setup.exe)
+          test "${#apks[@]}" = 1
+          test "${#exes[@]}" = 1
+          version="${apks[0]#FlClash-}"
+          version="${version%-android-arm64.apk}"
+          test "${exes[0]}" = "FlClash-$version-windows-amd64-setup.exe"
+          sha256sum "${apks[0]}" "${exes[0]}" > "FlClash-$version-SHA256SUMS"
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
