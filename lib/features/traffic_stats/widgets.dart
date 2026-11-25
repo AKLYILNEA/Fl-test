@@ -3,7 +3,10 @@ import 'dart:math' as math;
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/ui/icons/icons.dart';
+import 'package:fl_clash/views/dashboard/layout.dart';
 import 'package:fl_clash/views/dashboard/style.dart';
+import 'package:fl_clash/views/dashboard/widgets/card.dart';
+import 'package:fl_clash/widgets/text_ink.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/widgets.dart';
 
@@ -387,7 +390,7 @@ class TrafficStatsOverviewCard extends StatelessWidget {
     final centerColor = routeTotal > 0
         ? (showDirectCenter ? directColor : proxyColor)
         : cs.onSurfaceVariant;
-    final trackColor = DashboardColors.of(context).track;
+    final trackColor = DashboardColors.of(context).tone2;
 
     final topRow = IntrinsicHeight(
       child: Row(
@@ -715,6 +718,8 @@ class _TrafficStatsRunningTime extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = context.appLocalizations;
     final duration = Duration(seconds: seconds);
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final headerScale = math.max(1.0, textScale);
     final numberStyle = AppTextStyle.title1
         .of(context, emphasized: true)
         .toTabular
@@ -737,36 +742,13 @@ class _TrafficStatsRunningTime extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Row(
-                children: [
-                  GlyphIcon(
-                    AppGlyphs.clock,
-                    size: 15,
-                    color: context.colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: AlignmentDirectional.centerStart,
-                      child: Text(
-                        l.trafficStatsRunningTime,
-                        maxLines: 1,
-                        softWrap: false,
-                        overflow: TextOverflow.visible,
-                        style: AppTextStyle.footnote
-                            .of(context)
-                            .copyWith(
-                              color: context.colorScheme.onSurfaceVariant,
-                            ),
-                      ),
-                    ),
-                  ),
-                ],
+              _RunningTimeTitle(
+                title: l.trafficStatsRunningTime,
+                scale: headerScale,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 4),
               SizedBox(
-                height: 34 * MediaQuery.textScalerOf(context).scale(1),
+                height: 34 * textScale,
                 width: double.infinity,
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
@@ -800,6 +782,109 @@ class _TrafficStatsRunningTime extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RunningTimeTitle extends StatefulWidget {
+  const _RunningTimeTitle({required this.title, required this.scale});
+
+  final String title;
+  final double scale;
+
+  @override
+  State<_RunningTimeTitle> createState() => _RunningTimeTitleState();
+}
+
+class _RunningTimeTitleState extends State<_RunningTimeTitle> {
+  (String, TextStyle, double, TextDirection, Locale?)? _inkKey;
+  Future<TextInk?>? _measurement;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = context.colorScheme.onSurfaceVariant;
+    final density = DashboardDensity.of(
+      MediaQuery.sizeOf(context) / widget.scale,
+    );
+    final style =
+        (density.isDesktop
+                ? DashboardText.cardTitle(context)
+                : DashboardText.mobileCardTitle(context))
+            .copyWith(color: color);
+    final scaler = MediaQuery.textScalerOf(context);
+    final direction = Directionality.of(context);
+    final locale = Localizations.maybeLocaleOf(context);
+    final key = (
+      widget.title,
+      style,
+      scaler.scale(style.fontSize!),
+      direction,
+      locale,
+    );
+
+    if (_inkKey != key) {
+      _inkKey = key;
+      // Capitals give an alphabetic title its visual height without descenders.
+      final capitals = widget.title.runes
+          .map(String.fromCharCode)
+          .where(
+            (letter) =>
+                letter == letter.toUpperCase() &&
+                letter != letter.toLowerCase(),
+          )
+          .join();
+      _measurement = measureTextInk(
+        capitals.isEmpty ? widget.title : capitals,
+        style,
+        scaler,
+        textDirection: direction,
+        locale: locale,
+      );
+    }
+
+    final clock = GlyphIcon(
+      AppGlyphs.clock,
+      size: DashboardCardHeader.glyphSize,
+      color: color,
+    );
+    final label = Text(
+      widget.title,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: style,
+    );
+    return SizedBox(
+      height:
+          (density.isDesktop ? DashboardCardHeader.height : 26) * widget.scale,
+      child: Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: FutureBuilder<TextInk?>(
+          key: ValueKey(key),
+          future: _measurement,
+          builder: (context, snapshot) {
+            final ink = snapshot.data;
+            return Row(
+              spacing: 8,
+              crossAxisAlignment: ink == null
+                  ? CrossAxisAlignment.center
+                  : CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              children: [
+                if (ink == null)
+                  clock
+                else
+                  BaselineAt(
+                    baseline:
+                        DashboardCardHeader.glyphSize / 2 +
+                        (ink.ascent - ink.descent) / 2,
+                    child: clock,
+                  ),
+                Expanded(child: label),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -1417,7 +1502,7 @@ class TrafficStatsRuleHitsSection extends StatelessWidget {
                     hitCountText: l.trafficStatsHitCount(rules[i].hits),
                     defaultBadge: l.defaultText,
                     fallbackRuleBadge: l.rule,
-                    trackColor: DashboardColors.of(context).track,
+                    trackColor: DashboardColors.of(context).tone2,
                   ),
               ],
             ),
@@ -1737,7 +1822,7 @@ class TrafficStatsRankingSection extends StatelessWidget {
                         height: 4,
                         width: double.infinity,
                         child: ColoredBox(
-                          color: DashboardColors.of(context).track,
+                          color: DashboardColors.of(context).tone2,
                           child: Align(
                             alignment: AlignmentDirectional.centerStart,
                             child: FractionallySizedBox(

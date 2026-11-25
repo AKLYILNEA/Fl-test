@@ -255,7 +255,8 @@ void main() {
       return request['id'] as int;
     }
 
-    test('opens on listen with the initial credit and the options', () async {
+    test('opens on listen with the options and gives its credit once it '
+        'has the sub', () async {
       final (stream, _) = await open(
         params: {'intervalMs': 1000},
         maxBatchMs: 250,
@@ -266,9 +267,10 @@ void main() {
       await answerOpen();
       expect(channel.lastCall('traffic.watch')['params'], {
         'intervalMs': 1000,
-        'credit': 4,
+        'credit': 0,
         'maxBatchMs': 250,
       });
+      expect(channel.lastCall(r'$/credit')['params'], {'sub': 7, 'n': 4});
       expect(frames.single.snapshot, {'total': 1});
       await subscription.cancel();
     });
@@ -283,7 +285,7 @@ void main() {
         {'n': 2},
       ]);
       expect(frames.last.events, [1, 2]);
-      expect(channel.calls(r'$/credit'), isEmpty);
+      expect(channel.calls(r'$/credit'), hasLength(1));
       channel.event(
         7,
         [
@@ -306,7 +308,7 @@ void main() {
           {'n': index},
         ]);
       }
-      expect(channel.calls(r'$/credit'), isEmpty);
+      expect(channel.calls(r'$/credit'), hasLength(1));
       subscription.resume();
       await settle();
       expect(channel.lastCall(r'$/credit')['params'], {'sub': 7, 'n': 3});
@@ -323,6 +325,47 @@ void main() {
         {'n': 1},
       ]);
       expect(client.watchCount, 0);
+    });
+
+    test('reads a large snapshot off the UI isolate', () async {
+      await connect();
+      final stream = client.watch<(int, String?), int>(
+        'connection.watch',
+        decodeSnapshot: (snapshot) => (
+          (_object(snapshot)['items'] as List).length,
+          Isolate.current.debugName,
+        ),
+        decodeEvent: (event) => event['n'] as int,
+      );
+      final opened = Completer<(int, String?)?>();
+      final subscription = stream.listen((frame) {
+        if (!opened.isCompleted) {
+          opened.complete(frame.snapshot);
+        }
+      });
+      await settle();
+      channel.answerHello();
+      await settle();
+      final id = channel.lastCall('connection.watch')['id'];
+      final items = List.generate(3000, (index) => 'connection-$index-padding');
+      final frame = utf8.encode(
+        json.encode({
+          'jsonrpc': '2.0',
+          'id': id,
+          'result': {
+            'sub': 7,
+            'snapshot': {'items': items},
+          },
+        }),
+      );
+      expect(frame.length, greaterThan(coreOffloadBytes));
+      channel.pushRaw(Uint8List.fromList(frame));
+
+      final (count, isolateName) = (await opened.future)!;
+      expect(count, 3000);
+      expect(isolateName, isNot('main'));
+      expect(channel.lastCall(r'$/credit')['params'], {'sub': 7, 'n': 4});
+      await subscription.cancel();
     });
 
     test('opens again after a resync and says so', () async {
@@ -392,6 +435,66 @@ void main() {
       });
       await settle();
       expect((errors.single as CoreMethodException).code, 'unsupported');
+      expect(client.watchCount, 0);
+    });
+
+    test('ends with an error when the session is lost while it waits to '
+        'open again after a resync', () async {
+      final (stream, _) = await open();
+      final errors = <Object>[];
+      stream.listen((_) {}, onError: errors.add);
+      await answerOpen();
+      channel.push({
+        'jsonrpc': '2.0',
+        'method': r'$/event',
+        'params': {'sub': 7, 'resync': true},
+      });
+      channel.disconnect();
+      await settle();
+      expect(errors.single, isA<CoreMethodException>());
+      expect(client.watchCount, 0);
+
+      await Future<void>.delayed(const Duration(milliseconds: 120));
+      expect(channel.calls('traffic.watch'), hasLength(1));
+    });
+
+    test('ends with an error as soon as the client closes while it waits '
+        'for the Core', () async {
+      final stream = client.watch<JsonMap, int>(
+        'traffic.watch',
+        decodeEvent: (event) => event['n'] as int,
+      );
+      final errors = <Object>[];
+      stream.listen((_) {}, onError: errors.add);
+      await settle();
+
+      await client.close();
+      await settle();
+
+      expect(errors.single, isA<CoreMethodException>());
+      expect(client.watchCount, 0);
+    });
+
+    test('skips an event it cannot read and still gives the credit '
+        'back', () async {
+      final (stream, _) = await open();
+      final frames = <WatchFrame<JsonMap, int>>[];
+      final subscription = stream.listen(frames.add);
+      await answerOpen();
+      channel.event(7, [
+        {'n': 'not a number'},
+        {'n': 1},
+      ]);
+      channel.event(7, [
+        {'n': 2},
+      ]);
+      expect(frames.map((frame) => frame.events), [
+        isEmpty,
+        [1],
+        [2],
+      ]);
+      expect(channel.lastCall(r'$/credit')['params'], {'sub': 7, 'n': 2});
+      await subscription.cancel();
     });
   });
 

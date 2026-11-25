@@ -92,6 +92,15 @@ class GeoResourceAction extends _$GeoResourceAction {
     }
   }
 
+  /// An update whose end was among the events lost can be asked about
+  /// nowhere, so its key would never clear; it is let go and may run again.
+  void forgetUpdates() {
+    for (final geoResource in List.of(_operations.keys)) {
+      _stopUpdating(geoResource);
+    }
+    _manualUpdates.clear();
+  }
+
   void updateGeoResourceUrl(GeoResource geoResource, String newUrl) {
     if (!newUrl.isUrl) {
       throw ArgumentError.value(newUrl, 'newUrl', 'Not a valid URL');

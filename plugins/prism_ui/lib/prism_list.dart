@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
+import 'package:prism_ui/list.dart';
 import 'package:prism_ui/sliver_list/super_sliver_list.dart';
 
 export 'package:prism_ui/sliver_list/super_sliver_list.dart'
@@ -183,7 +184,9 @@ class PrismReorderableListView extends StatelessWidget {
   final ReorderCallback onReorderItem;
   final ReorderItemProxyDecorator proxyDecorator;
   final Widget? header;
-  final Widget? footer;
+
+  /// Ends the list, under the rows.
+  final String? footer;
   final double? itemExtent;
   final double estimatedItemExtent;
   final ScrollController? controller;
@@ -226,7 +229,8 @@ class PrismReorderableListView extends StatelessWidget {
                 itemExtent: itemExtent,
                 estimatedItemExtent: estimatedItemExtent,
               ),
-              if (footer != null) SliverToBoxAdapter(child: footer),
+              if (footer != null)
+                SliverToBoxAdapter(child: ListFooter(text: footer, last: true)),
             ],
           ),
         ),

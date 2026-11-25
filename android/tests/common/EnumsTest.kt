@@ -40,7 +40,7 @@ class EnumsTest {
     @Test
     fun `broadcast action names back the intent action suffixes`() {
         assertEquals(
-            listOf("VPN_START_REQUESTED", "VPN_REVOKED", "ROOT_TUN_LOST"),
+            listOf("VPN_START_REQUESTED", "VPN_REVOKED"),
             BroadcastAction.entries.map { it.name },
         )
     }

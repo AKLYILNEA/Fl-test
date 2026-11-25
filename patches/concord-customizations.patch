@@ -1,8 +1,8 @@
 diff --git a/Cargo.lock b/Cargo.lock
-index 91faf2d..1ce22f9 100644
+index 8bbb4ba..8e58db5 100644
 --- a/Cargo.lock
 +++ b/Cargo.lock
-@@ -1027,6 +1027,7 @@ dependencies = [
+@@ -1010,6 +1010,7 @@ dependencies = [
   "tempfile",
   "time",
   "tokio",
@@ -10,11 +10,14 @@ index 91faf2d..1ce22f9 100644
   "tracing",
   "tracing-subscriber",
  ]
-@@ -1164,14 +1165,18 @@ dependencies = [
+@@ -1146,17 +1147,21 @@ dependencies = [
+  "concord-net",
+  "concord-platform",
+  "concord-proxy",
++ "concord-quic",
   "concord-rules",
   "concord-test-support",
   "concord-tls",
-+ "concord-transport",
   "concord-tun",
   "concord-tunnel",
   "futures-util",
@@ -29,7 +32,7 @@ index 91faf2d..1ce22f9 100644
   "rand 0.9.5",
   "rcgen",
   "regex",
-@@ -1577,8 +1582,12 @@ dependencies = [
+@@ -1584,8 +1589,12 @@ dependencies = [
   "concord-test-support",
   "dashmap",
   "hex",
@@ -43,17 +46,17 @@ index 91faf2d..1ce22f9 100644
   "tokio-util",
   "tracing",
 diff --git a/crates/api/Cargo.toml b/crates/api/Cargo.toml
-index 704d763..19fa9f5 100644
+index d143629..4a191e9 100644
 --- a/crates/api/Cargo.toml
 +++ b/crates/api/Cargo.toml
 @@ -20,6 +20,7 @@ concord-common = { workspace = true, features = ["io"] }
- concord-engine = { workspace = true }
+ concord-engine = { workspace = true, features = ["mitm"] }
  concord-proto = { workspace = true }
  tokio = { workspace = true, features = ["sync", "time", "rt", "macros"] }
 +tokio-util = { workspace = true }
  futures-util = { workspace = true }
+ base64 = { workspace = true }
  serde_json = { workspace = true }
- time = { workspace = true }
 diff --git a/crates/api/src/control.rs b/crates/api/src/control.rs
 index 6bf951b..75c97a5 100644
 --- a/crates/api/src/control.rs
@@ -94,10 +97,10 @@ index 6bf951b..75c97a5 100644
          self.refresh();
 diff --git a/crates/api/src/control/customization.rs b/crates/api/src/control/customization.rs
 new file mode 100644
-index 0000000..c44b5da
+index 0000000..831096e
 --- /dev/null
 +++ b/crates/api/src/control/customization.rs
-@@ -0,0 +1,277 @@
+@@ -0,0 +1,280 @@
 +use std::collections::BTreeMap;
 +use std::net::IpAddr;
 +
@@ -136,7 +139,10 @@ index 0000000..c44b5da
 +            concord_engine::StatsOptions {
 +                enable: params.enable,
 +                detail: params.detail,
-+                retention_days: params.retention_days.clamp(7, 30),
++                retention_months: match params.retention_months {
++                    6 | 12 => params.retention_months,
++                    _ => 3,
++                },
 +                tz_offset: params.tz_offset,
 +                profile: params.profile,
 +            },
@@ -376,14 +382,14 @@ index 0000000..c44b5da
 +    }
 +}
 diff --git a/crates/engine/Cargo.toml b/crates/engine/Cargo.toml
-index e876652..98b96b7 100644
+index 0b18a38..3b4beb0 100644
 --- a/crates/engine/Cargo.toml
 +++ b/crates/engine/Cargo.toml
 @@ -29,6 +29,10 @@ concord-rules = { workspace = true }
  concord-tls = { workspace = true }
  concord-tun = { workspace = true }
  concord-tunnel = { workspace = true }
-+concord-transport = { workspace = true }
++concord-quic = { workspace = true }
 +quinn = { workspace = true }
 +h3 = { workspace = true }
 +h3-quinn = { workspace = true }
@@ -391,33 +397,34 @@ index e876652..98b96b7 100644
  rustls-pki-types = { workspace = true }
  socket2 = { workspace = true }
 diff --git a/crates/engine/src/engine.rs b/crates/engine/src/engine.rs
-index 349db1b..ac17947 100644
+index 19a67eb..6000316 100644
 --- a/crates/engine/src/engine.rs
 +++ b/crates/engine/src/engine.rs
-@@ -121,7 +121,7 @@ pub struct Engine {
-     dns_update_seq: AtomicU64,
+@@ -128,7 +128,7 @@ pub struct Engine {
      mitm: MitmService,
-     handle: Handle,
+     /// The engine's own tasks on its tracker, which only the end of the work they do stops.
+     own: Tasks,
 -    prober: Prober,
 +    prober: Arc<Prober>,
      /// Every background task the engine starts; shutdown ends them and waits, so nothing
      /// outlives the engine.
      tasks: TaskTracker,
-@@ -160,11 +160,11 @@ impl Engine {
-             user_agent: ArcSwap::from_pointee("clash.meta".to_string()),
+@@ -175,12 +175,12 @@ impl Engine {
          });
          let geo_store = Arc::new(GeoStore::new(".").with_opener(mmap::open_read_only));
+         let proxy_tasks = Arc::new(ProxyTasks::new(own.clone()));
 -        let prober = Prober::new(Arc::new(TunnelProbes {
 +        let prober = Arc::new(Prober::new(Arc::new(TunnelProbes {
              tunnel: tunnel.clone(),
+             tasks: proxy_tasks.clone(),
              route: route.clone(),
              fetcher: fetcher.clone(),
 -        }));
 +        })));
          let clock = Arc::new(ClockOffset::default());
-         let tasks = TaskTracker::new();
-         let handle = Handle::current();
-@@ -243,6 +243,7 @@ impl Engine {
+         let mitm = MitmService::new(table.clone(), fetcher.clone(), events.clone());
+         let shared = Shared {
+@@ -259,6 +259,7 @@ impl Engine {
          self.shared.geo.store.set_dir(home.root());
          home.reclaim();
          self.start_mitm(&home);
@@ -425,7 +432,7 @@ index 349db1b..ac17947 100644
          self.home.store(Some(home));
          self.initialized.store(true, Ordering::SeqCst);
          Ok(())
-@@ -267,8 +268,32 @@ impl Engine {
+@@ -290,8 +291,45 @@ impl Engine {
          &self.mitm
      }
  
@@ -434,13 +441,20 @@ index 349db1b..ac17947 100644
 +    }
 +
 +    pub fn configure_traffic_stats(
-+        &self, options: concord_tunnel::traffic_stats::StatsOptions,
-+        screen_on: Option<bool>, suspended: Option<bool>,
++        &self,
++        options: concord_tunnel::traffic_stats::StatsOptions,
++        screen_on: Option<bool>,
++        suspended: Option<bool>,
 +    ) {
 +        self.table.configure_stats(options, screen_on, suspended);
 +    }
 +
-+    pub fn query_traffic_stats(&self, start: time::Date, end: time::Date, top: usize) -> Value {
++    pub fn query_traffic_stats(
++        &self,
++        start: time::Date,
++        end: time::Date,
++        top: usize,
++    ) -> serde_json::Value {
 +        self.table.query_stats(start, end, top)
 +    }
 +
@@ -449,7 +463,13 @@ index 349db1b..ac17947 100644
 +    }
 +
 +    pub fn ip_country(&self, ip: std::net::IpAddr) -> String {
-+        self.shared.geo.store.country_codes(ip).into_iter().next().unwrap_or_default()
++        self.shared
++            .geo
++            .store
++            .country_codes(ip)
++            .into_iter()
++            .next()
++            .unwrap_or_default()
 +    }
 +
      fn set_running(&self, running: bool) {
@@ -459,17 +479,17 @@ index 349db1b..ac17947 100644
      }
  
 diff --git a/crates/engine/src/lib.rs b/crates/engine/src/lib.rs
-index f8a2d66..fc196a8 100644
+index 72363c7..1853db9 100644
 --- a/crates/engine/src/lib.rs
 +++ b/crates/engine/src/lib.rs
-@@ -37,3 +37,5 @@ pub use tun::{InheritedTun, InheritedTunError};
+@@ -40,3 +40,5 @@ pub use tun::{InheritedTun, InheritedTunError};
  pub use views::*;
  
  pub use concord_tunnel::ExplainFlow;
 +
 +pub use concord_tunnel::traffic_stats::StatsOptions;
 diff --git a/crates/engine/src/probe/mod.rs b/crates/engine/src/probe/mod.rs
-index 4c6eb66..8af0782 100644
+index b29d1de..b18a029 100644
 --- a/crates/engine/src/probe/mod.rs
 +++ b/crates/engine/src/probe/mod.rs
 @@ -5,6 +5,7 @@ mod outbound_ip;
@@ -480,7 +500,7 @@ index 4c6eb66..8af0782 100644
  #[cfg(test)]
  mod testing;
  #[cfg(test)]
-@@ -41,6 +42,18 @@ pub trait ProbeEnv: Send + Sync {
+@@ -43,6 +44,22 @@ pub trait ProbeEnv: Send + Sync {
      /// `None` routes by the rules as an inbound connection would; `Some` pins the outbound.
      async fn dial(&self, target: &Address, proxy: Option<&str>) -> io::Result<Dialed>;
  
@@ -488,7 +508,11 @@ index 4c6eb66..8af0782 100644
 +        &self,
 +        _address: &Address,
 +        _proxy: Option<&str>,
-+    ) -> io::Result<(Arc<dyn quinn::AsyncUdpSocket>, std::net::SocketAddr, Vec<String>)> {
++    ) -> io::Result<(
++        Arc<dyn quinn::AsyncUdpSocket>,
++        std::net::SocketAddr,
++        Vec<String>,
++    )> {
 +        Err(io::Error::from(io::ErrorKind::Unsupported))
 +    }
 +
@@ -1124,19 +1148,19 @@ index 0000000..e7b0748
 +    Bytes::from(data)
 +}
 diff --git a/crates/engine/src/probe_env.rs b/crates/engine/src/probe_env.rs
-index 444de73..38d26bd 100644
+index 98cef93..2e5539c 100644
 --- a/crates/engine/src/probe_env.rs
 +++ b/crates/engine/src/probe_env.rs
 @@ -2,7 +2,7 @@ use std::io;
  use std::sync::Arc;
  
  use async_trait::async_trait;
--use concord_common::{Address, RouteStamp};
-+use concord_common::{Address, HostResolver, Initiator, IpVersion, RouteStamp};
+-use concord_common::{Address, RouteStamp, Tasks};
++use concord_common::{Address, HostResolver, Initiator, IpVersion, RouteStamp, Tasks};
  use concord_tls::TrustStore;
  use concord_tunnel::Tunnel;
  use futures_util::FutureExt;
-@@ -27,6 +27,34 @@ impl ProbeEnv for TunnelProbes {
+@@ -29,6 +29,58 @@ impl ProbeEnv for TunnelProbes {
          })
      }
  
@@ -1144,35 +1168,59 @@ index 444de73..38d26bd 100644
 +        &self,
 +        address: &Address,
 +        proxy: Option<&str>,
-+    ) -> io::Result<(Arc<dyn quinn::AsyncUdpSocket>, std::net::SocketAddr, Vec<String>)> {
++    ) -> io::Result<(
++        Arc<dyn quinn::AsyncUdpSocket>,
++        std::net::SocketAddr,
++        Vec<String>,
++    )> {
 +        let ip = if let Some(ip) = address.ip() {
 +            ip
 +        } else {
-+            let runtime = self.tunnel.runtime()
++            let runtime = self
++                .tunnel
++                .runtime()
 +                .ok_or_else(|| io::Error::other("no config applied"))?;
-+            let host = address.domain().ok_or_else(|| io::Error::other("missing host"))?;
-+            let ips = runtime.dns.lookup(host, IpVersion::Dual, Initiator::Other).await?;
-+            ips.v4.first().copied().or_else(|| ips.v6.first().copied())
++            let host = address
++                .domain()
++                .ok_or_else(|| io::Error::other("missing host"))?;
++            let ips = runtime
++                .dns
++                .lookup(host, IpVersion::Dual, Initiator::Other)
++                .await?;
++            ips.v4
++                .first()
++                .copied()
++                .or_else(|| ips.v6.first().copied())
 +                .ok_or_else(|| io::Error::from(io::ErrorKind::NotFound))?
 +        };
 +        let peer = std::net::SocketAddr::new(ip, address.port());
-+        let route = self.tunnel.explain(address, proxy).await
++        let route = self
++            .tunnel
++            .explain(address, proxy)
++            .await
 +            .map(|route| route.chain.iter().map(ToString::to_string).collect())
 +            .unwrap_or_default();
 +        let session = self.tunnel.associate_inner(address, proxy).await?;
-+        Ok((concord_transport::SessionSocket::new(session, peer, &Default::default()), peer, route))
++        Ok((
++            concord_quic::SessionSocket::new(session, peer, &self.tasks.tasks()),
++            peer,
++            route,
++        ))
 +    }
 +
 +    async fn speed_rule(&self, address: &Address, proxy: Option<&str>) -> (String, String) {
-+        self.tunnel.explain(address, proxy).await
-+            .map(|route| (route.rule, route.payload)).unwrap_or_default()
++        self.tunnel
++            .explain(address, proxy)
++            .await
++            .map(|route| (route.rule, route.payload))
++            .unwrap_or_default()
 +    }
 +
      fn knows(&self, proxy: &str) -> bool {
          self.tunnel
              .runtime()
 diff --git a/crates/proto/src/registry.rs b/crates/proto/src/registry.rs
-index 3a24930..66f6fc1 100644
+index 3fd4db3..294eb4c 100644
 --- a/crates/proto/src/registry.rs
 +++ b/crates/proto/src/registry.rs
 @@ -184,6 +184,17 @@ macro_rules! with_methods {
@@ -1195,10 +1243,10 @@ index 3a24930..66f6fc1 100644
              { kind: unary, fun: probe_services, name: "probe.services", exec: Concurrent, params: $crate::types::ServicesParams, result: $crate::types::ServiceList, event: (), policy: None, cap: None }
 diff --git a/crates/proto/src/types/customization.rs b/crates/proto/src/types/customization.rs
 new file mode 100644
-index 0000000..52773fa
+index 0000000..13c24e7
 --- /dev/null
 +++ b/crates/proto/src/types/customization.rs
-@@ -0,0 +1,59 @@
+@@ -0,0 +1,60 @@
 +use super::Json;
 +
 +dto! {
@@ -1225,7 +1273,8 @@ index 0000000..52773fa
 +    pub struct TrafficStatsConfig {
 +        pub enable: bool,
 +        pub detail: bool,
-+        pub retention_days: u32,
++        #[serde(default)]
++        pub retention_months: u32,
 +        pub tz_offset: i32,
 +        pub profile: String,
 +        #[serde(default)]
@@ -1259,7 +1308,7 @@ index 0000000..52773fa
 +    }
 +}
 diff --git a/crates/proto/src/types/mod.rs b/crates/proto/src/types/mod.rs
-index 3be2c3a..03808cb 100644
+index abdef52..b824d7d 100644
 --- a/crates/proto/src/types/mod.rs
 +++ b/crates/proto/src/types/mod.rs
 @@ -12,6 +12,8 @@ macro_rules! dto {
@@ -1287,32 +1336,31 @@ index 43089b9..0e9bd0a 100644
  [dev-dependencies]
  concord-test-support = { workspace = true }
 diff --git a/crates/tunnel/src/lib.rs b/crates/tunnel/src/lib.rs
-index 1013ee1..307970a 100644
+index 652ae16..503ca14 100644
 --- a/crates/tunnel/src/lib.rs
 +++ b/crates/tunnel/src/lib.rs
-@@ -6,6 +6,7 @@ mod route;
- mod runtime;
+@@ -8,6 +8,7 @@ mod smart;
  pub mod sniff;
  pub mod table;
-+pub mod traffic_stats;
  mod tcp;
++pub mod traffic_stats;
  mod udp;
  mod upstream;
+ 
 diff --git a/crates/tunnel/src/table.rs b/crates/tunnel/src/table.rs
-index bf073d5..e106a1a 100644
+index 6dcf460..c71829b 100644
 --- a/crates/tunnel/src/table.rs
 +++ b/crates/tunnel/src/table.rs
-@@ -8,6 +8,9 @@ use concord_common::{ConnRecord, CoreEvent, EventSink, TrafficDelta};
- use dashmap::DashMap;
+@@ -11,6 +11,8 @@ use dashmap::DashMap;
  use tokio::time::Instant;
+ use tokio_util::sync::CancellationToken;
  
 +use crate::traffic_stats::{StatsOptions, TrafficRecorder};
-+use tokio_util::sync::CancellationToken;
 +
  const REPORT_INTERVAL: Duration = Duration::from_secs(1);
  const RATE_WINDOW: Duration = Duration::from_secs(1);
  /// Closed connections' ids by number, for reading their MITM exchanges. Each captured exchange
-@@ -153,6 +156,9 @@ impl Drop for Registration {
+@@ -153,6 +155,9 @@ impl Drop for Registration {
          self.tracked.record.close();
          self.tracked.table.open.remove(&self.tracked.record.id);
          self.tracked.table.remember_closed(&self.tracked.record);
@@ -1320,22 +1368,22 @@ index bf073d5..e106a1a 100644
 +            lock(&self.tracked.table.stats).closed(&self.tracked.record);
 +        }
          if self.tracked.listed.load(Ordering::Acquire) && self.tracked.table.events.enabled() {
-             self.tracked.table.events.closed(self.tracked.record.seq);
-         }
-@@ -171,6 +177,9 @@ pub struct ConnTable {
-     closed_ids: Mutex<ClosedIds>,
-     closes: AtomicU64,
+             let _announcing = lock(&self.tracked.table.announcing);
+             self.tracked.table.events.closed(&self.tracked.record);
+@@ -177,6 +182,9 @@ pub struct ConnTable {
+     closing: ArcSwap<CancellationToken>,
      events: Arc<dyn EventSink>,
+     tasks: Tasks,
 +    stats: Mutex<TrafficRecorder>,
 +    stats_enabled: AtomicBool,
 +    stats_timer: Mutex<Option<CancellationToken>>,
  }
  
  impl ConnTable {
-@@ -186,9 +195,68 @@ impl ConnTable {
-             closed_ids: Mutex::new(ClosedIds::default()),
-             closes: AtomicU64::new(0),
+@@ -195,9 +203,87 @@ impl ConnTable {
+             closing: ArcSwap::from_pointee(CancellationToken::new()),
              events,
+             tasks,
 +            stats: Mutex::new(TrafficRecorder::default()),
 +            stats_enabled: AtomicBool::new(false),
 +            stats_timer: Mutex::new(None),
@@ -1356,25 +1404,42 @@ index bf073d5..e106a1a 100644
 +        self.sync_stats_timer(old_interval, stats.interval());
 +    }
 +
-+    pub fn configure_stats(self: &Arc<Self>, options: StatsOptions, screen_on: Option<bool>, suspended: Option<bool>) {
++    pub fn configure_stats(
++        self: &Arc<Self>,
++        options: StatsOptions,
++        screen_on: Option<bool>,
++        suspended: Option<bool>,
++    ) {
 +        let mut stats = lock(&self.stats);
 +        let old_interval = stats.interval();
 +        self.stats_enabled.store(options.enable, Ordering::Release);
 +        stats.configure(options, &self.snapshot());
-+        if let Some(screen_on) = screen_on { stats.screen_off = !screen_on; }
-+        if let Some(suspended) = suspended { stats.suspended = suspended; }
++        if let Some(screen_on) = screen_on {
++            stats.screen_off = !screen_on;
++        }
++        if let Some(suspended) = suspended {
++            stats.suspended = suspended;
++        }
 +        self.sync_stats_timer(old_interval, stats.interval());
 +    }
 +
-+    fn sync_stats_timer(self: &Arc<Self>, old_interval: Option<Duration>, interval: Option<Duration>) {
-+        if interval == old_interval { return; }
++    fn sync_stats_timer(
++        self: &Arc<Self>,
++        old_interval: Option<Duration>,
++        interval: Option<Duration>,
++    ) {
++        if interval == old_interval {
++            return;
++        }
 +        let mut timer = lock(&self.stats_timer);
-+        if let Some(previous) = timer.take() { previous.cancel(); }
++        if let Some(previous) = timer.take() {
++            previous.cancel();
++        }
 +        if let Some(interval) = interval {
 +            let cancel = CancellationToken::new();
 +            *timer = Some(cancel.clone());
 +            let table = Arc::downgrade(self);
-+            tokio::spawn(async move {
++            self.tasks.spawn(async move {
 +                loop {
 +                    tokio::select! {
 +                        biased;
@@ -1383,7 +1448,9 @@ index bf073d5..e106a1a 100644
 +                    }
 +                    let Some(table) = table.upgrade() else { break };
 +                    let mut stats = lock(&table.stats);
-+                    if cancel.is_cancelled() { break; }
++                    if cancel.is_cancelled() {
++                        break;
++                    }
 +                    stats.checkpoint(&table.snapshot());
 +                }
 +            });
@@ -1398,10 +1465,10 @@ index bf073d5..e106a1a 100644
 +        lock(&self.stats).clear(&self.snapshot())
 +    }
 +
-     /// How many times `close_all` has run; a flow reads it before it starts to set up.
-     pub fn closes(&self) -> u64 {
-         self.closes.load(Ordering::SeqCst)
-@@ -247,6 +315,9 @@ impl ConnTable {
+     /// Cancelled by the next `close_all`. A flow routes and dials under it, so a close that lands
+     /// before the flow registers ends the setup too; it reads this before [`closes`](Self::closes).
+     pub fn closing(&self) -> CancellationToken {
+@@ -262,6 +348,9 @@ impl ConnTable {
      pub fn list(&self, tracked: &Arc<Tracked>) {
          let record = &tracked.record;
          self.open.insert(record.id.clone(), record.clone());
@@ -1413,10 +1480,10 @@ index bf073d5..e106a1a 100644
              self.events.publish(CoreEvent::Request(record.clone()));
 diff --git a/crates/tunnel/src/traffic_stats.rs b/crates/tunnel/src/traffic_stats.rs
 new file mode 100644
-index 0000000..766c758
+index 0000000..9015aa7
 --- /dev/null
 +++ b/crates/tunnel/src/traffic_stats.rs
-@@ -0,0 +1,530 @@
+@@ -0,0 +1,536 @@
 +use std::collections::{BTreeMap, HashMap};
 +use std::sync::Arc;
 +use std::sync::atomic::Ordering;
@@ -1513,7 +1580,7 @@ index 0000000..766c758
 +pub struct StatsOptions {
 +    pub enable: bool,
 +    pub detail: bool,
-+    pub retention_days: u32,
++    pub retention_months: u32,
 +    pub tz_offset: i32,
 +    pub profile: String,
 +}
@@ -1523,7 +1590,7 @@ index 0000000..766c758
 +        Self {
 +            enable: false,
 +            detail: true,
-+            retention_days: 30,
++            retention_months: 3,
 +            tz_offset: 0,
 +            profile: String::new(),
 +        }
@@ -1612,9 +1679,10 @@ index 0000000..766c758
 +        }
 +        // Retention limits catch-up after a long sleep.
 +        let end = self.local(now);
++        let first = self.first_retained_day(end.date());
 +        let mut start = self
 +            .local(start)
-+            .max(end - time::Duration::days(i64::from(self.options.retention_days)));
++            .max(first.midnight().assume_offset(end.offset()));
 +        self.since = Some(now);
 +        while start < end {
 +            let midnight = start
@@ -1644,7 +1712,7 @@ index 0000000..766c758
 +        self.settle(now);
 +        self.sample(records, now);
 +        let enable_changed = self.options.enable != options.enable;
-+        self.dirty |= self.options.retention_days != options.retention_days;
++        self.dirty |= self.options.retention_months != options.retention_months;
 +        self.options = options;
 +        self.since = (self.running && self.options.enable).then_some(now);
 +        if enable_changed {
@@ -1783,10 +1851,15 @@ index 0000000..766c758
 +    }
 +
 +    fn cutoff(&self, now: OffsetDateTime) -> String {
-+        date_key(
-+            self.local(now).date()
-+                - time::Duration::days(i64::from(self.options.retention_days.saturating_sub(1))),
-+        )
++        date_key(self.first_retained_day(self.local(now).date()))
++    }
++
++    fn first_retained_day(&self, date: Date) -> Date {
++        let months = self.options.retention_months.clamp(1, 12) as i32;
++        let index = date.year() * 12 + i32::from(date.month() as u8) - months;
++        let month = time::Month::try_from(index.rem_euclid(12) as u8 + 1)
++            .expect("a month index is within the calendar year");
++        Date::from_calendar_date(index.div_euclid(12), month, 1).unwrap_or(Date::MIN)
 +    }
 +
 +    fn prune(&mut self, now: OffsetDateTime) {
@@ -1947,3 +2020,320 @@ index 0000000..766c758
 +        assert_eq!(stats.days["2026-11-18"].running_ms, 18_000_000);
 +    }
 +}
+diff --git a/schema/api.json b/schema/api.json
+index b2ddd03..dbd5a99 100644
+--- a/schema/api.json
++++ b/schema/api.json
+@@ -689,6 +689,115 @@
+         "$ref": "#/$defs/Empty"
+       }
+     },
++    {
++      "name": "speedTest.start",
++      "kind": "unary",
++      "exec": "concurrent",
++      "params": {
++        "$ref": "#/$defs/SpeedTestParams"
++      },
++      "result": true
++    },
++    {
++      "name": "speedTest.probe",
++      "kind": "unary",
++      "exec": "concurrent",
++      "params": {
++        "$ref": "#/$defs/SpeedTestParams"
++      },
++      "result": true
++    },
++    {
++      "name": "speedTest.status",
++      "kind": "unary",
++      "exec": "inline",
++      "params": {
++        "$ref": "#/$defs/SpeedTestId"
++      },
++      "result": true
++    },
++    {
++      "name": "speedTest.cancel",
++      "kind": "unary",
++      "exec": "inline",
++      "params": {
++        "$ref": "#/$defs/SpeedTestId"
++      },
++      "result": {
++        "$ref": "#/$defs/Empty"
++      }
++    },
++    {
++      "name": "speedTest.servers",
++      "kind": "unary",
++      "exec": "concurrent",
++      "params": {
++        "$ref": "#/$defs/SpeedTestServerQuery"
++      },
++      "result": true
++    },
++    {
++      "name": "trafficStats.configure",
++      "kind": "unary",
++      "exec": "serial",
++      "params": {
++        "$ref": "#/$defs/TrafficStatsConfig"
++      },
++      "result": {
++        "$ref": "#/$defs/Empty"
++      }
++    },
++    {
++      "name": "trafficStats.get",
++      "kind": "unary",
++      "exec": "concurrent",
++      "params": {
++        "$ref": "#/$defs/TrafficStatsQuery"
++      },
++      "result": true
++    },
++    {
++      "name": "trafficStats.clear",
++      "kind": "unary",
++      "exec": "serial",
++      "params": {
++        "$ref": "#/$defs/Empty"
++      },
++      "result": {
++        "$ref": "#/$defs/Empty"
++      }
++    },
++    {
++      "name": "ip.cacheGet",
++      "kind": "unary",
++      "exec": "concurrent",
++      "params": {
++        "$ref": "#/$defs/IpCacheGet"
++      },
++      "result": true
++    },
++    {
++      "name": "ip.cacheSet",
++      "kind": "unary",
++      "exec": "concurrent",
++      "params": {
++        "$ref": "#/$defs/IpCacheSet"
++      },
++      "result": {
++        "$ref": "#/$defs/Empty"
++      }
++    },
++    {
++      "name": "ip.country",
++      "kind": "unary",
++      "exec": "concurrent",
++      "params": {
++        "$ref": "#/$defs/IpAddress"
++      },
++      "result": {
++        "type": "string"
++      }
++    },
+     {
+       "name": "route.check",
+       "kind": "unary",
+@@ -4612,6 +4721,184 @@
+       ],
+       "description": "A device the core creates itself, or a descriptor the host opened and\nregistered beforehand."
+     },
++    "SpeedTestParams": {
++      "type": "object",
++      "properties": {
++        "id": {
++          "type": "string"
++        },
++        "proxy": {
++          "type": "string"
++        },
++        "protocol": {
++          "type": "string"
++        },
++        "duration": {
++          "type": "integer",
++          "format": "uint64",
++          "minimum": 0
++        },
++        "streams": {
++          "type": "integer",
++          "format": "uint64",
++          "minimum": 0
++        },
++        "server": {
++          "default": null
++        }
++      },
++      "required": [
++        "id",
++        "proxy",
++        "protocol",
++        "duration",
++        "streams"
++      ]
++    },
++    "SpeedTestId": {
++      "type": "object",
++      "properties": {
++        "id": {
++          "type": "string"
++        }
++      },
++      "required": [
++        "id"
++      ]
++    },
++    "SpeedTestServerQuery": {
++      "type": "object",
++      "properties": {
++        "id": {
++          "type": "string"
++        },
++        "proxy": {
++          "type": "string"
++        },
++        "search": {
++          "type": "string"
++        }
++      },
++      "required": [
++        "id",
++        "proxy",
++        "search"
++      ]
++    },
++    "TrafficStatsConfig": {
++      "type": "object",
++      "properties": {
++        "enable": {
++          "type": "boolean"
++        },
++        "detail": {
++          "type": "boolean"
++        },
++        "retentionMonths": {
++          "type": "integer",
++          "format": "uint32",
++          "minimum": 0,
++          "default": 0
++        },
++        "tzOffset": {
++          "type": "integer",
++          "format": "int32"
++        },
++        "profile": {
++          "type": "string"
++        },
++        "screenOn": {
++          "type": [
++            "boolean",
++            "null"
++          ],
++          "default": null
++        },
++        "suspended": {
++          "type": [
++            "boolean",
++            "null"
++          ],
++          "default": null
++        }
++      },
++      "required": [
++        "enable",
++        "detail",
++        "tzOffset",
++        "profile"
++      ]
++    },
++    "TrafficStatsQuery": {
++      "type": "object",
++      "properties": {
++        "start": {
++          "type": "string"
++        },
++        "end": {
++          "type": "string"
++        },
++        "top": {
++          "type": "integer",
++          "format": "uint",
++          "minimum": 0,
++          "default": 0
++        }
++      },
++      "required": [
++        "start",
++        "end"
++      ]
++    },
++    "IpCacheGet": {
++      "type": "object",
++      "properties": {
++        "ip": {
++          "type": "string"
++        },
++        "source": {
++          "type": [
++            "string",
++            "null"
++          ],
++          "default": null
++        }
++      },
++      "required": [
++        "ip"
++      ]
++    },
++    "IpCacheSet": {
++      "type": "object",
++      "properties": {
++        "ip": {
++          "type": "string"
++        },
++        "source": {
++          "type": [
++            "string",
++            "null"
++          ],
++          "default": null
++        },
++        "data": true
++      },
++      "required": [
++        "ip",
++        "data"
++      ]
++    },
++    "IpAddress": {
++      "type": "object",
++      "properties": {
++        "ip": {
++          "type": "string"
++        }
++      },
++      "required": [
++        "ip"
++      ]
++    },
+     "RouteCheckParams": {
+       "type": "object",
+       "properties": {
+diff --git a/xtask/src/layers.rs b/xtask/src/layers.rs
+index 9b36034..70dbe43 100644
+--- a/xtask/src/layers.rs
++++ b/xtask/src/layers.rs
+@@ -129,6 +129,7 @@ const LAYERS: &[(&str, Opt, &[&str])] = &[
+             "concord-dns",
+             "concord-group",
+             "concord-tunnel",
++            "concord-quic",
+             "concord-inbound",
+             "concord-tun",
+             "concord-mitm",

@@ -1,8 +1,11 @@
+import 'dart:io';
+
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as p;
 
 import 'build_cache.dart';
 import 'concord_builder.dart';
+import 'error.dart';
 import 'fingerprint.dart';
 import 'options.dart';
 import 'rust_builder.dart';
@@ -47,12 +50,17 @@ Future<BuildReport> buildPlatform(BuildRequest request) async {
   final target = request.target;
   final rootDir = request.rootDir;
   final config = BuildConfig.load(rootDir: rootDir);
+  final patch = p.join(rootDir, 'patches', 'concord-customizations.patch');
+  final hasPatch = File(patch).existsSync();
+  if (hasPatch) {
+    _applyConcordPatch(p.join(rootDir, config.concordDir), patch);
+  }
   final cache = BuildCache(rootDir: rootDir);
   final notice = BuildNotice();
-  final harnessInputs = switch (request.harnessDir) {
-    null => const <String>[],
-    final dir => collectPackageInputs(dir),
-  };
+  final harnessInputs = [
+    if (request.harnessDir case final dir?) ...collectPackageInputs(dir),
+    if (hasPatch) patch,
+  ];
 
   final core = await ConcordBuilder(
     rootDir: rootDir,
@@ -87,6 +95,31 @@ Future<BuildReport> buildPlatform(BuildRequest request) async {
     '${helper.primaryOutput}',
   );
   return _report([core, helper], extraOutputs: [manifestPath]);
+}
+
+void _applyConcordPatch(String directory, String patch) {
+  final reversed = Process.runSync('git', [
+    '-C',
+    directory,
+    'apply',
+    '--reverse',
+    '--check',
+    '--ignore-whitespace',
+    patch,
+  ]);
+  if (reversed.exitCode == 0) return;
+  final result = Process.runSync('git', [
+    '-C',
+    directory,
+    'apply',
+    '--ignore-whitespace',
+    patch,
+  ]);
+  if (result.exitCode != 0) {
+    throw BuildException(
+      'Could not apply Concord customizations: ${result.stderr}',
+    );
+  }
 }
 
 BuildReport _report(

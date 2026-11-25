@@ -3,6 +3,8 @@ package com.follow.clash.core
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.TimeUnit
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertThrows
@@ -20,6 +22,8 @@ private class FakeCore(
     var opened = 0
     var refuseOpen = false
     var refuseSend = false
+    var loseAfterAnswering: String? = null
+    val delivering: ThreadLocal<Boolean> = ThreadLocal.withInitial { false }
     private var receiver: FrameReceiver? = null
 
     override fun open(receiver: FrameReceiver): Long {
@@ -40,7 +44,7 @@ private class FakeCore(
         val method = message.get("method").asString
         val tail = if (method == "core.hello") RESULT else answer(method, message.getAsJsonObject("params"))
         if (tail != null) push("""{"jsonrpc":"2.0","id":${id.asLong},$tail}""")
-        return true
+        return method != loseAfterAnswering
     }
 
     override fun close(session: Long) {
@@ -48,7 +52,12 @@ private class FakeCore(
     }
 
     fun push(json: String) {
-        receiver!!.onFrame(json.toByteArray())
+        delivering.set(true)
+        try {
+            receiver!!.onFrame(json.toByteArray())
+        } finally {
+            delivering.set(false)
+        }
     }
 
     fun methods() = sent.map { it.get("method").asString }
@@ -117,6 +126,39 @@ class CoreClientTest {
     }
 
     @Test
+    fun `an async call that is never answered fails once its time is up`() {
+        val core = FakeCore { _, _ -> null }
+        val client = CoreClient(core, asyncTimeoutMillis = 50)
+
+        val error =
+            assertThrows(ExecutionException::class.java) {
+                client.callAsync("a").get(5, TimeUnit.SECONDS)
+            }
+
+        assertEquals("timeout", (error.cause as CoreCallException).kind)
+    }
+
+    @Test
+    fun `a quick setup checks the CA off the thread that delivers the Core's answers`() {
+        val core = FakeCore { method, _ -> if (method == "mitm.certificate") null else RESULT }
+        var checkedWhileDelivering: Boolean? = null
+
+        val setup =
+            CoreClient(core).quickSetup(JsonObject(), JsonParser.parseString("""{"options":{}}""")) { pem ->
+                checkedWhileDelivering = core.delivering.get()
+                pem == "P"
+            }
+        val certificate = core.sent.single { it.get("method").asString == "mitm.certificate" }.get("id").asLong
+        core.push("""{"jsonrpc":"2.0","id":$certificate,"result":{"certificate":{"pem":"P","fingerprint":"F"}}}""")
+        setup.get(5, TimeUnit.SECONDS)
+
+        assertEquals(false, checkedWhileDelivering)
+        val apply = core.sent.single { it.get("method").asString == "config.apply" }
+        assertEquals("F", apply.getAsJsonObject("params").getAsJsonObject("options").get("mitmTrustedCa").asString)
+        assertEquals("engine.start", core.methods().last())
+    }
+
+    @Test
     fun `a lost session fails what waits and the next call opens another`() {
         val core = FakeCore()
         val client = CoreClient(core)
@@ -150,6 +192,23 @@ class CoreClientTest {
     }
 
     @Test
+    fun `a listener the Core refuses to start fails the start`() {
+        val core =
+            FakeCore { method, _ ->
+                when (method) {
+                    "engine.state" -> """"result":{"sub":7,"snapshot":{"state":"stopped"}}"""
+                    "engine.start" -> """"error":{"code":-32000,"message":"address in use","data":{"kind":"internal"}}"""
+                    else -> RESULT
+                }
+            }
+
+        val started = CoreClient(core).startEngine()
+
+        assertTrue(started.isFailure)
+        assertEquals("address in use", started.exceptionOrNull()!!.message)
+    }
+
+    @Test
     fun `a snapshot cancels the subscription it opened`() {
         val core = FakeCore { _, _ -> OPENED }
         val client = CoreClient(core)
@@ -179,6 +238,33 @@ class CoreClientTest {
         assertEquals(1, lost)
         kept.close()
         assertEquals(1, lost)
+    }
+
+    @Test
+    fun `a watch reports a session lost right after its answer`() {
+        val core = FakeCore { _, _ -> OPENED }
+        core.loseAfterAnswering = "traffic.watch"
+        var lost = 0
+
+        CoreClient(core).watch("traffic.watch", emptyMap(), { lost++ }) {}
+
+        assertEquals(1, lost)
+    }
+
+    @Test
+    fun `a resync ends a watch as lost and drops what follows`() {
+        val core = FakeCore { _, _ -> OPENED }
+        val client = CoreClient(core)
+        var lost = 0
+        val seen = mutableListOf<Int>()
+        client.watch("traffic.watch", emptyMap(), { lost++ }) { seen.add(1) }
+
+        core.push("""{"jsonrpc":"2.0","method":"${'$'}/event","params":{"sub":7,"seq":1,"resync":true}}""")
+        core.push("""{"jsonrpc":"2.0","method":"${'$'}/event","params":{"sub":7,"seq":2,"data":[{}]}}""")
+
+        assertEquals(1, lost)
+        assertTrue(seen.isEmpty())
+        assertEquals(1, core.opened)
     }
 
     @Test

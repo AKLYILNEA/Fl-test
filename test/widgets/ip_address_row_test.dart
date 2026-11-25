@@ -1,4 +1,4 @@
-import 'package:fl_clash/features/connection/tracker_info_item.dart';
+import 'package:fl_clash/features/connection/tracker_selection.dart';
 import 'package:fl_clash/features/ip_quality/ip_address_row.dart';
 import 'package:fl_clash/features/ip_quality/ip_quality_sheet.dart';
 import 'package:fl_clash/models/models.dart';
@@ -171,6 +171,8 @@ void main() {
       );
       await tester.pump();
       await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Info'));
       await tester.pumpAndSettle();
       await tester.dragFrom(
         tester.getCenter(find.byType(SheetDragHandle)),

@@ -6,6 +6,7 @@ import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/core/core.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
+import 'package:fl_clash/plugins/service.dart';
 import 'package:fl_clash/providers/action.dart';
 import 'package:fl_clash/providers/app.dart';
 import 'package:fl_clash/providers/config.dart';
@@ -74,20 +75,39 @@ class TestSetupAction extends SetupAction {
   int trafficResets = 0;
   int applyProfileCalls = 0;
   final List<bool> appliedForce = [];
+  Completer<void>? profileGate;
   bool blockCoreCalls = false;
   Error? coreRunningError;
+  Exception? coreRunningException;
   Error? applyError;
   final Set<bool> unansweredCoreCalls = {};
   int authorizeCalls = 0;
   AuthorizeCode authorizeResult = AuthorizeCode.none;
   bool desktop = true;
   DateTime? serviceStart;
+  Completer<DateTime?>? serviceRead;
 
   @override
   bool get tunNeedsAuthorization => desktop;
 
   @override
-  Future<DateTime?> serviceStartTime() async => serviceStart;
+  Future<AndroidServiceRun?> adoptRunningService() async {
+    final startedAt = await (serviceRead?.future ?? Future.value(serviceStart));
+    if (startedAt == null) return null;
+    return (
+      startedAt: startedAt,
+      options: const VpnOptions(
+        enable: true,
+        port: 7890,
+        ipv6: false,
+        dnsHijacking: true,
+        accessControlProps: AccessControlProps(),
+        allowBypass: false,
+        systemProxy: false,
+        bypassDomain: [],
+      ),
+    );
+  }
 
   @override
   Duration get minApplyDebounce => const Duration(milliseconds: 100);
@@ -110,6 +130,10 @@ class TestSetupAction extends SetupAction {
     if (error != null) {
       throw error;
     }
+    final exception = coreRunningException;
+    if (exception != null) {
+      throw exception;
+    }
     if (unansweredCoreCalls.contains(running)) {
       throw const CoreMethodException(code: 'core_unavailable', message: '');
     }
@@ -126,6 +150,9 @@ class TestSetupAction extends SetupAction {
   }) async {
     applyProfileCalls++;
     appliedForce.add(force);
+    if (profileGate case final gate?) {
+      await gate.future;
+    }
     if (applyError case final error?) {
       throw error;
     }
@@ -146,6 +173,7 @@ Future<List<WarningInfo>> _applied(MockCoreApi api) => api.applyConfig(
   overlay: any(named: 'overlay'),
   selection: any(named: 'selection'),
   options: any(named: 'options'),
+  host: any(named: 'host'),
 );
 
 ProfileInspect _inspected({
@@ -199,13 +227,13 @@ void main() {
       ],
     );
     globalState.container = container;
-    globalState.needInitStatus = true;
     container.read(setupActionProvider.notifier);
   });
 
   tearDown(() async {
     action.blockCoreCalls = false;
     action.coreRunningError = null;
+    action.coreRunningException = null;
     action.unansweredCoreCalls.clear();
     for (final gate in action.pendingCoreCalls) {
       if (!gate.isCompleted) {
@@ -214,7 +242,6 @@ void main() {
     }
     await container.read(setupActionProvider.notifier).setRunning(false);
     container.dispose();
-    globalState.needInitStatus = true;
   });
 
   void markInitialized() {
@@ -236,7 +263,6 @@ void main() {
 
       expect(action.coreRunningCalls, [true]);
       expect(action.applyProfileCalls, 1);
-      expect(globalState.needInitStatus, isFalse);
     });
 
     test('safe mode runs the profile but never touches the listener', () async {
@@ -344,6 +370,27 @@ void main() {
       expect(container.read(runTimeProvider), isNull);
       expect(container.read(runningVpnOptionsProvider), isNull);
       expect(action.trafficResets, 1);
+    });
+
+    test('a stop whose answer the transport drops stays stopped, and the '
+        'lost session after it brings nothing back', () async {
+      markInitialized();
+      final setup = container.read(setupActionProvider.notifier);
+      await setup.setRunning(true);
+      action.coreRunningException = const CoreMethodException(
+        code: 'transport_disconnected',
+        message: 'Core transport disconnected',
+      );
+
+      await expectLater(
+        setup.setRunning(false),
+        throwsA(isA<CoreMethodException>()),
+      );
+      setup.onCoreLost();
+
+      expect(container.read(isStartProvider), isFalse);
+      expect(container.read(runTimeProvider), isNull);
+      expect(setup.wantsRunning, isFalse);
     });
 
     test(
@@ -843,13 +890,68 @@ void main() {
 
   group('initStatus', () {
     test('is a no-op once the status has already been initialized', () async {
-      globalState.needInitStatus = false;
+      final setup = container.read(setupActionProvider.notifier);
+      await setup.setRunning(true, initialize: true);
+      await setup.initStatus();
 
-      await container.read(setupActionProvider.notifier).initStatus();
-
-      expect(action.coreRunningCalls, isEmpty);
-      expect(action.applyProfileCalls, 0);
+      expect(action.coreRunningCalls, [true]);
+      expect(action.applyProfileCalls, 1);
     });
+
+    test(
+      'initialization waits for a start requested before bootstrap finished',
+      () async {
+        final setup = container.read(setupActionProvider.notifier);
+        final gate = action.profileGate = Completer<void>();
+        final starting = setup.setRunning(true, initialize: true);
+        expect(action.applyProfileCalls, 1);
+
+        var ready = false;
+        final initializing = setup.initStatus().then((_) => ready = true);
+        await pumpEventQueue();
+        expect(ready, isFalse);
+        gate.complete();
+        await initializing;
+        expect(await starting, isTrue);
+        expect(action.applyProfileCalls, 1);
+      },
+    );
+
+    test(
+      'a pending service snapshot yields to a start tapped while it loads',
+      () async {
+        final snapshot = action.serviceRead = Completer<DateTime?>();
+        final gate = action.profileGate = Completer<void>();
+        final setup = container.read(setupActionProvider.notifier);
+        var ready = false;
+        final initializing = setup.initStatus().then((_) => ready = true);
+        final starting = setup.setRunning(true, initialize: true);
+        snapshot.complete(null);
+        await pumpEventQueue();
+        expect(action.applyProfileCalls, 1);
+        expect(ready, isFalse);
+        gate.complete();
+        await initializing;
+        expect(await starting, isTrue);
+        expect(container.read(isStartProvider), isTrue);
+      },
+    );
+
+    test(
+      'a stop during startup reports its error to the request that made it',
+      () async {
+        final setup = container.read(setupActionProvider.notifier);
+        await setup.setRunning(true, initialize: true);
+        action.unansweredCoreCalls.add(false);
+        await expectLater(
+          setup.setRunning(false),
+          throwsA(isA<CoreMethodException>()),
+        );
+        await setup.initStatus();
+        expect(action.coreRunningCalls, [true, false]);
+        expect(action.applyProfileCalls, 1);
+      },
+    );
 
     test('starts the core when autoRun is enabled', () async {
       container.read(appSettingProvider.notifier).value = const AppSettingProps(
@@ -859,7 +961,6 @@ void main() {
       await container.read(setupActionProvider.notifier).initStatus();
 
       expect(action.coreRunningCalls, [true]);
-      expect(globalState.needInitStatus, isFalse);
     });
 
     test('only applies the profile when autoRun is disabled', () async {
@@ -882,8 +983,8 @@ void main() {
 
       await container.read(setupActionProvider.notifier).initStatus();
 
-      expect(action.coreRunningCalls, [true]);
-      expect(action.appliedForce, [false]);
+      expect(action.coreRunningCalls, isEmpty);
+      expect(action.appliedForce, isEmpty);
       expect(globalState.lastConfigMd5, 'running');
       expect(container.read(isStartProvider), isTrue);
     });
@@ -1072,7 +1173,6 @@ void main() {
     test('an Android one asks for nothing on desktop and keeps its VPN '
         'settings', () async {
       const vpnProps = VpnProps(
-        rootTun: true,
         dnsHijacking: true,
         accessControlProps: AccessControlProps(
           enable: true,
@@ -1494,8 +1594,61 @@ void main() {
       },
     );
 
-    test('a config the Core took is followed by the external controller, '
-        'which the Core never reads from the profile', () async {
+    test(
+      'a config the Core took carries the external controller and the '
+      'host credential, which the Core never reads from the profile',
+      () async {
+        final profile = Profile.normal(label: 'p', url: 'http://127.0.0.1:9/');
+        final mocks = coreMocks();
+        when(() => _applied(mocks.api)).thenAnswer((_) async => const []);
+        when(() => mocks.api.lastWarnings()).thenAnswer((_) async => const []);
+        when(() => mocks.api.patchConfig(any())).thenAnswer((_) async => 1);
+        final scoped = ProviderContainer(
+          overrides: [
+            profilesProvider.overrideWith(() => TestProfiles([profile])),
+            currentProfileIdProvider.overrideWithBuild((_, _) => profile.id),
+            setupStateProvider.overrideWith((_, _) => nullProfileSetupState),
+            coreHandlerProvider.overrideWithValue(mocks.controller),
+            setupActionProvider.overrideWith(SetupAction.new),
+            hostCredentialProvider.overrideWithValue('h:s'),
+          ],
+        );
+        addTearDown(scoped.dispose);
+        scoped.listen(patchClashConfigProvider, (_, _) {});
+        scoped
+            .read(patchClashConfigProvider.notifier)
+            .value = const PatchClashConfig(
+          externalController: ExternalControllerStatus.open,
+          secret: 's',
+        );
+
+        expect(
+          await scoped
+              .read(setupActionProvider.notifier)
+              .applyProfile(force: true),
+          isTrue,
+        );
+
+        final host =
+            verify(
+                  () => mocks.api.applyConfig(
+                    profilePath: any(named: 'profilePath'),
+                    overlay: any(named: 'overlay'),
+                    selection: any(named: 'selection'),
+                    options: any(named: 'options'),
+                    host: captureAny(named: 'host'),
+                  ),
+                ).captured.single
+                as Map<String, Object?>;
+        expect(host['externalController'], '127.0.0.1:9090');
+        expect(host['secret'], 's');
+        expect(host['hostCredential'], 'h:s');
+        verifyNever(() => mocks.api.patchConfig(any()));
+      },
+    );
+
+    test('a resume that finds the config already applied still hands the '
+        'Core the external controller and the host credential', () async {
       final profile = Profile.normal(label: 'p', url: 'http://127.0.0.1:9/');
       final mocks = coreMocks();
       when(() => _applied(mocks.api)).thenAnswer((_) async => const []);
@@ -1508,6 +1661,7 @@ void main() {
           setupStateProvider.overrideWith((_, _) => nullProfileSetupState),
           coreHandlerProvider.overrideWithValue(mocks.controller),
           setupActionProvider.overrideWith(SetupAction.new),
+          hostCredentialProvider.overrideWithValue('h:s'),
         ],
       );
       addTearDown(scoped.dispose);
@@ -1518,20 +1672,24 @@ void main() {
         externalController: ExternalControllerStatus.open,
         secret: 's',
       );
+      final action = scoped.read(setupActionProvider.notifier);
+      expect(await action.applyProfile(force: true), isTrue);
+      clearInteractions(mocks.api);
 
-      expect(
-        await scoped
-            .read(setupActionProvider.notifier)
-            .applyProfile(force: true),
-        isTrue,
-      );
+      expect(await action.applyProfile(), isTrue);
 
+      verifyNever(() => _applied(mocks.api));
       final patch =
           verify(() => mocks.api.patchConfig(captureAny())).captured.single
               as ConfigPatch;
       expect(patch.externalController, '127.0.0.1:9090');
       expect(patch.secret, 's');
-      expect(patch.mode, isNull);
+      expect(patch.hostCredential, 'h:s');
+      expect(
+        (patch.toJson()['options']! as Map).containsKey('mitmTrustedCa'),
+        isFalse,
+        reason: 'options without it give the CA trust back to the config',
+      );
     });
 
     test('the warnings of a setup are kept, whether the Core took it or '
@@ -1582,6 +1740,45 @@ void main() {
       rejecting = true;
       expect(await setupAction.applyProfile(force: true), isFalse);
       expect(scoped.read(configWarningsStateProvider), [warning]);
+    });
+
+    test('a resume that finds the config already applied still shows the '
+        'warnings the Core kept from it', () async {
+      final profile = Profile.normal(label: 'p', url: 'http://127.0.0.1:9/');
+      final mocks = coreMocks();
+      when(() => _applied(mocks.api)).thenAnswer((_) async => const []);
+      when(() => mocks.api.patchConfig(any())).thenAnswer((_) async => 1);
+      when(() => mocks.api.lastWarnings()).thenAnswer(
+        (_) async => const [
+          WarningInfo(level: 'warning', path: 'proxies[1]', message: 'x'),
+        ],
+      );
+      final scoped = ProviderContainer(
+        overrides: [
+          profilesProvider.overrideWith(() => TestProfiles([profile])),
+          currentProfileIdProvider.overrideWithBuild((_, _) => profile.id),
+          setupStateProvider.overrideWith((_, _) => nullProfileSetupState),
+          coreHandlerProvider.overrideWithValue(mocks.controller),
+          setupActionProvider.overrideWith(SetupAction.new),
+        ],
+      );
+      addTearDown(scoped.dispose);
+      scoped.read(coreStatusProvider.notifier).value = CoreStatus.connected;
+      final action = scoped.read(setupActionProvider.notifier);
+      expect(await action.applyProfile(force: true), isTrue);
+      scoped.read(configWarningsStateProvider.notifier).value = const [];
+      clearInteractions(mocks.api);
+
+      expect(await action.applyProfile(), isTrue);
+
+      verifyNever(() => _applied(mocks.api));
+      expect(scoped.read(configWarningsStateProvider), const [
+        ConfigWarning(
+          level: ConfigWarningLevel.warning,
+          path: 'proxies[1]',
+          message: 'x',
+        ),
+      ]);
     });
 
     test('a setup against a Core marked stopped leaves no warnings beside '
@@ -2355,6 +2552,38 @@ void main() {
         local['path'],
         await appPath.getProviderCachePath(localRule.fileName),
       );
+    });
+
+    test('with no profile the config carries the settings and MITM, '
+        'and no rule or proxy, so everything goes direct', () async {
+      final mocks = coreMocks();
+      final scoped = ProviderContainer(
+        overrides: [
+          coreHandlerProvider.overrideWithValue(mocks.controller),
+          setupActionProvider.overrideWith(SetupAction.new),
+        ],
+      );
+      addTearDown(scoped.dispose);
+
+      final res = await scoped
+          .read(setupActionProvider.notifier)
+          .getProfile(
+            setupState: nullProfileSetupState,
+            patchConfig: const PatchClashConfig(
+              mitm: Mitm(enable: true, hostname: ['a.example']),
+            ),
+          );
+      final config = loadYaml(res.yaml) as YamlMap;
+
+      verifyNever(() => mocks.api.readConfig(any()));
+      expect(res.base, isNull);
+      expect(config['mitm']['enable'], isTrue);
+      expect(config['mitm']['hostname'], contains('a.example'));
+      expect(config['tun'], isA<YamlMap>());
+      expect(config['dns'], isA<YamlMap>());
+      expect(config['mode'], 'rule');
+      expect(config['rules'], isEmpty);
+      expect(config.containsKey('proxies'), isFalse);
     });
 
     test('a provider a custom profile names carries its options', () async {

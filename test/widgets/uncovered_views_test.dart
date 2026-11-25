@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:fl_clash/common/app_localizations.dart';
 import 'package:fl_clash/common/exception.dart';
 import 'package:fl_clash/common/l10n_labels.dart';
+import 'package:fl_clash/common/release_asset.dart';
 import 'package:fl_clash/common/request.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/features/form/form.dart';
@@ -274,6 +275,46 @@ void main() {
     expect(tester.takeException(), null);
   });
 
+  testWidgets('about view sets updates between the hero and more', (
+    tester,
+  ) async {
+    final container = _containerFor(tester, size: const Size(1400, 2000));
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: const TestApp(child: AboutView()),
+      ),
+    );
+    await tester.pump();
+    final l10n = currentAppLocalizations;
+    final hero = find.byWidgetPredicate(
+      (widget) => widget.runtimeType.toString() == '_AboutHero',
+    );
+    final update = tester.getRect(find.widgetWithText(ListHeader, l10n.update));
+    expect(update.top, greaterThan(tester.getRect(hero).bottom));
+    expect(
+      update.bottom,
+      lessThan(tester.getRect(find.text(l10n.autoCheckUpdate)).top),
+    );
+    expect(
+      tester.getRect(find.text(l10n.autoCheckUpdate)).bottom,
+      lessThan(tester.getRect(find.widgetWithText(ListHeader, l10n.more)).top),
+    );
+    expect(find.text(l10n.updateChannel), findsNothing);
+
+    expect(container.read(appSettingProvider).autoCheckUpdate, isTrue);
+    await tester.tap(
+      find.descendant(
+        of: find.widgetWithText(ListItem, l10n.autoCheckUpdate),
+        matching: find.byType(Switch),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(container.read(appSettingProvider).autoCheckUpdate, isFalse);
+
+    expect(tester.takeException(), null);
+  });
+
   testWidgets('about view shows progress while checking for updates', (
     tester,
   ) async {
@@ -302,7 +343,15 @@ void main() {
 
     adapter.response.complete(
       ResponseBody.fromString(
-        jsonEncode({'tag_name': 'v0.0.0'}),
+        jsonEncode([
+          {
+            'tag_name': 'v0.0.0-rs.1',
+            'draft': false,
+            'assets': [
+              {'name': updateChecksumsName('v0.0.0-rs.1')},
+            ],
+          },
+        ]),
         200,
         headers: {
           Headers.contentTypeHeader: [Headers.jsonContentType],
@@ -712,6 +761,30 @@ void main() {
       final exit = tester.getRect(exitRow('Media'));
       expect(exit.left, global.left);
       expect(exit.right, global.right);
+    });
+
+    testWidgets('the global added rules row ends its count in a chevron at '
+        'the margin, as an open row does', (tester) async {
+      final global = currentAppLocalizations.controlGlobalAddedRules;
+      await pumpExits(
+        tester,
+        profile: Profile.normal(),
+        global: [exitRule(1, 'Media')],
+      );
+
+      final row = tester.getRect(exitRow(global));
+      final chevron = tester.getRect(
+        find.descendant(
+          of: exitRow(global),
+          matching: find.byGlyph(AppGlyphs.chevronForward),
+        ),
+      );
+      final insets = tester.element(exitRow(global)).listInsets;
+      expect(
+        chevron.right,
+        row.right - insets.trailing + ListItem.chevronInset,
+      );
+      expect(tester.getRect(find.text('1/1')).right, lessThan(chevron.left));
     });
 
     testWidgets('the global added rules row sits under the header as a first '

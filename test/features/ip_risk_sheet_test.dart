@@ -63,72 +63,53 @@ const sampleRisk = IpRisk(
 );
 
 void main() {
-  testWidgets('only the small edit button opens and updates the IP', (
+  testWidgets('the IP card copies the address and shows a success banner', (
     tester,
   ) async {
-    final queried = <String>[];
+    String? copied;
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'Clipboard.setData') {
+          copied = (call.arguments as Map)['text'] as String;
+        }
+        return null;
+      },
+    );
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      ),
+    );
     await tester.pumpWidget(
       TestApp(
         locale: const Locale('en'),
         overrides: [
           ipLocateProvider.overrideWith(
-            (_, ip) async => IpLocateInfo(
-              ip: ip,
-              company: sampleRisk.organization,
-              network: sampleRisk.isp,
-              asn: sampleRisk.asn,
-            ),
+            (_, ip) async => IpLocateInfo(ip: ip, asn: sampleRisk.asn),
           ),
-          ipRiskProvider.overrideWith((_, ip) async {
-            queried.add(ip);
-            return IpRisk(ip: ip, score: 0, level: IpRiskLevel.low);
-          }),
+          ipRiskProvider.overrideWith((_, ip) async => sampleRisk),
         ],
         child: const IpRiskSheet(ip: '158.247.202.50'),
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('158.247.202.50'));
-    await tester.pumpAndSettle();
-    expect(find.byType(app_ui.InputDialog), findsNothing);
-    final edit = find.byTooltip('Edit');
+
+    final l = tester.element(find.byType(IpRiskSheet)).appLocalizations;
+    final copy = find.byTooltip(l.copy);
+    expect(find.byTooltip(l.edit), findsNothing);
     expect(
-      find.ancestor(of: edit, matching: find.byType(app_ui.MinIconButtonTheme)),
+      find.ancestor(of: copy, matching: find.byType(app_ui.MinIconButtonTheme)),
       findsOneWidget,
     );
-    await tester.tap(edit);
+    await tester.tap(copy);
     await tester.pumpAndSettle();
-    expect(find.byType(app_ui.InputDialog), findsOneWidget);
-    final submit = tester
-        .element(find.byType(app_ui.InputDialog))
-        .appLocalizations
-        .submit;
-    await tester.enterText(
-      find.descendant(
-        of: find.byType(app_ui.InputDialog),
-        matching: find.byType(EditableText),
-      ),
-      '192.168.1.1',
-    );
-    await tester.tap(find.text(submit));
-    await tester.pumpAndSettle();
-    expect(find.byType(app_ui.InputDialog), findsOneWidget);
-    expect(queried, ['158.247.202.50']);
-    await tester.enterText(
-      find.descendant(
-        of: find.byType(app_ui.InputDialog),
-        matching: find.byType(EditableText),
-      ),
-      '8.8.8.8',
-    );
-    await tester.tap(find.text(submit));
-    await tester.pumpAndSettle();
-    expect(find.byType(app_ui.InputDialog), findsNothing);
-    expect(find.text('8.8.8.8'), findsOneWidget);
-    expect(queried, ['158.247.202.50', '8.8.8.8']);
-    expect(tester.takeException(), isNull);
+    expect(copied, sampleRisk.ip);
+    expect(find.text(l.copySuccess), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
   });
+
   testWidgets('unknown hosting mark shows a question, distinct from no', (
     tester,
   ) async {
@@ -204,7 +185,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Premium Residential IP'), findsOneWidget);
+    expect(find.text('Premium Residential IP'), findsNWidgets(2));
     expect(find.text('Datacenter'), findsNothing);
     expect(find.text('Residential proxy'), findsNothing);
     expect(find.text('Hostname'), findsNothing);
@@ -379,7 +360,14 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(app_ui.NullStatusSwitcher), findsOneWidget);
       expect(find.text('28'), findsOneWidget);
-      expect(find.text('数据中心'), findsOneWidget);
+      expect(find.text('数据中心'), findsNWidgets(2));
+      expect(
+        find.descendant(
+          of: find.byType(RiskChecksCard),
+          matching: find.text('数据中心'),
+        ),
+        findsOneWidget,
+      );
       final sheetCtx = tester.element(find.byType(RiskChecksCard));
       final fireholPill = tester.widget<Container>(
         find
@@ -416,7 +404,10 @@ void main() {
               .abs(),
           lessThanOrEqualTo(0.5),
         );
-        final datacenterText = find.text('数据中心');
+        final datacenterText = find.descendant(
+          of: find.byType(RiskChecksCard),
+          matching: find.text('数据中心'),
+        );
         final datacenterBox = find.ancestor(
           of: datacenterText,
           matching: find.byType(Container),
@@ -428,10 +419,35 @@ void main() {
           lessThanOrEqualTo(0.5),
         );
       }
-      final checkTopLeft = tester.getTopLeft(find.text('机房或代理'));
+      final flagsHeaderTopLeft = tester.getTopLeft(
+        find.descendant(
+          of: find.byType(RiskChecksCard),
+          matching: find.text('命中标记'),
+        ),
+      );
       final cardTopLeft = tester.getTopLeft(find.byType(RiskChecksCard));
-      expect(checkTopLeft.dx, cardTopLeft.dx + 20);
-      expect(checkTopLeft.dy, cardTopLeft.dy + 20);
+      expect(flagsHeaderTopLeft.dy, greaterThan(cardTopLeft.dy));
+      expect(
+        tester.getTopLeft(find.text('机房或代理')).dy,
+        greaterThan(flagsHeaderTopLeft.dy),
+      );
+      expect(
+        find.descendant(
+          of: find.byType(RiskChecksCard),
+          matching: find.byType(app_ui.Divider),
+        ),
+        findsNWidgets(2),
+      );
+      expect(
+        tester.getTopLeft(find.byType(IpAttributionCard)).dy,
+        lessThan(tester.getTopLeft(find.byType(RiskChecksCard)).dy),
+      );
+      expect(
+        tester.getTopLeft(find.byType(RiskScoreCard)).dy,
+        lessThan(tester.getTopLeft(find.byType(IpAttributionCard)).dy),
+      );
+      expect(find.byGlyph(AppGlyphs.flag), findsOneWidget);
+      expect(find.byGlyph(AppGlyphs.location), findsOneWidget);
       expect(tester.takeException(), isNull);
       if (width == 430) {
         await tester.runAsync(() async {
@@ -573,7 +589,7 @@ void main() {
   );
 
   testWidgets(
-    'location card stacks country and region cleanly with standalone ASN pill',
+    'location card mirrors IP lookup attribution styling with country pill and ASN row',
     (tester) async {
       const longRisk = IpRisk(
         ip: '58.247.1.2',
@@ -609,29 +625,32 @@ void main() {
       final sheetCtx = tester.element(find.byType(IpRiskSheet));
       final l = sheetCtx.appLocalizations;
       expect(find.text('Shanghai · Hongkou (Hongkou Qu)'), findsOneWidget);
-      expect(find.text('AS9999'), findsOneWidget);
+      expect(find.text('CN'), findsOneWidget);
       expect(find.text(l.isp), findsOneWidget);
       expect(find.text(l.operatorOrAsn), findsNothing);
       expect(
         find.text('Shanghai Information Network Co., Ltd.'),
         findsOneWidget,
       );
-      expect(find.textContaining('· AS4811'), findsNothing);
-      final asnPill = find
+      expect(find.textContaining('AS9999'), findsOneWidget);
+      expect(find.textContaining(longRisk.isp), findsOneWidget);
+      expect(find.textContaining('AS4811'), findsNothing);
+      expect(find.text(l.unknown), findsOneWidget);
+      final codePill = find
           .ancestor(
-            of: find.text('AS9999'),
+            of: find.text('CN'),
             matching: find.byType(DecoratedBox),
           )
           .first;
-      final asnBox = tester.widget<DecoratedBox>(asnPill);
+      final codeBox = tester.widget<DecoratedBox>(codePill);
       expect(
         tester
             .getTopRight(find.text('Shanghai \u00b7 Hongkou (Hongkou Qu)'))
             .dx,
-        closeTo(tester.getTopRight(asnPill).dx, 1),
+        closeTo(tester.getTopRight(codePill).dx, 1),
       );
       expect(
-        (asnBox.decoration as ShapeDecoration).color,
+        (codeBox.decoration as ShapeDecoration).color,
         DashboardColors.of(sheetCtx).tone,
       );
       final countryFinder = find.byWidgetPredicate(
@@ -639,14 +658,14 @@ void main() {
       );
       expect(countryFinder, findsOneWidget);
       expect(find.byType(app_ui.Divider), findsNWidgets(2));
-      expect(find.text('AS4811'), findsNothing);
       expect(find.text('ASN'), findsOneWidget);
+      expect(find.byGlyph(AppGlyphs.flag), findsOneWidget);
       expect(
-        tester.getTopLeft(find.text('AS9999')).dx,
+        tester.getTopLeft(find.text('CN')).dx,
         greaterThan(tester.getTopLeft(countryFinder).dx),
       );
       expect(
-        tester.getTopLeft(find.text('AS9999')).dy,
+        tester.getTopLeft(find.text('CN')).dy,
         lessThan(tester.getTopLeft(countryFinder).dy),
       );
       expect(

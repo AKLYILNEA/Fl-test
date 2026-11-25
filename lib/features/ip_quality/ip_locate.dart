@@ -118,8 +118,7 @@ final ipLocateRepositoryProvider = Provider<IpLocateRepository>((ref) {
         ref.read(coreHandlerProvider).api.readIpCache(ip, source: 'iplocate'),
     write: (ip, data) => ref
         .read(coreHandlerProvider)
-        .api
-        .writeIpCache(ip, data, source: 'iplocate'),
+        .api.writeIpCache(ip, data, source: 'iplocate'),
     fetch: (ip, cancel) => fetchIpLocate(request.dio, ip, cancel),
   );
 });

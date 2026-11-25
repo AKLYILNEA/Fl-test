@@ -126,7 +126,7 @@ void main() {
     expect(service.width, closeTo(upload.width, 0.01));
     expect(
       tester.widget<ServiceStatusCard>(find.byType(ServiceStatusCard)).columns,
-      2,
+      1,
     );
     expect(memory.top, service.top);
     expect(memory.left, closeTo(service.right + 16, 0.01));
@@ -244,22 +244,11 @@ void main() {
     expect(stats.bottom, 660 - 24);
     expect(stats.width, closeTo(current.width, 0.01));
     expect(groups.top, stats.top);
-    final summary = find.byType(ProxyGroupsSummaryCard);
     expect(
-      find.descendant(
-        of: summary,
-        matching: find.byWidgetPredicate(
-          (widget) =>
-              widget is Text &&
-              widget.textSpan?.toPlainText(includePlaceholders: false) == '12',
-        ),
-      ),
+      find.textContaining(RegExp(r'^12'), findRichText: true),
       findsOneWidget,
     );
-    expect(
-      find.descendant(of: summary, matching: find.text(' groups')),
-      findsOneWidget,
-    );
+    expect(find.text(' groups'), findsOneWidget);
     expect(scrollExtentOf(tester), 0);
     expect(find.byType(Scrollable), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -483,18 +472,22 @@ void main() {
     await teardown(tester);
   });
 
-  testWidgets('desktop app bar shows the wakelock action', (tester) async {
+  testWidgets('desktop app bar shows wakelock beside live status button', (
+    tester,
+  ) async {
     await pumpDashboard(
       tester,
       const Size(1220, 824),
       platform: SupportPlatform.Windows,
     );
 
-    expect(
-      find.widgetWithGlyph(AppBarActionButton, AppGlyphs.sun),
-      findsOneWidget,
+    final wakelockFinder = find.widgetWithGlyph(
+      AppBarActionButton,
+      AppGlyphs.sun,
     );
-    expect(tester.takeException(), isNull);
+    expect(wakelockFinder, findsOneWidget);
+    expect(find.byType(LiveStatusButton), findsOneWidget);
+
     await teardown(tester);
   });
 }

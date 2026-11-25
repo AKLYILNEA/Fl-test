@@ -121,6 +121,24 @@ class _IconSetsViewState extends ConsumerState<IconSetsView> {
 
   List<PopupMenuItem> _buildMenuItems(IconSet iconSet) {
     final appLocalizations = context.appLocalizations;
+    if (iconSet.isBuiltIn) {
+      return [
+        PopupMenuItem(
+          glyph: AppGlyphs.sync,
+          label: appLocalizations.sync,
+          onPressed: () {
+            _run(() => _iconSetsAction.sync(iconSet), title: iconSet.name);
+          },
+        ),
+        PopupMenuItem(
+          glyph: AppGlyphs.link,
+          label: appLocalizations.projectUrl,
+          onPressed: () {
+            dialogs.openUrl(builtInIconSetProjectUrl);
+          },
+        ),
+      ];
+    }
     return [
       if (iconSet.isRemote)
         PopupMenuItem(
@@ -159,7 +177,9 @@ class _IconSetsViewState extends ConsumerState<IconSetsView> {
         child: ItemPositionProvider(
           position: ItemPosition.get(index, iconSets.length),
           child: DecorationListItem(
-            contentPadding: const EdgeInsets.only(left: 16),
+            contentPadding: EdgeInsetsDirectional.only(
+              start: context.listInsets.leading,
+            ),
             leading: SizedBox.square(
               dimension: 32,
               child: IconTheme.merge(
@@ -172,7 +192,9 @@ class _IconSetsViewState extends ConsumerState<IconSetsView> {
               chip: iconSet.icons.length.compact,
             ),
             subtitle: Text(
-              iconSet.isRemote
+              iconSet.isBuiltIn
+                  ? appLocalizations.builtIn
+                  : iconSet.isRemote
                   ? appLocalizations.remote
                   : appLocalizations.local,
               style: context.listCaptionStyle,
@@ -197,10 +219,12 @@ class _IconSetsViewState extends ConsumerState<IconSetsView> {
         illustration: NullStatusIllustration.icons,
       ),
       child: PrismReorderableListView(
-        padding: const EdgeInsets.all(16).copyWith(
-          top: context.contentTopPadding,
-          bottom: 16 + context.bottomInset,
-        ),
+        padding: context.listInsets
+            .page(top: 16, bottom: 16)
+            .copyWith(
+              top: context.contentTopPadding,
+              bottom: 16 + context.bottomInset,
+            ),
         itemCount: iconSets.length,
         itemBuilder: (_, index) => _buildItem(iconSets, index),
         proxyDecorator: (_, index, animation) {

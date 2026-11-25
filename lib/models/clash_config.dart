@@ -33,7 +33,7 @@ const defaultGeoXUrl = {
   GeoResource.MMDB:
       'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@release/geoip.metadb',
   GeoResource.ASN:
-      'https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/GeoLite2-ASN.mmdb',
+      'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@release/GeoLite2-ASN.mmdb',
   GeoResource.GEOSITE:
       'https://fastly.jsdelivr.net/gh/appshubcc/bett-rules@release/geosite.dat',
 };
@@ -45,14 +45,7 @@ const minTunMtu = 1280;
 const maxTunMtu = 65535;
 const defaultCongestionController = 'cubic';
 
-// The TUN congestion controls the app knows, cubic first as the default; the
-// Core's reported list decides which of them are offered.
-const congestionControllers = [
-  defaultCongestionController,
-  'reno',
-  'bbr',
-  'bbr3',
-];
+const congestionControllers = [defaultCongestionController, 'reno', 'bbr'];
 const defaultDnsHijack = ['any:53'];
 const defaultTunUdpTimeout = 300;
 
@@ -95,6 +88,7 @@ abstract class ProxyGroup with _$ProxyGroup {
     @JsonKey(name: 'exclude-type') String? excludeType,
     @JsonKey(name: 'expected-status') String? expectedStatus,
     int? tolerance,
+    @JsonKey(name: 'policy-priority') String? policyPriority,
     LoadBalanceStrategy? strategy,
     @JsonKey(name: 'hash-key') String? hashKey,
     @JsonKey(name: 'default-selected') String? defaultSelected,
@@ -141,8 +135,11 @@ extension ProxyGroupExt on ProxyGroup {
       if (includeAllProviders == true) 'include-all-providers': true,
       if (hidden != null) 'hidden': hidden,
       if (icon?.isNotEmpty == true) 'icon': icon,
-      if (type == GroupType.URLTest && tolerance != null)
+      if ((type == GroupType.URLTest || type == GroupType.Smart) &&
+          tolerance != null)
         'tolerance': tolerance,
+      if (type == GroupType.Smart && policyPriority?.isNotEmpty == true)
+        'policy-priority': policyPriority,
       if (type == GroupType.Selector && defaultSelected?.isNotEmpty == true)
         'default-selected': defaultSelected,
       if (type == GroupType.LoadBalance && strategy != null)
@@ -215,6 +212,7 @@ const proxyGroupTextKeys = [
   'exclude-type',
   'expected-status',
   'hash-key',
+  'policy-priority',
   'default-selected',
   'empty-fallback',
   'icon',
@@ -1183,7 +1181,7 @@ int _mtuFromJson(int value) =>
     value > 0 ? value.clamp(minTunMtu, maxTunMtu) : defaultTunMtu;
 
 String _congestionControllerFromJson(String value) =>
-    value.isEmpty ? defaultCongestionController : value;
+    congestionControllers.contains(value) ? value : defaultCongestionController;
 
 extension TunExt on Tun {
   List<String> excludedRoutes({required bool bypassPrivateRoute}) => [
@@ -1249,8 +1247,8 @@ abstract class Dns with _$Dns {
     String fakeIpRange,
     @Default('') @JsonKey(name: 'fake-ip-range6') String fakeIpRange6,
     @Default([
-      'dns.msftnsci.com',
-      'www.msftnsci.com',
+      'dns.msftncsi.com',
+      'www.msftncsi.com',
       'www.msftconnecttest.com',
     ])
     @JsonKey(name: 'fake-ip-filter')
@@ -1558,7 +1556,10 @@ abstract class ProfileTun with _$ProfileTun {
   const factory ProfileTun({
     @Default(defaultTunMtu) int mtu,
     @Default(defaultCongestionController)
-    @JsonKey(name: 'congestion-controller')
+    @JsonKey(
+      name: 'congestion-controller',
+      fromJson: _congestionControllerFromJson,
+    )
     String congestionController,
     @Default(false) @JsonKey(name: 'strict-route') bool strictRoute,
     @Default([]) @JsonKey(name: 'route-address') List<String> routeAddress,
@@ -2265,12 +2266,6 @@ List<int> mitmCaptureOptions({required bool isAndroid}) =>
 
 Map<String, Object> _mitmLimits({required bool isAndroid}) =>
     isAndroid ? _androidMitmLimits : _desktopMitmLimits;
-
-int mitmCaptureBytes({required bool isAndroid}) =>
-    _mitmLimits(isAndroid: isAndroid)['capture-bytes']! as int;
-
-int mitmMaxBodySize({required bool isAndroid}) =>
-    _mitmLimits(isAndroid: isAndroid)['max-body-size']! as int;
 
 extension MitmExt on Mitm {
   int captureLimit({required bool isAndroid}) =>

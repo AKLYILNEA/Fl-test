@@ -1,6 +1,31 @@
 part of '../action.dart';
 
-enum _SetupTaskResult { completed, handoffToCoreRestart, failed }
+enum _SetupTaskResult { completed, handoffToCoreRestart, failed, superseded }
+
+class _PendingSetupSlot {
+  _PendingSetupSlot({
+    required this.force,
+    required this.silence,
+    Future<void> Function()? preloadInvoke,
+  }) : preloadInvokes = [?preloadInvoke];
+
+  bool force;
+  bool silence;
+  final List<Future<void> Function()> preloadInvokes;
+  final completer = Completer<_SetupTaskResult>();
+
+  void merge({
+    required bool force,
+    required bool silence,
+    Future<void> Function()? preloadInvoke,
+  }) {
+    this.force |= force;
+    this.silence &= silence;
+    if (preloadInvoke != null) {
+      preloadInvokes.add(preloadInvoke);
+    }
+  }
+}
 
 typedef _SetupInputs = (
   SetupState,
@@ -37,9 +62,13 @@ class SetupAction extends _$SetupAction {
   CoreController get _core => ref.read(coreHandlerProvider);
 
   Timer? _runtimeTimer;
-  final _setupScheduler = SerialTaskScheduler();
+  var _setupRunning = false;
+  _PendingSetupSlot? _pendingSetup;
+  var _switchToken = 0;
+  var _switchDebouncePending = false;
   final _listenerScheduler = SerialTaskScheduler();
   _RunRequest? _latestRunRequest;
+  Future<void>? _initialRun;
   DateTime? _startTime;
   var _resumeOnRestart = false;
   ({String digest, Set<String> names})? _outboundNames;
@@ -59,16 +88,43 @@ class SetupAction extends _$SetupAction {
     }
   }
 
-  bool get _isRunning => _startTime != null && _startTime!.isBeforeNow;
-
   @override
   void build() {
-    ref.onDispose(_stopRuntimeTicker);
+    ref.onDispose(() {
+      _stopRuntimeTicker();
+      debouncer.cancel(FunctionTag.switchProfile);
+    });
     ref.listen(appVisibleProvider, (_, _) => _syncRuntimeTicker());
     ref.listen(
       appSettingProvider.select((state) => state.showTrayTitle),
       (_, _) => _syncRuntimeTicker(),
     );
+  }
+
+  /// Short debounce that coalesces rapid profile taps before pushing to Core,
+  /// flushed immediately when navigating away or starting the VPN.
+  @protected
+  Duration get switchProfileDebounceDuration =>
+      const Duration(milliseconds: 250);
+
+  void switchProfileDebounce() {
+    if (!ref.read(initProvider)) return;
+    _switchToken++;
+    _switchDebouncePending = true;
+    debouncer.cancel(FunctionTag.applyProfile);
+    _pendingForceApply = false;
+    ref.read(proxiesActionProvider.notifier).cancelDelayTests();
+    debouncer.call(FunctionTag.switchProfile, () {
+      _switchDebouncePending = false;
+      unawaited(fullSetup());
+    }, duration: switchProfileDebounceDuration);
+  }
+
+  /// Immediately runs a pending profile switch when the user navigates away
+  /// from the profiles page (e.g. straight into Proxies) or starts the VPN.
+  void flushPendingProfileSwitch() {
+    if (!_switchDebouncePending) return;
+    debouncer.flush(FunctionTag.switchProfile);
   }
 
   bool get _isTrafficShown =>
@@ -80,19 +136,29 @@ class SetupAction extends _$SetupAction {
   SetupParams get _setupParams => SetupParams(
     selectedMap: ref.read(selectedMapProvider),
     options: ref.read(coreOptionsProvider),
+    host: hostSettingsOf(
+      ref.read(patchClashConfigProvider),
+      credential: ref.read(hostCredentialProvider),
+      safeMode: ref.read(safeModeProvider),
+    ),
   );
 
-  // The selection reaches the Core through changeProxy, not through an apply.
+  // The selection reaches the Core through changeProxy and the host settings
+  // through a patch, not through an apply.
   SetupParams get _appliedParams =>
-      _setupParams.copyWith(selectedMap: const {});
+      _setupParams.copyWith(selectedMap: const {}, host: null);
 
   Future<bool> fullSetup() async {
+    _switchDebouncePending = false;
+    debouncer.cancel(FunctionTag.switchProfile);
     if (!ref.read(initProvider)) return true;
     ref.read(proxiesActionProvider.notifier).cancelDelayTests();
     ref.read(delayDataSourceProvider.notifier).value = {};
     final setupResult = applyProfile(force: true);
     ref.read(logsProvider.notifier).value = FixedList(maxLogsLength);
-    ref.read(requestsProvider.notifier).value = FixedList(maxRequestsLength);
+    ref.read(requestsProvider.notifier).value = ConnectionLog(
+      maxRequestsLength,
+    );
     ref.read(dnsQueriesProvider.notifier).value = FixedList(
       maxDnsQueriesLength,
     );
@@ -117,7 +183,7 @@ class SetupAction extends _$SetupAction {
       return;
     }
 
-    _startTime ??= DateTime.now();
+    _startTime ??= clock.now();
     _updateRunTime();
     _syncRuntimeTicker();
   }
@@ -152,22 +218,40 @@ class SetupAction extends _$SetupAction {
     final startTime = _startTime;
     ref.read(runTimeProvider.notifier).value = startTime == null
         ? null
-        : DateTime.now().millisecondsSinceEpoch -
-              startTime.millisecondsSinceEpoch;
+        : clock.now().millisecondsSinceEpoch - startTime.millisecondsSinceEpoch;
   }
 
   @protected
-  Future<DateTime?> serviceStartTime() async => service?.getRunTime();
+  Future<AndroidServiceRun?> adoptRunningService() async =>
+      service?.adoptRunningService();
 
   Future<void> initStatus() async {
-    if (!globalState.needInitStatus) {
-      return;
+    if (_initialRun == null) {
+      await _restoreStatus();
     }
-    _startTime = await serviceStartTime();
-    if (_isRunning) {
-      globalState.lastConfigMd5 = await preferences.getAppliedConfigMd5();
-      globalState.lastConfigCounts = await preferences.getAppliedConfigCounts();
-      await _run(true, initialize: true, resume: true);
+    Future<void>? joined;
+    while (!identical(joined, _initialRun)) {
+      joined = _initialRun;
+      await joined;
+    }
+  }
+
+  Future<void> _restoreStatus() async {
+    final request = _latestRunRequest;
+    final run = await adoptRunningService();
+    if (_initialRun != null || request != _latestRunRequest) return;
+    if (run != null) {
+      _startTime = run.startedAt;
+      _setLocalRunning(true);
+      ref.read(runningVpnOptionsProvider.notifier).value = run.options;
+      final (digest, counts) = await (
+        preferences.getAppliedConfigMd5(),
+        preferences.getAppliedConfigCounts(),
+      ).wait;
+      if (_startTime == run.startedAt && request == _latestRunRequest) {
+        globalState.lastConfigMd5 = digest;
+        globalState.lastConfigCounts = counts;
+      }
     } else if (ref.read(appSettingProvider).autoRun) {
       await setRunning(true, initialize: true);
     } else {
@@ -188,6 +272,13 @@ class SetupAction extends _$SetupAction {
     ref.read(runningVpnOptionsProvider.notifier).value = null;
   }
 
+  void applyAndroidServiceStopped() {
+    _latestRunRequest = null;
+    _resumeOnRestart = false;
+    _setLocalRunning(false);
+    ref.read(runningVpnOptionsProvider.notifier).value = null;
+  }
+
   void resumeOnRestart() {
     _resumeOnRestart = true;
   }
@@ -196,6 +287,7 @@ class SetupAction extends _$SetupAction {
     if (running && !initialize && !ref.read(initProvider)) {
       return Future.value(true);
     }
+    if (running) flushPendingProfileSwitch();
     return _run(running, initialize: running && initialize);
   }
 
@@ -213,10 +305,12 @@ class SetupAction extends _$SetupAction {
     _latestRunRequest = request;
     _resumeOnRestart = false;
     _setLocalRunning(running);
-    if (request.initialize) {
-      globalState.needInitStatus = false;
+    final task = running ? _start(request) : _stop(request);
+    if (initialize || _initialRun != null && !ref.read(initProvider)) {
+      // The caller reports the outcome. Bootstrap waits for the transition to settle.
+      _initialRun = task.then<void>((_) {}, onError: (Object _) {});
     }
-    return running ? _start(request) : _stop(request);
+    return task;
   }
 
   Future<bool> _start(_RunRequest request) async {
@@ -248,7 +342,10 @@ class SetupAction extends _$SetupAction {
       rethrow;
     }
     final applied = await inputsApplied();
-    if (_isCurrent(request) && !applied) {
+    if (_isCurrent(request) &&
+        !applied &&
+        !_setupRunning &&
+        !_switchDebouncePending) {
       applyProfileDebounce(force: true, silence: true);
     }
     return true;
@@ -385,6 +482,7 @@ class SetupAction extends _$SetupAction {
         configPatchOf(
           _effectivePatchConfig(patchConfig),
           authentication: networkSetting.authentication.credentials,
+          hostCredential: ref.read(hostCredentialProvider),
           options: ref.read(coreOptionsProvider),
         ),
       );
@@ -516,6 +614,11 @@ class SetupAction extends _$SetupAction {
     bool force = false,
     Future<void> Function()? preloadInvoke,
   }) async {
+    if (_switchDebouncePending) {
+      _switchDebouncePending = false;
+      debouncer.cancel(FunctionTag.switchProfile);
+      force = true;
+    }
     final result = await _runSetup(
       force: force,
       silence: silence,
@@ -524,38 +627,172 @@ class SetupAction extends _$SetupAction {
     return result != _SetupTaskResult.failed;
   }
 
+  Future<_SetupTaskResult> _runSingleSetupConfig({
+    required bool force,
+    required bool silence,
+    required List<Future<void> Function()> preloadInvokes,
+  }) {
+    final Future<void> Function()? combinedPreload = preloadInvokes.isEmpty
+        ? null
+        : () async {
+            for (final invoke in preloadInvokes) {
+              await invoke();
+            }
+          };
+    return _setupConfig(
+      force: force,
+      silence: silence,
+      preloadInvoke: combinedPreload,
+      onUpdated: ({required isCurrent, required retryEmpty}) async {
+        await ref
+            .read(proxiesActionProvider.notifier)
+            .updateGroups(shouldRetry: () => retryEmpty && isCurrent());
+        if (isCurrent()) {
+          await ref.read(providersProvider.notifier).syncProviders();
+        }
+      },
+    );
+  }
+
   Future<_SetupTaskResult> _runSetup({
     bool silence = false,
     bool force = false,
     Future<void> Function()? preloadInvoke,
   }) async {
-    final result = await _setupScheduler.run(() {
-      return _setupConfig(
+    if (_setupRunning) {
+      final slot = _pendingSetup;
+      if (slot != null) {
+        slot.merge(
+          force: force,
+          silence: silence,
+          preloadInvoke: preloadInvoke,
+        );
+        return slot.completer.future;
+      }
+      final nextSlot = _PendingSetupSlot(
         force: force,
         silence: silence,
         preloadInvoke: preloadInvoke,
-        onUpdated: () async {
-          await ref.read(proxiesActionProvider.notifier).updateGroups();
-          await ref.read(providersProvider.notifier).syncProviders();
-        },
       );
-    });
-    if (result != _SetupTaskResult.handoffToCoreRestart) {
-      return result;
+      _pendingSetup = nextSlot;
+      return nextSlot.completer.future;
     }
-    // Release the current serial task before restartCore reapplies the profile.
-    final restarted = await _restartCoreAfterAuthorization();
-    return restarted ? _SetupTaskResult.completed : _SetupTaskResult.failed;
+
+    // Absorb any deferred slot held back while a switch burst was active.
+    final deferred = _pendingSetup;
+    _pendingSetup = null;
+    if (deferred != null) {
+      force |= deferred.force;
+      silence &= deferred.silence;
+    }
+    final preloadInvokes = <Future<void> Function()>[
+      ...?deferred?.preloadInvokes,
+      ?preloadInvoke,
+    ];
+
+    _setupRunning = true;
+    final _SetupTaskResult result;
+    try {
+      result = await _runSingleSetupConfig(
+        force: force,
+        silence: silence,
+        preloadInvokes: preloadInvokes,
+      );
+    } catch (error, stackTrace) {
+      _releaseOrDrainSetup();
+      if (deferred != null && !deferred.completer.isCompleted) {
+        deferred.completer.completeError(error, stackTrace);
+      }
+      rethrow;
+    }
+    _releaseOrDrainSetup();
+
+    final _SetupTaskResult finalResult;
+    if (result == _SetupTaskResult.handoffToCoreRestart) {
+      try {
+        // Active slot is already released so restartCore can reapply cleanly.
+        final restarted = await _restartCoreAfterAuthorization();
+        finalResult = restarted
+            ? _SetupTaskResult.completed
+            : _SetupTaskResult.failed;
+      } catch (error, stackTrace) {
+        if (deferred != null && !deferred.completer.isCompleted) {
+          deferred.completer.completeError(error, stackTrace);
+        }
+        rethrow;
+      }
+    } else {
+      finalResult = result;
+    }
+    if (deferred != null && !deferred.completer.isCompleted) {
+      deferred.completer.complete(finalResult);
+    }
+    return finalResult;
+  }
+
+  void _releaseOrDrainSetup() {
+    if (_switchDebouncePending) {
+      // Hold back any queued pass while the user is still tapping through
+      // profiles; the debounce fire/flush will absorb it for the final choice.
+      _setupRunning = false;
+      return;
+    }
+    final next = _pendingSetup;
+    if (next == null) {
+      _setupRunning = false;
+      return;
+    }
+    _pendingSetup = null;
+    unawaited(_runPendingSlot(next));
+  }
+
+  Future<void> _runPendingSlot(_PendingSetupSlot slot) async {
+    final _SetupTaskResult result;
+    try {
+      result = await _runSingleSetupConfig(
+        force: slot.force,
+        silence: slot.silence,
+        preloadInvokes: slot.preloadInvokes,
+      );
+    } catch (error, stackTrace) {
+      _releaseOrDrainSetup();
+      slot.completer.completeError(error, stackTrace);
+      return;
+    }
+    _releaseOrDrainSetup();
+    if (result == _SetupTaskResult.handoffToCoreRestart) {
+      try {
+        final restarted = await _restartCoreAfterAuthorization();
+        slot.completer.complete(
+          restarted ? _SetupTaskResult.completed : _SetupTaskResult.failed,
+        );
+      } catch (error, stackTrace) {
+        slot.completer.completeError(error, stackTrace);
+      }
+      return;
+    }
+    slot.completer.complete(result);
   }
 
   Future<bool> _restartCoreAfterAuthorization() async {
     try {
       return await ref.read(coreActionProvider.notifier).restartCore();
     } catch (_) {
-      ref.read(authorizedTunEnableProvider.notifier).value =
-          TunAuthorizationState.none;
+      _forgetTunAuthorization();
       rethrow;
     }
+  }
+
+  /// A restart asks first, as [_setupConfig] would before handing off to it:
+  /// the apply inside the restart must not hand off to the restart it runs in.
+  /// Returns whether it was granted now.
+  Future<bool> _authorizeTunBeforeRestart() async {
+    return !await requestAdmin(ref.read(patchClashConfigProvider).tun.enable);
+  }
+
+  void _forgetTunAuthorization() {
+    ref.read(authorizedTunEnableProvider.notifier).value =
+        TunAuthorizationState.none;
   }
 
   /// With a base, [BuiltProfile.yaml] is only the overlay the Core applies.
@@ -564,23 +801,6 @@ class SetupAction extends _$SetupAction {
     required PatchClashConfig patchConfig,
   }) async {
     final profileId = setupState.profileId;
-    if (profileId == null) {
-      final yaml = await encodeYamlTask(
-        inboundConfigOf(
-          patchConfig,
-          authentication: ref
-              .read(networkSettingProvider)
-              .authentication
-              .credentials,
-        ),
-      );
-      return (
-        yaml: yaml,
-        md5: yaml.toMd5(),
-        counts: configCountsOf(const {}),
-        base: null,
-      );
-    }
     final defaultUA = globalState.packageInfo.ua;
     final networkSetting = ref.read(
       networkSettingProvider.select(
@@ -595,7 +815,7 @@ class SetupAction extends _$SetupAction {
     final isCustom = setupState.profileType == ProfileType.custom;
     final scriptContent = isCustom ? null : await setupState.script?.content;
     final hasScript = scriptContent?.isNotEmpty == true;
-    final profileBase = !isCustom && !hasScript
+    final profileBase = profileId != null && !isCustom && !hasScript
         ? await _core.getProfileBase(profileId)
         : null;
     Map<String, dynamic> rawConfig = isCustom
@@ -606,7 +826,8 @@ class SetupAction extends _$SetupAction {
               groups: setupState.proxyGroups,
             ),
           }
-        : profileBase?.base.config ?? await _core.readConfig(profileId);
+        : profileBase?.base.config ??
+              (profileId == null ? {} : await _core.readConfig(profileId));
     final proxyGroups = isCustom ? setupState.proxyGroups : <ProxyGroup>[];
     final rules = isCustom ? setupState.rules : <Rule>[];
     if (hasScript) {
@@ -615,7 +836,7 @@ class SetupAction extends _$SetupAction {
     final directory = await appPath.profilesPath;
     final hasCustomExit =
         setupState.addedRules.any((rule) => rule.customExit) ||
-        setupState.mitmModules.isNotEmpty;
+        setupState.mitmModules.any((module) => module.policies.isNotEmpty);
     final injected = await _resolveInjectedProviders(
       setupState,
       proxyGroups: proxyGroups,
@@ -638,9 +859,13 @@ class SetupAction extends _$SetupAction {
         defaultUA: defaultUA,
         authentication: networkSetting.authentication.credentials,
         exitTargets: setupState.exitTargets,
-        outboundNames: profileBase != null && hasCustomExit
-            ? await _outboundNamesOf(profileId, profileBase.base.digest)
-            : null,
+        outboundNames: switch ((profileId, profileBase)) {
+          (final id?, final base?) when hasCustomExit => await _outboundNamesOf(
+            id,
+            base.base.digest,
+          ),
+          _ => null,
+        },
         defaultExitTarget: profileBase == null
             ? null
             : lastMatchTarget(profileBase.base.matchRules),
@@ -734,11 +959,10 @@ class SetupAction extends _$SetupAction {
         setupState: setupState,
         patchConfig: patchClashConfig,
       );
-      final yamlContent = switch (res.base) {
+      return switch (res.base) {
         final base? => await _core.buildProfile(base),
         null => res.yaml,
       };
-      return unescapeYamlUnicode(yamlContent);
     } catch (e) {
       dialogs.showBanner(e.toString(), level: BannerLevel.error);
     }
@@ -762,15 +986,15 @@ class SetupAction extends _$SetupAction {
             authorized &&
             !ref.read(tunDisabledThisRunProvider),
       ),
-      externalController: patchConfig.secret.isEmpty
-          ? ExternalControllerStatus.close
-          : patchConfig.externalController,
+      externalController: effectiveControllerOf(patchConfig, safeMode: false),
     );
   }
 
-  /// The Core ignores the profile's `external-controller` and `secret` while
-  /// a host drives it and opens the controller from a patch only.
-  Future<void> _openController(PatchClashConfig config) async {
+  /// An apply carries the host settings; a resume that applies nothing sends
+  /// them too, for a Core that started from params saved before they did, and
+  /// the options, which hand the CA trust a native start checked back to the
+  /// app's own check.
+  Future<void> _patchHostSettings(PatchClashConfig config) async {
     try {
       await _core.updateConfig(
         ConfigPatch(
@@ -779,11 +1003,13 @@ class SetupAction extends _$SetupAction {
           externalControllerCors: controllerCorsOf(
             config.externalControllerCors,
           ),
+          hostCredential: ref.read(hostCredentialProvider),
+          options: coreOptionsArgOf(ref.read(coreOptionsProvider)),
         ),
       );
     } catch (error) {
       commonPrint.log(
-        'external controller: ${compactError(error)}',
+        'host settings: ${compactError(error)}',
         logLevel: coreFailureLogLevel(error),
       );
     }
@@ -854,13 +1080,41 @@ class SetupAction extends _$SetupAction {
     return fallback;
   }
 
+  bool _isSuperseded(int runToken, int? targetProfileId) {
+    if (_switchToken != runToken) {
+      return true;
+    }
+    if (targetProfileId != null &&
+        ref.read(currentProfileIdProvider) != targetProfileId) {
+      return true;
+    }
+    return false;
+  }
+
   Future<_SetupTaskResult> _setupConfig({
     bool force = false,
     bool silence = false,
     Future<void> Function()? preloadInvoke,
-    FutureOr Function()? onUpdated,
+    FutureOr<void> Function({
+      required bool Function() isCurrent,
+      required bool retryEmpty,
+    })?
+    onUpdated,
   }) async {
-    var profile = ref.read(currentProfileProvider) ?? recoverMissingProfile();
+    var profile = ref.read(currentProfileProvider);
+    if (profile == null) {
+      profile = recoverMissingProfile();
+      if (profile != null) {
+        _switchDebouncePending = false;
+        debouncer.cancel(FunctionTag.switchProfile);
+      }
+    }
+    final targetProfileId = profile?.id;
+    final runToken = _switchToken;
+    bool isSuperseded() =>
+        preloadInvoke == null && _isSuperseded(runToken, targetProfileId);
+    bool isCurrent() => !isSuperseded();
+
     // A refresh failure is surfaced by safeRun; setup keeps the old profile.
     final nextProfile = await globalState.safeRun(
       () => profile?.checkAndUpdateAndCopy(
@@ -870,6 +1124,9 @@ class SetupAction extends _$SetupAction {
     if (nextProfile != null) {
       profile = nextProfile;
       ref.read(profilesProvider.notifier).put(nextProfile);
+    }
+    if (isSuperseded()) {
+      return _SetupTaskResult.superseded;
     }
     commonPrint.log('setup ===> ${profile?.realLabel}');
     final patchConfig = ref.read(patchClashConfigProvider);
@@ -886,6 +1143,7 @@ class SetupAction extends _$SetupAction {
       setupState = state;
       return getProfile(setupState: state, patchConfig: realPatchConfig);
     }, title: 'build profile');
+    if (isSuperseded()) return _SetupTaskResult.superseded;
     final profileFailed = realProfile == null;
     final setupParams = _setupParams.copyWith(base: realProfile?.base);
     final inputs = switch (setupState) {
@@ -904,12 +1162,15 @@ class SetupAction extends _$SetupAction {
       globalState.lastConfigCounts = realProfile.counts;
       unawaited(preferences.saveAppliedConfigCounts(realProfile.counts));
       await preloadInvoke?.call();
+      await _loadConfigWarnings();
+      await _patchHostSettings(realPatchConfig);
       return _SetupTaskResult.completed;
     }
-    // Go answers a config it rejects by running its built-in default, which
+    // Concord answers a config it rejects by running its built-in default, which
     // has no proxies, so until this push succeeds no applied config is known.
     _appliedInputs = null;
     globalState.lastConfigMd5 = null;
+    globalState.lastConfigCounts = null;
     if (system.isAndroid) {
       await ref.read(vpnOptionsProvider.future);
       await preferences.saveShareState(ref.read(sharedStateProvider));
@@ -953,8 +1214,14 @@ class SetupAction extends _$SetupAction {
             }
             await _loadConfigWarnings();
             globalState.lastConfigCounts = configCountsOf(const {});
-            unawaited(preferences.saveAppliedConfigCounts(globalState.lastConfigCounts));
-            await globalState.safeRun(() => onUpdated?.call());
+            unawaited(
+              preferences.saveAppliedConfigCounts(globalState.lastConfigCounts),
+            );
+            if (!isSuperseded()) {
+              await globalState.safeRun(
+                () => onUpdated?.call(isCurrent: isCurrent, retryEmpty: false),
+              );
+            }
             throw MessageException(error.message);
           } finally {
             sync.applyEnded(appliedProfileId);
@@ -968,15 +1235,19 @@ class SetupAction extends _$SetupAction {
         }
         await _loadConfigWarnings();
         globalState.lastConfigMd5 = yamlMd5;
+        ref.invalidate(activeRulesProvider);
         globalState.lastConfigCounts =
             realProfile?.counts ?? configCountsOf(const {});
-        unawaited(preferences.saveAppliedConfigCounts(globalState.lastConfigCounts));
+        unawaited(
+          preferences.saveAppliedConfigCounts(globalState.lastConfigCounts),
+        );
         _appliedInputs = inputs;
-        await _openController(realPatchConfig);
         if (system.isAndroid) {
           await preferences.saveAppliedConfigMd5(yamlMd5);
         }
-        await onUpdated?.call();
+        if (!isSuperseded()) {
+          await onUpdated?.call(isCurrent: isCurrent, retryEmpty: true);
+        }
       },
       silence: true,
       tag: !silence ? LoadingTag.proxies : null,

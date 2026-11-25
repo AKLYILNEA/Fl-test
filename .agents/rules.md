@@ -396,6 +396,10 @@ the singleton calls `CoreController.resetInstance()` in `tearDown`. It also only
 when nothing has read it yet: that is a top-level `final`, bound to whichever instance existed at the first read, which
 in a shared isolate is another file's.
 
+MITM sources, tests and fixtures name only reserved hosts (`a.test`, `example.com`) and neutral samples written for the
+test, never a published third-party module or a real app's ad or tracking endpoint; `test/lint/mitm_fixtures_test.dart`
+enforces it, and a real host the product itself needs goes in `test/lint/mitm_fixture_hosts.txt` with its reason.
+
 ### Shared Test Isolate
 
 `tool/test.dart` imports many test files into one entrypoint, so process-wide state outlives the file that set it, and
@@ -421,6 +425,10 @@ a file alone so it cannot fail the run, and lists it; fix it where it reads the 
 Construct the Android lib handler with `CoreLib.scoped(fakeService)`. The `service` global is gated on `Platform.isAndroid`
 and is therefore null on every test host, so a `CoreLib()` built from it silently takes the null-service fallback on every
 path. `CoreLib.scoped` binds an explicit `Service` instead; reset the singleton with `CoreLib.resetInstance()` in `tearDown`.
+
+`RustLib.initMock` replaces the Rust bridge for the whole isolate, so follow it with `addTearDown(RustLib.dispose)`. A
+mock left behind makes the next `initEditorNative` throw that the bridge is initialized twice, and hands every later
+`EditorView` the mock's null `RopeBridge`.
 
 Three globals in `lib/common` reach real host state and carry a `@visibleForTesting` seam to stand in front of it:
 `AutoLaunch.entry`, `listNetworkInterfaces` and `LinkManager.uriLinkStream`. Replace the entry in particular — every

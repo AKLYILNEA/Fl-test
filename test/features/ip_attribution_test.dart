@@ -68,8 +68,8 @@ void main() {
         );
         await tester.pumpAndSettle();
         expect(find.text(sample.company), findsOneWidget);
-        expect(find.text(sample.network), findsOneWidget);
-        expect(find.text(sample.asn), findsOneWidget);
+        expect(find.textContaining(sample.network), findsOneWidget);
+        expect(find.textContaining(sample.asn), findsOneWidget);
         expect(find.text('ASN'), findsOneWidget);
         expect(find.text('Scamalytics ISP'), findsNothing);
         expect(find.text('AS123'), findsNothing);

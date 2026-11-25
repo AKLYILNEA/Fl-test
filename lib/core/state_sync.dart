@@ -35,6 +35,7 @@ class CoreStateSync {
   final _held = <StateChangedEvent>[];
   final _ownSelects = <String, int>{};
   final _selecting = <String, int>{};
+  final _heldPicks = <String, ({int seq, String proxy})>{};
   int _ownPatch = -1;
   int _patchWanted = 0;
   int _patchDone = 0;
@@ -42,6 +43,8 @@ class CoreStateSync {
   int? _profileId;
 
   void Function()? onApplied;
+
+  void Function(List<StateWrite> writes)? onHeldPicks;
 
   /// Picks reported meanwhile may belong to the config being replaced.
   bool get applying => _applying > 0;
@@ -55,6 +58,7 @@ class CoreStateSync {
     _held.clear();
     _ownSelects.clear();
     _selecting.clear();
+    _heldPicks.clear();
     _ownPatch = -1;
     _patchDone = _patchWanted;
     _profileId = null;
@@ -63,6 +67,7 @@ class CoreStateSync {
   int resync() {
     _seen = null;
     _held.clear();
+    _heldPicks.clear();
     return ++_generation;
   }
 
@@ -107,9 +112,16 @@ class CoreStateSync {
     if (event.origin == ChangeOrigin.host) {
       return const [];
     }
+    if (event.change case SelectedChange(
+      :final group,
+      :final proxy,
+    ) when _selecting.containsKey(group)) {
+      _heldPicks[group] = (seq: event.seq, proxy: proxy);
+      return const [];
+    }
     return switch (event.change) {
       SelectedChange(:final group, :final proxy)
-          when !applying && (_ownSelects[group] ?? -1) < event.seq =>
+          when _picks(group, event.seq) =>
         [SelectionWrite(group, proxy)],
       final GeneralChange change when _ownPatch < event.seq => [
         GeneralWrite(change),
@@ -122,6 +134,10 @@ class CoreStateSync {
     _selecting.update(group, (count) => count + 1, ifAbsent: () => 1);
   }
 
+  bool _picks(String group, int seq) =>
+      !applying && (_ownSelects[group] ?? -1) < seq;
+
+  /// Call after the app has put its own record of the pick back on failure.
   void selectEnded(String group, int? seq) {
     final count = (_selecting[group] ?? 1) - 1;
     if (count > 0) {
@@ -131,6 +147,15 @@ class CoreStateSync {
     }
     if (seq != null && seq > (_ownSelects[group] ?? -1)) {
       _ownSelects[group] = seq;
+    }
+    if (count > 0) {
+      return;
+    }
+    if (_heldPicks.remove(group) case (
+      seq: final heldSeq,
+      :final proxy,
+    ) when _picks(group, heldSeq)) {
+      onHeldPicks?.call([SelectionWrite(group, proxy)]);
     }
   }
 

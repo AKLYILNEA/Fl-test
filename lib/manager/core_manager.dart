@@ -10,6 +10,7 @@ import 'package:fl_clash/providers/app.dart';
 import 'package:fl_clash/providers/config.dart';
 import 'package:fl_clash/providers/core.dart';
 import 'package:fl_clash/providers/database.dart';
+import 'package:fl_clash/providers/mitm.dart';
 import 'package:fl_clash/providers/state.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -40,7 +41,6 @@ class _CoreContainerState extends ConsumerState<CoreManager>
 
   final _feeds = <String, StreamSubscription<Object?>>{};
   StreamSubscription<String>? _crashes;
-  bool _countersOpen = true;
   bool _away = false;
 
   bool get _pausesInBackground => widget.pausesInBackground ?? system.isAndroid;
@@ -56,9 +56,12 @@ class _CoreContainerState extends ConsumerState<CoreManager>
     // the previous one hides the error and looks like the switch was lost.
     ref.listenManual(currentProfileIdProvider, (prev, next) {
       if (prev == next) return;
-      runAfterFrame(() {
-        unawaited(ref.read(setupActionProvider.notifier).fullSetup());
-      });
+      ref.read(setupActionProvider.notifier).switchProfileDebounce();
+    });
+    ref.listenManual(currentPageLabelProvider, (prev, next) {
+      if (prev != next) {
+        ref.read(setupActionProvider.notifier).flushPendingProfileSwitch();
+      }
     });
     ref.listenManual(updateParamsProvider, (prev, next) {
       if (prev != next) {
@@ -109,6 +112,9 @@ class _CoreContainerState extends ConsumerState<CoreManager>
       } else if (next != CoreStatus.connected) {
         _closeFeeds();
       }
+      if (prev == CoreStatus.connected && next != CoreStatus.connected) {
+        ref.read(requestsProvider.notifier).closeAll();
+      }
     }, fireImmediately: true);
     ref.listenManual(trafficStatsStoreProvider, (prev, next) {
       if (next.hasValue && prev?.value != next.value) {
@@ -127,6 +133,9 @@ class _CoreContainerState extends ConsumerState<CoreManager>
       if (prev != next) {
         unawaited(_syncTrafficStats(screenOn: next));
       }
+    });
+    ref.listenManual(suspendProvider, (prev, next) {
+      if (prev != next) unawaited(_syncTrafficStats());
     });
   }
 
@@ -148,6 +157,7 @@ class _CoreContainerState extends ConsumerState<CoreManager>
             profile: profile,
             tzOffset: DateTime.now().timeZoneOffset.inMinutes,
             screenOn: screenOn ?? ref.read(appVisibleProvider),
+            suspended: ref.read(suspendProvider),
           );
     } catch (error) {
       commonPrint.log(
@@ -176,6 +186,8 @@ class _CoreContainerState extends ConsumerState<CoreManager>
     _closeFeeds();
     final api = _core.api;
     ref.read(connectionBookProvider).clear();
+    ref.read(requestsProvider.notifier).startOver();
+    ref.read(dnsQueriesProvider.notifier).startOver();
     _feed('dns', api.watchDns(), (entries) {
       ref
           .read(dnsQueriesProvider.notifier)
@@ -186,7 +198,8 @@ class _CoreContainerState extends ConsumerState<CoreManager>
     });
     _sync
       ..reset()
-      ..onApplied = _resyncState;
+      ..onApplied = _resyncState
+      ..onHeldPicks = _writeState;
     _feed('events', api.watchEvents(delays: true, state: true), (events) {
       events.forEach(_onEvent);
     });
@@ -199,21 +212,35 @@ class _CoreContainerState extends ConsumerState<CoreManager>
     _syncLogFeed();
   }
 
+  /// Kept for the session: a new watch's snapshot misses what closed meanwhile.
   void _openConnections() {
-    _countersOpen = _demand.wanted;
     _feed(
       'connections',
-      _core.api.watchConnections(maxBatchMs: 250, counters: _countersOpen),
+      _core.api.watchConnections(maxBatchMs: 250, counters: false),
       _onConnections,
     );
     if (_away) {
       _feeds['connections']?.pause();
     }
+    _syncConnectionCounters();
   }
 
   void _syncConnectionCounters() {
-    if (_feeds.containsKey('connections') && _demand.wanted != _countersOpen) {
-      _openConnections();
+    if (!_feeds.containsKey('connections') ||
+        _demand.wanted == _feeds.containsKey('counters')) {
+      return;
+    }
+    if (!_demand.wanted) {
+      unawaited(_feeds.remove('counters')?.cancel());
+      return;
+    }
+    _feed(
+      'counters',
+      _core.api.watchConnections(maxBatchMs: 250, counters: true),
+      _onCounters,
+    );
+    if (_away) {
+      _feeds['counters']?.pause();
     }
   }
 
@@ -227,10 +254,12 @@ class _CoreContainerState extends ConsumerState<CoreManager>
       return;
     }
     _away = away;
-    if (away) {
-      _feeds['connections']?.pause();
-    } else {
-      _feeds['connections']?.resume();
+    for (final name in const ['connections', 'counters']) {
+      if (away) {
+        _feeds[name]?.pause();
+      } else {
+        _feeds[name]?.resume();
+      }
     }
   }
 
@@ -276,6 +305,8 @@ class _CoreContainerState extends ConsumerState<CoreManager>
         ref
             .read(geoResourceActionProvider.notifier)
             .handleCoreUpdate(name, phase, error);
+      case ResourceUpdateEvent(kind: ResourceKind.mitmModule):
+        ref.invalidate(mitmModuleStatusProvider);
       case ResourceUpdateEvent(
         :final name,
         phase: ResourcePhase.updated || ResourcePhase.unchanged,
@@ -287,8 +318,8 @@ class _CoreContainerState extends ConsumerState<CoreManager>
         _writeState(_sync.take(event));
       case DialerLoopEvent(:final name):
         _onDialerLoop(name);
-      case FatalEvent(:final message):
-        _onCrash(message);
+      case final ScriptNotificationEvent notice:
+        _onScriptNotification(notice);
       case EventsResynced():
         unawaited(_onResynced());
         unawaited(_resyncState());
@@ -298,6 +329,7 @@ class _CoreContainerState extends ConsumerState<CoreManager>
   }
 
   Future<void> _onResynced() async {
+    ref.read(geoResourceActionProvider.notifier).forgetUpdates();
     ref.read(proxiesActionProvider.notifier).updateGroupsDebounce();
     await ref.read(providersProvider.notifier).syncProviders();
   }
@@ -355,6 +387,16 @@ class _CoreContainerState extends ConsumerState<CoreManager>
     if (change.counters.isNotEmpty) {
       requests.updateTraffic(change.counters);
     }
+    if (change.closed.isNotEmpty) {
+      requests.close(change.closed, ends: change.ended);
+    }
+  }
+
+  void _onCounters(ConnectionUpdate update) {
+    final counters = ref.read(connectionBookProvider).countersOf(update);
+    if (counters.isNotEmpty) {
+      ref.read(requestsProvider.notifier).updateTraffic(counters);
+    }
   }
 
   Future<void> _onLoaded(String providerName) async {
@@ -408,6 +450,25 @@ class _CoreContainerState extends ConsumerState<CoreManager>
     );
   }
 
+  void _onScriptNotification(ScriptNotificationEvent notice) {
+    if (notice.text.isEmpty ||
+        WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed) {
+      return;
+    }
+    final link = scriptNotificationLink(notice.url);
+    throttler.call(
+      FunctionTag.scriptNotification,
+      () => dialogs.showBanner(
+        currentAppLocalizations.scriptNotification(notice.script, notice.text),
+        onTap: link == null
+            ? null
+            : () => unawaited(dialogs.openUrl(link.toString())),
+      ),
+      duration: const Duration(seconds: 1),
+      fire: true,
+    );
+  }
+
   void _onCrash(String message) {
     if (ref.read(coreStatusProvider) != CoreStatus.connected) {
       return;
@@ -424,4 +485,13 @@ class _CoreContainerState extends ConsumerState<CoreManager>
   Widget build(BuildContext context) {
     return widget.child;
   }
+}
+
+Uri? scriptNotificationLink(String url) {
+  final link = Uri.tryParse(url);
+  return link != null &&
+          (link.isScheme('http') || link.isScheme('https')) &&
+          link.host.isNotEmpty
+      ? link
+      : null;
 }

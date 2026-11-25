@@ -237,10 +237,11 @@ class SpeedTestSettings {
     'server': server?.toJson(),
   };
   Map<String, Object?> toParams(String proxy, String id) => {
-    ...toJson(),
     'id': id,
-    'provider': 'speedtest',
     'proxy': proxy,
+    'protocol': protocol,
+    'duration': duration,
+    if (server case final value?) 'server': value.toJson(),
     'streams': multiThread ? 8 : 1,
   };
 }

@@ -1,4 +1,3 @@
-import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/core/core.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
@@ -62,10 +61,12 @@ void main() {
     globalState.container = container;
     container.listen(appSettingProvider, (_, _) {});
     final requests = container.read(requestsProvider.notifier);
-    requests.value = FixedList<TrackerInfo>(500);
-    requests.addRequests([_request(1, 'gamma.test', 10)]);
-    requests.addRequests([_request(2, 'alpha.test', 30)]);
-    requests.addRequests([_request(3, 'beta.test', 20)]);
+    requests.value = ConnectionLog(500);
+    requests.addRequests([
+      _request(1, 'gamma.test', 10),
+      _request(2, 'alpha.test', 30),
+      _request(3, 'beta.test', 20),
+    ]);
   });
 
   tearDown(() => container.dispose());
@@ -116,35 +117,81 @@ void main() {
     await teardown(tester);
   });
 
-  testWidgets('a column dragged wider in the card keeps its width', (
-    tester,
-  ) async {
-    await pumpRequestsTable(tester);
+  Finder ruleHead() => find.descendant(
+    of: find.byType(ConnectionsTableCard),
+    matching: find.text('Rule'),
+  );
 
-    final ruleHead = find.descendant(
-      of: find.byType(ConnectionsTableCard),
-      matching: find.text('Rule'),
-    );
-    final rule = tester.getTopLeft(ruleHead).dx;
-    final handles = find.byWidgetPredicate(
-      (widget) =>
-          widget is MouseRegion &&
-          widget.cursor == SystemMouseCursors.resizeColumn,
-    );
+  Finder resizeHandle() => find
+      .byWidgetPredicate(
+        (widget) =>
+            widget is MouseRegion &&
+            widget.cursor == SystemMouseCursors.resizeColumn,
+      )
+      .at(2);
+
+  Future<void> widenTarget(WidgetTester tester) async {
     await tester.drag(
-      handles.at(2),
+      resizeHandle(),
       const Offset(60, 0),
       kind: PointerDeviceKind.mouse,
     );
     await tester.pump();
+  }
 
-    expect(tester.getTopLeft(ruleHead).dx, greaterThan(rule + 30));
+  testWidgets('a column dragged wider in the card keeps its width', (
+    tester,
+  ) async {
+    await pumpRequestsTable(tester);
+    final rule = tester.getTopLeft(ruleHead()).dx;
+    await widenTarget(tester);
+
+    expect(tester.getTopLeft(ruleHead()).dx, greaterThan(rule + 30));
     expect(
       container
           .read(appSettingProvider)
           .tableColumnWidths['dashboard.requests'],
       contains('target'),
     );
+
+    await teardown(tester);
+  });
+
+  testWidgets('a double click on a column edge sets the card\'s columns back', (
+    tester,
+  ) async {
+    await pumpRequestsTable(tester);
+    final rule = tester.getTopLeft(ruleHead()).dx;
+    await widenTarget(tester);
+    expect(tester.getTopLeft(ruleHead()).dx, greaterThan(rule + 30));
+
+    await tester.tap(resizeHandle(), kind: PointerDeviceKind.mouse);
+    await tester.pump(const Duration(milliseconds: 50));
+    await tester.tap(resizeHandle(), kind: PointerDeviceKind.mouse);
+    await tester.pump(kDoubleTapTimeout);
+
+    expect(tester.getTopLeft(ruleHead()).dx, rule);
+    expect(
+      container.read(appSettingProvider).tableColumnWidths,
+      isNot(contains('dashboard.requests')),
+    );
+
+    await teardown(tester);
+  });
+
+  testWidgets('the card table opens with the widths saved for it', (
+    tester,
+  ) async {
+    await pumpRequestsTable(tester);
+    final rule = tester.getTopLeft(ruleHead()).dx;
+    await widenTarget(tester);
+    final widened = tester.getTopLeft(ruleHead()).dx;
+    await teardown(tester);
+
+    await pumpRequestsTable(tester);
+
+    expect(widened, greaterThan(rule + 30));
+    expect(tester.getTopLeft(ruleHead()).dx, widened);
 
     await teardown(tester);
   });

@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/common/mitm_body.dart';
 import 'package:fl_clash/common/mitm_export.dart';
-import 'package:fl_clash/common/mitm_module.dart';
+import 'package:fl_clash/common/mitm_module_file.dart';
 import 'package:fl_clash/features/mitm/module_editor.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/core.dart';
@@ -71,7 +71,7 @@ List<PopupMenuItem> mitmExchangeMenuItems(
     PopupMenuItem(
       glyph: AppGlyphs.link,
       label: appLocalizations.copyLink,
-      onPressed: () => _copy(url),
+      onPressed: () => dialogs.copy(url),
     ),
     PopupMenuItem(
       glyph: AppGlyphs.code,
@@ -150,11 +150,6 @@ List<PopupMenuItem> mitmExchangeMenuItems(
   ];
 }
 
-Future<void> _copy(String text) async {
-  await Clipboard.setData(ClipboardData(text: text));
-  dialogs.showBanner(currentAppLocalizations.copySuccess);
-}
-
 Future<bool> _warned(WidgetRef ref, String action) async {
   if (ref.read(mitmExportWarnedProvider)) {
     return true;
@@ -189,7 +184,7 @@ Future<void> _copyCurl(WidgetRef ref, MitmExchange exchange) async {
   }
   await globalState.safeRun(() async {
     final body = await _body(ref, exchange, false);
-    await _copy(await compute(_curl, (exchange, body)));
+    await dialogs.copy(await compute(_curl, (exchange, body)));
   }, title: currentAppLocalizations.copyAsCurl);
 }
 
@@ -207,7 +202,7 @@ Future<void> _copyRaw(
   }
   await globalState.safeRun(() async {
     final body = await _body(ref, exchange, response);
-    await _copy(await compute(format, (exchange, body)));
+    await dialogs.copy(await compute(format, (exchange, body)));
   }, title: title);
 }
 
@@ -221,7 +216,7 @@ Future<void> _copyResponseBody(WidgetRef ref, MitmExchange exchange) async {
     if (body == null) {
       return;
     }
-    await _copy(await compute(mitmBodyCopyText, body));
+    await dialogs.copy(await compute(mitmBodyCopyText, body));
   }, title: title);
 }
 

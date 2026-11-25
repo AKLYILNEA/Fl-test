@@ -8,6 +8,7 @@ import 'package:fl_clash/core/core.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/plugins/app.dart';
+import 'package:fl_clash/plugins/app_icon.dart';
 import 'package:fl_clash/providers/config.dart';
 import 'package:fl_clash/providers/core.dart';
 import 'package:flutter/services.dart';
@@ -20,7 +21,12 @@ part 'generated/app.g.dart';
 bool safeMode(Ref ref) => safeModeBuild;
 
 @Riverpod(keepAlive: true)
-App? packageIconSource(Ref ref) => app;
+AppIconSource? packageIconSource(Ref ref) => app ?? DesktopAppIconSource();
+
+/// The `user:password` this app's own requests present to the Core's proxy
+/// listeners; the Core never intercepts a request that carries it.
+@Riverpod(keepAlive: true)
+String hostCredential(Ref ref) => '';
 
 /// Android: su is there and granted FlClash's last request.
 @Riverpod(keepAlive: true)
@@ -29,15 +35,6 @@ Future<bool> rootAccess(Ref ref) async {
     return false;
   }
   return app!.hasRootAccess();
-}
-
-/// Android: an su binary is installed, whether or not it grants FlClash.
-@Riverpod(keepAlive: true)
-Future<bool> suInstalled(Ref ref) async {
-  if (!system.isAndroid || app == null) {
-    return false;
-  }
-  return app!.hasSu();
 }
 
 @Riverpod(keepAlive: true)
@@ -157,40 +154,56 @@ class Logs extends _$Logs with AutoDisposeNotifierMixin {
 @Riverpod(keepAlive: true)
 class Requests extends _$Requests with AutoDisposeNotifierMixin {
   @override
-  FixedList<TrackerInfo> build() {
-    return FixedList(maxRequestsLength);
+  ConnectionLog build() {
+    return ConnectionLog(maxRequestsLength);
   }
 
-  void addRequests(Iterable<TrackerInfo> values) {
+  void _apply(ConnectionLog Function(ConnectionLog log) change) {
     if (!ref.mounted) {
       return;
     }
-    value = state.appendAll(values);
+    value = change(state);
   }
 
-  void updateTraffic(Map<int, RequestTraffic> traffic) {
-    if (!ref.mounted) {
-      return;
+  void addRequests(Iterable<TrackerInfo> values) =>
+      _apply((log) => log.open(values));
+
+  void updateTraffic(Map<int, RequestTraffic> traffic) =>
+      _apply((log) => log.updateTraffic(traffic));
+
+  void close(
+    Iterable<int> ids, {
+    DateTime? at,
+    Map<int, ConnectionEnd> ends = const {},
+  }) => _apply((log) => log.close(ids, at ?? DateTime.now(), ends: ends));
+
+  void closeAll({DateTime? at}) =>
+      _apply((log) => log.closeAll(at ?? DateTime.now()));
+
+  void startOver() => _apply((log) => ConnectionLog(log.closedCapacity));
+
+  /// False, writing nothing, once a new log has replaced [lineage].
+  bool sync(
+    List<TrackerInfo> open, {
+    required DateTime requestedAt,
+    required Object lineage,
+  }) => _applyWithin(lineage, (log) => log.sync(open, requestedAt));
+
+  bool poll(
+    ConnectionPoll poll, {
+    required DateTime requestedAt,
+    required Object lineage,
+  }) => _applyWithin(lineage, (log) => log.poll(poll, requestedAt));
+
+  bool _applyWithin(
+    Object lineage,
+    ConnectionLog Function(ConnectionLog log) change,
+  ) {
+    if (!ref.mounted || !identical(state.lineage, lineage)) {
+      return false;
     }
-    final pending = Map.of(traffic);
-    final updated = <int, TrackerInfo>{};
-    for (
-      var index = state.length - 1;
-      index >= 0 && pending.isNotEmpty;
-      index--
-    ) {
-      final request = state[index];
-      final item = pending.remove(request.id);
-      if (item != null) {
-        updated[index] = request.copyWith(
-          upload: item.upload,
-          download: item.download,
-        );
-      }
-    }
-    if (updated.isNotEmpty) {
-      value = state.replace(updated);
-    }
+    value = change(state);
+    return true;
   }
 }
 
@@ -207,6 +220,28 @@ class DnsQueries extends _$DnsQueries with AutoDisposeNotifierMixin {
     }
     value = state.appendAll(values);
   }
+
+  void startOver() {
+    if (!ref.mounted) {
+      return;
+    }
+    value = FixedList(state.maxLength);
+  }
+}
+
+Duration? _noRetry(int retryCount, Object error) => null;
+
+/// The rules the Core routes by, each named as a request names its rule;
+/// listed again once a config is applied or the Core connects, never retried
+/// before that.
+@Riverpod(keepAlive: true, retry: _noRetry)
+Future<RuleTable> activeRules(Ref ref) {
+  ref.listen(coreStatusProvider, (previous, next) {
+    if (next == CoreStatus.connected && previous != CoreStatus.connected) {
+      ref.invalidateSelf();
+    }
+  });
+  return ref.read(coreHandlerProvider).api.getRules();
 }
 
 @Riverpod(keepAlive: true)
@@ -612,6 +647,21 @@ class _CoreStatus extends _$CoreStatus with AutoDisposeNotifierMixin {
   @override
   CoreStatus build() {
     return CoreStatus.disconnected;
+  }
+}
+
+/// How many Core sessions have ended; each session numbers its connections
+/// and requests from one again.
+@Riverpod(keepAlive: true)
+class EndedCoreSessions extends _$EndedCoreSessions {
+  @override
+  int build() {
+    ref.listen(coreStatusProvider, (previous, next) {
+      if (previous == CoreStatus.connected && next != CoreStatus.connected) {
+        state++;
+      }
+    });
+    return 0;
   }
 }
 

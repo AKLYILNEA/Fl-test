@@ -1,5 +1,11 @@
+import 'dart:async';
+
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
+import 'package:fl_clash/features/about/miuix_bg_effect.dart';
+import 'package:fl_clash/features/ip_quality/ip_lookup_view.dart';
+import 'package:fl_clash/features/speed_test/view.dart';
+import 'package:fl_clash/features/traffic_stats/view.dart';
 import 'package:fl_clash/l10n/l10n.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
@@ -8,10 +14,10 @@ import 'package:fl_clash/views/about.dart';
 import 'package:fl_clash/views/access.dart';
 import 'package:fl_clash/views/backup_and_restore.dart';
 import 'package:fl_clash/views/config/general.dart';
+import 'package:fl_clash/views/connection/requests.dart';
 import 'package:fl_clash/views/hotkey.dart';
 import 'package:fl_clash/widgets/widgets.dart';
-import 'package:fl_clash/features/speed_test/view.dart';
-import 'package:fl_clash/features/traffic_stats/view.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -33,7 +39,24 @@ class _ToolViewState extends ConsumerState<ToolsView> {
   @override
   void initState() {
     super.initState();
-    _controller = sheetScrollController(context);
+    _controller = sheetScrollController(
+      context,
+      initialScrollOffset:
+          context
+              .getInheritedWidgetOfExactType<PrimaryScrollController>()
+              ?.controller
+              ?.initialScrollOffset ??
+          0,
+    );
+    unawaited(_warmUpAboutShaders());
+  }
+
+  Future<void> _warmUpAboutShaders() async {
+    await SchedulerBinding.instance.endOfFrame;
+    await whenNothingAnimates();
+    if (mounted) {
+      await MiuixBgEffectController.warmUp();
+    }
   }
 
   @override
@@ -87,13 +110,18 @@ class _ToolViewState extends ConsumerState<ToolsView> {
         builder: (_, ref, _) {
           final state = ref.watch(moreToolsSelectorStateProvider);
           final navigation = state.navigationItems;
+          final dns = navigation.indexWhere(
+            (item) => item.label == PageLabel.dns,
+          );
           final resources = navigation.indexWhere(
             (item) => item.label == PageLabel.resources,
           );
           final logs = navigation.indexWhere(
             (item) => item.label == PageLabel.logs,
           );
-          final speedTestIndex = resources >= 0
+          final customToolsIndex = dns >= 0
+              ? dns
+              : resources >= 0
               ? resources
               : logs >= 0
               ? logs
@@ -101,11 +129,17 @@ class _ToolViewState extends ConsumerState<ToolsView> {
           return generateSection(
             items: [
               for (var index = 0; index <= navigation.length; index++) ...[
-                if (index == speedTestIndex) ...[
+                if (index == customToolsIndex) ...[
                   ListItem.open(
-                    leading: const GlyphIcon(AppGlyphs.speed),
-                    title: Text(context.appLocalizations.speedTest),
-                    widget: const SpeedTestView(),
+                    leading: const GlyphIcon(AppGlyphs.dns),
+                    title: Text(context.appLocalizations.dnsQueries),
+                    widget: const RequestsView(segment: RequestsSegment.dns),
+                    forceFull: true,
+                  ),
+                  ListItem.open(
+                    leading: const GlyphIcon(AppGlyphs.location),
+                    title: Text(context.appLocalizations.ipQuery),
+                    widget: const IpLookupView(),
                     forceFull: true,
                   ),
                   ListItem.open(
@@ -114,8 +148,14 @@ class _ToolViewState extends ConsumerState<ToolsView> {
                     widget: const TrafficStatsView(),
                     forceFull: true,
                   ),
+                  ListItem.open(
+                    leading: const GlyphIcon(AppGlyphs.speed),
+                    title: Text(context.appLocalizations.speedTest),
+                    widget: const SpeedTestView(),
+                    forceFull: true,
+                  ),
                 ],
-                if (index < navigation.length)
+                if (index < navigation.length && index != dns)
                   _buildNavigationMenuItem(navigation[index]),
               ],
             ],
@@ -130,15 +170,13 @@ class _ToolViewState extends ConsumerState<ToolsView> {
       body: Builder(
         builder: (context) => CustomScrollView(
           key: toolsStoreKey,
+          controller: _controller,
           slivers: [
             SliverPadding(
-              padding: EdgeInsets.only(
-                left: 16,
-                right: 16,
+              padding: context.listInsets.page(
                 top: context.sectionsTopPadding,
                 bottom: 20 + context.bottomInset,
               ),
-              // These few sections need real extents before restoring an offset.
               sliver: SliverToBoxAdapter(child: Column(children: items)),
             ),
           ],
@@ -253,7 +291,7 @@ class _AdvancedConfigItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListItem.open(
       leading: const GlyphIcon(AppGlyphs.wrench),
-      title: Text(context.appLocalizations.config),
+      title: Text(context.appLocalizations.advancedConfig),
       widget: const AdvancedConfigView(),
     );
   }

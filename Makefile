@@ -14,6 +14,8 @@ SHELL := /bin/bash
 
 CARGO := env -u all_proxy -u ALL_PROXY CARGO_INCREMENTAL=0 cargo
 CORE_MAX_BYTES ?= 30000000
+# concord/.agents/commands.md lists the same crates: the members that declare default features.
+CORE_FEATURE_CRATES := concord-common concord-engine concord-mitm
 KIND ?= rs
 
 PACKAGE := dart tool/package.dart
@@ -25,7 +27,7 @@ COMMENT_FILES = $(or $(FILES),$(shell git diff HEAD --name-only --diff-filter=d;
 	gen gen-watch l10n icons status-icons frb site \
 	fmt fmt-check analyze test coverage lint strip-check hooks-test comment-density plugins-check setup-hooks-test \
 	rust-check changelog-verify check \
-	core-build core-fmt core-check core-test core-sent-config core-gate core-schema \
+	core-customizations core-build core-fmt core-check core-test core-sent-config core-gate core-schema \
 	package package-android package-windows package-macos package-linux package-dry manifest \
 	run release-plan clean clean-core
 
@@ -40,7 +42,7 @@ help: ## List every target and variable
 
 setup: submodules pub-get ## Fetch submodules and Dart packages
 
-submodules: ## Update git submodules (Concord core, prism_ui)
+submodules: ## Update the Concord core submodule
 	git submodule update --init --recursive
 
 pub-get: ## flutter pub get
@@ -130,20 +132,28 @@ check: hooks-test pub-get fmt-check analyze coverage ## Run CI's dart job: hooks
 
 ##@ Concord
 
-core-build: ## Build the desktop Core in debug
+core-customizations: ## Apply the Concord customizations to the pinned submodule
+	git -C concord apply --reverse --check --ignore-whitespace "$(CURDIR)/patches/concord-customizations.patch" 2>/dev/null || \
+		git -C concord apply --ignore-whitespace "$(CURDIR)/patches/concord-customizations.patch"
+
+core-build: core-customizations ## Build the desktop Core in debug
 	cd concord && $(CARGO) build -p concord-desktop
 
-core-fmt: ## Format the Concord workspace
+core-fmt: core-customizations ## Format the Concord workspace
 	cd concord && $(CARGO) fmt
 
-core-check: ## cargo fmt --check, clippy, check-layers and schema --check
+core-check: core-customizations ## cargo fmt --check, clippy (also each crate without its default features), check-layers and schema --check
 	cd concord && $(CARGO) fmt --check
 	cd concord && $(CARGO) clippy --workspace --all-targets -- -D warnings
+	cd concord && for crate in $(CORE_FEATURE_CRATES); do \
+		$(CARGO) clippy -p $$crate --no-default-features --all-targets -- -D warnings || exit 1; done
 	cd concord && $(CARGO) xtask check-layers
 	cd concord && $(CARGO) xtask schema --check
 
-core-test: ## cargo test --workspace, with the app-tree contract tests required
+core-test: core-customizations ## cargo test --workspace, with the app-tree contract tests required, and each crate without its default features
 	cd concord && CONCORD_REQUIRE_APP_TREE=1 $(CARGO) test --workspace
+	cd concord && for crate in $(CORE_FEATURE_CRATES); do \
+		$(CARGO) test -p $$crate --no-default-features || exit 1; done
 
 core-sent-config: ## Load the config each platform sends with concord -t
 	env -u all_proxy dart tool/check_sent_config.dart
@@ -154,7 +164,7 @@ core-gate: core-check core-test core-sent-config ## The full Concord gate: also 
 	cd concord && $(CARGO) build --release -p concord-desktop
 	cd concord && $(CARGO) xtask check-size target/release/concord $(CORE_MAX_BYTES)
 
-core-schema: ## Rewrite concord/schema/ after an API or config change
+core-schema: core-customizations ## Rewrite concord/schema/ after an API or config change
 	cd concord && $(CARGO) xtask schema
 
 ##@ Package

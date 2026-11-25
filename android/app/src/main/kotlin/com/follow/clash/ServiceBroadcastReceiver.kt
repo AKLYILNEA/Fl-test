@@ -36,9 +36,7 @@ class ServiceBroadcastReceiver : BroadcastReceiver() {
         when (action) {
             BroadcastAction.VPN_START_REQUESTED.action -> ServiceState.handleStartAction()
 
-            BroadcastAction.VPN_REVOKED.action,
-            BroadcastAction.ROOT_TUN_LOST.action,
-            -> ServiceState.handleVpnRevokeAction()
+            BroadcastAction.VPN_REVOKED.action -> ServiceState.handleVpnRevokeAction()
         }
     }
 

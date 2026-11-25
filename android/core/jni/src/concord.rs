@@ -5,7 +5,7 @@ pub type Callback = unsafe extern "C" fn(context: *mut c_void);
 #[repr(C)]
 pub struct PlatformHost {
     pub context: *mut c_void,
-    pub protect: unsafe extern "C" fn(context: *mut c_void, fd: i32),
+    pub protect: unsafe extern "C" fn(context: *mut c_void, fd: i32) -> bool,
     pub resolve_uid: unsafe extern "C" fn(
         context: *mut c_void,
         protocol: i32,

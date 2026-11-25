@@ -53,8 +53,8 @@ String _$safeModeHash() => r'3ef07344f5a8dbf775ccf0a4861c0317ec8b2266';
 final packageIconSourceProvider = PackageIconSourceProvider._();
 
 final class PackageIconSourceProvider
-    extends $FunctionalProvider<App?, App?, App?>
-    with $Provider<App?> {
+    extends $FunctionalProvider<AppIconSource?, AppIconSource?, AppIconSource?>
+    with $Provider<AppIconSource?> {
   PackageIconSourceProvider._()
     : super(
         from: null,
@@ -71,24 +71,73 @@ final class PackageIconSourceProvider
 
   @$internal
   @override
-  $ProviderElement<App?> $createElement($ProviderPointer pointer) =>
+  $ProviderElement<AppIconSource?> $createElement($ProviderPointer pointer) =>
       $ProviderElement(pointer);
 
   @override
-  App? create(Ref ref) {
+  AppIconSource? create(Ref ref) {
     return packageIconSource(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(App? value) {
+  Override overrideWithValue(AppIconSource? value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<App?>(value),
+      providerOverride: $SyncValueProvider<AppIconSource?>(value),
     );
   }
 }
 
-String _$packageIconSourceHash() => r'b9b233f207f9dce3809537c3458e7a70192dd52d';
+String _$packageIconSourceHash() => r'382b2ece75e0827f4f89f37861cc228cb7f5936c';
+
+/// The `user:password` this app's own requests present to the Core's proxy
+/// listeners; the Core never intercepts a request that carries it.
+
+@ProviderFor(hostCredential)
+final hostCredentialProvider = HostCredentialProvider._();
+
+/// The `user:password` this app's own requests present to the Core's proxy
+/// listeners; the Core never intercepts a request that carries it.
+
+final class HostCredentialProvider
+    extends $FunctionalProvider<String, String, String>
+    with $Provider<String> {
+  /// The `user:password` this app's own requests present to the Core's proxy
+  /// listeners; the Core never intercepts a request that carries it.
+  HostCredentialProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'hostCredentialProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$hostCredentialHash();
+
+  @$internal
+  @override
+  $ProviderElement<String> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  String create(Ref ref) {
+    return hostCredential(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(String value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<String>(value),
+    );
+  }
+}
+
+String _$hostCredentialHash() => r'0d794c42d6a603928abcdbe2bb6ca5faba9bde78';
 
 /// Android: su is there and granted FlClash's last request.
 
@@ -127,44 +176,6 @@ final class RootAccessProvider
 }
 
 String _$rootAccessHash() => r'59f43852dbede9ebe3301b885d63cd0a3961126d';
-
-/// Android: an su binary is installed, whether or not it grants FlClash.
-
-@ProviderFor(suInstalled)
-final suInstalledProvider = SuInstalledProvider._();
-
-/// Android: an su binary is installed, whether or not it grants FlClash.
-
-final class SuInstalledProvider
-    extends $FunctionalProvider<AsyncValue<bool>, bool, FutureOr<bool>>
-    with $FutureModifier<bool>, $FutureProvider<bool> {
-  /// Android: an su binary is installed, whether or not it grants FlClash.
-  SuInstalledProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'suInstalledProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$suInstalledHash();
-
-  @$internal
-  @override
-  $FutureProviderElement<bool> $createElement($ProviderPointer pointer) =>
-      $FutureProviderElement(pointer);
-
-  @override
-  FutureOr<bool> create(Ref ref) {
-    return suInstalled(ref);
-  }
-}
-
-String _$suInstalledHash() => r'fc80f277bdf74e629f164e8a9e23ab0ceb1bcd49';
 
 @ProviderFor(AuthorizedTunEnable)
 final authorizedTunEnableProvider = AuthorizedTunEnableProvider._();
@@ -650,7 +661,7 @@ abstract class _$Logs extends $Notifier<FixedList<Log>> {
 final requestsProvider = RequestsProvider._();
 
 final class RequestsProvider
-    extends $NotifierProvider<Requests, FixedList<TrackerInfo>> {
+    extends $NotifierProvider<Requests, ConnectionLog> {
   RequestsProvider._()
     : super(
         from: null,
@@ -670,28 +681,27 @@ final class RequestsProvider
   Requests create() => Requests();
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(FixedList<TrackerInfo> value) {
+  Override overrideWithValue(ConnectionLog value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<FixedList<TrackerInfo>>(value),
+      providerOverride: $SyncValueProvider<ConnectionLog>(value),
     );
   }
 }
 
-String _$requestsHash() => r'ed2ef77771baef02dc9e4ead91b9a28b50f7e5d5';
+String _$requestsHash() => r'3fdee2b426d70b46b1c93dee2061d61c504170ce';
 
-abstract class _$Requests extends $Notifier<FixedList<TrackerInfo>> {
-  FixedList<TrackerInfo> build();
+abstract class _$Requests extends $Notifier<ConnectionLog> {
+  ConnectionLog build();
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
-    final ref =
-        this.ref as $Ref<FixedList<TrackerInfo>, FixedList<TrackerInfo>>;
+    final ref = this.ref as $Ref<ConnectionLog, ConnectionLog>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<FixedList<TrackerInfo>, FixedList<TrackerInfo>>,
-              FixedList<TrackerInfo>,
+              AnyNotifier<ConnectionLog, ConnectionLog>,
+              ConnectionLog,
               Object?,
               Object?
             >;
@@ -731,7 +741,7 @@ final class DnsQueriesProvider
   }
 }
 
-String _$dnsQueriesHash() => r'9281a2f1772916403823d5dc13f742e26ddbd2ae';
+String _$dnsQueriesHash() => r'c8f5c67d9ffa9a1016726209da8ebbea4f4f1f70';
 
 abstract class _$DnsQueries extends $Notifier<FixedList<DnsQuery>> {
   FixedList<DnsQuery> build();
@@ -750,6 +760,55 @@ abstract class _$DnsQueries extends $Notifier<FixedList<DnsQuery>> {
     return element.handleCreate(ref, build);
   }
 }
+
+/// The rules the Core routes by, each named as a request names its rule;
+/// listed again once a config is applied or the Core connects, never retried
+/// before that.
+
+@ProviderFor(activeRules)
+final activeRulesProvider = ActiveRulesProvider._();
+
+/// The rules the Core routes by, each named as a request names its rule;
+/// listed again once a config is applied or the Core connects, never retried
+/// before that.
+
+final class ActiveRulesProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<RuleTable>,
+          RuleTable,
+          FutureOr<RuleTable>
+        >
+    with $FutureModifier<RuleTable>, $FutureProvider<RuleTable> {
+  /// The rules the Core routes by, each named as a request names its rule;
+  /// listed again once a config is applied or the Core connects, never retried
+  /// before that.
+  ActiveRulesProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: _noRetry,
+        name: r'activeRulesProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$activeRulesHash();
+
+  @$internal
+  @override
+  $FutureProviderElement<RuleTable> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<RuleTable> create(Ref ref) {
+    return activeRules(ref);
+  }
+}
+
+String _$activeRulesHash() => r'7ba36fee8b7aeb4507e63f09b39f97dd60743e5a';
 
 @ProviderFor(DnsQueryCount)
 final dnsQueryCountProvider = DnsQueryCountProvider._();
@@ -2300,6 +2359,68 @@ abstract class _$CoreStatus extends $Notifier<CoreStatus> {
             as $ClassProviderElement<
               AnyNotifier<CoreStatus, CoreStatus>,
               CoreStatus,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
+
+/// How many Core sessions have ended; each session numbers its connections
+/// and requests from one again.
+
+@ProviderFor(EndedCoreSessions)
+final endedCoreSessionsProvider = EndedCoreSessionsProvider._();
+
+/// How many Core sessions have ended; each session numbers its connections
+/// and requests from one again.
+final class EndedCoreSessionsProvider
+    extends $NotifierProvider<EndedCoreSessions, int> {
+  /// How many Core sessions have ended; each session numbers its connections
+  /// and requests from one again.
+  EndedCoreSessionsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'endedCoreSessionsProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$endedCoreSessionsHash();
+
+  @$internal
+  @override
+  EndedCoreSessions create() => EndedCoreSessions();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(int value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<int>(value),
+    );
+  }
+}
+
+String _$endedCoreSessionsHash() => r'9ed0ed2637ff67eb6bd048482c2dc6b4c91256f7';
+
+/// How many Core sessions have ended; each session numbers its connections
+/// and requests from one again.
+
+abstract class _$EndedCoreSessions extends $Notifier<int> {
+  int build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<int, int>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<int, int>,
+              int,
               Object?,
               Object?
             >;

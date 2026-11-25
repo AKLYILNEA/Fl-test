@@ -158,11 +158,6 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Future<void> openCapture(WidgetTester tester) async {
-    await tester.tap(find.text(currentAppLocalizations.httpCapture));
-    await tester.pumpAndSettle();
-  }
-
   Future<void> toggleEnable(WidgetTester tester) async {
     await tester.tap(
       find.descendant(
@@ -175,32 +170,6 @@ void main() {
     );
     await tester.pumpAndSettle();
   }
-
-  testWidgets('capture says when no listed host leaves it nothing to record', (
-    tester,
-  ) async {
-    await pumpView(
-      tester,
-      mitm: const Mitm(enable: true, capture: true, hostname: ['-a.example']),
-    );
-    await openCapture(tester);
-    expect(
-      find.text(currentAppLocalizations.httpCaptureNoHosts),
-      findsOneWidget,
-    );
-  });
-
-  testWidgets('capture keeps its description once a host is listed', (
-    tester,
-  ) async {
-    await pumpView(
-      tester,
-      mitm: const Mitm(enable: true, capture: true, hostname: ['a.example']),
-    );
-    await openCapture(tester);
-    expect(find.text(currentAppLocalizations.httpCaptureNoHosts), findsNothing);
-    expect(find.text(currentAppLocalizations.httpCaptureDesc), findsOneWidget);
-  });
 
   testWidgets('offers a certificate until one is generated', (tester) async {
     await pumpView(tester);
@@ -327,54 +296,8 @@ void main() {
     await tester.tap(find.text(currentAppLocalizations.options));
     await tester.pumpAndSettle();
 
-    expect(find.text(currentAppLocalizations.httpCapture), findsOneWidget);
+    expect(find.text(currentAppLocalizations.httpCapture), findsNothing);
     expect(find.text(_certificate.subject), findsOneWidget);
-  });
-
-  Finder captureSwitch() => find.descendant(
-    of: find.widgetWithText(ListItem, currentAppLocalizations.httpCapture),
-    matching: find.byType(Switch),
-  );
-
-  testWidgets('capture waits for decryption to be on', (tester) async {
-    await pumpView(tester, certificate: _certificate);
-
-    expect(find.text(currentAppLocalizations.options), findsOneWidget);
-    await openCapture(tester);
-    expect(tester.widget<Switch>(captureSwitch()).onChanged, isNull);
-  });
-
-  testWidgets('capture is saved with the MITM settings', (tester) async {
-    await pumpView(
-      tester,
-      certificate: _certificate,
-      mitm: const Mitm(enable: true),
-    );
-
-    await openCapture(tester);
-    await tester.tap(captureSwitch());
-    await tester.pumpAndSettle();
-
-    expect(saved().capture, isTrue);
-  });
-
-  testWidgets('capture limit shows the platform default until one is picked', (
-    tester,
-  ) async {
-    await pumpView(
-      tester,
-      certificate: _certificate,
-      mitm: const Mitm(enable: true),
-    );
-
-    await openCapture(tester);
-    await tester.tap(find.text('2000'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('5000'));
-    await tester.pumpAndSettle();
-
-    expect(saved().captureEntries, 5000);
-    expect(find.text('5000'), findsOneWidget);
   });
 
   group('the certificate row', () {
@@ -723,7 +646,7 @@ void main() {
   ) async {
     await pumpView(
       tester,
-      mitm: const Mitm(hostname: ['a.com', 'bad host']),
+      mitm: const Mitm(hostname: ['a.test', 'bad host']),
       view: const AdvancedConfigView(),
     );
 
@@ -753,7 +676,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextFormField), 'a.com, b.com');
+    await tester.enterText(find.byType(TextFormField), 'a.test, b.test');
     await tester.tap(button(currentAppLocalizations.confirm));
     await tester.pumpAndSettle();
 

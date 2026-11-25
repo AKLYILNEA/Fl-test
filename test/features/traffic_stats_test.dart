@@ -268,7 +268,20 @@ void main() {
               closeTo(tester.getBottomLeft(direct).dy, .01),
             );
             final l = context.appLocalizations;
-            expect(find.text(l.trafficStatsRunningTime), findsOneWidget);
+            final title = find.descendant(
+              of: tile,
+              matching: find.text(l.trafficStatsRunningTime),
+            );
+            final clock = find.descendant(
+              of: tile,
+              matching: find.byWidgetPredicate(
+                (w) => w is GlyphIcon && w.glyph == AppGlyphs.clock,
+              ),
+            );
+            expect(
+              tester.widget<Text>(title).style!.color,
+              tester.widget<GlyphIcon>(clock).color,
+            );
             expect(
               find.text(
                 '8 ${l.trafficStatsHourUnit} 36 ${l.trafficStatsMinuteUnit}',
@@ -730,7 +743,7 @@ void main() {
       final overviewRing = tester.widget<RingChart>(
         find.descendant(of: overview, matching: find.byType(RingChart)),
       );
-      expect(overviewRing.trackColor, DashboardColors.of(overviewCtx).track);
+      expect(overviewRing.trackColor, DashboardColors.of(overviewCtx).tone2);
       expect(overviewRing.size, lessThanOrEqualTo(86));
       final overviewDividerFinder = find.descendant(
         of: overview,

@@ -87,9 +87,9 @@ unsafe extern "C" fn release_receiver(context: *mut c_void) {
     drop(unsafe { Box::from_raw(context.cast::<ReceiverRef>()) });
 }
 
-unsafe extern "C" fn protect(context: *mut c_void, fd: i32) {
+unsafe extern "C" fn protect(context: *mut c_void, fd: i32) -> bool {
     let host = unsafe { borrowed::<HostRef>(context) };
-    attached("protect", |env| host.protect(env, fd));
+    attached("protect", |env| host.protect(env, fd)).unwrap_or(false)
 }
 
 unsafe extern "C" fn resolve_uid(

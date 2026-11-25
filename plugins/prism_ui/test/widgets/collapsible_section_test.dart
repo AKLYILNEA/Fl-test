@@ -1,8 +1,10 @@
+import 'package:prism_ui/icons/icons.dart';
 import 'package:prism_ui/prism_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import '../helpers/glyph_finders.dart';
 import '../helpers/test_app.dart';
 
 void main() {
@@ -45,15 +47,29 @@ void main() {
 
   testWidgets('shows its count and folds away from its header', (tester) async {
     await pumpSection(tester, 3);
-    expect(find.text('Nodes (3)'), findsOneWidget);
+    expect(find.text('Nodes 3'), findsOneWidget);
 
-    await tester.tap(find.text('Nodes (3)'));
+    await tester.tap(find.text('Nodes 3'));
     await tester.pumpAndSettle();
     expect(find.text('n0'), findsNothing);
 
-    await tester.tap(find.text('Nodes (3)'));
+    await tester.tap(find.text('Nodes 3'));
     await tester.pumpAndSettle();
     expect(opacityOf(tester, 'n0'), 1);
+  });
+
+  testWidgets('a header that does not fold has no chevron', (tester) async {
+    await tester.pumpWidget(
+      const TestApp(
+        child: CollapsibleHeader(
+          label: '15:41',
+          count: 2,
+          unfold: kAlwaysCompleteAnimation,
+        ),
+      ),
+    );
+    expect(find.text('15:41 2'), findsOneWidget);
+    expect(find.byGlyph(Glyphs.chevronDown), findsNothing);
   });
 
   testWidgets('a keyboard reaches the header and folds the section', (
@@ -98,7 +114,7 @@ void main() {
       ),
     );
 
-    expect(find.text('Nodes (1)'), findsOneWidget);
+    expect(find.text('Nodes 1'), findsOneWidget);
     expect(find.text('n0'), findsNothing);
   });
 
@@ -107,9 +123,9 @@ void main() {
     await pumpSection(tester, 40);
     final top = tester.getTopLeft(find.text('n6')).dy;
 
-    await tester.tap(find.text('Nodes (40)'));
+    await tester.tap(find.text('Nodes 40'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Nodes (40)'));
+    await tester.tap(find.text('Nodes 40'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 60));
     expect(tester.getTopLeft(find.text('n6')).dy, lessThan(top));
@@ -133,9 +149,9 @@ void main() {
     expect(find.text('n0'), findsOneWidget);
     expect(find.text('n100'), findsNothing);
 
-    await tester.tap(find.text('Nodes (1000)'));
+    await tester.tap(find.text('Nodes 1000'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Nodes (1000)'));
+    await tester.tap(find.text('Nodes 1000'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 60));
     expect(find.text('n0'), findsOneWidget);
@@ -169,11 +185,11 @@ void main() {
     );
 
     await pumpGroups(['a', 'b']);
-    expect(find.text('a (2)'), findsOneWidget);
+    expect(find.text('a 2'), findsOneWidget);
     expect(find.text('b total'), findsOneWidget);
     expect(find.text('a0'), findsNothing);
 
-    await tester.tap(find.text('b (2)'));
+    await tester.tap(find.text('b 2'));
     await tester.pumpAndSettle();
     expect(find.text('b0'), findsOneWidget);
     expect(find.text('a0'), findsNothing);
@@ -183,8 +199,8 @@ void main() {
     expect(find.text('b1'), findsOneWidget);
     expect(find.text('c0'), findsNothing);
     expect(
-      tester.getTopLeft(find.text('b (2)')).dy,
-      greaterThan(tester.getTopLeft(find.text('c (2)')).dy),
+      tester.getTopLeft(find.text('b 2')).dy,
+      greaterThan(tester.getTopLeft(find.text('c 2')).dy),
     );
   });
 
@@ -216,10 +232,10 @@ void main() {
         ),
       ),
     );
-    expect(find.text('g0 (1000)'), findsOneWidget);
-    expect(find.text('g100 (1000)'), findsNothing);
+    expect(find.text('g0 1000'), findsOneWidget);
+    expect(find.text('g100 1000'), findsNothing);
 
-    await tester.tap(find.text('g0 (1000)'));
+    await tester.tap(find.text('g0 1000'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 60));
     expect(find.text('g0-0'), findsOneWidget);
@@ -228,8 +244,94 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('g0-0'), findsOneWidget);
     expect(find.text('g0-100'), findsNothing);
-    expect(find.text('g1 (1000)'), findsNothing);
+    expect(find.text('g1 1000'), findsNothing);
+  });
+
+  group('a header\'s leading', () {
+    tearDown(() => _LateIcon.shown.value = false);
+
+    Future<void> pumpHeaders(
+      WidgetTester tester, {
+      TextDirection textDirection = TextDirection.ltr,
+    }) async {
+      tester.view.physicalSize = const Size(400, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        TestApp(
+          child: Directionality(
+            textDirection: textDirection,
+            child: Surface(
+              child: CustomScrollView(
+                slivers: [
+                  SliverCollapsibleGroups(
+                    groups: [
+                      const CollapsibleGroup(
+                        key: 'a',
+                        label: 'a',
+                        itemCount: 1,
+                      ),
+                      const CollapsibleGroup(
+                        key: 'b',
+                        label: 'b',
+                        itemCount: 1,
+                        leading: _LateIcon(),
+                      ),
+                    ],
+                    itemBuilder: (_, _, _) => const SizedBox(height: 40),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    testWidgets('takes no gap until it shows something, then takes one '
+        'without rebuilding its header', (tester) async {
+      await pumpHeaders(tester);
+      final bare = tester.getTopLeft(find.text('a 1')).dx;
+      expect(tester.getTopLeft(find.text('b 1')).dx, bare);
+
+      final headers = <Element>[];
+      debugOnRebuildDirtyWidget = (element, _) {
+        if (element.widget is CollapsibleHeader) {
+          headers.add(element);
+        }
+      };
+      addTearDown(() => debugOnRebuildDirtyWidget = null);
+      _LateIcon.shown.value = true;
+      await tester.pump();
+      expect(headers, isEmpty);
+      expect(tester.getTopLeft(find.text('b 1')).dx, bare + 24 + 8);
+      expect(tester.getTopLeft(find.byKey(_LateIcon.iconKey)).dx, bare);
+    });
+
+    testWidgets('sits at the start of a right-to-left header', (tester) async {
+      _LateIcon.shown.value = true;
+      await pumpHeaders(tester, textDirection: TextDirection.rtl);
+      final bare = tester.getTopRight(find.text('a 1')).dx;
+      expect(tester.getTopRight(find.text('b 1')).dx, bare - 24 - 8);
+      expect(tester.getTopRight(find.byKey(_LateIcon.iconKey)).dx, bare);
+    });
   });
 }
 
 Widget _firstEntry(BuildContext context, int index) => const Text('n0');
+
+class _LateIcon extends StatelessWidget {
+  static final shown = ValueNotifier(false);
+  static const iconKey = ValueKey('icon');
+
+  const _LateIcon();
+
+  @override
+  Widget build(BuildContext context) => ValueListenableBuilder(
+    valueListenable: shown,
+    builder: (_, shown, _) => shown
+        ? const SizedBox(key: iconKey, width: 24, height: 24)
+        : const SizedBox.shrink(),
+  );
+}

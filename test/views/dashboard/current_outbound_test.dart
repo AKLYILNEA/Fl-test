@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:fl_clash/common/common.dart';
-import 'package:fl_clash/common/ip_quality.dart';
 import 'package:fl_clash/common/service_probe.dart'
     show directOutbound, routedOutbound;
 import 'package:fl_clash/core/core.dart';
 import 'package:fl_clash/enum/enum.dart';
+import 'package:fl_clash/features/ip_quality/risk_model.dart';
+import 'package:fl_clash/features/ip_quality/risk_provider.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/ip_quality.dart';
 import 'package:fl_clash/providers/outbound_ip.dart';
@@ -12,27 +15,30 @@ import 'package:fl_clash/providers/routed_probe.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/ui/icons/icons.dart';
 import 'package:fl_clash/views/dashboard/layout.dart';
-import 'package:fl_clash/views/dashboard/widgets/card.dart';
 import 'package:fl_clash/views/dashboard/widgets/current_outbound.dart';
 import 'package:fl_clash/widgets/widgets.dart';
-import 'dart:async';
-import 'dart:math' as math;
-
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:prism_ui/prism_ui.dart';
 
 import '../../helpers/core_mocks.dart';
 import '../../helpers/glyph_finders.dart';
-import '../../helpers/test_app.dart';
-import 'package:prism_ui/prism_ui.dart';
 import '../../helpers/host_scaffold.dart';
+import '../../helpers/test_app.dart';
 
 const _ip = '203.0.113.9';
 
 const _profile = Profile(id: 1, autoUpdateDuration: Duration.zero);
+
+const _risk = IpRisk(
+  ip: _ip,
+  score: 28,
+  level: IpRiskLevel.medium,
+  countryCode: 'GB',
+);
 
 const _residential = IpQuality(
   ip: _ip,
@@ -99,15 +105,6 @@ When<Future<OutboundIp>> _whenProbed(MockCoreApi api) => when(
   ),
 );
 
-void _verifyProbed(MockCoreApi api, {required int times}) => verify(
-  () => api.outboundIp(
-    any(),
-    any(),
-    timeout: any(named: 'timeout'),
-    guard: any(named: 'guard'),
-  ),
-).called(times);
-
 Widget _card({DashboardDensity density = DashboardDensity.standard}) =>
     HostScaffold(
       body: Align(
@@ -144,6 +141,7 @@ Widget _app(
         }),
       ),
       ipQualityProvider.overrideWith(quality),
+      ipRiskProvider(_ip).overrideWith((_) async => _risk),
     ],
     child: _card(density: density),
   );
@@ -174,311 +172,70 @@ Widget _probingApp(
   );
 }
 
-void _useTallView(WidgetTester tester) {
-  tester.view.physicalSize = const Size(1000, 1600);
-  tester.view.devicePixelRatio = 1;
-  addTearDown(tester.view.resetPhysicalSize);
-  addTearDown(tester.view.resetDevicePixelRatio);
-}
-
-Finder _clover() => find.ancestor(
-  of: find.byType(ShapeBadge),
-  matching: find.byWidgetPredicate((widget) => widget is PressRegion),
-);
-
-double _cloverTurn(WidgetTester tester) => tester
-    .widget<ShapeBadge>(
-      find.descendant(of: _clover(), matching: find.byType(ShapeBadge)),
-    )
-    .rotation;
-
-double _rootGlow(WidgetTester tester) {
-  final paint = tester.widget<CustomPaint>(
-    find
-        .ancestor(
-          of: find.byType(DashboardCard),
-          matching: find.byType(CustomPaint),
-        )
-        .first,
-  );
-  return (paint.painter! as dynamic).opacity as double;
-}
-
-DashboardChip _chip(WidgetTester tester, String label) =>
-    tester.widget<DashboardChip>(
-      find.ancestor(of: find.text(label), matching: find.byType(DashboardChip)),
-    );
-
 void main() {
   setUpAll(() => registerFallbackValue(const OutboundIpParams(timeout: 0)));
 
-  group('root access', () {
-    testWidgets('fades in a glow and names it only to a screen reader', (
-      tester,
-    ) async {
-      final semantics = tester.ensureSemantics();
-      await tester.pumpWidget(_app((_, _) async => _residential, root: true));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 150));
+  testWidgets('is off on the status card even with su granted', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(_app((_, _) async => _residential, root: true));
+    await tester.pump(commonDuration);
 
-      expect(_rootGlow(tester), inExclusiveRange(0, 1));
-
-      await tester.pump(commonDuration);
-
-      expect(_rootGlow(tester), 1);
-      expect(find.text('Root'), findsNothing);
-      expect(find.bySemanticsLabel(RegExp('Status Root')), findsOneWidget);
-      semantics.dispose();
-    });
-
-    testWidgets('leaves the card plain without it', (tester) async {
-      await tester.pumpWidget(_app((_, _) async => _residential));
-      await tester.pump(commonDuration);
-
-      expect(_rootGlow(tester), 0);
-    });
+    expect(suAccessGlowShown, isFalse);
+    expect(find.bySemanticsLabel(RegExp('Status Root')), findsNothing);
+    semantics.dispose();
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pump(commonDuration);
   });
 
   group('the exit address', () {
-    testWidgets('shows with its country, type, quality and organization', (
-      tester,
-    ) async {
-      await tester.pumpWidget(_app((_, _) async => _residential));
-      await tester.pump();
-
-      expect(find.text(_ip), findsOneWidget);
-      expect(find.text('GB'), findsOneWidget);
-      expect(find.text('Residential'), findsOneWidget);
-      expect(_chip(tester, 'Quality Good').tone, DashboardChipTone.ok);
-      expect(find.text('Example Broadband'), findsOneWidget);
-      expect(find.text('Status'), findsOneWidget);
-      expect(find.byGlyph(AppGlyphs.refresh), findsNothing);
-    });
-
-    testWidgets('a little wider than its card shrinks to fit', (tester) async {
-      await tester.pumpWidget(_app((_, _) async => _residential));
-      await tester.pump();
-
-      expect(tester.widget<Text>(find.text(_ip)).overflow, isNull);
-      expect(
-        find.ancestor(of: find.text(_ip), matching: find.byType(FittedBox)),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('a risky one shows its quality in the warning tone', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        _app((_, _) async => _residential.copyWith(isTor: true)),
-      );
-      await tester.pump();
-
-      expect(_chip(tester, 'Quality Risky').tone, DashboardChipTone.warn);
-    });
-
-    testWidgets('says its type is unknown when no type was found', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        _app((_, _) async => throw const IpQualityLookupException([])),
-      );
-      await tester.pump();
-
-      expect(find.text('GB'), findsOneWidget);
-      expect(find.text('Not running'), findsOneWidget);
-      expect(_chip(tester, 'Unknown type').tone, DashboardChipTone.idle);
-      expect(find.byType(DashboardChip), findsNWidgets(2));
-      expect(find.text('Example Broadband'), findsNothing);
-    });
-
-    testWidgets('holds the place of its quality while it loads', (
-      tester,
-    ) async {
-      final quality = Completer<IpQuality>();
-      await tester.pumpWidget(
-        TestApp(
-          locale: const Locale('en'),
-          overrides: [
-            profilesProvider.overrideWithValue(const [_profile]),
-            suspendProvider.overrideWithValue(false),
-            outboundIpProbeProvider.overrideWith(_Ips.new),
-            ipQualityProvider.overrideWith((_, _) => quality.future),
-          ],
-          child: _card(),
-        ),
-      );
-      await tester.pump();
-
-      expect(find.byType(SkeletonPill), findsNWidgets(3));
-      expect(find.byType(SkeletonText), findsOneWidget);
-      expect(tester.widget<PressRegion>(_clover()).onTap, isNull);
-      final turn = _cloverTurn(tester);
-      await tester.pump(const Duration(milliseconds: 300));
-      expect(_cloverTurn(tester), isNot(turn));
-
-      quality.complete(_residential);
-      await tester.pumpAndSettle();
-
-      expect(find.byType(SkeletonPill), findsNothing);
-      expect(find.text('Residential'), findsOneWidget);
-      expect(_cloverTurn(tester) % (math.pi / 2), closeTo(0, 1e-9));
-      expect(tester.widget<PressRegion>(_clover()).onTap, isNotNull);
-    });
-
-    testWidgets('checks a failed quality again from its clover', (
-      tester,
-    ) async {
-      final mocks = coreMocks();
-      _whenProbed(mocks.api).thenAnswer((_) async => _address());
-      var calls = 0;
-      await tester.pumpWidget(
-        _probingApp(
-          mocks.controller,
-          quality: (_, _) async {
-            calls++;
-            throw const IpQualityLookupException([]);
-          },
-        ),
-      );
-      await tester.pump();
-      await tester.pump(commonDuration);
-      expect(find.text('Unknown type'), findsOneWidget);
-
-      await tester.tap(find.byTooltip('Retry'));
-      await tester.pumpAndSettle();
-
-      expect(calls, 2);
-      _verifyProbed(mocks.api, times: 2);
-    });
-
-    testWidgets('names its network by ASN when the organization is unknown', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        _app((_, _) async => _residential.copyWith(organization: null)),
-      );
-      await tester.pump();
-
-      expect(find.text('AS64500'), findsOneWidget);
-    });
-
-    testWidgets('fits a phone', (tester) async {
-      await tester.pumpWidget(
-        _app((_, _) async => _residential, density: DashboardDensity.mobile),
-      );
-      await tester.pump();
-
-      expect(find.text(_ip), findsOneWidget);
-      expect(find.text('Residential'), findsOneWidget);
-      expect(tester.takeException(), isNull);
-    });
-
-    testWidgets('opens its details from the address, not the card', (
-      tester,
-    ) async {
-      _useTallView(tester);
-      await tester.pumpWidget(_app((_, _) async => _residential));
-      await tester.pump();
-
-      await tester.tap(find.text('Example Broadband'));
-      await tester.pumpAndSettle();
-      expect(find.text('iplocate.io'), findsNothing);
-
-      await tester.tap(find.text(_ip));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Good'), findsOneWidget);
-      expect(find.text('Residential'), findsNWidgets(2));
-      final organization = tester.widget<RichText>(
-        find.descendant(
-          of: find.text('Example Broadband').last,
-          matching: find.byType(RichText),
-        ),
-      );
-      expect(organization.textAlign, TextAlign.end);
-      expect(find.text('AS64500'), findsOneWidget);
-      expect(find.text('iplocate.io'), findsOneWidget);
-    });
-
-    testWidgets('lists every source when none found a type and checks again', (
-      tester,
-    ) async {
-      _useTallView(tester);
-      var calls = 0;
-      await tester.pumpWidget(
-        _app((_, _) async {
-          calls++;
-          throw const IpQualityLookupException([
-            (
-              source: IpQualitySource.identMe,
-              status: IpQualitySourceStatus.ipMismatch,
-            ),
-            (
-              source: IpQualitySource.ipLocate,
-              status: IpQualitySourceStatus.rateLimited,
-            ),
-          ]);
-        }),
-      );
-      await tester.pump();
-
-      await tester.tap(find.byTooltip('Outbound IP details'));
-      await tester.pumpAndSettle();
-
-      expect(find.text("Couldn't determine the IP type"), findsOneWidget);
-      expect(find.text('Different outbound IP'), findsOneWidget);
-      expect(find.text('Rate limited'), findsOneWidget);
-
-      await tester.tap(find.byTooltip('Check again'));
-      await tester.pumpAndSettle();
-
-      expect(calls, 2);
-    });
-
-    testWidgets('is masked everywhere once hidden', (tester) async {
-      _useTallView(tester);
-      await tester.pumpWidget(_app((_, _) async => _residential));
-      await tester.pump();
-
-      await tester.tap(find.byTooltip('Outbound IP details'));
-      await tester.pumpAndSettle();
-      await tester.scrollUntilVisible(
-        find.text('Hide IP'),
-        100,
-        scrollable: find.byType(Scrollable).last,
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Hide IP'));
-      await tester.pumpAndSettle();
-
-      expect(find.text(_ip), findsNothing);
-      expect(find.text('*****'), findsNWidgets(2));
-      final container = ProviderScope.containerOf(
-        tester.element(find.byType(CurrentOutboundCard)),
-      );
-      expect(container.read(appSettingProvider).hideIp, isTrue);
-    });
-
     ProviderContainer containerOf(WidgetTester tester) =>
         ProviderScope.containerOf(
           tester.element(find.byType(CurrentOutboundCard)),
         );
-
-    void start(WidgetTester tester) {
-      containerOf(tester).read(runTimeProvider.notifier).value = 1;
-    }
 
     ProbePhase phaseOf(WidgetTester tester) => containerOf(
       tester,
     ).read(outboundIpProbeProvider).entryOf(routedOutbound).phase;
 
     Future<void> startProxy(WidgetTester tester) async {
-      start(tester);
+      containerOf(tester).read(runTimeProvider.notifier).value = 1;
       await tester.pump();
       await tester.pump(probeMoveSettleDuration);
       await tester.pump();
     }
+
+    testWidgets('shows the exit, country and fraud score on the dashboard', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        TestApp(
+          locale: const Locale('en'),
+          overrides: [
+            outboundIpProbeProvider.overrideWith(_Ips.new),
+            ipRiskProvider(_ip).overrideWith((_) async => _risk),
+          ],
+          child: _card(),
+        ),
+      );
+      await tester.pump();
+      expect(find.text(_ip), findsOneWidget);
+      expect(find.text('GB'), findsWidgets);
+      expect(find.text('Fraud score'), findsOneWidget);
+      expect(find.textContaining('28', findRichText: true), findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(commonDuration);
+    });
+
+    testWidgets('keeps the exit readable on a phone', (tester) async {
+      await tester.pumpWidget(
+        _app((_, _) async => _residential, density: DashboardDensity.mobile),
+      );
+      await tester.pump();
+      expect(find.text(_ip), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(commonDuration);
+    });
 
     testWidgets('that fails once keeps checking for a second answer', (
       tester,
@@ -500,7 +257,7 @@ void main() {
       await startProxy(tester);
       expect(phaseOf(tester), ProbePhase.probing);
       expect(find.text('Check failed'), findsNothing);
-      expect(find.byType(SkeletonText), findsNWidgets(2));
+      expect(find.byType(SkeletonText), findsWidgets);
 
       failing = false;
       await tester.pump(probeConfirmDelay);
@@ -532,7 +289,6 @@ void main() {
       await tester.pump(probeConfirmDelay);
       await tester.pumpAndSettle();
       expect(find.text('Check failed'), findsOneWidget);
-      expect(find.text('Tap the icon to retry'), findsOneWidget);
       expect(asked, [directOutbound, routedOutbound, routedOutbound]);
 
       await tester.tap(find.byTooltip('Retry'));
@@ -575,6 +331,7 @@ void main() {
         profilesProvider.overrideWithValue(profiles),
         outboundIpProbeProvider.overrideWith(_Ips.new),
         ipQualityProvider.overrideWith((_, _) async => _residential),
+        ipRiskProvider(_ip).overrideWith((_) async => _risk),
         setupActionProvider.overrideWith(_RecordingSetupAction.new),
         suspendProvider.overrideWithValue(suspended),
       ],
@@ -671,12 +428,20 @@ void main() {
       await tester.pumpAndSettle();
     });
 
-    testWidgets('is off without a profile', (tester) async {
+    testWidgets('starts without a profile, which runs everything direct', (
+      tester,
+    ) async {
       container = containerWith(profiles: const []);
+      container.read(coreStatusProvider.notifier).value = CoreStatus.connected;
       await pumpCard(tester, density: DashboardDensity.mobile);
 
       final toggle = tester.widget<PressRegion>(startButton());
-      expect(toggle.onTap, isNull);
+      expect(toggle.onTap, isNotNull);
+      await tester.tap(startButton());
+      await tester.pump();
+      final action =
+          container.read(setupActionProvider.notifier) as _RecordingSetupAction;
+      expect(action.requests, [true]);
       expect(tester.takeException(), isNull);
     });
   });

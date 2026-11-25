@@ -214,4 +214,34 @@ void main() {
     expect(find.text('page'), findsNothing);
     expect(navigator.canPop(), isFalse);
   });
+
+  testWidgets('a push moves in on a view whose display is gone', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      View(
+        view: _DisplaylessView(tester.view),
+        child: HostApp(navigatorKey: navigatorKey, home: const SizedBox()),
+      ),
+      wrapWithView: false,
+    );
+    final route = FadePageRoute<void>(builder: (_) => const Text('page'));
+    unawaited(navigatorKey.currentState!.push(route));
+
+    await tester.pumpAndSettle();
+    expect(route.animation!.value, 1);
+    expect(find.text('page'), findsOneWidget);
+  });
+}
+
+class _DisplaylessView extends TestFlutterView {
+  _DisplaylessView(TestFlutterView view)
+    : super(
+        view: view,
+        platformDispatcher: view.platformDispatcher,
+        display: view.display,
+      );
+
+  @override
+  TestDisplay get display => throw TypeError();
 }

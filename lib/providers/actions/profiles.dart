@@ -39,17 +39,14 @@ class ProfilesAction extends _$ProfilesAction {
 
   Future<void> deleteProfile(int id) async {
     await ref.read(profilesProvider.notifier).del(id);
+    ref.read(profileIconsProvider.notifier).removeIcon(id);
     await clearEffect(id);
     final currentProfileId = ref.read(currentProfileIdProvider);
     if (currentProfileId == id) {
-      final profiles = ref.read(profilesProvider);
-      if (profiles.isNotEmpty) {
-        final updateId = profiles.first.id;
-        ref.read(currentProfileIdProvider.notifier).value = updateId;
-      } else {
-        ref.read(currentProfileIdProvider.notifier).value = null;
-        unawaited(ref.read(setupActionProvider.notifier).setRunning(false));
-      }
+      ref.read(currentProfileIdProvider.notifier).value = ref
+          .read(profilesProvider)
+          .firstOrNull
+          ?.id;
     }
   }
 

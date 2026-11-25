@@ -1,6 +1,5 @@
 import 'package:drift/native.dart';
 import 'package:fl_clash/common/common.dart';
-import 'package:fl_clash/common/mitm_module.dart';
 import 'package:fl_clash/database/database.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
@@ -17,6 +16,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../helpers/glyph_finders.dart';
 import '../../helpers/host_scaffold.dart';
+import '../../helpers/module_reads.dart';
 import '../../helpers/test_app.dart';
 import '../../helpers/test_profiles.dart';
 
@@ -335,9 +335,10 @@ void main() {
         overrides: [
           profilesProvider.overrideWith(() => TestProfiles([_profile])),
           for (final id in [1, 2])
-            mitmModuleContentProvider(
-              id,
-            ).overrideWith((ref) async => MitmModuleContent()),
+            mitmModuleContentProvider(id).overrideWith(
+              (ref) async =>
+                  moduleDetails('', moduleRead(declaredScripts: const [1])),
+            ),
         ],
       );
       globalState.container = container;
@@ -645,6 +646,32 @@ void main() {
       expect(tester.getSize(card).height, 300);
       expect(front('View all'), findsOneWidget);
       expect(find.text('rule 3 was dropped'), findsNothing);
+    });
+
+    testWidgets('opened to all lay out only the rows in view', (tester) async {
+      report([
+        for (var i = 1; i <= 500; i++)
+          ConfigWarning(
+            level: ConfigWarningLevel.warning,
+            path: 'rules[$i]',
+            message: 'rule $i was dropped',
+          ),
+      ]);
+      container.read(updateDownloadStateProvider.notifier).value =
+          const UpdateDownloading('v0.9.4', received: 25, total: 100);
+      await pumpButton(tester);
+      await open(tester);
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await settle(tester);
+
+      await tester.tap(front('View all'));
+      await settle(tester);
+
+      expect(find.text('rule 3 was dropped').hitTestable(), findsOneWidget);
+      expect(
+        find.text('rule 500 was dropped', skipOffstage: false),
+        findsNothing,
+      );
     });
   });
 

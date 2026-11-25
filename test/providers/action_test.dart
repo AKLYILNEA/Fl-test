@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:fl_clash/common/app_localizations.dart';
 import 'package:fl_clash/core/core.dart';
@@ -15,11 +16,38 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:riverpod/riverpod.dart';
 
+import '../helpers/app_paths.dart';
 import '../helpers/core_mocks.dart';
 import '../helpers/test_profiles.dart';
 
 void main() {
   group('ProfilesAction', () {
+    test('deleting the last profile keeps running, on no profile', () async {
+      final root = Directory.systemTemp.createTempSync('profiles_action');
+      addTearDown(() => root.deleteSync(recursive: true));
+      await useAppPaths(root);
+      final only = Profile.normal(label: 'Only');
+      final mocks = coreMocks();
+      when(() => mocks.api.clearEffect(only.id)).thenAnswer((_) async {});
+      final setup = _RecordingSetup();
+      final container = ProviderContainer(
+        overrides: [
+          currentProfileIdProvider.overrideWithBuild((_, _) => only.id),
+          profilesProvider.overrideWith(() => TestProfiles([only])),
+          coreHandlerProvider.overrideWithValue(mocks.controller),
+          setupActionProvider.overrideWith(() => setup),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await container
+          .read(profilesActionProvider.notifier)
+          .deleteProfile(only.id);
+
+      expect(container.read(currentProfileIdProvider), isNull);
+      expect(setup.running, isEmpty);
+    });
+
     test('keeps edited profile data when remote update fails', () async {
       final original = Profile.normal(label: 'old label', url: 'bad-url');
       final edited = original.copyWith(
@@ -881,6 +909,39 @@ void main() {
       },
     );
 
+    test('a restart whose apply needs TUN authorization asks before it '
+        'restarts the Core, so it never waits on itself', () async {
+      late _HandoffSetupAction setupAction;
+      final container = ProviderContainer(
+        overrides: [
+          coreActionProvider.overrideWith(_TestCoreAction.new),
+          setupActionProvider.overrideWith(() {
+            setupAction = _HandoffSetupAction([AuthorizeCode.success]);
+            return setupAction;
+          }),
+        ],
+      );
+      addTearDown(container.dispose);
+      container
+          .read(patchClashConfigProvider.notifier)
+          .update((state) => state.copyWith.tun(enable: true));
+      container.read(setupActionProvider);
+      final coreAction =
+          container.read(coreActionProvider.notifier) as _TestCoreAction;
+
+      final applied = await coreAction.restartCore().timeout(
+        const Duration(seconds: 5),
+      );
+
+      expect(applied, isTrue);
+      expect(setupAction.authorizationRequestCount, 1);
+      expect(coreAction.lifecycleRestartCount, 1);
+      expect(
+        container.read(authorizedTunEnableProvider),
+        TunAuthorizationState.authorized,
+      );
+    });
+
     test('reopens authorization and propagates a failed restart', () async {
       late _AuthorizationSetupAction setupAction;
       final container = ProviderContainer(
@@ -1090,6 +1151,24 @@ class _AuthorizationSetupAction extends SetupAction {
   }
 }
 
+/// Hands off to a Core restart as `_setupConfig` does once TUN was just
+/// granted.
+class _HandoffSetupAction extends _AuthorizationSetupAction {
+  _HandoffSetupAction(super.authorizationResults);
+
+  @override
+  Future<bool> applyProfile({
+    bool silence = false,
+    bool force = false,
+    Future<void> Function()? preloadInvoke,
+  }) async {
+    if (!await requestAdmin(ref.read(patchClashConfigProvider).tun.enable)) {
+      return ref.read(coreActionProvider.notifier).restartCore();
+    }
+    return true;
+  }
+}
+
 class _RaceSetupAction extends SetupAction {
   int applyProfileDebounceCount = 0;
   int resetCoreTrafficCount = 0;
@@ -1141,5 +1220,15 @@ class _RaceCommonAction extends CommonAction {
   @override
   void setTrafficFeed(bool wanted) {
     trafficFeeds.add(wanted);
+  }
+}
+
+class _RecordingSetup extends SetupAction {
+  final running = <bool>[];
+
+  @override
+  Future<bool> setRunning(bool running, {bool initialize = false}) async {
+    this.running.add(running);
+    return true;
   }
 }

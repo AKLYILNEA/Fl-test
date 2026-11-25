@@ -58,7 +58,7 @@ final class RpcCoreApi implements CoreApi {
     params: {
       'enable': settings.enable,
       'detail': settings.detail,
-      'retentionDays': settings.retentionDays,
+      'retentionMonths': settings.retentionMonths,
       'tzOffset': tzOffset,
       'profile': profile,
       'screenOn': ?screenOn,
@@ -215,6 +215,7 @@ final class RpcCoreApi implements CoreApi {
     JsonMap? overlay,
     Map<String, String> selection = const {},
     required CoreOptionsArg options,
+    JsonMap? host,
   }) {
     return _call(
       'config.apply',
@@ -224,6 +225,7 @@ final class RpcCoreApi implements CoreApi {
         'overlay': ?overlay,
         'selection': selection,
         'options': options.toJson(),
+        'host': ?host,
       },
     );
   }
@@ -444,6 +446,9 @@ final class RpcCoreApi implements CoreApi {
       );
 
   @override
+  Future<Object?> ruleList() => _call('rule.list', (r) => _object(r));
+
+  @override
   Future<RuleSetInfoDto> compileRuleSet(String name, {String? url}) => _call(
     'ruleSet.compile',
     (r) => RuleSetInfoDto.fromJson(_object(r)),
@@ -650,6 +655,27 @@ final class RpcCoreApi implements CoreApi {
   );
 
   @override
+  Future<MitmQueryAnswer> mitmQuery({
+    MitmFilter filter = const MitmFilter(),
+    int? before,
+    int? limit,
+    int? since,
+    bool facets = false,
+    int? rateFrom,
+  }) => _call(
+    'mitm.query',
+    (r) => MitmQueryAnswer.fromJson(_object(r)),
+    params: {
+      'filter': filter.toJson(),
+      'before': ?before,
+      'limit': ?limit,
+      'since': ?since,
+      if (facets) 'facets': true,
+      'rateFrom': ?rateFrom,
+    },
+  );
+
+  @override
   Future<Object?> mitmExchange(int id) =>
       _find<Object?>('mitm.exchange', _resultOrNull, params: {'id': id});
 
@@ -659,6 +685,31 @@ final class RpcCoreApi implements CoreApi {
     _resultOrNull,
     params: {'id': id, 'response': response},
   );
+
+  @override
+  Future<JsonMap> readMitmModule(
+    String text, {
+    Map<String, String> arguments = const {},
+    Map<String, String> attachments = const {},
+    String language = '',
+  }) => _call(
+    'mitm.readModule',
+    (r) => _object(r),
+    params: {
+      'text': text,
+      'arguments': arguments,
+      'attachments': attachments,
+      'language': language,
+    },
+  );
+
+  @override
+  Future<JsonMap> mitmModuleStatus() =>
+      _call('mitm.moduleStatus', (r) => _object(r));
+
+  @override
+  Future<void> fetchMitmModule({String? name}) =>
+      _call('mitm.fetchModule', (_) {}, params: {'name': ?name});
 }
 
 Object? _resultOrNull(Object? result) => _object(result)['result'];

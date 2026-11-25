@@ -312,7 +312,7 @@ Android deliberately keeps Flutter requests optimistic and the native layer auth
   flight, the latest intent, and `ServiceController.runtime`. A service that is up under a stop intent reads `STOPPING`, a
   start still waiting on a permission reads `STOPPED`, and `STARTED` needs both a running intent and a runtime. The tile
   and `getRunTime` both read this one value, so they cannot disagree with the service.
-- `ServiceController` owns exactly one `ManagedServiceBinding`, selects `VpnService`, `RootTunService` or `ProxyService` from `VpnOptions`,
+- `ServiceController` owns exactly one `ManagedServiceBinding`, selects `VpnService` or `ProxyService` from `VpnOptions`,
   binds with a five-second connection timeout, and invokes `ManagedService.start()`/`stop()` off the main thread. The
   binding and `runtime` (which service runs, and since when) are set and cleared together, by a stop, a failed start, or
   a lost connection and by nothing else. Flutter's `shutdown` only clears the Core event listener: Android keeps an
@@ -330,14 +330,6 @@ Android deliberately keeps Flutter requests optimistic and the native layer auth
   newer request has claimed the service. A failed start therefore always ends in `STOPPED`, whichever step refused it.
   The one start that mints no request is a repeat on a settled run of the same kind, which Flutter sends every time it
   reattaches: a request refused at a permission prompt there would stop a service that was running fine.
-- Root mode (`VpnOptions.rootTun`) runs `RootTunService`: `RootTun` starts `libtun.so` through `su`, which opens the
-  device and installs its policy routes with Concord's `concord_tun_provision`, passes the descriptor back over an
-  abstract socket that accepts only uid 0, and answers socket owner lookups, since `getConnectionOwnerUid` answers only
-  the VPN owner. The helper keeps the routes only while that connection is open, so a dead app leaves none; a lost
-  helper sends `ROOT_TUN_LOST`, which stops the run like a revoke. A start that cannot get root returns
-  `ServiceStart.RootUnavailable`, and `ServiceStateMachine` falls back to `VpnService` for that run, asking for the VPN
-  permission and telling the user why; the setting stays on. The app's own uid is excluded from the routes, which is
-  what keeps the in-process Core's sockets off the device.
 - Generic service creation/destruction is lifecycle evidence, not user intent. New commands must flow through
   `ServiceState.requestStart()`/`requestStop()` or the explicit system-action handlers instead of inferring intent from a
   callback.
@@ -348,6 +340,10 @@ Quick Settings, notification, revoke, and Always-on VPN paths converge on the sa
   because only Flutter can apply the current profile. Without Flutter, native code claims the intent, restores
   `SharedState` from preferences, runs `quickSetup`, checks VPN permission, and runs the start; claiming first is what
   makes a second action during the setup toggle that start off instead of racing a second setup against it.
+  Such a start only runs the takeover on the config last applied, host settings included, and checks the MITM CA
+  against the device's stores itself (`withTrustedCa`), so a CA the user removed is not decrypted under; what
+  needs the app, such as pausing on an excluded Wi-Fi or updating subscriptions, rule sets and modules, waits until
+  it opens.
 - An engine that attaches to a run the service already has, started that way or outliving the last engine, adopts it:
   `SetupAction.initStatus` restores the md5 of the config.yaml the Core last accepted and pushes the profile only when it
   now builds differently. Pushing the same config again rebuilds every proxy group, and a url-test group starts over on
@@ -518,8 +514,9 @@ force or is being asked again. The mechanism has three parts.
   come in bursts: a network switch reports more than once, and a launch applies the config and starts the
   listeners back to back. A new route version keeps every answer on show and sends their hits to `checkRoutes` in
   one call, at once for the first move and, for the moves that follow within `probeSettleDuration`, together when
-  it ends, so groups re-picking moments apart cost one check more; only an answer whose exit moved is
-  dropped and asked again, and one that held takes the checked version. An answer that lands under an older version
+  it ends. A successful probe whose exit held takes the checked version. A moved exit or a failed probe from
+  an earlier version is asked again. The exit alone cannot establish whether a failed probe's front proxy still
+  takes the same route. An answer that lands under an older version
   than the state is held back as checking until its own check returns, so it never shows and then flips. An ask
   that is not the user's or a reset's waits out `probeThrottleDuration` since the target's last probe, so a config
   load whose providers, rule sets and url-test picks land over a few seconds moves an exit at most one probe more.
@@ -533,12 +530,14 @@ force or is being asked again. The mechanism has three parts.
   or closed connection, a failed lookup, a Core that gave no answer — may be the route still settling or a
   connection something else closed (`closeConnections` after a proxy switch closes the routed probes too), so a watched
   target stays checking and is asked once more after `probeConfirmDelay`; it shows as failed when the
-  second attempt agrees, and a failure that spent its whole deadline (`ProbeAnswer.timedOut`) shows at once.
-  A failure on show is not asked again while the route holds still, since the same exit would only be asked the
-  same thing: it waits for a reset, a moved exit, a proxy the user switched, `refresh`, or the app resuming
-  (`markResumed`), which asks the watched ones again on show. A reset or a moved exit makes the next failure one
-  to confirm again, and
-  a service check that timed out is a failure that still shows its status. `refresh` is the user's own request and
+  second attempt agrees under the same route version, and a failure that spent its whole deadline (`ProbeAnswer.timedOut`) shows at once.
+  A watched service can recover on the same route. After a failure is displayed, the first automatic recheck
+  runs one minute later. Continued failures wait two minutes, then five minutes after each result. The previous
+  status stays visible during these checks. Hiding or locking the app cancels service retry timers, and a result
+  arriving while hidden starts none. Showing the app rearms watched failures. On resume, `markResumed` can ask
+  sooner, once the normal five-second `probeThrottleDuration` since the last check expires. Success, route invalidation
+  and releasing the last watcher clear the backoff. Outbound IP failures keep their existing event-driven retries.
+  A reset or moved exit makes the next early failure one to confirm again. `refresh` is the user's own request and
   runs for unwatched targets too: the service sheet reads the cache and never watches its rows, because one service
   check is one to four full HTTPS fetches where a delay test is a single empty request.
 
@@ -798,16 +797,23 @@ over it, as iOS's does, and lets go 0.2 s after the change, as LiquidGlassKit's 
   engine's Gaussian, in device pixels, on a Vogel disc of 16 taps up to a sigma of 2 pixels, 32 up to 3.5 and 64
   past it, so no taps lie further apart than 64 leave them at the widest; rendered at density 2.625 the lens moves by
   at most 12/255 on a few pixels from 64 taps throughout.
+- The shader works a pane's rim out only where it reaches. `liquidGlassInner` gives the rectangle deeper in than the
+  bevel and all the rim draws (the highlight and its tail, the line, the parted colors, the shine's bands), where
+  every one of those sums comes to nothing; a pixel inside it takes its sample, tint, contrast and glow by the same
+  sums and skips the rest, so a frame is what it was, bit for bit. A lens bends to its middle and a shaded end fades
+  without end, so they have no such rectangle, nor has a pane outlined by a path; goo takes its first pill. On a
+  Mi 11 a frame with an alert open takes 17 to 23 of about 375 units less GPU work (busy share times clock), a still
+  page 3 to 4 of about 200, and the slowest tenth of the frames of an alert's entry finish 0.5 to 1.7 ms sooner.
 - Glass builds no pipelines ahead of use. A warm-up that rendered panes offscreen once the first frame landed was
   dropped: after an install, with no pipeline cache on disk, it compiled on the raster thread just as the app was first
   used, to spare the first menu and lens only a few pipelines.
 - A pane is a rounded rectangle, each corner with its own radius, unless a `clipper` gives it a path, as the start
   button's cookie does. The shader reads that path as its reach from the pane's center in 64 directions, so it must
   meet every ray from the center once.
-- Without Impeller's shader filters (Skia, as under plain `flutter test`) a pane frosts from its capture:
-  blur, saturation, brightness, tint, and a rim, with no refraction; the tint is not thickened there, as it is where a
-  pane has no capture, since the capture holds the blur. `flutter test --enable-impeller` runs the shader, so `toImage`
-  shows the real glass.
+- Without Impeller's shader filters (Skia on the Intel macOS build and under plain `flutter test`) a pane frosts from
+  its capture: blur, saturation, brightness, tint, and a rim, with no refraction; the tint is not thickened there, as it
+  is where a pane has no capture, since the capture holds the blur. `flutter test --enable-impeller` runs the shader, so
+  `toImage` shows the real glass.
 - A popup grows out of its anchor on a platter (`AnchoredPopupRoute`). On glass the platter is a `LiquidGlassPane`
   easing from the button's `regular` glass to the thicker `menu` glass, and the menu's cards stand `bare` while it
   shows, opening and returning, so one pane bends the backdrop at a time. The platter takes the `menu` glass's frost
@@ -1065,14 +1071,21 @@ that starts them. A list or map edit page is the exception: its description says
 effect. A section header carries its title, set as iOS 27 sets a grouped list's header in `headline` and the
 footer's `onSurfaceVariant`, and at most a few actions on the group, as `IconButtonData`: `ListHeader` draws them as
 36 dp tonal buttons (`TonalButtonSize.section`), the first two grouped,
-centered on the title. Every header stands as tall as one with a button, 6 dp clear of the group below, so headers
-match whether or not they carry actions. A group with a selection swaps them
-for delete and select all, never a text button. `generateSection` is the only section builder, and a sheet lays its groups inside the 16 dp inset the pages use.
+centered on the title. A header without actions ends its title 6 dp above the group, as iOS does; actions leave the
+title where it stands and grow the header so the buttons keep 6 dp clear of the group. No header gains or loses all its
+actions while shown. A group with a selection swaps them for delete and select all, never a text button.
+`generateSection` is the only section builder. Pages and sheets lay their groups inside `context.listInsets.page()`,
+the width rule of the Inset grouped list section in `.agents/ios-measurements.md`, never a literal margin.
 Every section keeps the same space above it, `ListSectionGap`, title or not, with its title standing in that space, and
 sections are never spaced where they are placed. A page that opens on a section pads its top with `sectionsTopPadding`
 rather than `contentTopPadding`, so that space lands the first title or group where every page, the root tabs
 included, starts its content; an `ErrorBanner`, which can open such a page, keeps the same space above it.
 `generateGroup` gives the rows alone, for a group under a header its caller lays out, such as an `InfoHeader`.
+Such self-drawn sections stand `infoSectionSpacing` apart with their content `infoSectionContentGap` below the header,
+never `listSectionGap`. A row's own padding starts at `listInsets.leading` and ends a trailing glyph at
+`listInsets.trailing` less what its widget leaves beside the glyph (`Checkbox.edgeInset`, `Switch.edgeInset`,
+`IconButton.edgeInsetOf`, `MinIconButtonTheme.edgeInsetOf`, `ListItem.chevronInset`). A grid or card whose height is a
+row's takes it from `listRowExtent`, the rule `ListRow` lays out by.
 
 A row that opens a page, `ListItem.open`, ends in `AppGlyphs.chevronForward` unless it passes its own
 `trailing`, as iOS settings rows do. A row that opens a dialog in place, `ListItem.input`, has no chevron. A setting
@@ -1413,9 +1426,12 @@ other direction.
 
 ### High-Frequency Buffers
 
-`logsProvider`, `requestsProvider`, `dnsQueriesProvider` and `trafficsProvider` hold a `FixedList`
+`logsProvider`, `dnsQueriesProvider` and `trafficsProvider` hold a `FixedList`
 (`lib/common/fixed.dart`), which trades a normal copy-on-write for a shared
-buffer tagged with a generation counter:
+buffer tagged with a generation counter. `requestsProvider` holds a
+`ConnectionLog` (`lib/models/connection_log.dart`), which shares its entries the
+same way: `open`, `close`, `sync` and `updateTraffic` change them in place and
+return a wrapper one `revision` ahead, and the rules below hold for it too.
 
 - `append` mutates the buffer in place and returns a new wrapper one generation
   ahead. That is what providers publish, so `updateShouldNotify` still fires.
@@ -1666,7 +1682,8 @@ that asks the OS for a permission, a global shortcut or a registration, must con
 
 ## Build System
 
-`tool/package.dart` is the release build orchestrator (see Packaging below): it writes `env.json` (`APP_ENV`), runs
+`tool/package.dart` is the release build orchestrator (see Packaging below): it writes `env.json` (`APP_ENV`, and
+`RELEASE_TAG` for a tagged build), runs
 `flutter build`, and leaves the Core artifacts to the build hook.
 
 The desktop Concord core and the Rust helper are built by a Dart build hook; Android's Core is built by Gradle (see Android
@@ -1778,14 +1795,15 @@ and step without building, for any platform.
   Linux binary name and window class come from `BINARY_NAME` and `APPLICATION_ID` in `linux/CMakeLists.txt`.
   `windows/packaging/exe/inno_setup.iss` takes `{{NAME}}` placeholders, filled by `innoVariables`, and nothing else.
 - Names come from `releaseAssetName` in `lib/common/release_asset.dart`, which the in-app updater also uses:
-  `FlClash-<line>-<version>-<os>-<arch>[-<form>].<ext>`. The line is `rs` when `build_config.yaml` names
-  `concord_dir` and `dev` when it names `core_dir`, whatever the branch. The version is the `v*` tag on `HEAD` without
-  its `v` and with `+` turned into `.` (GitHub rewrites `+` in asset names), else `<pubspec version>-nightly.<commit
-  date>.<sha7>`. The form is `setup` or `portable` on Windows and absent elsewhere.
-- Each run writes `dist/manifest.json` and `FlClash-<line>-<version>-SHA256SUMS`. The release job merges the
-  per-platform runs with `dart run tool/package.dart merge`, and its release notes, Homebrew cask and F-Droid copy
-  read names from the merged manifest. For the `dev` line it also uploads the Windows installers and APKs under their
-  old names plus a `SHA256SUMS`, which apps released before these names still fetch.
+  `FlClash-<version>-<os>-<arch>[-<form>].<ext>`. The version is the `v*` tag on `HEAD` without its `v` and with `+`
+  turned into `.` (GitHub rewrites `+` in asset names), else `<pubspec version>-nightly.<commit date>.<sha7>`. The
+  version alone tells the lines apart: the line is `rs` when `build_config.yaml` names `concord_dir` and `dev` when it
+  names `core_dir`, whatever the branch, and an rs version starts its prerelease with `rs` (`0.9.5-rs.1`,
+  `0.9.5-rs.nightly.…`). The packager refuses a tag of the other line. The form is `setup` or `portable` on Windows
+  and absent elsewhere.
+- Each run writes `dist/manifest.json` and `FlClash-<version>-SHA256SUMS`. The release job merges the per-platform
+  runs with `dart run tool/package.dart merge`, checks the result with `check` (Release File Names in `commands.md`),
+  and its release notes, Homebrew cask and F-Droid copy read names from the merged manifest.
 - Kept from the fork's patches: package trees normalized to 0755/0644 before `dpkg-deb`, `rpmbuild` and
   `appimagetool` (see Linux Helper below); `dpkg-deb -Zxz`, because the dpkg of UOS and other Debian derivatives
   cannot unpack Ubuntu's default zstd; `StartupWMClass` in every desktop entry; an `AppRun` that passes its arguments
@@ -1957,6 +1975,11 @@ nothing is shown natively).
   deminiaturize brings it back, since the occlusion notification may never come. Windows: the runner forwards the
   top-level window's `WM_SHOWWINDOW` and `WM_SIZE` to the engine for the view, which it counts as hidden only once
   sized to zero; the module consumes a minimize's `WM_SIZE` so the view keeps its size.
+- Focus: while `Window.shown` is false, `HiddenWindowFocusGuard` excludes focus from the whole app. A focus request
+  makes the framework ask the engine to focus its view, and on Windows the engine's `SetFocus` activates the hidden
+  window and takes the foreground from the app in front, which drops an exclusive full-screen game out of full screen.
+  The guard gives back the focus it took once the window shows: the framework's own restore on resume can arrive
+  before the frame that lifts the exclusion and would be refused.
 - Each platform keeps one style record (title bar style everywhere, rounded corners on Windows, effect, tint and
   brightness on Windows and macOS) and reapplies it whole from a single `apply` routine, so DWM margins on Windows and
   `isOpaque`/effect views on macOS have one writer. Add a visual setting to that record, never a second code path.

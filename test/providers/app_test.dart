@@ -1,11 +1,16 @@
 import 'package:fl_clash/common/fixed.dart';
+import 'package:fl_clash/core/controller.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/app.dart';
 import 'package:fl_clash/providers/config.dart';
+import 'package:fl_clash/providers/core.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:riverpod/riverpod.dart';
+
+import '../helpers/core_mocks.dart';
 
 void main() {
   late ProviderContainer container;
@@ -16,6 +21,46 @@ void main() {
 
   tearDown(() {
     container.dispose();
+  });
+
+  test('the rules in force are listed again each time the Core connects, '
+      'and kept while it is away', () async {
+    final mocks = coreMocks();
+    var calls = 0;
+    when(mocks.api.ruleList).thenAnswer((_) async {
+      calls++;
+      return calls == 1
+          ? throw StateError('stopped')
+          : {
+              'rules': [
+                {'type': 'MATCH', 'payload': '', 'target': 'DIRECT'},
+              ],
+            };
+    });
+    final container = ProviderContainer(
+      overrides: [
+        coreHandlerProvider.overrideWithValue(
+          CoreController.test(mocks.backend),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+    container.listen(activeRulesProvider, (_, _) {}, onError: (_, _) {});
+    final status = container.read(coreStatusProvider.notifier);
+
+    await expectLater(
+      container.read(activeRulesProvider.future),
+      throwsStateError,
+    );
+    status.value = CoreStatus.connecting;
+    status.value = CoreStatus.connected;
+    final rules = await container.read(activeRulesProvider.future);
+    expect(rules.holds(0, type: 'MATCH', payload: ''), isTrue);
+
+    status.value = CoreStatus.disconnected;
+    await Future<void>.delayed(Duration.zero);
+    expect(container.read(activeRulesProvider).value, same(rules));
+    expect(calls, 2);
   });
 
   group('AuthorizedTunEnable provider', () {
@@ -262,7 +307,7 @@ void main() {
     });
 
     test('Requests.addRequest reaches listeners', () {
-      container.read(requestsProvider.notifier).value = FixedList(3);
+      container.read(requestsProvider.notifier).value = ConnectionLog(3);
       var notifications = 0;
       final subscription = container.listen(
         requestsProvider.select((state) => state.revision),
@@ -296,7 +341,7 @@ void main() {
         rulePayload: 'example.com',
       );
       final notifier = container.read(requestsProvider.notifier);
-      notifier.value = FixedList(3);
+      notifier.value = ConnectionLog(3);
       notifier.addRequests([request(1)]);
       notifier.addRequests([request(2)]);
       var notifications = 0;
@@ -322,6 +367,55 @@ void main() {
             .map((request) => (request.id, request.upload, request.download)),
         [(1, 520, 257835), (2, 460, 0)],
       );
+    });
+
+    test('Requests notifies once per close, sync and closeAll that changes '
+        'the log, and not for one that changes nothing', () {
+      TrackerInfo request(int id, int second) => TrackerInfo(
+        id: id,
+        start: DateTime.utc(2026).add(Duration(seconds: second)),
+        metadata: const Metadata(network: 'tcp', host: 'example.com'),
+        chains: const ['Proxy'],
+        rule: 'DOMAIN',
+        rulePayload: 'example.com',
+      );
+      final notifier = container.read(requestsProvider.notifier);
+      notifier.value = ConnectionLog(3);
+      notifier.addRequests([request(1, 0)]);
+      notifier.addRequests([request(2, 1)]);
+      notifier.addRequests([request(3, 2)]);
+      var notifications = 0;
+      final subscription = container.listen(
+        requestsProvider.select((state) => state.revision),
+        (_, _) => notifications++,
+      );
+      addTearDown(subscription.close);
+      final later = DateTime.utc(2026, 1, 2);
+
+      notifier.close([1], at: later);
+      expect(notifications, 1);
+      notifier.close([1, 99], at: later);
+      expect(notifications, 1);
+
+      notifier.sync(
+        [request(3, 2)],
+        requestedAt: later,
+        lineage: container.read(requestsProvider).lineage,
+      );
+      expect(notifications, 2);
+      expect(container.read(requestsProvider)[2]!.closedAt, later);
+      notifier.sync(
+        [request(3, 2)],
+        requestedAt: later,
+        lineage: container.read(requestsProvider).lineage,
+      );
+      expect(notifications, 2);
+
+      notifier.closeAll(at: later);
+      expect(notifications, 3);
+      notifier.closeAll(at: later);
+      expect(notifications, 3);
+      expect(container.read(requestsProvider).activeCount, 0);
     });
 
     test('Traffics.addTraffic reaches listeners and clear resets', () {

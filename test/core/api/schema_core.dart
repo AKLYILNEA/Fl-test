@@ -166,13 +166,19 @@ class ApiSchema {
 
 /// Answers every request from the schema, and keeps what the client got wrong.
 class SchemaCore {
-  SchemaCore(this.channel, this.schema, {required this.full}) {
+  SchemaCore(
+    this.channel,
+    this.schema, {
+    required this.full,
+    this.customResults = const {},
+  }) {
     channel.sentListener = _onSent;
   }
 
   final FakeFrameChannel channel;
   final ApiSchema schema;
   final bool full;
+  final Map<String, Object?> customResults;
   final List<String> problems = [];
   final Set<String> called = {};
   final Map<String, Object?> params = {};
@@ -215,6 +221,12 @@ class SchemaCore {
             schema.generate(event, full: full, alternative: index),
         ]);
       });
+      return;
+    }
+    if (customResults.containsKey(name)) {
+      final result = customResults[name];
+      problems.addAll(schema.validate(result, method['result']));
+      channel.answer(id, result);
       return;
     }
     channel.answer(id, schema.generate(method['result'], full: full));

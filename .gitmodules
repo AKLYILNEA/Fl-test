@@ -1,4 +1,4 @@
 [submodule "concord"]
 	path = concord
-	url = https://github.com/chen08209/concord.git
+	url = git@github.com:chen08209/concord.git
 	branch = main

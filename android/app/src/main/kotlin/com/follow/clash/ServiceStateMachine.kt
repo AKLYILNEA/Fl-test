@@ -30,8 +30,6 @@ internal const val MISSING_CONFIG_MESSAGE = "No configuration found."
 internal const val INVALID_CONFIG_MESSAGE = "Invalid configuration."
 internal const val VPN_PERMISSION_MESSAGE = "VPN permission required."
 internal const val START_FAILED_MESSAGE = "Failed to start service."
-internal const val ROOT_FALLBACK_MESSAGE =
-    "Root mode is unavailable, so this run uses the system VPN, which replaces any other VPN app:"
 
 private enum class StartOutcome {
     STARTED,
@@ -75,6 +73,10 @@ internal class ServiceStateMachine(private val host: ServiceStateHost) {
         } else {
             handleStartAction()
         }
+    }
+
+    suspend fun awaitRunningService(): ServiceRuntime? = transitionLock.withLock {
+        host.runtime?.takeIf { isRunRequested }
     }
 
     suspend fun awaitRunTime(): Long = transitionLock.withLock {
@@ -248,48 +250,24 @@ internal class ServiceStateMachine(private val host: ServiceStateHost) {
             return StartFailure.SERVICE
         }
         val options = sharedState.vpnOptions ?: return StartFailure.SERVICE
-        if (options.enable && options.rootTun) {
-            when (val root = startLocked(request, options)) {
-                ServiceStart.Started -> return null
-                ServiceStart.Failed -> return StartFailure.SERVICE
-                is ServiceStart.RootUnavailable -> {
-                    host.log("Root TUN unavailable: ${root.reason}")
-                    if (!isCurrent(request)) return StartFailure.SERVICE
-                    host.notifyRootFallback(root.reason)
-                }
-            }
-            return startPrepared(request, options.copy(rootTun = false))
-        }
-        return startPrepared(request, options)
-    }
-
-    private suspend fun startPrepared(request: RunRequest, options: VpnOptions): StartFailure? {
         if (!prepareVpn(options)) {
             if (host.app() == null && isCurrent(request)) {
                 host.showToast(VPN_PERMISSION_MESSAGE)
             }
             return StartFailure.VPN_PERMISSION
         }
-        return StartFailure.SERVICE.takeUnless {
-            startLocked(request, options) == ServiceStart.Started
-        }
-    }
-
-    private suspend fun startLocked(request: RunRequest, options: VpnOptions): ServiceStart =
-        transitionLock.withLock {
+        return transitionLock.withLock {
             when {
-                !isCurrent(request) -> ServiceStart.Failed
-                host.runtime?.vpn == options.enable -> ServiceStart.Started
+                !isCurrent(request) -> StartFailure.SERVICE
+                host.runtime?.vpn == options.enable -> null
                 else -> transitioning(RunState.STARTING) {
-                    val started = host.startService(options)
-                    if (started == ServiceStart.Started && !isCurrent(request)) {
-                        ServiceStart.Failed
-                    } else {
-                        started
+                    StartFailure.SERVICE.takeUnless {
+                        host.startService(options) && isCurrent(request)
                     }
                 }
             }
         }
+    }
 
     // Flutter's startListener and the native quickSetup both open the Core's listeners before any
     // service exists to answer for them, and Flutter may be gone before it hears of the failure.

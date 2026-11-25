@@ -45,7 +45,7 @@ class CoreMethodException implements Exception {
 /// A Core that never answered, as opposed to one that answered with an error.
 bool isUnansweredCoreError(Object? error) => switch (error) {
   TimeoutException() => true,
-  CoreMethodException(:final code) => code == 'core_unavailable',
+  CoreMethodException(:final isCoreUnavailable) => isCoreUnavailable,
   _ => false,
 };
 

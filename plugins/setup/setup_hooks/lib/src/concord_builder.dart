@@ -20,13 +20,17 @@ class ConcordBuilder {
     required this.cache,
     required this.notice,
     this.harnessInputs = const [],
-  });
+    this.cargo = runCommandStream,
+    Map<String, String>? environment,
+  }) : _environment = environment ?? Platform.environment;
 
   final String rootDir;
   final BuildConfig config;
   final BuildCache cache;
   final BuildNotice notice;
   final List<String> harnessInputs;
+  final StreamedCommand cargo;
+  final Map<String, String> _environment;
 
   static const _package = 'concord-desktop';
 
@@ -35,6 +39,8 @@ class ConcordBuilder {
   static const _macosDeploymentTarget = '12.0';
 
   String get _workspace => p.join(rootDir, config.concordDir);
+
+  String get _targetDir => cargoTargetDir(_workspace, _environment);
 
   String get _infoPlistPath => p.join(cache.cacheDir, 'core-info.plist');
 
@@ -59,7 +65,7 @@ class ConcordBuilder {
             _infoPlistPath,
           ).writeAsStringSync(coreInfoPlist(config.coreBundleId));
         }
-        await runCommandStream(
+        await cargo(
           'cargo',
           args,
           workingDirectory: _workspace,
@@ -68,8 +74,7 @@ class ConcordBuilder {
         // The Helper hashes the Core it finds, so a failed build must not leave
         // a half-copied file behind.
         final built = p.join(
-          _workspace,
-          'target',
+          _targetDir,
           target.rustTriple,
           'release',
           '$_binary${target.executableExtension}',

@@ -102,10 +102,11 @@ class CommonAction extends _$CommonAction {
   }
 
   Future<bool> autoCheckUpdate() async {
-    if (!ref.read(appSettingProvider).autoCheckUpdate) return false;
+    final setting = ref.read(appSettingProvider);
+    if (!setting.autoCheckUpdate) return false;
     final Map<String, dynamic>? res;
     try {
-      res = await request.checkForUpdate();
+      res = await request.checkForUpdate(setting.updateChannel);
     } catch (error) {
       commonPrint.log(
         'checkForUpdate failed: ${compactError(error)}',
@@ -179,7 +180,7 @@ class CommonAction extends _$CommonAction {
       );
       if (res == true) {
         if (asset == null) {
-          _openReleasePage();
+          _openReleasePage(tag);
         } else {
           unawaited(_downloadUpdate(tag, updateAssetName(tag, asset)));
         }
@@ -198,10 +199,8 @@ class CommonAction extends _$CommonAction {
     }
   }
 
-  void _openReleasePage() {
-    unawaited(
-      launchUrl(Uri.parse('https://github.com/$repository/releases/latest')),
-    );
+  void _openReleasePage(String tag) {
+    unawaited(openReleasePage(tag));
   }
 
   /// Downloads the latest release for this build even when it is not newer.
@@ -210,8 +209,9 @@ class CommonAction extends _$CommonAction {
     if (asset == null || ref.read(updateDownloadStateProvider) != null) {
       return;
     }
+    final channel = ref.read(appSettingProvider).updateChannel;
     final release = await globalState.loadingRun(
-      request.latestRelease,
+      () => request.newestRelease(channel),
       title: currentAppLocalizations.updateDownloadTest,
       tag: LoadingTag.checkUpdate,
     );
@@ -261,11 +261,17 @@ class CommonAction extends _$CommonAction {
       if (error is DioException && CancelToken.isCancel(error)) {
         return;
       }
+      if (error is ReleaseFileMissingException) {
+        _openReleasePage(tag);
+        dialogs.showBanner(currentAppLocalizations.updateFileMissing);
+        return;
+      }
       commonPrint.log(
         'Update download failed: ${compactError(error)}',
         logLevel: LogLevel.warning,
       );
       await _showUpdateFailure(
+        tag,
         userFacingErrorMessage(error, currentAppLocalizations),
       );
     } finally {
@@ -293,7 +299,10 @@ class CommonAction extends _$CommonAction {
       final status = await app?.installPackage(download.path);
       await clearUpdateDownloads();
       if (status != null && packageInstallFailed(status)) {
-        await _showUpdateFailure(currentAppLocalizations.updateInstallFailed);
+        await _showUpdateFailure(
+          download.tag,
+          currentAppLocalizations.updateInstallFailed,
+        );
       }
       return;
     }
@@ -301,18 +310,21 @@ class CommonAction extends _$CommonAction {
     if (started == true) {
       await ref.read(systemActionProvider.notifier).handleExit();
     } else if (started == false) {
-      await _showUpdateFailure(currentAppLocalizations.updateInstallFailed);
+      await _showUpdateFailure(
+        download.tag,
+        currentAppLocalizations.updateInstallFailed,
+      );
     }
   }
 
-  Future<void> _showUpdateFailure(String message) async {
+  Future<void> _showUpdateFailure(String tag, String message) async {
     final res = await dialogs.showMessage(
       title: currentAppLocalizations.updateFailed,
       message: TextSpan(text: message),
       confirmText: currentAppLocalizations.goDownload,
     );
     if (res == true) {
-      _openReleasePage();
+      _openReleasePage(tag);
     }
   }
 }

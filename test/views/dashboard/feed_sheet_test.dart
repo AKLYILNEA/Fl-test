@@ -5,7 +5,8 @@ import 'package:fl_clash/providers/database.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/ui/icons/icons.dart';
 import 'package:fl_clash/views/dashboard/widgets/connection_stats.dart';
-import 'package:fl_clash/views/dns_queries.dart';
+import 'package:fl_clash/features/features.dart';
+import 'package:fl_clash/views/connection/requests.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
@@ -102,14 +103,15 @@ void main() {
     await tester.tap(_dnsStat);
     await tester.pumpAndSettle();
 
-    expect(find.byType(DnsQueriesView), findsOneWidget);
+    expect(find.byType(RequestsView), findsOneWidget);
+    expect(find.byType(DnsQueryList), findsOneWidget);
     // A sheet this wide has nothing to drag between.
     expect(find.byType(SheetDragHandle), findsNothing);
 
     await tester.tap(find.byGlyph(AppGlyphs.close));
     await tester.pumpAndSettle();
 
-    expect(find.byType(DnsQueriesView), findsNothing);
+    expect(find.byType(RequestsView), findsNothing);
     expect(find.text('DNS queries'), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox.shrink());
@@ -125,7 +127,7 @@ void main() {
       await tester.tap(_dnsStat);
       await tester.pumpAndSettle();
 
-      expect(find.byType(DnsQueriesView), findsOneWidget);
+      expect(find.byType(RequestsView), findsOneWidget);
       expect(sheetTop(tester), closeTo(_shortTop, 1));
 
       await flingSheet(tester, -120);
@@ -177,7 +179,7 @@ void main() {
     await flingSheet(tester, 200);
     await tester.pumpAndSettle();
 
-    expect(find.byType(DnsQueriesView), findsNothing);
+    expect(find.byType(RequestsView), findsNothing);
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(seconds: 2));
@@ -284,7 +286,7 @@ void main() {
     final position = tester
         .state<ScrollableState>(
           find.descendant(
-            of: find.byType(DnsQueriesView),
+            of: find.byType(RequestsView),
             matching: find.byWidgetPredicate(
               (widget) =>
                   widget is Scrollable &&
@@ -335,12 +337,12 @@ void main() {
 
     await flingSheet(tester, -120);
     await tester.pumpAndSettle();
-    await tester.drag(find.byType(DnsQueriesView), const Offset(0, -200));
+    await tester.drag(find.byType(RequestsView), const Offset(0, -200));
     await tester.pumpAndSettle();
 
     expect(sheetTop(tester), closeTo(_tallTop, 1));
 
-    await tester.fling(find.byType(DnsQueriesView), const Offset(0, 100), 2500);
+    await tester.fling(find.byType(RequestsView), const Offset(0, 100), 2500);
     await tester.pumpAndSettle();
 
     expect(sheetTop(tester), closeTo(_tallTop, 1));
@@ -384,7 +386,7 @@ void main() {
 
     await tester.tap(_dnsStat);
     await tester.pumpAndSettle();
-    await tester.tap(find.byType(DnsQueryItem).hitTestable().first);
+    await tester.tap(find.byType(DnsQueryRow).hitTestable().first);
     await tester.pumpAndSettle();
 
     final detail = find.byType(DnsQueryDetailView);
@@ -395,7 +397,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(detail, findsNothing);
-    expect(find.byType(DnsQueriesView), findsOneWidget);
+    expect(find.byType(RequestsView), findsOneWidget);
     expect(sheetTop(tester), closeTo(_shortTop, 1));
 
     await tester.pumpWidget(const SizedBox.shrink());
@@ -410,7 +412,7 @@ void main() {
 
     await tester.tap(_dnsStat);
     await tester.pumpAndSettle();
-    await tester.tap(find.byType(DnsQueryItem).hitTestable().first);
+    await tester.tap(find.byType(DnsQueryRow).hitTestable().first);
     await tester.pumpAndSettle();
 
     final detail = find.byType(DnsQueryDetailView);
@@ -421,7 +423,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(detail, findsNothing);
-    expect(find.byType(DnsQueriesView), findsOneWidget);
+    expect(find.byType(RequestsView), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(seconds: 2));
@@ -437,7 +439,7 @@ void main() {
     await tester.tap(find.byTooltip('Close'));
     await tester.pumpAndSettle();
 
-    expect(find.byType(DnsQueriesView), findsNothing);
+    expect(find.byType(RequestsView), findsNothing);
     expect(find.text('DNS queries'), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox.shrink());

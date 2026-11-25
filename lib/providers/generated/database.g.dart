@@ -297,7 +297,7 @@ final class IconSetsProvider
   IconSets create() => IconSets();
 }
 
-String _$iconSetsHash() => r'fe06735ac9d8c8968278e163a3fcd5a3c0deb1d9';
+String _$iconSetsHash() => r'8d19e2015c1f6636a50a52367d75e2f84d5e604e';
 
 abstract class _$IconSets extends $StreamNotifier<List<IconSet>> {
   Stream<List<IconSet>> build();

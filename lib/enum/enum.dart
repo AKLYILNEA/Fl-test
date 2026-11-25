@@ -37,6 +37,17 @@ const desktopPlatforms = [
 
 enum GroupName { GLOBAL }
 
+/// Why a dial failed, spelled as the Core sends it. `handshake`: the path to the
+/// target opened but the exchange over it failed.
+enum ConnectionFailureKind {
+  timeout,
+  refused,
+  unreachable,
+  dns,
+  handshake,
+  other,
+}
+
 enum GroupType {
   @JsonValue('select')
   Selector('select'),
@@ -47,7 +58,9 @@ enum GroupType {
   @JsonValue('load-balance')
   LoadBalance('load-balance'),
   @JsonValue('relay')
-  Relay('relay');
+  Relay('relay'),
+  @JsonValue('smart')
+  Smart('smart');
 
   final String value;
 
@@ -60,6 +73,7 @@ enum GroupType {
       'fallback' => Fallback,
       'load-balance' || 'loadbalance' => LoadBalance,
       'relay' => Relay,
+      'smart' => Smart,
       String() => throw UnimplementedError(),
     };
   }
@@ -101,7 +115,11 @@ extension GroupTypeExtension on GroupType {
       GroupType.values.map((e) => e.toString().split('.').last).toList();
 
   bool get isComputedSelected {
-    return [GroupType.URLTest, GroupType.Fallback].contains(this);
+    return [
+      GroupType.URLTest,
+      GroupType.Fallback,
+      GroupType.Smart,
+    ].contains(this);
   }
 
   static GroupType? getGroupType(String value) {
@@ -133,8 +151,6 @@ enum RecordFacetKind {
   cache,
   rcode,
 }
-
-enum RecordGrouping { app, host, rule, exit }
 
 extension RecordToneExt on RecordTone {
   Color? accentColor(BuildContext context) {
@@ -182,20 +198,6 @@ enum ResultType {
   success,
   @JsonValue(-1)
   error,
-}
-
-enum CoreEventType {
-  speedTest,
-  log,
-  delay,
-  request,
-  requestTraffic,
-  dns,
-  loaded,
-  crash,
-  geoUpdate,
-  routeChanged,
-  dialerLoop,
 }
 
 enum FindProcessMode { always, strict }
@@ -429,9 +431,11 @@ enum AuthorizeCode { none, success, error }
 enum TunAuthorizationState { none, authorized, unauthorized }
 
 enum FunctionTag {
+  scriptNotification,
   updateConfig,
   updateGroups,
   applyProfile,
+  switchProfile,
   savePreferences,
   changeProxy,
   updateDelay,
@@ -450,13 +454,13 @@ enum FunctionTag {
 
 enum DashboardWidget {
   currentOutbound,
-  proxyGroups,
   networkSpeed,
   outboundMode,
   vpnButton(platforms: [SupportPlatform.Android]),
   networkTakeover(platforms: desktopPlatforms),
   serviceStatus,
   profiles,
+  proxyGroups,
   connectionStats,
   intranetIp,
   memoryInfo;
@@ -467,6 +471,17 @@ enum DashboardWidget {
 }
 
 enum DnsQueryInitiator { app, rule, direct, proxy, other }
+
+enum ConnectionEndReason {
+  local,
+  remote,
+  finished,
+  timeout,
+  reset,
+  core,
+  error,
+  failed,
+}
 
 enum IpType { residential, mobile, business, hosting }
 
@@ -814,6 +829,8 @@ enum RestoreStrategy { compatible, override }
 
 enum TabAnimation { slide, fade }
 
+enum UpdateChannel { stable, pre }
+
 enum LiquidGlassMode { none, standard, ultra }
 
 enum Language { yaml, javaScript, json, ini, xml, text }
@@ -860,8 +877,6 @@ enum MitmInstallOutcome { installed, untilReboot, prompted, saved }
 enum MitmRemoveOutcome { removed, userStore, needsRoot, failed }
 
 enum CoreStatus { connecting, connected, disconnected }
-
-enum RequestFeed { recent, live }
 
 enum UpdatingScope { core, local }
 

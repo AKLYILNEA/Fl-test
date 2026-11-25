@@ -26,6 +26,8 @@ object ServiceState {
 
     suspend fun handleVpnRevokeAction() = machine.handleVpnRevokeAction()
 
+    internal suspend fun awaitRunningService() = machine.awaitRunningService()
+
     suspend fun awaitRunTime(): Long = machine.awaitRunTime()
 
     fun requestStart(): Deferred<Boolean> = machine.requestStart()

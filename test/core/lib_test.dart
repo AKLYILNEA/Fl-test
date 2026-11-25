@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:isolate';
 
 import 'package:fl_clash/common/app_localizations.dart';
@@ -54,19 +55,26 @@ class _FakeService implements Service {
 
   String initError = '';
   String syncError = '';
+  Exception? syncException;
   bool shutdownResult = true;
   bool startResult = true;
   bool stopResult = true;
 
+  Completer<void>? initGate;
+
   @override
   Future<String> init() async {
     _record('init');
+    await initGate?.future;
     return initError;
   }
 
   @override
   Future<String> syncState(SharedState state) async {
     _record('syncState');
+    if (syncException case final exception?) {
+      throw exception;
+    }
     return syncError;
   }
 
@@ -89,7 +97,7 @@ class _FakeService implements Service {
   }
 
   @override
-  Future<DateTime?> getRunTime() async => null;
+  Future<AndroidServiceRun?> adoptRunningService() async => null;
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -216,6 +224,54 @@ void main() {
       expect(service.calls, ['init', 'syncState']);
     });
 
+    test('a sync the channel fails disconnects as a sync error does', () async {
+      service.syncException = PlatformException(code: 'sync');
+
+      await expectLater(lib.start(), throwsA(isA<PlatformException>()));
+      expect(service.calls, ['init', 'syncState', 'shutdown']);
+      expect(service.frames.generation, isNull);
+
+      service.syncException = null;
+      service.calls.clear();
+      final retry = await lib.start();
+
+      expect(retry.outcome, CoreLifecycleOutcome.applied);
+      expect(service.calls, ['init', 'syncState']);
+    });
+
+    test('the VPN options are read once the Core can answer what they ask '
+        'of it', () async {
+      container.dispose();
+      container = ProviderContainer(
+        overrides: [
+          profilesProvider.overrideWith(TestProfiles.new),
+          vpnOptionsProvider.overrideWith((ref) async {
+            if (service.frames.generation == null) {
+              throw StateError(
+                'the options were read before the Core connected',
+              );
+            }
+            return const VpnOptions(
+              enable: true,
+              port: 7890,
+              ipv6: false,
+              dnsHijacking: false,
+              accessControlProps: AccessControlProps(),
+              allowBypass: false,
+              systemProxy: false,
+              bypassDomain: [],
+            );
+          }),
+        ],
+      );
+      globalState.container = container;
+
+      final started = await lib.start();
+
+      expect(started.outcome, CoreLifecycleOutcome.applied);
+      expect(service.calls, ['init', 'syncState']);
+    });
+
     test('a Core that refuses the session shuts the service down and '
         'leaves the gate open to a retry', () async {
       final refusing = _FakeService(
@@ -227,6 +283,44 @@ void main() {
       expect(refusing.calls, ['init', 'shutdown']);
       expect(refusing.frames.generation, isNull);
       await refusing.frames.close();
+    });
+  });
+
+  group('a start still opening', () {
+    setUp(() => service.initGate = Completer<void>());
+
+    test('gives way to a close and leaves no session open', () async {
+      final start = lib.start();
+      await Future<void>.delayed(Duration.zero);
+      final close = lib.close();
+      service.initGate!.complete();
+
+      expect((await start).outcome, CoreLifecycleOutcome.superseded);
+      expect((await close).outcome, CoreLifecycleOutcome.coalesced);
+      expect(service.calls, ['init', 'shutdown']);
+      expect(service.frames.generation, isNull);
+    });
+
+    test('gives way to a stop and leaves no session open', () async {
+      final start = lib.start();
+      await Future<void>.delayed(Duration.zero);
+      final stop = lib.stop();
+      service.initGate!.complete();
+
+      expect((await start).outcome, CoreLifecycleOutcome.superseded);
+      expect((await stop).outcome, CoreLifecycleOutcome.coalesced);
+      expect(service.frames.generation, isNull);
+    });
+
+    test('takes a second start as the same one', () async {
+      final first = lib.start();
+      await Future<void>.delayed(Duration.zero);
+      final second = lib.start();
+      service.initGate!.complete();
+
+      expect((await first).outcome, CoreLifecycleOutcome.applied);
+      expect((await second).outcome, CoreLifecycleOutcome.coalesced);
+      expect(service.calls, ['init', 'syncState']);
     });
   });
 

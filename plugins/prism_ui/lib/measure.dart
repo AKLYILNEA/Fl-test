@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/widgets.dart';
 import 'package:prism_ui/metrics.dart';
 import 'package:prism_ui/typography.dart';
@@ -78,12 +76,11 @@ class Measure {
 
   double get cardHeaderHeight => textHeight(AppTextStyle.headline);
 
-  double get listRowHeight =>
-      max(listRowMinHeight, listTitleHeight + 2 * listRowVerticalPadding);
+  double get listRowHeight => listRowExtent(titleHeight: listTitleHeight);
 
-  double get listTwoLineRowHeight => max(
-    listRowMinHeight,
-    listTitleHeight + listSubtitleHeight + 2 * listRowVerticalPadding,
+  double get listTwoLineRowHeight => listRowExtent(
+    titleHeight: listTitleHeight,
+    subtitleHeight: listSubtitleHeight,
   );
 }
 

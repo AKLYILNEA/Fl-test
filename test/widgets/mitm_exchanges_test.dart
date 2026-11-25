@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/common/mitm_body.dart';
+import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/features/features.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/mitm.dart';
@@ -38,6 +39,7 @@ final _exchange = MitmExchange(
   originalUrl: 'https://a.test/old?x=1',
   proto: 'HTTP/2.0',
   status: 200,
+  reason: 'OK',
   responseSize: 2048,
   connection: '1',
   requestHeader: const {
@@ -47,9 +49,24 @@ final _exchange = MitmExchange(
     'X-Upstream': ['yes'],
   },
   actions: const [
+    MitmAction(
+      kind: 'header-rewrite',
+      phase: 'request',
+      detail: 'header-del X-Forwarded-For',
+    ),
     MitmAction(kind: 'url-rewrite', detail: 'header'),
-    MitmAction(kind: 'script', phase: 'response', detail: 'sign'),
+    MitmAction(
+      kind: 'script',
+      phase: 'response',
+      detail: 'sign',
+      module: 'Sign-in',
+    ),
   ],
+  route: const MitmRoute(
+    rule: 'URLRegex',
+    rulePayload: '/new',
+    chains: ['node-b', 'pick'],
+  ),
 );
 
 MitmExchangeSummary _summary(MitmExchange exchange) => MitmExchangeSummary(
@@ -73,7 +90,9 @@ Future<ProviderContainer> _pumpDetail(
   MitmBody responseBody = const MitmBody(),
   List<MitmModule> modules = const [],
   bool inSheet = false,
+  bool inPane = false,
   bool retry = false,
+  VoidCallback? onBodyRead,
 }) async {
   final contentType = mitmHeaderValue(
     (exchange ?? _exchange).responseHeader,
@@ -90,11 +109,12 @@ Future<ProviderContainer> _pumpDetail(
         7,
         response: true,
         contentType: contentType,
-      ).overrideWith(
-        (ref) async => bodyError == null
+      ).overrideWith((ref) async {
+        onBodyRead?.call();
+        return bodyError == null
             ? readMitmBody((responseBody, contentType, grpcOverLimitNote: null))
-            : throw bodyError,
-      ),
+            : throw bodyError;
+      }),
       mitmModulesProvider.overrideWith(() => _Modules(modules)),
     ],
   );
@@ -116,6 +136,8 @@ Future<ProviderContainer> _pumpDetail(
                   child: const Text('open'),
                 ),
               )
+            : inPane
+            ? DetailPane(child: TrackerInfoDetailView(trackerInfo: _decrypted))
             : SheetProvider(
                 type: SheetType.page,
                 child: TrackerInfoDetailView(trackerInfo: _decrypted),
@@ -141,7 +163,7 @@ Finder _inMenu(Finder finder) =>
 
 Future<void> _openRequest(WidgetTester tester) async {
   await _openTab(tester, currentAppLocalizations.httpRequests);
-  await tester.tap(find.text('GET /new?x=1'));
+  await tester.tap(find.text('/new?x=1'));
   await tester.pumpAndSettle();
 }
 
@@ -157,7 +179,7 @@ Future<void> _openBarMenu(WidgetTester tester) async {
 
 Finder _tab(String label) => find.descendant(
   of: find.byType(SegmentedControl<int>).last,
-  matching: find.text(label),
+  matching: find.textContaining(RegExp('^${RegExp.escape(label)}( \\d+)?\$')),
 );
 
 Future<void> _openTab(WidgetTester tester, String label) async {
@@ -174,6 +196,49 @@ Future<void> _scrollTo(WidgetTester tester, Finder finder) {
 }
 
 void main() {
+  testWidgets('with capture off a decrypted connection offers its timeline '
+      'and info alone', (tester) async {
+    await _pumpDetail(tester, list: const MitmExchangeList(), capture: false);
+
+    expect(_tab('Timeline'), findsOneWidget);
+    expect(_tab('Info'), findsOneWidget);
+    expect(_tab(currentAppLocalizations.httpRequests), findsNothing);
+    await _openTab(tester, 'Info');
+    expect(find.text(currentAppLocalizations.connectionPath), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('a decrypted connection offers its requests in a tab only in '
+      'a build that decrypts', (tester) async {
+    await _pumpDetail(tester, list: const MitmExchangeList());
+
+    expect(
+      _tab(currentAppLocalizations.httpRequests),
+      [findsOneWidget].firstOrNull ?? findsNothing,
+    );
+    await _openTab(tester, 'Info');
+    expect(find.text(currentAppLocalizations.connectionPath), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('a decrypted connection is marked in its row only in a build '
+      'that decrypts', (tester) async {
+    await tester.pumpWidget(
+      TestApp(
+        wrapInProviderScope: true,
+        homeBuilder: (child) => HostScaffold(body: child),
+        child: TrackerInfoItem(trackerInfo: _decrypted, detailTitle: 'detail'),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('MITM'), [findsOneWidget].firstOrNull ?? findsNothing);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
   testWidgets('a request opens as a page of its connection\'s sheet', (
     tester,
   ) async {
@@ -195,6 +260,13 @@ void main() {
     final request = find.byType(MitmExchangeView);
     expect(ModalRoute.of(tester.element(request)), isA<PagedSheetRoute>());
     expect(Navigator.of(tester.element(request)), same(pages));
+    final method = tester.widget<Text>(
+      find.descendant(
+        of: find.descendant(of: request, matching: find.byType(LabelWell)),
+        matching: find.byType(Text),
+      ),
+    );
+    expect(method.style?.fontFamily, FontFamily.jetBrainsMono.value);
 
     await tester.pumpWidget(const SizedBox.shrink());
   });
@@ -219,6 +291,7 @@ void main() {
 
     await tester.pumpWidget(const SizedBox.shrink());
     container.dispose();
+    await tester.pump(const Duration(seconds: 1));
   });
 
   testWidgets('a read that is retried shows no error yet', (tester) async {
@@ -241,6 +314,7 @@ void main() {
 
     await tester.pumpWidget(const SizedBox.shrink());
     container.dispose();
+    await tester.pump(const Duration(seconds: 1));
   });
 
   testWidgets('a body that fails says so beside its headers', (tester) async {
@@ -263,6 +337,38 @@ void main() {
 
     await tester.pumpWidget(const SizedBox.shrink());
     container.dispose();
+    await tester.pump(const Duration(seconds: 1));
+  });
+
+  testWidgets('the timeline sums up the requests in one step that opens '
+      'their tab', (tester) async {
+    await _pumpDetail(
+      tester,
+      list: MitmExchangeList(
+        capturing: true,
+        exchanges: [
+          _summary(_exchange),
+          MitmExchangeSummary(
+            id: 8,
+            start: _start.add(const Duration(seconds: 1)),
+            method: 'POST',
+            url: 'https://a.test/graphql',
+            status: 502,
+          ),
+        ],
+      ),
+      exchange: _exchange,
+    );
+
+    expect(find.text('2 HTTP requests'), findsOneWidget);
+    expect(find.text('HTTP · Latest POST /graphql 502'), findsOneWidget);
+    expect(find.byType(MitmExchangesView), findsNothing);
+
+    await tester.tap(find.text('2 HTTP requests'));
+    await tester.pumpAndSettle();
+    expect(find.byType(MitmExchangesView), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
   });
 
   testWidgets('a decrypted connection lists its requests in a tab of their '
@@ -273,7 +379,9 @@ void main() {
         capturing: true,
         since: _start.subtract(const Duration(minutes: 1)),
         exchanges: [
-          _summary(_exchange),
+          _summary(
+            _exchange,
+          ).copyWith(actionKinds: ['header-rewrite', 'url-rewrite', 'script']),
           MitmExchangeSummary(
             id: 8,
             start: _start,
@@ -287,31 +395,68 @@ void main() {
     );
     final appLocalizations = currentAppLocalizations;
 
-    expect(find.text(appLocalizations.basicInfo), findsOneWidget);
-    expect(find.text('GET /new?x=1'), findsNothing);
+    expect(find.text('/new?x=1'), findsNothing);
+    expect(_tab('${appLocalizations.httpRequests} 2'), findsOneWidget);
 
     await _openTab(tester, appLocalizations.httpRequests);
 
-    expect(find.text(appLocalizations.basicInfo), findsNothing);
-    expect(find.text('GET /new?x=1'), findsOneWidget);
-    expect(find.text('200'), findsOneWidget);
-    expect(find.text('35 ms'), findsOneWidget);
-    expect(find.text('POST /upload'), findsOneWidget);
-    expect(find.text(appLocalizations.inProgress), findsOneWidget);
+    expect(find.text('/new?x=1'), findsOneWidget);
+    expect(
+      tester
+          .getSize(
+            find.ancestor(
+              of: find.text('/new?x=1'),
+              matching: find.byType(DecorationListItem),
+            ),
+          )
+          .height,
+      listRowExtent(titleHeight: 22, subtitleHeight: 20),
+    );
+    expect(
+      find.text(
+        'GET · 200 · ${2048.traffic.show} · 35 ms · '
+        '${appLocalizations.headerRewrite} +2',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('/upload'), findsOneWidget);
+    expect(find.text('POST · ${appLocalizations.inProgress}'), findsOneWidget);
     expect(find.text(appLocalizations.httpRequestsMissing), findsNothing);
 
-    await tester.tap(find.text('GET /new?x=1'));
+    await tester.tap(find.text('/new?x=1'));
     await tester.pumpAndSettle();
 
-    expect(find.text('https://a.test/old?x=1'), findsOneWidget);
-    expect(find.text('HTTP/2.0'), findsOneWidget);
-    expect(find.text('X-Upstream'), findsNothing);
-    await _scrollTo(tester, find.text(appLocalizations.urlRewrite));
-    expect(find.text('header'), findsOneWidget);
     expect(
       find.descendant(
-        of: find.byType(MetaChip),
-        matching: find.text(appLocalizations.response),
+        of: find.byType(DetailHeader),
+        matching: find.text('200 OK · 35 ms · ${2048.traffic.show}'),
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('https://a.test/old?x=1'), findsOneWidget);
+    expect(find.text('HTTP/2.0'), findsOneWidget);
+    expect(find.text('URLRegex(/new)'), findsOneWidget);
+    expect(find.text('pick → node-b'), findsOneWidget);
+    expect(find.text('X-Upstream'), findsNothing);
+    await _scrollTo(tester, find.text(appLocalizations.urlRewrite));
+    expect(find.text(appLocalizations.total), findsOneWidget);
+    expect(find.text('${appLocalizations.httpWaiting} 20 ms'), findsOneWidget);
+    expect(
+      find.text('${appLocalizations.httpReceiving} 15 ms'),
+      findsOneWidget,
+    );
+    expect(find.text('header'), findsOneWidget);
+    expect(
+      find.text(
+        '${appLocalizations.response} · sign · '
+        '${appLocalizations.mitmActionModule('Sign-in')}',
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.text(
+        '${appLocalizations.request} · '
+        '${appLocalizations.delete} X-Forwarded-For',
       ),
       findsOneWidget,
     );
@@ -328,13 +473,33 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
-  testWidgets('with capture off a decrypted connection shows its overview '
-      'alone', (tester) async {
-    await _pumpDetail(tester, list: const MitmExchangeList(), capture: false);
+  testWidgets('beside the list a request opens over its connection, under '
+      'a button back to its requests', (tester) async {
+    await _pumpDetail(
+      tester,
+      list: MitmExchangeList(
+        capturing: true,
+        since: _start.subtract(const Duration(minutes: 1)),
+        exchanges: [_summary(_exchange)],
+      ),
+      exchange: _exchange,
+      inPane: true,
+    );
+    await _openRequest(tester);
 
-    expect(find.byType(SegmentedControl<int>), findsNothing);
-    expect(find.text(currentAppLocalizations.basicInfo), findsOneWidget);
-    expect(find.text(currentAppLocalizations.httpRequests), findsNothing);
+    final view = find.byType(MitmExchangeView);
+    expect(view, findsOneWidget);
+    expect(find.byType(DetailSheet), findsNothing);
+    expect(
+      find.descendant(of: view, matching: find.byGlyph(AppGlyphs.more)),
+      findsOneWidget,
+    );
+    final back = find.widgetWithText(TonalButton, _decrypted.title);
+    await tester.tap(back);
+    await tester.pumpAndSettle();
+
+    expect(view, findsNothing);
+    expect(find.text('/new?x=1'), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox.shrink());
   });
@@ -355,6 +520,27 @@ void main() {
       find.text(currentAppLocalizations.httpRequestsMissing),
       findsOneWidget,
     );
+
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('a decrypted connection with no requests yet says they '
+      'will show there, and offers nothing to do', (tester) async {
+    await _pumpDetail(
+      tester,
+      list: MitmExchangeList(
+        capturing: true,
+        since: _start.subtract(const Duration(minutes: 1)),
+      ),
+    );
+    await _openTab(tester, currentAppLocalizations.httpRequests);
+
+    expect(find.text(currentAppLocalizations.noHttpRequests), findsOneWidget);
+    expect(
+      find.text(currentAppLocalizations.noHttpRequestsHint),
+      findsOneWidget,
+    );
+    expect(find.byType(TonalButton), findsNothing);
 
     await tester.pumpWidget(const SizedBox.shrink());
   });
@@ -381,11 +567,60 @@ void main() {
     );
     await _openTab(tester, currentAppLocalizations.httpRequests);
 
-    await tester.tap(find.text('GET /new?x=1'));
+    await tester.tap(find.text('/new?x=1'));
     await tester.pumpAndSettle();
 
     expect(
       find.text(currentAppLocalizations.httpRequestCleared),
+      findsOneWidget,
+    );
+
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('a request opened before the Core restarted says it is gone', (
+    tester,
+  ) async {
+    final container = await _pumpDetail(
+      tester,
+      list: MitmExchangeList(capturing: true, exchanges: [_summary(_exchange)]),
+      exchange: _exchange,
+    );
+    final status = container.read(coreStatusProvider.notifier)
+      ..value = CoreStatus.connected;
+    await _openRequest(tester);
+    expect(find.text(currentAppLocalizations.httpRequestCleared), findsNothing);
+
+    status.value = CoreStatus.disconnected;
+    status.value = CoreStatus.connected;
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text(currentAppLocalizations.httpRequestCleared),
+      findsOneWidget,
+    );
+
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('a connection opened before the Core restarted lists none of '
+      'the next session\'s requests', (tester) async {
+    final container = await _pumpDetail(
+      tester,
+      list: MitmExchangeList(capturing: true, exchanges: [_summary(_exchange)]),
+    );
+    final status = container.read(coreStatusProvider.notifier)
+      ..value = CoreStatus.connected;
+    await _openTab(tester, currentAppLocalizations.httpRequests);
+    expect(find.text('/new?x=1'), findsOneWidget);
+
+    status.value = CoreStatus.disconnected;
+    status.value = CoreStatus.connected;
+    await tester.pumpAndSettle();
+
+    expect(find.text('/new?x=1'), findsNothing);
+    expect(
+      find.text(currentAppLocalizations.httpRequestsMissing),
       findsOneWidget,
     );
 
@@ -410,7 +645,7 @@ void main() {
       exchange: waiting,
     );
     await _openTab(tester, currentAppLocalizations.httpRequests);
-    await tester.tap(find.text('GET /new?x=1'));
+    await tester.tap(find.text('/new?x=1'));
     await tester.pumpAndSettle();
     await _openTab(tester, currentAppLocalizations.response);
 
@@ -421,7 +656,7 @@ void main() {
     );
     expect(
       find.descendant(
-        of: detail,
+        of: find.byType(NullStatus),
         matching: find.text(currentAppLocalizations.inProgress),
       ),
       findsOneWidget,
@@ -451,11 +686,43 @@ void main() {
       responseBody: body,
     );
     await _openTab(tester, currentAppLocalizations.httpRequests);
-    await tester.tap(find.text('GET /new?x=1'));
+    await tester.tap(find.text('/new?x=1'));
     await tester.pumpAndSettle();
     await _openTab(tester, currentAppLocalizations.response);
     return find.byType(MitmExchangeView);
   }
+
+  testWidgets('a body read once stays while its request is open', (
+    tester,
+  ) async {
+    var reads = 0;
+    final exchange = _exchange.copyWith(
+      responseHeader: {
+        'Content-Type': ['text/plain'],
+      },
+    );
+    await _pumpDetail(
+      tester,
+      list: MitmExchangeList(
+        capturing: true,
+        since: _start,
+        exchanges: [_summary(exchange)],
+      ),
+      exchange: exchange,
+      responseBody: MitmBody(data: base64Encode(utf8.encode('hi'))),
+      onBodyRead: () => reads++,
+    );
+    await _openRequest(tester);
+    await _openTab(tester, currentAppLocalizations.response);
+    expect(find.text('hi'), findsOneWidget);
+    await _openTab(tester, currentAppLocalizations.overview);
+    await _openTab(tester, currentAppLocalizations.response);
+
+    expect(find.text('hi'), findsOneWidget);
+    expect(reads, 1);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
 
   testWidgets('a finished request shows its body, and says when only its '
       'start was kept', (tester) async {
@@ -470,6 +737,13 @@ void main() {
 
     expect(
       find.descendant(of: detail, matching: find.text('{\n  "ok": 1\n}')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: detail,
+        matching: find.text('${2048.traffic.show} · JSON'),
+      ),
       findsOneWidget,
     );
     expect(
@@ -489,12 +763,17 @@ void main() {
       body: MitmBody(data: base64Encode([0, 1, 2, 3]), truncated: true),
     );
 
-    await tester.tap(
-      find.descendant(
-        of: detail,
-        matching: find.text(currentAppLocalizations.binaryData),
-      ),
+    final binary = find.descendant(
+      of: detail,
+      matching: find.text(currentAppLocalizations.binaryData),
     );
+    final visible = tester.getRect(find.byType(SheetDragHandle).first);
+    await tester.dragFrom(
+      visible.bottomCenter + const Offset(0, 120),
+      const Offset(0, -300),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(binary);
     await tester.pumpAndSettle();
 
     expect(find.textContaining('000000  00 01 02 03'), findsOneWidget);
@@ -502,6 +781,50 @@ void main() {
       find.text(currentAppLocalizations.httpBodyTruncated),
       findsAtLeastNWidgets(1),
     );
+
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('an image body decodes no taller than its box shows it', (
+    tester,
+  ) async {
+    final detail = await openResponse(
+      tester,
+      contentType: 'image/png',
+      body: MitmBody(data: base64Encode([0x89, 0x50, 0x4e, 0x47])),
+    );
+    final image = find.descendant(of: detail, matching: find.byType(Image));
+    final resize = tester.widget<Image>(image).image as ResizeImage;
+    final ratio = MediaQuery.devicePixelRatioOf(tester.element(image));
+
+    expect(resize.height, (240 * ratio).round());
+    expect(resize.allowUpscaling, isFalse);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('a body under no headers starts where the headers would', (
+    tester,
+  ) async {
+    final exchange = _exchange.copyWith(responseHeader: {});
+    await _pumpDetail(
+      tester,
+      list: MitmExchangeList(
+        capturing: true,
+        since: _start,
+        exchanges: [_summary(exchange)],
+      ),
+      exchange: exchange,
+      responseBody: MitmBody(data: base64Encode(utf8.encode('hi'))),
+    );
+    await _openRequest(tester);
+    await _openTab(tester, currentAppLocalizations.response);
+
+    final header = find.ancestor(
+      of: find.text(currentAppLocalizations.responseBody),
+      matching: find.byType(ListHeader),
+    );
+    expect(tester.widget<ListHeader>(header).atTop, isTrue);
 
     await tester.pumpWidget(const SizedBox.shrink());
   });
@@ -538,7 +861,7 @@ void main() {
       exchange: exchange,
     );
     await _openTab(tester, currentAppLocalizations.httpRequests);
-    await tester.longPress(find.text('GET /new?x=1'));
+    await tester.longPress(find.text('/new?x=1'));
     await tester.pumpAndSettle();
 
     for (final label in [
@@ -680,22 +1003,7 @@ void main() {
       debugOnRebuildDirtyWidget = null;
     }
     expect(rebuilds, 0);
-    expect(find.text('GET /new?x=1'), findsOneWidget);
-
-    await tester.pumpWidget(const SizedBox.shrink());
-  });
-
-  testWidgets('a decrypted connection is marked in its row', (tester) async {
-    await tester.pumpWidget(
-      TestApp(
-        wrapInProviderScope: true,
-        homeBuilder: (child) => HostScaffold(body: child),
-        child: TrackerInfoItem(trackerInfo: _decrypted, detailTitle: 'detail'),
-      ),
-    );
-    await tester.pump();
-
-    expect(find.text('MITM'), findsOneWidget);
+    expect(find.text('/new?x=1'), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox.shrink());
   });

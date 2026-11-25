@@ -1,7 +1,6 @@
 package com.follow.clash
 
 import android.content.Context
-import com.follow.clash.service.RootTun
 import java.io.File
 import java.io.IOException
 import java.security.KeyStore
@@ -44,6 +43,9 @@ object SystemCaStore {
         )
     }
 
+    /** What the app's own check counts as ready: the CA is in the user or the system store. */
+    fun trusts(pem: String): Boolean = locate(pem.toByteArray()).let { it["user"] == true || it["system"] == true }
+
     /** "installed", "untilReboot" when no root manager took the module, or "denied". */
     fun install(context: Context, der: ByteArray): String {
         return withScripts(context, der) { work, cert ->
@@ -79,7 +81,10 @@ object SystemCaStore {
     private fun preferences(context: Context) =
         context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE)
 
-    private fun rootAvailable(): Boolean = RootTun.suPath() != null
+    private fun rootAvailable(): Boolean {
+        val directories = System.getenv("PATH").orEmpty().split(':') + listOf("/system/xbin", "/sbin")
+        return directories.any { it.isNotEmpty() && File(it, "su").exists() }
+    }
 
     private fun parse(der: ByteArray): X509Certificate {
         return CertificateFactory.getInstance("X.509")

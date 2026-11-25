@@ -261,11 +261,7 @@ class ProxyGroupView extends ConsumerWidget {
       GridView.builder(
         key: _getPageStorageKey(ref),
         controller: controller,
-        padding: EdgeInsets.only(
-          left: 16,
-          right: 16,
-          bottom: 16 + context.bottomInset,
-        ),
+        padding: context.listInsets.page(bottom: 16 + context.bottomInset),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: columns,
           mainAxisSpacing: proxyGridSpacing,

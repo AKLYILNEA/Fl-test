@@ -10,7 +10,6 @@ import 'package:fl_clash/providers/core.dart';
 import 'package:fl_clash/views/connection/requests.dart';
 import 'package:fl_clash/views/dashboard/layout.dart';
 import 'package:fl_clash/views/dashboard/style.dart';
-import 'package:fl_clash/views/dns_queries.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -62,15 +61,12 @@ void openDashboardFeed(BuildContext context, DashboardFeed feed) {
     context,
     builder: (_, controller) => NestedPagedSheet(
       builder: (_) => switch (feed) {
-        DashboardFeed.connections => RequestsView(
+        DashboardFeed.connections ||
+        DashboardFeed.requests => RequestsView(scrollController: controller),
+        DashboardFeed.dns => RequestsView(
           scrollController: controller,
-          initialFeed: RequestFeed.live,
+          segment: RequestsSegment.dns,
         ),
-        DashboardFeed.requests => RequestsView(
-          scrollController: controller,
-          initialFeed: RequestFeed.recent,
-        ),
-        DashboardFeed.dns => DnsQueriesView(scrollController: controller),
       },
     ),
   );
@@ -117,11 +113,26 @@ mixin ConnectionsPolling<T extends ConsumerStatefulWidget>
     }
     try {
       if (pollsConnections) {
-        final (:next, :tcp) = _newestFirst(
-          ref.read(connectionBookProvider).list(),
-        );
+        final lineage = ref.read(requestsProvider).lineage;
+        final requestedAt = DateTime.now();
+        final snapshot = ref.read(connectionBookProvider).list();
         if (!isCurrent()) return;
-        connectionCount.value = next.length;
+        final requests = ref.read(requestsProvider.notifier);
+        if (!requests.sync(
+          snapshot,
+          requestedAt: requestedAt,
+          lineage: lineage,
+        )) {
+          return;
+        }
+        connectionCount.value = snapshot.length;
+        final next = [
+          for (final trackerInfo in requests.value.list.reversed)
+            if (trackerInfo.isActive) trackerInfo,
+        ];
+        final tcp = next
+            .where((item) => item.metadata.network.toLowerCase() == 'tcp')
+            .length;
         updateWhenRouteSettled(
           () => setState(() {
             connections = next;
@@ -298,23 +309,22 @@ class _ConnectionsTableCardState extends ConsumerState<ConnectionsTableCard>
     final headerHeight = _tabHeightOf(density) * scale;
     final tabInset = _tabInsetOf(density);
     final cellStart = dashboardCardPadding(density).left - _cellInset;
-    Widget segment(DashboardFeed feed, Widget count) =>
-        DashboardConnectedButton(
-          selected: _feed == feed,
-          first: feed == DashboardFeed.values.first,
-          last: feed == DashboardFeed.values.last,
-          outer: headerHeight / 2,
-          inner: 8,
-          background: DashboardColors.of(context).tone,
-          semanticLabel: feed.label,
-          onTap: () => _select(feed),
-          builder: (foreground) => _FeedSegment(
-            label: feed.label,
-            count: count,
-            height: headerHeight,
-            foreground: foreground,
-          ),
-        );
+    Widget segment(DashboardFeed feed, Widget count) => ConnectedButton(
+      selected: _feed == feed,
+      first: feed == DashboardFeed.values.first,
+      last: feed == DashboardFeed.values.last,
+      outer: headerHeight / 2,
+      inner: 8,
+      background: DashboardColors.of(context).tone,
+      semanticLabel: feed.label,
+      onTap: () => _select(feed),
+      builder: (foreground) => _FeedSegment(
+        label: feed.label,
+        count: count,
+        height: headerHeight,
+        foreground: foreground,
+      ),
+    );
     return DashboardCard(
       semanticLabel: appLocalizations.liveConnections,
       padding: EdgeInsets.fromLTRB(cellStart, tabInset, cellStart, 0),
@@ -330,7 +340,7 @@ class _ConnectionsTableCardState extends ConsumerState<ConnectionsTableCard>
                 start: FittedBox(
                   fit: BoxFit.scaleDown,
                   alignment: AlignmentDirectional.centerStart,
-                  child: DashboardConnectedGroup(
+                  child: ConnectedButtonGroup(
                     children: [
                       segment(
                         DashboardFeed.connections,
@@ -698,7 +708,7 @@ class _Exit extends StatelessWidget {
   }
 }
 
-String _timeOf(DateTime time) => time.showTime.trim();
+String _timeOf(DateTime time) => time.showTime;
 
 String _ruleKey(TrackerInfo info) =>
     '${info.rule} ${info.rulePayload}'.toLowerCase();
@@ -919,14 +929,4 @@ class _DnsResult extends StatelessWidget {
       ],
     );
   }
-}
-
-({List<TrackerInfo> next, int tcp}) _newestFirst(
-  List<TrackerInfo> trackerInfos,
-) {
-  final next = [...trackerInfos]..sort((a, b) => b.start.compareTo(a.start));
-  final tcp = next
-      .where((item) => item.metadata.network.toLowerCase() == 'tcp')
-      .length;
-  return (next: next, tcp: tcp);
 }

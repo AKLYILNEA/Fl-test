@@ -58,7 +58,7 @@ final class IpCountryProvider
   }
 }
 
-String _$ipCountryHash() => r'e1461792b951f44cb5d7ac699d06fa9b92b8964d';
+String _$ipCountryHash() => r'206239e821c3f48137cf312a78274aa57664b834';
 
 final class IpCountryFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<String>, String> {

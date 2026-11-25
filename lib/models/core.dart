@@ -12,6 +12,9 @@ abstract class SetupParams with _$SetupParams {
     @JsonKey(includeToJson: false, includeFromJson: false) SetupBase? base,
     @JsonKey(name: 'selection') required Map<String, String> selectedMap,
     required CoreOptions options,
+
+    /// As `config.apply` takes it, since Android hands these params on as they are.
+    @JsonKey(includeIfNull: false) Map<String, Object?>? host,
   }) = _SetupParams;
 
   factory SetupParams.fromJson(Map<String, dynamic> json) =>
@@ -206,10 +209,53 @@ abstract class MitmExchangeSummary with _$MitmExchangeSummary {
     @Default(0) @JsonKey(name: 'request-size') int requestSize,
     @Default(0) @JsonKey(name: 'response-size') int responseSize,
     @Default('') String error,
+    @Default('') String host,
+    @Default('') String path,
+    @Default('') @JsonKey(name: 'content-type') String contentType,
+    @Default('') @JsonKey(name: 'status-class') String statusClass,
+    @Default('') String kind,
+    @Default(false) bool rewritten,
+    @Default([]) @JsonKey(name: 'action-kinds') List<String> actionKinds,
+
+    /// `reject`, `redirect`, `map-local`, `script`, or empty for the server.
+    @Default('') String answer,
+    @JsonKey(name: 'connection-id') int? connectionId,
+    MitmApp? app,
   }) = _MitmExchangeSummary;
 
   factory MitmExchangeSummary.fromJson(Map<String, Object?> json) =>
       _$MitmExchangeSummaryFromJson(json);
+}
+
+@freezed
+abstract class MitmApp with _$MitmApp {
+  const factory MitmApp({
+    @Default('') String process,
+    @Default('') @JsonKey(name: 'process-path') String processPath,
+    int? uid,
+  }) = _MitmApp;
+
+  factory MitmApp.fromJson(Map<String, Object?> json) =>
+      _$MitmAppFromJson(json);
+}
+
+/// A page of Concord's `mitm.query`, newest first.
+@freezed
+abstract class MitmQueryPage with _$MitmQueryPage {
+  const factory MitmQueryPage({
+    @Default(false) bool capturing,
+    DateTime? since,
+    @Default(0) int version,
+    @Default(0) int oldest,
+    @Default(0) int held,
+    @Default(0) int matched,
+    @Default([]) List<MitmExchangeSummary> exchanges,
+    int? next,
+    @Default([]) List<int> unmatched,
+  }) = _MitmQueryPage;
+
+  factory MitmQueryPage.fromJson(Map<String, Object?> json) =>
+      _$MitmQueryPageFromJson(json);
 }
 
 /// Every request that started after [since] is still kept.
@@ -232,10 +278,24 @@ abstract class MitmAction with _$MitmAction {
     required String kind,
     @Default('') String phase,
     @Default('') String detail,
+    @Default('') String module,
   }) = _MitmAction;
 
   factory MitmAction.fromJson(Map<String, Object?> json) =>
       _$MitmActionFromJson(json);
+}
+
+/// The rule that decided a request and the chain it left through, exit first.
+@freezed
+abstract class MitmRoute with _$MitmRoute {
+  const factory MitmRoute({
+    @Default('') String rule,
+    @Default('') @JsonKey(name: 'rule-payload') String rulePayload,
+    @Default([]) List<String> chains,
+  }) = _MitmRoute;
+
+  factory MitmRoute.fromJson(Map<String, Object?> json) =>
+      _$MitmRouteFromJson(json);
 }
 
 @freezed
@@ -251,10 +311,12 @@ abstract class MitmExchange with _$MitmExchange {
     @Default('') @JsonKey(name: 'original-url') String originalUrl,
     @Default('') String proto,
     @Default(0) int status,
+    @Default('') String reason,
     @Default(0) @JsonKey(name: 'request-size') int requestSize,
     @Default(0) @JsonKey(name: 'response-size') int responseSize,
     @Default('') String error,
     @Default('') String connection,
+    @JsonKey(name: 'connection-id') int? connectionId,
     @Default({})
     @JsonKey(name: 'request-header')
     Map<String, List<String>> requestHeader,
@@ -262,6 +324,7 @@ abstract class MitmExchange with _$MitmExchange {
     @JsonKey(name: 'response-header')
     Map<String, List<String>> responseHeader,
     @Default([]) List<MitmAction> actions,
+    MitmRoute? route,
   }) = _MitmExchange;
 
   factory MitmExchange.fromJson(Map<String, Object?> json) =>
@@ -296,7 +359,6 @@ abstract class VpnOptions with _$VpnOptions {
     @Default([]) List<String> routeAddress,
     @Default(0) int mtu,
     @Default('') String congestionController,
-    @Default(false) bool rootTun,
   }) = _VpnOptions;
 
   factory VpnOptions.fromJson(Map<String, Object?> json) =>
@@ -425,6 +487,7 @@ abstract class ServiceCheckItem with _$ServiceCheckItem {
     @Default('') String name,
     @Default('') String status,
     @Default('') String region,
+    @Default('') String ip,
     @Default(0) int delay,
     @Default([]) List<String> chains,
     @JsonKey(name: 'checked-at') @Default(0) int checkedAt,

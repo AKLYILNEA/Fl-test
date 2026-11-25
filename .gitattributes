@@ -1,2 +1,4 @@
 # freezed emits lines of trailing spaces, and generated code is never edited by hand.
 lib/**/generated/** -whitespace
+plugins/prism_ui/lib/generated/** -whitespace
+patches/concord-customizations.patch whitespace=-blank-at-eol

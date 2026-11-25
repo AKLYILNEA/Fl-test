@@ -397,6 +397,35 @@ void main() {
     expect(container.read(navigationStateProvider).currentIndex, 0);
   });
 
+  test('on mobile, connections stays in the tools list while HTTPS is not '
+      'decrypted, and dev never decrypts', () {
+    container
+        .read(viewSizeProvider.notifier)
+        .update((_) => Size(maxMobileWidth.toDouble(), 800));
+    List<PageLabel> bar() => [
+      for (final item
+          in container.read(currentNavigationItemsStateProvider).value)
+        item.label,
+    ];
+    List<PageLabel> tools() => [
+      for (final item
+          in container.read(moreToolsSelectorStateProvider).navigationItems)
+        item.label,
+    ];
+
+    expect(bar(), isNot(contains(PageLabel.requests)));
+    expect(tools(), contains(PageLabel.requests));
+
+    container
+        .read(patchClashConfigProvider.notifier)
+        .update(
+          (state) => state.copyWith(mitm: state.mitm.copyWith(enable: true)),
+        );
+    final joinsBar = container.read(patchClashConfigProvider).mitm.enable;
+    expect(bar().contains(PageLabel.requests), joinsBar);
+    expect(tools().contains(PageLabel.requests), !joinsBar);
+  });
+
   test('layout and page state providers compose their dependencies', () {
     final profile = Profile.normal(label: 'Primary');
     _profiles(container).replace([profile]);
@@ -603,6 +632,43 @@ void main() {
     final vpnOptions = scoped.read(sharedStateProvider).vpnOptions!;
     expect(vpnOptions.enable, isFalse);
     expect(vpnOptions.systemProxy, isFalse);
+  });
+
+  test('the shared state carries the host settings a native start applies, '
+      'and safe mode keeps the controller closed', () {
+    loadAppLocalizations(const Locale('en'));
+    ProviderContainer scopedWith({required bool safeMode}) {
+      final scoped = ProviderContainer(
+        overrides: [
+          profilesProvider.overrideWith(TestProfiles.new),
+          safeModeProvider.overrideWithValue(safeMode),
+          hostCredentialProvider.overrideWithValue('h:s'),
+        ],
+      );
+      addTearDown(scoped.dispose);
+      scoped.listen(sharedStateProvider, (_, _) {});
+      scoped
+          .read(patchClashConfigProvider.notifier)
+          .update(
+            (state) => state.copyWith(
+              externalController: ExternalControllerStatus.open,
+              secret: 's',
+            ),
+          );
+      return scoped;
+    }
+
+    final host = scopedWith(
+      safeMode: false,
+    ).read(sharedStateProvider).setupParams!.host!;
+    expect(host['externalController'], '127.0.0.1:9090');
+    expect(host['secret'], 's');
+    expect(host['hostCredential'], 'h:s');
+    final safe = scopedWith(
+      safeMode: true,
+    ).read(sharedStateProvider).setupParams!.host!;
+    expect(safe['externalController'], '');
+    expect(safe['hostCredential'], 'h:s');
   });
 
   test('selection and delay providers resolve groups and profile state', () {

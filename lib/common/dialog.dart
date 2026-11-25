@@ -4,6 +4,7 @@ import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/widgets/widgets.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -38,6 +39,7 @@ class Dialogs {
       context: context ?? _context,
       child: child,
       dismissible: dismissible ?? true,
+      useRootNavigator: context != null,
     );
   }
 
@@ -221,6 +223,16 @@ class Dialogs {
     );
   }
 
+  Future<void> copyToClipboard(BuildContext context, String text) async {
+    await Clipboard.setData(ClipboardData(text: text));
+    if (context.mounted) {
+      showBanner(
+        context.appLocalizations.copySuccess,
+        level: BannerLevel.success,
+      );
+    }
+  }
+
   void showBanner(
     String text, {
     BannerLevel level = BannerLevel.info,
@@ -235,6 +247,11 @@ class Dialogs {
       return;
     }
     BannerHost.maybeOf(context)?.show(text, level: level, onTap: onTap);
+  }
+
+  Future<void> copy(String text) async {
+    await Clipboard.setData(ClipboardData(text: text));
+    showBanner(currentAppLocalizations.copySuccess);
   }
 
   void showFailures(List<UpdatingMessage> failures) {
@@ -298,7 +315,7 @@ class _FailureDetailsSheet extends StatelessWidget {
       title: context.appLocalizations.errorDetails,
       body: SelectionArea(
         child: PrismListView(
-          padding: const EdgeInsets.symmetric(horizontal: 16).copyWith(
+          padding: context.listInsets.page().copyWith(
             top: context.sectionsTopPadding,
             bottom: 20 + context.bottomInset,
           ),
@@ -319,6 +336,7 @@ class _FailureDetailsSheet extends StatelessWidget {
                   ),
               ],
               footer: message,
+              last: index == groups.length - 1,
             );
           },
         ),

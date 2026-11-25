@@ -17,7 +17,7 @@ import 'widgets/widgets.dart';
 
 // Narrower columns leave a pair of service cells too tight for a status, so
 // the grid stacks them in one.
-const _servicePairColumnMin = 180.0;
+const _servicePairColumnMin = 290.0;
 
 const _maxColumnWidth = 440.0;
 
@@ -37,18 +37,18 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
   late final ScrollController _controller;
 
   @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   void initState() {
     super.initState();
     _controller = sheetScrollController(context);
-    if (system.isDesktop) {
-      unawaited(ref.read(wakelockProvider.notifier).restore());
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(ref.read(wakelockProvider.notifier).restore());
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   void _setEditing(bool editing) {
@@ -91,18 +91,18 @@ class _DashboardViewState extends ConsumerState<DashboardView> {
             )
           : null,
       iconActions: [
-        if (editable && !editing)
-          IconButtonData(
-            glyph: AppGlyphs.edit,
-            tooltip: appLocalizations.editDashboard,
-            onPressed: () => _setEditing(true),
-          ),
-        if (desktopPlatforms.contains(platform) && !editing)
+        if (!editing && desktopPlatforms.contains(platform))
           IconButtonData(
             glyph: AppGlyphs.sun,
             tooltip: appLocalizations.wakelock,
             isSelected: ref.watch(wakelockProvider),
             onPressed: () => ref.read(wakelockProvider.notifier).toggle(),
+          ),
+        if (editable && !editing)
+          IconButtonData(
+            glyph: AppGlyphs.edit,
+            tooltip: appLocalizations.editDashboard,
+            onPressed: () => _setEditing(true),
           ),
       ],
       // The providers learn a resize a frame late, too late for the cards.

@@ -172,6 +172,10 @@ class Card extends StatelessWidget {
     );
   }
 
+  /// The least a card takes up, whatever it draws.
+  static Size tapTargetOf(BuildContext context) =>
+      _tapTargetOf(Theme.of(context));
+
   static Size _tapTargetOf(ThemeData theme) {
     if (theme.tapTargetSize != TapTargetSize.padded) {
       return Size.zero;

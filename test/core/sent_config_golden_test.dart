@@ -161,7 +161,10 @@ Future<String> _sent(String os) async {
       authentication: const ['user:pass'],
     ),
   );
-  return result.yaml;
+  return result.yaml.replaceAllMapped(
+    RegExp(r'^(\s+path: "/profiles)([^"]+)"$', multiLine: true),
+    (match) => '${match[1]}${match[2]!.replaceAll(r'\\', '/')}"',
+  );
 }
 
 void _expectFile(String path, String actual) {
@@ -285,6 +288,7 @@ void main() {
     final patch = configPatchOf(
       _patch,
       authentication: const ['user:pass'],
+      hostCredential: 'host:secret',
       options: const CoreOptions(
         testUrl: 'https://a.test/generate_204',
         skipCertVerify: true,

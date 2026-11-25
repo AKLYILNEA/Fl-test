@@ -65,7 +65,8 @@ class ServicePlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
             "init" -> initialize(call, result)
             "session" -> attachSession(call, result)
             "shutdown" -> shutdown(result)
-            "getRunTime" -> getRunTime(result)
+            "getRunningService" -> getRunningService(result)
+            "isRunRequested" -> result.success(ServiceState.isRunRequested)
             "syncState" -> syncState(call, result)
             "start" -> start(call, result)
             "stop" -> stop(call, result)
@@ -122,9 +123,12 @@ class ServicePlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
             .onFailure { error -> result.error("CORE_ERROR", error.message, null) }
     }
 
-    private fun getRunTime(result: MethodChannel.Result) {
+    private fun getRunningService(result: MethodChannel.Result) {
         scope.launch {
-            result.success(ServiceState.awaitRunTime())
+            val runtime = ServiceState.awaitRunningService()
+            result.success(runtime?.takeIf { it.options != null }?.let {
+                mapOf("startedAt" to it.startedAtMillis, "options" to gson.toJson(it.options))
+            })
         }
     }
 
@@ -164,12 +168,6 @@ class ServicePlugin : FlutterPlugin, MethodChannel.MethodCallHandler {
                     mapOf("revision" to commandRevision, "failure" to failure?.code),
                 )
             }
-        }
-    }
-
-    internal fun notifyRootFallback(reason: String) {
-        scope.launch(Dispatchers.Main) {
-            channel.invokeMethod("rootFallback", reason)
         }
     }
 

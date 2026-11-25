@@ -549,7 +549,6 @@ class _IconRuleFormState extends ConsumerState<_IconRuleForm> {
                   hintText: appLocalizations.required,
                   textInputAction: TextInputAction.done,
                   autocorrect: false,
-                  enableSuggestions: false,
                   onChanged: _handleChanged,
                   onFieldSubmitted: (_) => _handleSubmit(),
                 ),

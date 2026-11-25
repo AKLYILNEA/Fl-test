@@ -14,7 +14,6 @@ import 'common.dart';
 
 const _headerInset = 10.0;
 const _headerButtonInset = 4.0;
-const _groupInset = 16.0;
 const _liftDistance = 16.0;
 const _groupMinWidth = 360.0;
 const _groupMaxColumns = 3;
@@ -190,7 +189,8 @@ class _ProxiesListViewState extends ConsumerState<ProxiesListView> {
           child: WidthBuilder(
             builder: (_, maxWidth) {
               final gap = cardSpacingOf(context, viewMode);
-              final width = max(maxWidth - _groupInset * 2, 0.0);
+              final margin = context.listInsets.margin;
+              final width = max(maxWidth - margin * 2, 0.0);
               final groupColumns = viewMode == ViewMode.mobile
                   ? 1
                   : ((width + gap) / (_groupMinWidth + gap)).floor().clamp(
@@ -224,9 +224,7 @@ class _ProxiesListViewState extends ConsumerState<ProxiesListView> {
                       child: SizedBox(height: context.contentTopPadding),
                     ),
                     SliverPadding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: _groupInset,
-                      ),
+                      padding: EdgeInsets.symmetric(horizontal: margin),
                       sliver: groupColumns == 1
                           ? SliverMainAxisGroup(
                               slivers: groups.map(buildGroup).toList(),
@@ -733,6 +731,7 @@ class _GroupIcon extends ConsumerWidget {
                   child: CommonTargetIcon(
                     src: src,
                     fallback: GroupMonogram(name),
+                    rasterizeSvg: true,
                   ),
                 ),
               ),
@@ -749,7 +748,11 @@ class _GroupIcon extends ConsumerWidget {
                 size: constraints.maxHeight,
                 color: context.colorScheme.primary,
               ),
-              child: CommonTargetIcon(src: src, fallback: GroupMonogram(name)),
+              child: CommonTargetIcon(
+                src: src,
+                fallback: GroupMonogram(name),
+                rasterizeSvg: true,
+              ),
             );
           },
         ),
@@ -823,6 +826,7 @@ class _SelectedProxyLine extends ConsumerWidget {
                   child: CommonTargetIcon(
                     src: icon,
                     fallback: GroupMonogram(proxyName),
+                    rasterizeSvg: true,
                   ),
                 ),
               ),

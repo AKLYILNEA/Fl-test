@@ -104,6 +104,16 @@ void main() {
       );
     });
 
+    test('is true for a call the transport dropped before an answer', () {
+      for (final code in ['transport_disconnected', 'transport_error']) {
+        expect(
+          isUnansweredCoreError(CoreMethodException(code: code, message: '')),
+          isTrue,
+          reason: code,
+        );
+      }
+    });
+
     test('is false for a Core that answered with an error', () {
       expect(
         isUnansweredCoreError(

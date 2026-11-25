@@ -287,6 +287,7 @@ void main() {
             overlay: any(named: 'overlay'),
             selection: any(named: 'selection'),
             options: any(named: 'options'),
+            host: any(named: 'host'),
           ),
         ).thenAnswer((_) async => const []);
       }
@@ -314,6 +315,29 @@ void main() {
                 'http://x.com',
               ),
             ),
+          ),
+        ).called(1);
+      });
+
+      test('hands the host settings on with the apply', () async {
+        stubApply();
+        const host = {'secret': 's', 'hostCredential': 'h:s'};
+
+        await controller.setupConfig(
+          params: const SetupParams(
+            selectedMap: {},
+            options: _options,
+            host: host,
+          ),
+        );
+
+        verify(
+          () => api.applyConfig(
+            profilePath: null,
+            overlay: null,
+            selection: const {},
+            options: any(named: 'options'),
+            host: host,
           ),
         ).called(1);
       });
@@ -586,6 +610,36 @@ void main() {
       expect(groups.map((group) => group.name), ['G']);
       expect(groups.single.now, 'a');
       expect(groups.single.all.map((proxy) => proxy.name), ['a']);
+    });
+
+    test('keeps a smart group', () async {
+      when(() => api.proxyGroups()).thenAnswer(
+        (_) async => const ProxyGroupsDto(
+          order: ['S'],
+          groups: [
+            GroupInfo(
+              name: 'S',
+              type: 'Smart',
+              now: 'a',
+              all: ['a'],
+              testUrl: '',
+              hidden: false,
+              icon: '',
+              emptyFallback: '',
+            ),
+          ],
+          nodes: [NodeInfo(name: 'a', type: 'ss')],
+        ),
+      );
+
+      final groups = await controller.getProxiesGroups(
+        sortType: ProxiesSortType.none,
+        delayMap: const {},
+        selectedMap: const {},
+        defaultTestUrl: 'http://t',
+      );
+
+      expect(groups.single.type, GroupType.Smart);
     });
 
     test('is empty when the Core lists no groups', () async {

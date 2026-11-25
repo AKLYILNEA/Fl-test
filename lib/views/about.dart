@@ -9,6 +9,7 @@ import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/ui/icons/icons.dart';
 import 'package:fl_clash/ui/ui.dart';
+import 'package:fl_clash/widgets/config_item.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -61,6 +62,12 @@ class _AboutViewState extends ConsumerState<AboutView>
 
   double _scrollOffset = 0.0;
   double _heroExtent = 280.0;
+  Size? _lastMeasuredViewSize;
+  Animation<double>? _routeAnimation;
+  bool _routeTransitioning = false;
+
+  static bool _isAnimatingStatus(AnimationStatus? status) =>
+      status == AnimationStatus.forward || status == AnimationStatus.reverse;
 
   @override
   void initState() {
@@ -71,15 +78,32 @@ class _AboutViewState extends ConsumerState<AboutView>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    final nextAnimation = ModalRoute.of(context)?.animation;
+    if (nextAnimation != _routeAnimation) {
+      _routeAnimation?.removeStatusListener(_handleRouteAnimationStatus);
+      _routeAnimation = nextAnimation;
+      _routeAnimation?.addStatusListener(_handleRouteAnimationStatus);
+    }
+    _routeTransitioning = _isAnimatingStatus(_routeAnimation?.status);
     _syncBgAnimation();
   }
 
   @override
   void dispose() {
+    _routeAnimation?.removeStatusListener(_handleRouteAnimationStatus);
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     _bgController.dispose();
     super.dispose();
+  }
+
+  void _handleRouteAnimationStatus(AnimationStatus status) {
+    final transitioning = _isAnimatingStatus(status);
+    if (transitioning == _routeTransitioning || !mounted) return;
+    setState(() {
+      _routeTransitioning = transitioning;
+    });
+    _syncBgAnimation();
   }
 
   void _onScroll() {
@@ -107,6 +131,7 @@ class _AboutViewState extends ConsumerState<AboutView>
     final playing =
         widget.dynamicBackground &&
         !context.disableAnimations &&
+        !_routeTransitioning &&
         _scrollProgress < 1.0;
     _bgController.sync(
       playing: playing,
@@ -114,7 +139,9 @@ class _AboutViewState extends ConsumerState<AboutView>
     );
   }
 
-  void _measureHero() {
+  void _measureHero(Size viewSize) {
+    if (_lastMeasuredViewSize == viewSize) return;
+    _lastMeasuredViewSize = viewSize;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final box = _heroKey.currentContext?.findRenderObject() as RenderBox?;
@@ -134,7 +161,11 @@ class _AboutViewState extends ConsumerState<AboutView>
     if (ref.read(loadingProvider(LoadingTag.checkUpdate))) return;
     final commonAction = ref.read(commonActionProvider.notifier);
     final result = await globalState.loadingRun(
-      () async => (release: await request.checkForUpdate()),
+      () async => (
+        release: await request.checkForUpdate(
+          ref.read(appSettingProvider).updateChannel,
+        ),
+      ),
       title: context.appLocalizations.checkUpdate,
       tag: LoadingTag.checkUpdate,
     );
@@ -173,13 +204,18 @@ class _AboutViewState extends ConsumerState<AboutView>
     final progress = _scrollProgress;
     final barBgAlpha = ((progress - 0.35) / 0.65).clamp(0.0, 1.0);
     final collapsed = progress >= 1.0;
+    final blurEnabled = !_routeTransitioning;
+    final avatarCachePx = (40 * MediaQuery.devicePixelRatioOf(context)).round();
 
     _bgController.sync(
       playing:
-          widget.dynamicBackground && !context.disableAnimations && !collapsed,
+          widget.dynamicBackground &&
+          !context.disableAnimations &&
+          !_routeTransitioning &&
+          !collapsed,
       colorInterpPeriod: preset.colorInterpPeriod,
     );
-    _measureHero();
+    _measureHero(MediaQuery.sizeOf(context));
 
     final barBackgroundColor = SurfaceLevel.page
         .colorOf(colorScheme)
@@ -249,8 +285,27 @@ class _AboutViewState extends ConsumerState<AboutView>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        generateSection(
+                          title: appLocalizations.update,
+                          items: [
+                            ConfigToggleItem(
+                              title: (l) => l.autoCheckUpdate,
+                              selector: appSettingProvider.select(
+                                (state) => state.autoCheckUpdate,
+                              ),
+                              onChanged: (ref, value) => ref
+                                  .read(appSettingProvider.notifier)
+                                  .update(
+                                    (state) =>
+                                        state.copyWith(autoCheckUpdate: value),
+                                  ),
+                            ),
+                          ],
+                        ),
+
                         MiuixFrostedSection(
                           title: appLocalizations.more,
+                          blurEnabled: blurEnabled,
                           items: [
                             _buildLinkItem(
                               glyph: AppGlyphs.code,
@@ -264,19 +319,20 @@ class _AboutViewState extends ConsumerState<AboutView>
                               color: colorScheme.primary,
                               title: appLocalizations.core,
                               url: 'https://github.com/chen08209/concord',
-                              label: 'github.com/chen08209/concord',
+                              label: 'github.com/chen08209/Clash.Meta',
                             ),
                             _buildLinkItem(
                               glyph: AppGlyphs.send,
                               color: colorScheme.primary,
                               title: 'Telegram',
-                              url: 'https://t.me/FlClash',
-                              label: 't.me/FlClash',
+                              url: 'https://t.me/aaANDkk1314',
+                              label: 't.me/aaANDkk1314',
                             ),
                           ],
                         ),
                         MiuixFrostedSection(
                           title: appLocalizations.otherContributors,
+                          blurEnabled: blurEnabled,
                           items: [
                             for (final contributor in _contributors)
                               ListItem(
@@ -286,7 +342,11 @@ class _AboutViewState extends ConsumerState<AboutView>
                                   foregroundDecoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     image: DecorationImage(
-                                      image: AssetImage(contributor.avatar),
+                                      image: ResizeImage.resizeIfNeeded(
+                                        avatarCachePx,
+                                        avatarCachePx,
+                                        AssetImage(contributor.avatar),
+                                      ),
                                       fit: BoxFit.cover,
                                     ),
                                   ),
@@ -337,8 +397,7 @@ class _AboutHero extends StatelessWidget {
     required this.onEnterDeveloperMode,
   });
 
-  static const _logoSize = 88.0;
-  static const _logoInset = 10.0;
+  static const _logoSize = 96.0;
 
   Widget _fadeScale(double progress, Widget child) {
     final clamped = progress.clamp(0.0, 1.0);
@@ -367,24 +426,15 @@ class _AboutHero extends StatelessWidget {
             iconProgress,
             _DeveloperModeDetector(
               onEnterDeveloperMode: onEnterDeveloperMode,
-              child: DecoratedBox(
-                decoration: ShapeDecoration(
-                  color: const Color(0xFFFFFFFF),
-                  shape: AppShape.all(24),
-                  shadows: _aboutShadows,
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(_logoInset),
-                  child: Image.asset(
-                    'assets/images/icon.png',
-                    width: _logoSize - _logoInset * 2,
-                    height: _logoSize - _logoInset * 2,
-                  ),
-                ),
+              child: MiuixChromaticLogo(
+                assetPath: 'assets/images/logo.svg',
+                size: _logoSize,
+                backdropKey: backdropKey,
+                controller: controller,
+                preset: preset,
               ),
             ),
           ),
-          const SizedBox(height: 6),
           _fadeScale(
             titleProgress,
             MiuixChromaticTitle(
@@ -546,6 +596,10 @@ class _DeveloperModeDetectorState extends State<_DeveloperModeDetector> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(onTap: _handleTap, child: widget.child);
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: _handleTap,
+      child: widget.child,
+    );
   }
 }

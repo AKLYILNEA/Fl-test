@@ -768,6 +768,49 @@ class _ExpandingBox extends SingleChildRenderObjectWidget {
   }
 }
 
+/// Gives a card that measures its content a height the rows are sure to
+/// reach, instead of building every row to measure it.
+class _KnownHeight extends SingleChildRenderObjectWidget {
+  const _KnownHeight({required this.height, super.child});
+
+  final double height;
+
+  @override
+  _RenderKnownHeight createRenderObject(BuildContext context) =>
+      _RenderKnownHeight(height);
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    _RenderKnownHeight renderObject,
+  ) {
+    renderObject.height = height;
+  }
+}
+
+class _RenderKnownHeight extends RenderProxyBox {
+  _RenderKnownHeight(this._height);
+
+  double _height;
+  set height(double value) {
+    if (value == _height) return;
+    _height = value;
+    markNeedsLayout();
+  }
+
+  @override
+  double computeMinIntrinsicWidth(double height) => 0;
+
+  @override
+  double computeMaxIntrinsicWidth(double height) => 0;
+
+  @override
+  double computeMinIntrinsicHeight(double width) => _height;
+
+  @override
+  double computeMaxIntrinsicHeight(double width) => _height;
+}
+
 class _RenderExpandingBox extends RenderProxyBox {
   _RenderExpandingBox(this._progress);
 
@@ -1574,7 +1617,7 @@ class _ReadyHero extends StatelessWidget {
           glyphColor: colorScheme.onSuccess,
           chips: [
             _HeroChip(
-              globalState.packageInfo.version,
+              installedVersionName(globalState.packageInfo.version),
               color: colorScheme.onSurfaceVariant,
             ),
             GlyphIcon(
@@ -1722,56 +1765,66 @@ class _WarningsHero extends StatelessWidget {
   ) {
     final colorScheme = context.colorScheme;
     final last = items.length - 1;
-    return SingleChildScrollView(
-      controller: scroll,
-      padding: const EdgeInsets.all(_inset),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: _gap,
-        children: [
-          for (final (i, item) in items.indexed)
-            DecoratedBox(
-              decoration: ShapeDecoration(
-                color: fill,
-                shape: _rowShape(i, last),
-              ),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(minHeight: _rowHeight),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 9,
-                  ),
-                  child: Row(
+    Widget row(int i) {
+      final item = items[i];
+      return DecoratedBox(
+        decoration: ShapeDecoration(color: fill, shape: _rowShape(i, last)),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: _rowHeight),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: 10,
+              children: [
+                GlyphIcon(
+                  AppGlyphs.warning,
+                  size: 18,
+                  fill: 1,
+                  color: colorScheme.warning,
+                ),
+                Expanded(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    spacing: 10,
+                    spacing: 2,
                     children: [
-                      GlyphIcon(
-                        AppGlyphs.warning,
-                        size: 18,
-                        fill: 1,
-                        color: colorScheme.warning,
+                      Text(
+                        item.message,
+                        style: AppTextStyle.subheadline.of(context),
                       ),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          spacing: 2,
-                          children: [
-                            Text(
-                              item.message,
-                              style: AppTextStyle.subheadline.of(context),
-                            ),
-                            if (item.path.isNotEmpty)
-                              Text(item.path, style: pathStyle),
-                          ],
-                        ),
-                      ),
+                      if (item.path.isNotEmpty)
+                        Text(item.path, style: pathStyle),
                     ],
                   ),
                 ),
-              ),
+              ],
             ),
-        ],
+          ),
+        ),
+      );
+    }
+
+    final shortest = _inset * 2 + items.length * (_rowHeight + _gap) - _gap;
+    if (shortest < _maxCardHeight) {
+      return SingleChildScrollView(
+        controller: scroll,
+        padding: const EdgeInsets.all(_inset),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: _gap,
+          children: [for (var i = 0; i < items.length; i++) row(i)],
+        ),
+      );
+    }
+    return _KnownHeight(
+      height: shortest,
+      child: PrismListView(
+        controller: scroll,
+        padding: const EdgeInsets.all(_inset),
+        itemCount: items.length,
+        gap: _gap,
+        estimatedItemExtent: _rowHeight,
+        itemBuilder: (_, i) => row(i),
       ),
     );
   }

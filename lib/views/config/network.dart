@@ -5,7 +5,6 @@ import 'package:fl_clash/common/mitm_network.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/features/form/form.dart';
 import 'package:fl_clash/models/models.dart';
-import 'package:fl_clash/providers/app.dart';
 import 'package:fl_clash/providers/config.dart';
 import 'package:fl_clash/providers/mitm.dart';
 import 'package:fl_clash/views/config/override.dart';
@@ -44,32 +43,11 @@ ConfigToggleItem _vpnToggle({
   required ConfigLabel title,
   required bool Function(VpnProps state) select,
   required _VpnUpdate<bool> update,
-  ConfigLabel? subtitle,
-  bool enabled = true,
 }) {
   return ConfigToggleItem(
     title: title,
-    subtitle: subtitle,
-    enabled: enabled,
     selector: vpnSettingProvider.select(select),
     onChanged: _vpnWriter(update),
-  );
-}
-
-ConfigToggleItem _vpnServiceToggle(
-  WidgetRef ref, {
-  required ConfigLabel title,
-  required bool Function(VpnProps state) select,
-  required _VpnUpdate<bool> update,
-}) {
-  final rootTun = ref.watch(
-    vpnSettingProvider.select((state) => state.rootTun),
-  );
-  return _vpnToggle(
-    title: title,
-    select: select,
-    update: update,
-    enabled: !rootTun,
   );
 }
 
@@ -113,29 +91,12 @@ class TUNItem extends ConsumerWidget {
   }
 }
 
-class RootTunItem extends ConsumerWidget {
-  const RootTunItem({super.key});
-
-  @override
-  Widget build(BuildContext context, ref) {
-    // Root managers hide su from apps they have not granted; a start without root falls back.
-    final suInstalled = ref.watch(suInstalledProvider).value ?? true;
-    return _vpnToggle(
-      title: (l) => l.rootTun,
-      subtitle: suInstalled ? null : (l) => l.rootTunUnavailable,
-      select: (state) => state.rootTun,
-      update: (state, value) => state.copyWith(rootTun: value),
-    );
-  }
-}
-
 class AllowBypassItem extends ConsumerWidget {
   const AllowBypassItem({super.key});
 
   @override
   Widget build(BuildContext context, ref) {
-    return _vpnServiceToggle(
-      ref,
+    return _vpnToggle(
       title: (l) => l.allowBypass,
       select: (state) => state.allowBypass,
       update: (state, value) => state.copyWith(allowBypass: value),
@@ -148,8 +109,7 @@ class VpnSystemProxyItem extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, ref) {
-    return _vpnServiceToggle(
-      ref,
+    return _vpnToggle(
       title: (l) => l.systemProxy,
       select: (state) => state.systemProxy,
       update: (state, value) => state.copyWith(systemProxy: value),
@@ -188,8 +148,7 @@ class DNSHijackingItem extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, ref) {
-    return _vpnServiceToggle(
-      ref,
+    return _vpnToggle(
       title: (l) => l.dnsHijacking,
       select: (state) => state.dnsHijacking,
       update: (state, value) => state.copyWith(dnsHijacking: value),
@@ -251,9 +210,7 @@ class BypassPrivateRouteItem extends ConsumerWidget {
 }
 
 class BypassDomainItem extends ConsumerWidget {
-  const BypassDomainItem({super.key, this.enabled = true});
-
-  final bool enabled;
+  const BypassDomainItem({super.key});
 
   @override
   Widget build(BuildContext context, ref) {
@@ -262,7 +219,6 @@ class BypassDomainItem extends ConsumerWidget {
         .value
         ?.keys[MitmNetworkKey.bypassDomain];
     return ConfigListEditItem(
-      enabled: enabled,
       title: (l) => l.bypassDomain,
       subtitle: module == null ? null : (l) => l.mitmChangeReplacedBy(module),
       itemMaxLength: TextInputLimits.domain,
@@ -531,27 +487,22 @@ class VpnSections extends ConsumerWidget {
     final authenticationEnable = ref.watch(
       networkSettingProvider.select((state) => state.authentication.enable),
     );
-    final rootTun = ref.watch(
-      vpnSettingProvider.select((state) => state.rootTun),
-    );
     return Column(
       children: [
         generateSection(items: const [VPNItem()]),
         generateSection(
           title: 'VPN',
-          items: [
-            const VpnSystemProxyItem(),
-            BypassDomainItem(enabled: !rootTun),
-            const AllowBypassItem(),
-            const Ipv6Item(),
-            const DNSHijackingItem(),
-            if (rootTunOffered) const RootTunItem(),
+          items: const [
+            VpnSystemProxyItem(),
+            BypassDomainItem(),
+            AllowBypassItem(),
+            Ipv6Item(),
+            DNSHijackingItem(),
           ],
           footer: [
             if (authenticationEnable)
               appLocalizations.authenticationSystemProxyDesc,
             appLocalizations.bypassDomainDesc,
-            if (rootTunOffered) appLocalizations.rootTunDesc,
           ].join('\n'),
         ),
       ],
@@ -608,7 +559,7 @@ class NetworkListView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 16).copyWith(
+      padding: context.listInsets.page().copyWith(
         top: context.sectionsTopPadding,
         bottom: 16 + context.bottomInset,
       ),

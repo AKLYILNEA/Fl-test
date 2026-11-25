@@ -12,6 +12,7 @@ reports through `concord -t`, not this table.
 | `allow-lan` | general | android, macos, windows, linux | T0 | `false` |
 | `authentication` | network | android, macos, windows, linux | T0 | `[]` |
 | `disable-keep-alive` | general | android, macos, windows, linux | T0 | `false` |
+| `dns.append-system` | fixed | android, macos, windows, linux | T0 |  |
 | `dns.cache-algorithm` | DNS override | android, macos, windows, linux | T1 | `""` |
 | `dns.cache-max-size` | DNS override | android, macos, windows, linux | T1 | `0` |
 | `dns.default-nameserver` | DNS override | android, macos, windows, linux | T0 | `["114.114.114.114","223.5.5.5","8.8.8.8","1.0.0.1"]` |
@@ -19,7 +20,7 @@ reports through `concord -t`, not this table.
 | `dns.direct-nameserver-follow-policy` | DNS override | android, macos, windows, linux | T0 | `false` |
 | `dns.enable` | DNS override | android, macos, windows, linux | T0 | `false` |
 | `dns.enhanced-mode` | DNS override | android, macos, windows, linux | T0 | `"redir-host"` |
-| `dns.fake-ip-filter` | DNS override | android, macos, windows, linux | T0 | `["dns.msftnsci.com","www.msftnsci.com","www.msftconnecttest.com"]` |
+| `dns.fake-ip-filter` | DNS override | android, macos, windows, linux | T0 | `["dns.msftncsi.com","www.msftncsi.com","www.msftconnecttest.com"]` |
 | `dns.fake-ip-filter-mode` | DNS override | android, macos, windows, linux | T0 | `"blacklist"` |
 | `dns.fake-ip-range` | DNS override | android, macos, windows, linux | T0 | `"198.18.0.1/16"` |
 | `dns.fake-ip-range6` | DNS override | android, macos, windows, linux | T1 | `""` |

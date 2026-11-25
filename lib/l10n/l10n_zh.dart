@@ -51,6 +51,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get outboundMode => '出站模式';
 
   @override
+  String get noProfileDirect => '未使用配置，全部直连';
+
+  @override
   String get serviceStatus => '服务状态';
 
   @override
@@ -189,6 +192,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get autoCheckUpdate => '自动检查更新';
 
   @override
+  String get updateChannel => '更新渠道';
+
+  @override
+  String get updateChannelStable => '正式版';
+
+  @override
+  String get updateChannelPre => '预览版';
+
+  @override
   String get checkCertificate => '校验 TLS 证书';
 
   @override
@@ -243,10 +255,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get rename => '重命名';
 
   @override
-  String get profileUrlNullValidationDesc => '请输入配置URL';
+  String get profileUrlNullValidationDesc => '请输入配置 URL';
 
   @override
-  String get profileUrlInvalidValidationDesc => '请输入有效配置URL';
+  String get profileUrlInvalidValidationDesc => '请输入有效配置 URL';
 
   @override
   String get autoUpdate => '自动更新';
@@ -345,10 +357,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appAccessControl => '应用访问控制';
 
   @override
-  String get accessControlAllowDesc => '只允许选中应用进入VPN';
+  String get accessControlAllowDesc => '只允许选中应用进入 VPN';
 
   @override
-  String get accessControlNotAllowDesc => '选中应用将会被排除在VPN之外';
+  String get accessControlNotAllowDesc => '选中应用将会被排除在 VPN 之外';
 
   @override
   String get accessControlDisabledDesc => '应用访问控制已关闭';
@@ -391,13 +403,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get tabAnimation => '选项卡动画';
 
   @override
-  String get desc => '基于 Concord 内核的多平台代理客户端，简单易用，开源无广告。';
+  String get desc => '基于 ClashMeta 的多平台代理客户端，简单易用，开源无广告。';
 
   @override
-  String get startVpn => '正在启动VPN…';
+  String get startVpn => '正在启动 VPN…';
 
   @override
-  String get stopVpn => '正在停止VPN…';
+  String get stopVpn => '正在停止 VPN…';
 
   @override
   String get compatible => '兼容模式';
@@ -427,7 +439,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get noInfo => '暂无信息';
 
   @override
-  String get pleaseBindWebDAV => '请绑定WebDAV';
+  String get pleaseBindWebDAV => '请绑定 WebDAV';
 
   @override
   String get bind => '绑定';
@@ -436,13 +448,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get connectivity => '连通性：';
 
   @override
-  String get webDAVConfiguration => 'WebDAV配置';
+  String get webDAVConfiguration => 'WebDAV 配置';
 
   @override
   String get address => '地址';
 
   @override
-  String get addressTip => '请输入有效的WebDAV地址';
+  String get addressTip => '请输入有效的 WebDAV 地址';
 
   @override
   String get password => '密码';
@@ -475,13 +487,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get search => '搜索';
 
   @override
-  String get allowBypass => '允许应用绕过VPN';
+  String get allowBypass => '允许应用绕过 VPN';
 
   @override
   String get externalController => '外部控制器';
 
   @override
-  String get externalControllerDesc => '外部控制器开启后，可通过 9090 端口控制内核。';
+  String get externalControllerDesc => '外部控制器监听 9090 端口。';
 
   @override
   String get externalControllerSecret => '外部控制器密钥';
@@ -505,9 +517,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get startupAndBackground => '启动与后台';
 
   @override
-  String get requestsAndUpdates => '请求与更新';
-
-  @override
   String get logsAndDiagnostics => '日志与诊断';
 
   @override
@@ -517,7 +526,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get unifiedDelay => '统一延迟';
 
   @override
-  String get tcpConcurrent => 'TCP并发';
+  String get tcpConcurrent => 'TCP 并发';
 
   @override
   String get requests => '请求';
@@ -539,6 +548,236 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get liveConnections => '实时连接';
+
+  @override
+  String get speed => '速度';
+
+  @override
+  String get closeActiveConnections => '关闭全部活动连接';
+
+  @override
+  String closeActiveConnectionsTip(int count) {
+    return '关闭全部 $count 条活动连接？正在使用它们的应用会自行重连，进行中的下载或通话可能中断。';
+  }
+
+  @override
+  String get connectionsAll => '全部';
+
+  @override
+  String get connectionsActive => '活动';
+
+  @override
+  String get connectionsFailed => '失败';
+
+  @override
+  String get connectionsDecrypted => '已解密';
+
+  @override
+  String get connectionRuleGlobal => '全局模式';
+
+  @override
+  String get connectionRuleNone => '未经规则';
+
+  @override
+  String get failureRefused => '连接被拒绝';
+
+  @override
+  String get failureUnreachable => '不可达';
+
+  @override
+  String get failureDns => 'DNS 解析失败';
+
+  @override
+  String get dnsNoSuchDomain => '域名不存在';
+
+  @override
+  String get dnsServerFailure => '上游出错';
+
+  @override
+  String get dnsRefused => '上游拒绝了查询';
+
+  @override
+  String get dnsTimedOut => '查询超时';
+
+  @override
+  String get dnsBlockedByRule => '被规则拦截';
+
+  @override
+  String get failureHandshake => '握手失败';
+
+  @override
+  String get failureOther => '其他错误';
+
+  @override
+  String get connectionClosed => '已关闭';
+
+  @override
+  String get timeline => '时间线';
+
+  @override
+  String get connectionInfo => '信息';
+
+  @override
+  String get decryption => '解密';
+
+  @override
+  String connectionRuleIndex(Object number) {
+    return '第 $number 条';
+  }
+
+  @override
+  String get handshake => '握手';
+
+  @override
+  String get now => '现在';
+
+  @override
+  String get mitmCertificateRefused => '客户端拒绝了证书';
+
+  @override
+  String get connectionEndLocal => '本地关闭';
+
+  @override
+  String get connectionEndRemote => '对端关闭';
+
+  @override
+  String get connectionEndFinished => '已结束';
+
+  @override
+  String get connectionEndReset => '被重置';
+
+  @override
+  String get connectionEndCore => '被核心关闭';
+
+  @override
+  String get fakeIpMapping => 'fake-ip 映射';
+
+  @override
+  String get dnsFromHosts => '来自 hosts';
+
+  @override
+  String get condition => '条件';
+
+  @override
+  String get addCondition => '添加条件';
+
+  @override
+  String get conditionField => '字段';
+
+  @override
+  String get conditionContains => '包含';
+
+  @override
+  String get conditionEquals => '等于';
+
+  @override
+  String get conditionTip =>
+      '同一字段的条件满足其一即可，不同字段的都要满足。搜索框里也能这样写：host:github.com -app:slack';
+
+  @override
+  String get conditionNotContains => '不包含';
+
+  @override
+  String get conditionNotEquals => '不等于';
+
+  @override
+  String get editCondition => '编辑条件';
+
+  @override
+  String conditionValuesIn(String field) {
+    return '当前连接里的$field';
+  }
+
+  @override
+  String conditionShows(String count) {
+    return '将筛出 $count 条连接';
+  }
+
+  @override
+  String get conditionRows => '同一行满足其一，各行都要满足';
+
+  @override
+  String get clearAll => '清除全部';
+
+  @override
+  String get conditionOr => '或';
+
+  @override
+  String get selectConnection => '选择一条连接';
+
+  @override
+  String get selectConnectionHint => '这里会显示它的时间线、HTTP 请求和连接信息';
+
+  @override
+  String get selectDnsQuery => '选择一次查询';
+
+  @override
+  String get selectDnsQueryHint => '这里会显示它的应答、上游，以及相关的连接';
+
+  @override
+  String get relatedConnections => '相关的连接';
+
+  @override
+  String get upstream => '上游';
+
+  @override
+  String get dnsQueryFields => '查询';
+
+  @override
+  String dnsQueryAskedBy(String initiator) {
+    return '$initiator发起';
+  }
+
+  @override
+  String get dnsConditionTip => '同一字段的条件满足其一即可，不同字段的都要满足。';
+
+  @override
+  String dnsConditionValuesIn(String field) {
+    return '当前查询里的$field';
+  }
+
+  @override
+  String dnsConditionShows(String count) {
+    return '将筛出 $count 次查询';
+  }
+
+  @override
+  String get connectionPath => '链路';
+
+  @override
+  String get processPath => '进程路径';
+
+  @override
+  String get proxyNode => '代理节点';
+
+  @override
+  String get closingTime => '关闭时间';
+
+  @override
+  String processUid(int uid) {
+    return 'UID $uid';
+  }
+
+  @override
+  String get onlyThisApp => '只看此应用';
+
+  @override
+  String get onlyThisDomain => '只看此域名';
+
+  @override
+  String get hideThisHost => '隐藏此主机';
+
+  @override
+  String get copySummary => '复制摘要';
+
+  @override
+  String get copyDomain => '复制域名';
+
+  @override
+  String get copyAnswers => '复制应答';
+
+  @override
+  String get viewHttp => '查看 HTTP';
 
   @override
   String get inbound => '入站';
@@ -634,7 +873,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get liquidGlass => '液态玻璃';
 
   @override
-  String get keepAliveIntervalDesc => 'TCP保持活动间隔';
+  String get keepAliveIntervalDesc => 'TCP 保持活动间隔';
 
   @override
   String get entries => '个条目';
@@ -751,7 +990,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get writeToSystem => '写入系统';
 
   @override
-  String get writeToSystemDesc => '写入系统会同时设置系统时钟，Android 上不生效。';
+  String get writeToSystemDesc => '写入系统在 Android 上不生效。';
 
   @override
   String get sniffer => '域名嗅探';
@@ -760,13 +999,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get overrideDestination => '覆盖目标地址';
 
   @override
-  String get forceDnsMapping => '强制DNS映射';
+  String get forceDnsMapping => '强制 DNS 映射';
 
   @override
-  String get forceDnsMappingDesc => '强制 DNS 映射对通过 DNS 映射得到域名的连接也进行嗅探。';
-
-  @override
-  String get parsePureIp => '解析纯IP';
+  String get parsePureIp => '解析纯 IP';
 
   @override
   String get forceDomain => '强制嗅探域名';
@@ -796,8 +1032,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get addOverrideEntry => '添加覆写项';
 
   @override
-  String get dnsOverrideDesc =>
-      '添加的项会覆写所有 URL 和文件配置的 DNS，未添加的项沿用配置自身的设置。自定义配置的 DNS 在其内容中设置。';
+  String get dnsOverrideDesc => '添加的项覆写 URL 和文件配置的 DNS。';
 
   @override
   String get settingEntries => '设置项';
@@ -827,26 +1062,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get respectRules => '遵守规则';
 
   @override
-  String get respectRulesDesc =>
-      '遵守规则使 DNS 连接遵守规则，需配置 Proxy Server Nameserver。';
+  String get respectRulesDesc => '遵守规则需配置 Proxy Server Nameserver。';
 
   @override
-  String get dnsMode => 'DNS模式';
+  String get dnsMode => 'DNS 模式';
 
   @override
-  String get fakeipRange => 'Fake-IP范围';
+  String get fakeipRange => 'Fake-IP 范围';
 
   @override
-  String get fakeipFilter => 'Fake-IP过滤';
+  String get fakeipFilter => 'Fake-IP 过滤';
 
   @override
-  String get useHosts => '使用Hosts';
+  String get useHosts => '使用 Hosts';
 
   @override
-  String get useSystemHosts => '使用系统Hosts';
+  String get useSystemHosts => '使用系统 Hosts';
 
   @override
-  String get fallbackFilter => 'Fallback过滤';
+  String get fallbackFilter => 'Fallback 过滤';
 
   @override
   String get domain => '域名';
@@ -858,7 +1092,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get listenRoutingMarkDesc => '监听路由标记仅在 Linux 生效。';
 
   @override
-  String get ipv6Timeout => 'IPv6超时（毫秒）';
+  String get ipv6Timeout => 'IPv6 超时（毫秒）';
 
   @override
   String get cacheAlgorithm => '缓存算法';
@@ -867,10 +1101,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cacheMaxSize => '缓存大小';
 
   @override
-  String get fakeipRange6 => 'Fake-IP范围（IPv6）';
+  String get fakeipRange6 => 'Fake-IP 范围（IPv6）';
 
   @override
-  String get fakeipFilterMode => 'Fake-IP过滤模式';
+  String get fakeipFilterMode => 'Fake-IP 过滤模式';
 
   @override
   String get fakeipTtl => 'Fake-IP TTL';
@@ -1065,9 +1299,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get filter => '筛选';
 
   @override
-  String get groupBy => '分类';
-
-  @override
   String get hideTimeoutProxies => '隐藏超时代理';
 
   @override
@@ -1206,7 +1437,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cacheCorrupt => '缓存已损坏，是否清空？';
 
   @override
-  String get detectionTip => '依赖第三方api，仅供参考';
+  String get detectionTip => '依赖第三方 api，仅供参考';
 
   @override
   String get listen => '监听';
@@ -1248,10 +1479,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get scriptFailed => '脚本运行失败';
 
   @override
-  String get sourceIp => '源IP';
+  String get sourceIp => '源 IP';
 
   @override
-  String get noResolve => '不解析IP';
+  String get noResolve => '不解析 IP';
 
   @override
   String get saveChanges => '是否保存更改？';
@@ -1391,7 +1622,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String urlTip(Object label) {
-    return '$label必须为URL';
+    return '$label必须为 URL';
   }
 
   @override
@@ -1427,7 +1658,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get batchImport => '批量导入';
 
   @override
-  String get batchUrlInputTip => '每行一个URL';
+  String get batchUrlInputTip => '每行一个 URL';
 
   @override
   String get batchLinkInputTip => '每行一个链接';
@@ -1478,13 +1709,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get mixedPort => '混合端口';
 
   @override
-  String get socksPort => 'Socks端口';
+  String get socksPort => 'Socks 端口';
 
   @override
-  String get redirPort => 'Redir端口';
+  String get redirPort => 'Redir 端口';
 
   @override
-  String get tproxyPort => 'Tproxy端口';
+  String get tproxyPort => 'Tproxy 端口';
 
   @override
   String portTip(Object label) {
@@ -1501,7 +1732,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get importFile => '通过文件导入';
 
   @override
-  String get importUrl => '通过URL导入';
+  String get importUrl => '通过 URL 导入';
 
   @override
   String get startFromScratch => '从零开始';
@@ -1527,7 +1758,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get destinationGeoIP => '目标地理定位';
 
   @override
-  String get destinationIPASN => '目标IP ASN';
+  String get destinationIPASN => '目标 IP ASN';
 
   @override
   String get specialProxy => '特殊代理';
@@ -1569,13 +1800,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get forceRestartCoreTip => '您确定要强制重启核心吗？';
 
   @override
-  String get dnsHijacking => 'DNS劫持';
+  String get dnsHijacking => 'DNS 劫持';
 
   @override
   String get coreStatus => '核心状态';
 
   @override
-  String get appendSystemDns => '追加系统DNS';
+  String get appendSystemDns => '追加系统 DNS';
 
   @override
   String get editRule => '编辑规则';
@@ -1848,7 +2079,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get testWhenUsed => '使用时测试';
 
   @override
-  String get disableUDP => '禁用UDP';
+  String get disableUDP => '禁用 UDP';
 
   @override
   String get confirmDeleteProxyGroup => '确定要删除当前策略组吗？';
@@ -1875,7 +2106,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get noResolveHostname => '不解析主机名';
 
   @override
-  String get matchSourceIp => '匹配来源IP';
+  String get matchSourceIp => '匹配来源 IP';
 
   @override
   String get basicInfo => '基础信息';
@@ -1986,10 +2217,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get ruleActionProcessPathWildcardDesc => '使用进程路径通配符匹配，仅支持*和?通配符';
 
   @override
-  String get ruleActionProcessNameDesc => '使用进程匹配，在Android平台可以匹配包名';
+  String get ruleActionProcessNameDesc => '使用进程匹配，在 Android 平台可以匹配包名';
 
   @override
-  String get ruleActionProcessNameRegexDesc => '使用进程名称正则表达式匹配，在Android平台可以匹配包名';
+  String get ruleActionProcessNameRegexDesc =>
+      '使用进程名称正则表达式匹配，在 Android 平台可以匹配包名';
 
   @override
   String get ruleActionProcessNameWildcardDesc => '使用进程名称通配符匹配，仅支持*和?通配符';
@@ -1998,13 +2230,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get ruleActionUidDesc => '匹配 Linux USER ID';
 
   @override
-  String get ruleActionNetworkDesc => '匹配TCP或者UDP';
+  String get ruleActionNetworkDesc => '匹配 TCP 或者 UDP';
 
   @override
-  String get ruleActionDscpDesc => '匹配DSCP标记（仅限 tproxy udp 入站）';
+  String get ruleActionDscpDesc => '匹配 DSCP 标记（仅限 tproxy udp 入站）';
 
   @override
-  String get ruleActionRuleSetDesc => '引用规则集合，需配置rule-providers';
+  String get ruleActionRuleSetDesc => '引用规则集合，需配置 rule-providers';
 
   @override
   String get ruleActionAndDesc => '逻辑规则 AND';
@@ -2035,7 +2267,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String invalidSubRule(Object subRule) {
-    return '$subRule 是一个无效的SUB_RULE';
+    return '$subRule 是一个无效的 SUB_RULE';
   }
 
   @override
@@ -2098,16 +2330,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get locationPermissionDesc =>
-      '根据系统要求，获取Wi-Fi名称需要您授予位置权限。Android 上请选择“始终允许”，否则应用在后台时无法获取 Wi-Fi 名称。';
+      '根据系统要求，获取 Wi-Fi 名称需要您授予位置权限。Android 上请选择“始终允许”，否则应用在后台时无法获取 Wi-Fi 名称。';
 
   @override
-  String get excludeSsids => '排除SSIDs';
+  String get excludeSsids => '排除 SSIDs';
 
   @override
   String get excludeSsidsDesc => '连接到被排除 SSID 的 Wi-Fi 时，将会自动切换应用运行状态。';
 
   @override
-  String get ssidsEmpty => 'SSIDs为空';
+  String get ssidsEmpty => 'SSIDs 为空';
 
   @override
   String get onDemand => '按需运行';
@@ -2117,10 +2349,10 @@ class AppLocalizationsZh extends AppLocalizations {
       '位置权限已被拒绝，无法获取当前 Wi-Fi 名称。请前往系统设置手动开启位置权限。';
 
   @override
-  String get addSsid => '添加SSID';
+  String get addSsid => '添加 SSID';
 
   @override
-  String get editSsid => '编辑SSID';
+  String get editSsid => '编辑 SSID';
 
   @override
   String get authorized => '已授权';
@@ -2135,7 +2367,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get resourceUpdateInterval => '自动更新间隔';
 
   @override
-  String get resourceUpdateIntervalTip => '自动更新间隔必须大于0';
+  String get resourceUpdateIntervalTip => '自动更新间隔必须大于 0';
 
   @override
   String get hours => '小时';
@@ -2235,9 +2467,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get pickFromAlbum => '从相册选择';
-
-  @override
-  String get closeConnections => '关闭连接';
 
   @override
   String get scrollToSelected => '滚动到已选';
@@ -2383,7 +2612,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get invalidProfileQrcode => '该二维码不包含配置文件链接';
 
   @override
-  String get dnsQueries => 'DNS查询';
+  String get dnsQueries => 'DNS 查询';
 
   @override
   String get recordType => '记录类型';
@@ -2524,6 +2753,11 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String scriptNotification(Object script, Object text) {
+    return '脚本 $script\n$text';
+  }
+
+  @override
   String customIssuesSummary(Object count) {
     return '$count 项存在问题，应用配置可能失败';
   }
@@ -2612,7 +2846,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get routingMark => '路由标记';
 
   @override
-  String get strictRouteDesc => '严格路由防止 DNS 等流量绕过虚拟网卡，关闭 IPv6 时会阻断本机的 IPv6 连接。';
+  String get strictRouteDesc => '关闭 IPv6 时，严格路由会阻断本机的 IPv6 连接。';
 
   @override
   String get initFailed => '启动失败';
@@ -2639,11 +2873,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bypassPrivateRoute => '绕过私有路由地址';
 
   @override
-  String get disableIcmpForwarding => '禁用ICMP转发';
+  String get disableIcmpForwarding => '禁用 ICMP 转发';
 
   @override
-  String get disableIcmpForwardingDesc =>
-      '禁用 ICMP 转发后由虚拟网卡直接应答 ping，ping 将不再显示真实延迟。';
+  String get disableIcmpForwardingDesc => '禁用 ICMP 转发后，ping 不再显示真实延迟。';
 
   @override
   String get excludeInterface => '排除网卡';
@@ -2652,7 +2885,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get includeInterface => '包含网卡';
 
   @override
-  String get includeInterfaceDesc => '只有从包含网卡进入的流量经过虚拟网卡，设置后排除网卡不再生效。';
+  String get includeInterfaceDesc => '设置后排除网卡不再生效。';
 
   @override
   String get includeUid => '包含用户 ID';
@@ -2676,15 +2909,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get dnsHijackDesc => '未添加时劫持所有发往 53 端口的 DNS 请求（any:53）。';
 
   @override
-  String get tunOverrideDesc =>
-      '添加的项会覆写所有配置的虚拟网卡设置，未添加的项沿用配置自身的设置。自定义配置自己添加的项优先。';
+  String get tunOverrideDesc => '添加的项覆写所有配置的设置，自定义配置自己的项优先。';
 
   @override
-  String get generalOverrideDesc =>
-      '添加的项会覆写所有配置的对应设置，未添加的项沿用配置自身的设置，配置未设置时使用内核默认值。';
+  String get generalOverrideDesc => '添加的项覆写所有配置的对应设置。';
 
   @override
-  String get profileTunSettingsDesc => '仅作用于当前配置，并优先于网络设置中的虚拟网卡覆写项。';
+  String get profileTunSettingsDesc => '仅作用于当前配置，优先于网络设置中的覆写项。';
 
   @override
   String settingsCount(num count) {
@@ -2978,7 +3209,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get connectionStats => '连接统计';
 
   @override
-  String get connectionStatsDesc => '实时连接、最近请求、DNS查询';
+  String get connectionStatsDesc => '实时连接、最近请求、DNS 查询';
 
   @override
   String get memoryInfoDesc => '应用与内核占用的内存';
@@ -3012,13 +3243,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get allReferencedProxyProviders => '全部被引用的代理集';
 
   @override
-  String get clearDnsCache => '清除DNS缓存';
+  String get clearDnsCache => '清除 DNS 缓存';
 
   @override
-  String get dnsCacheCleared => 'DNS缓存已清除';
+  String get dnsCacheCleared => 'DNS 缓存已清除';
 
   @override
-  String get clearDnsCacheFailed => '清除DNS缓存失败';
+  String get clearDnsCacheFailed => '清除 DNS 缓存失败';
 
   @override
   String get select => '选中';
@@ -3049,25 +3280,35 @@ class AppLocalizationsZh extends AppLocalizations {
   String get httpCapture => '抓包';
 
   @override
-  String get httpCaptureDesc => '记录“主机名”中列出的主机的请求，在连接详情中查看。记录只保存在内存中。';
-
-  @override
-  String get httpCaptureNoHosts =>
-      '未列出任何主机，不会记录内容。请在 MITM 页的“主机名”中添加，或在连接详情中加入。';
+  String get httpCaptureNoHosts => '在“主机名”中添加主机后才会记录。';
 
   @override
   String get httpCaptureLimit => '最多记录条数';
 
   @override
-  String httpCaptureLimitDesc(Object memory, Object body) {
-    return '达到此条数或占满 $memory 内存后，先丢弃最早的记录。每段内容只保留前 $body。';
-  }
+  String get httpCaptureMemoryOnly => '仅保存在内存中';
 
   @override
   String get httpRequests => 'HTTP 请求';
 
   @override
+  String httpRequestCount(int count) {
+    return '$count 个 HTTP 请求';
+  }
+
+  @override
+  String latestHttpRequest(String request) {
+    return '最近一次 $request';
+  }
+
+  @override
   String get httpRequestsMissing => '抓包开启前发出或已被清除的请求不在列表中。';
+
+  @override
+  String get noHttpRequests => '还没有请求';
+
+  @override
+  String get noHttpRequestsHint => '这条连接已经解密，上面的 HTTP 请求会出现在这里';
 
   @override
   String get httpRequestCleared => '这条请求的记录已清除';
@@ -3085,7 +3326,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get originalUrl => '原 URL';
 
   @override
-  String get timeToFirstByte => '首字节耗时';
+  String get httpTiming => '耗时';
+
+  @override
+  String get httpWaiting => '等待响应';
+
+  @override
+  String get httpReceiving => '接收';
 
   @override
   String get requestBody => '请求体';
@@ -3214,8 +3461,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get mitmCertificateAndroidReadyTip => '只有信任用户证书的应用（多为浏览器）会被解密。';
 
   @override
-  String get mitmAndroidRootDesc =>
-      '未 root 时只能解密信任用户证书的应用，多为浏览器；root 后可解密所有应用。';
+  String get mitmAndroidRootDesc => '未 root 时只解密信任用户证书的应用。';
 
   @override
   String get mitmCertificateLinuxTip => 'Flatpak 版浏览器需要手动导入导出的证书。';
@@ -3374,11 +3620,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get mitmIgnoredLines => '忽略的行';
 
   @override
-  String get mitmModuleRulesDesc => '分流规则排在配置自身的规则之前。';
+  String get mitmModuleRulesDesc => '先于配置自身的规则匹配。';
 
   @override
   String get mitmRequestRulesDesc =>
-      '模块里的 URL-REGEX 和 USER-AGENT 规则已改成 URL 重写，逐个请求判断：明文 HTTP 请求都会判断，HTTPS 只在 MITM 主机名里的连接上判断。';
+      'URL-REGEX 和 USER-AGENT 规则改作 URL 重写，HTTPS 只对主机名中的主机生效。';
+
+  @override
+  String mitmExtendedMatchingNote(Object count) {
+    return '其中 $count 条使用扩展匹配';
+  }
+
+  @override
+  String mitmActionModule(Object module) {
+    return '来自 $module';
+  }
 
   @override
   String mitmModuleSystemTip(Object system) {
@@ -3399,8 +3655,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get mitmModuleRiskTitle => '启用此模块？';
 
   @override
-  String get mitmNetworkRisk =>
-      '生成配置时，它会修改下列网络设置，并优先于你在 FlClash 中对同一项的设置。关闭或删除模块后即恢复。';
+  String get mitmNetworkRisk => '启用时会覆盖下列网络设置。';
 
   @override
   String mitmSkipVerifyRisk(Object hosts) {
@@ -3413,8 +3668,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get mitmClientSourceTunTip =>
-      '开启 TUN 时，本机应用的来源是 TUN 地址；列表不包含它时，本机应用的流量不会被解密。';
+  String get mitmClientSourceTunTip => '开启 TUN 时，需包含 TUN 地址才能解密本机应用。';
 
   @override
   String get mitmNetworkChanges => '网络设置';
@@ -3457,10 +3711,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get mitmSkipRule => '不支持此规则类型';
 
   @override
-  String get mitmSkipHttpRulePolicy =>
-      'URL-REGEX 和 USER-AGENT 规则只能用 REJECT 类策略';
-
-  @override
   String get mitmSkipFinalRule => '模块的规则排在最前面，兜底规则会盖住后面的所有规则';
 
   @override
@@ -3482,19 +3732,66 @@ class AppLocalizationsZh extends AppLocalizations {
   String get mitmSkipReflect => 'FlClash 不能把数据包原路弹回';
 
   @override
-  String get mitmSkipConditional => '不支持条件重写';
-
-  @override
   String get mitmSkipSkipVerifyAll => '不会对全部主机关闭证书校验';
 
   @override
   String get mitmSkipRelativeData => '此行引用的文件不是附件，请改用 URL 或添加为附件';
 
   @override
-  String get mitmSkipNotDownloaded => '其文件尚未下载';
+  String get mitmSkipUnreadable => '无法识别此行';
 
   @override
-  String get mitmSkipUnreadable => '无法识别此行';
+  String get mitmSkipNoSection => '此行不在任何段内';
+
+  @override
+  String get mitmSkipRequirementUnreadable => '无法识别此行的生效条件';
+
+  @override
+  String get mitmSkipPolicy => '此规则的策略没有指向任何目标';
+
+  @override
+  String get mitmSkipNestedRuleSet => '规则集里不能再引用规则集';
+
+  @override
+  String get mitmSkipCondition => '无法判断此条件';
+
+  @override
+  String get mitmSkipRuntimeValue => '此行需要只有当前请求才有的值';
+
+  @override
+  String get mitmResources => '远程文件';
+
+  @override
+  String get mitmResourceOk => '已下载';
+
+  @override
+  String get mitmResourceFetching => '正在下载';
+
+  @override
+  String get mitmResourceMissing => '尚未下载';
+
+  @override
+  String get mitmFetchDns => '下载失败：无法解析主机名';
+
+  @override
+  String get mitmFetchTls => '下载失败：无法建立安全连接';
+
+  @override
+  String get mitmFetchTimeout => '下载失败：服务器响应超时';
+
+  @override
+  String get mitmFetchConnection => '下载失败：连接中断';
+
+  @override
+  String get mitmFetchOther => '下载失败';
+
+  @override
+  String get mitmResourcesFetch => '重新下载';
+
+  @override
+  String mitmFetchHttp(int status) {
+    return '下载失败：服务器返回 $status';
+  }
 
   @override
   String get mitmAddLocalFile => '添加本地文件';
@@ -3530,6 +3827,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get mitmScriptGeneric => '通用';
+
+  @override
+  String get mitmScriptDns => 'DNS';
 
   @override
   String get mitmExcluded => '排除';
@@ -3634,6 +3934,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get updateDownloadFailed => '无法下载更新。';
 
   @override
+  String get updateFileMissing => '未找到更新文件，请在发布页手动下载。';
+
+  @override
   String get defaultNameserverDesc => '用于解析其他 DNS 服务器的域名，只能填写 IP 地址。';
 
   @override
@@ -3684,6 +3987,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String coreStoppedWithReason(Object reason) {
     return '应用与核心的连接已断开：$reason';
   }
+
+  @override
+  String get coreUnavailableTip => '核心未运行，请在核心启动后重试';
 
   @override
   String mixedPortReset(Object value, Object port) {
@@ -3758,18 +4064,59 @@ class AppLocalizationsZh extends AppLocalizations {
   String get vpnServiceStartFailed => 'VPN 服务无法启动。';
 
   @override
-  String get rootTun => 'Root 模式';
+  String get requestPath => '路径';
 
   @override
-  String get rootTunDesc => '不占用系统 VPN，需要 root 权限。';
+  String get statusCode => '状态码';
 
   @override
-  String get rootTunUnavailable => '未检测到 root';
+  String get contentKind => '类型';
 
   @override
-  String rootTunFallback(Object reason) {
-    return 'Root 不可用（$reason），本次使用系统 VPN。';
+  String get httpRewritten => '已改写';
+
+  @override
+  String get httpAnswerReject => '拒绝';
+
+  @override
+  String get httpAnswerRedirect => '重定向';
+
+  @override
+  String get httpAnswerScript => '脚本响应';
+
+  @override
+  String get httpBodyText => '文本';
+
+  @override
+  String get httpBodyImage => '图片';
+
+  @override
+  String get regexReplace => '正则替换';
+
+  @override
+  String get owningConnection => '所属连接';
+
+  @override
+  String get selectHttpRequest => '选择一个请求';
+
+  @override
+  String get selectHttpRequestHint => '这里会显示它的请求、响应和耗时';
+
+  @override
+  String httpConditionShows(String count) {
+    return '将筛出 $count 个请求';
   }
+
+  @override
+  String httpConditionValuesIn(String field) {
+    return '当前请求里的$field';
+  }
+
+  @override
+  String get httpConditionTip => '同一字段的条件满足其一即可，不同字段的都要满足。';
+
+  @override
+  String get outboundIpAddress => '出站 IP 地址';
 
   @override
   String get config => '配置';
@@ -3793,7 +4140,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get secondaryDevelopmentBuild => '二次开发构建';
 
   @override
-  String get addressHelp => 'WebDAV服务器地址';
+  String get addressHelp => 'WebDAV 服务器地址';
 
   @override
   String get authenticationDesc => '认证开启后，使用本地代理端口需要账号密码。';
@@ -3867,9 +4214,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get blockConnection => '阻止连接';
 
   @override
-  String get proxyNode => '代理节点';
-
-  @override
   String get bypassPrivateRouteDesc => '开启绕过私有路由地址后，局域网、回环和组播地址不经过虚拟网卡。';
 
   @override
@@ -3888,7 +4232,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get excludeDstPortDesc => '发往这些目标端口的流量不经过虚拟网卡。';
 
   @override
-  String get emojiStyle => 'Emoji字体';
+  String get emojiStyle => 'Emoji 字体';
 
   @override
   String get customFont => '自定义字体';
@@ -4023,7 +4367,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String ipRiskNoteIndirect(Object isp, Object score) {
+  String ipRiskNoteIndirect(Object score, Object isp) {
     return 'Scamalytics 无法直接观测该 IP 的网页流量，欺诈值 $score 是依据 $isp 旗下 IP 的整体风险估算的。';
   }
 
@@ -4208,7 +4552,7 @@ class AppLocalizationsZh extends AppLocalizations {
       'HTTP/3 基于 QUIC (UDP)，不可用时依次回退到 HTTP/2、（HTTP/2 不可用时）HTTP/1.1';
 
   @override
-  String speedTestProtocolFallback(Object fallback, Object protocol) {
+  String speedTestProtocolFallback(Object protocol, Object fallback) {
     return '$protocol 不可用，已回退到 $fallback';
   }
 
@@ -4313,11 +4657,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get trafficStatsSiteIconDesc => '为域名排行获取并本地缓存网站图标';
 
   @override
-  String get trafficStatsRetention => '数据保留天数';
+  String get trafficStatsRetention => '数据保留期限';
 
   @override
-  String trafficStatsDays(Object count) {
-    return '$count 天';
+  String trafficStatsMonths(num count) {
+    return '$count 个月';
   }
 
   @override
@@ -4336,4 +4680,31 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get trafficStatsRefresh => '刷新';
+
+  @override
+  String get ipQuery => 'IP 查询';
+
+  @override
+  String get otherProfiles => '其他配置';
+
+  @override
+  String get customIcon => '自定义图标';
+
+  @override
+  String get remainingShort => '剩余';
+
+  @override
+  String get expired => '已过期';
+
+  @override
+  String get localFile => '本地文件';
+
+  @override
+  String get lastEdited => '上次编辑';
+
+  @override
+  String get builtIn => '内置';
+
+  @override
+  String get projectUrl => '项目地址';
 }

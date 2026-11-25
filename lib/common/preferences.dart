@@ -77,6 +77,19 @@ class Preferences {
     }
   }
 
+  /// Stored apart from the config, so a backup never carries it and a
+  /// restored install makes its own.
+  Future<String> getHostCredential() async {
+    final preferences = await _store.value;
+    final stored = preferences?.getString(hostCredentialKey);
+    if (stored != null && stored.isNotEmpty) {
+      return stored;
+    }
+    final created = '${generateRandomSecret(16)}:${generateRandomSecret(32)}';
+    await preferences?.setString(hostCredentialKey, created);
+    return created;
+  }
+
   Future<ConfigCounts?> getAppliedConfigCounts() async {
     final preferences = await _store.value;
     final jsonStr = preferences?.getString('appliedConfigCounts');
@@ -243,6 +256,16 @@ class Preferences {
   Future<void> setIconRules(String value) async {
     final sharedPreferencesIns = await _store.value;
     await sharedPreferencesIns?.setString(iconRulesKey, value);
+  }
+
+  Future<String?> getProfileIcons() async {
+    final sharedPreferencesIns = await _store.value;
+    return sharedPreferencesIns?.getString(profileIconsKey);
+  }
+
+  Future<void> setProfileIcons(String value) async {
+    final sharedPreferencesIns = await _store.value;
+    await sharedPreferencesIns?.setString(profileIconsKey, value);
   }
 
   Future<void> clearPreferences() async {

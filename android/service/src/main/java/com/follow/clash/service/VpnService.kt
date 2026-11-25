@@ -21,6 +21,7 @@ import com.follow.clash.service.models.toCIDR
 import com.follow.clash.service.models.tunMtu
 import com.follow.clash.service.modules.ServiceModules
 import java.net.InetSocketAddress
+import java.util.concurrent.ConcurrentHashMap
 import android.net.VpnService as SystemVpnService
 
 class VpnService : SystemVpnService(), ManagedService {
@@ -40,7 +41,7 @@ class VpnService : SystemVpnService(), ManagedService {
     private val connectivity by lazy {
         getSystemService<ConnectivityManager>()
     }
-    private val packageNames by lazy { UidPackageNames(packageManager) }
+    private val uidPackageNameMap = ConcurrentHashMap<Int, String>()
 
     private fun resolveUid(
         protocol: Int,
@@ -52,6 +53,23 @@ class VpnService : SystemVpnService(), ManagedService {
         }
         return connectivity?.getConnectionOwnerUid(protocol, source, target) ?: -1
     }
+
+    private fun resolvePackage(uid: Int): String {
+        val cached = uidPackageNameMap[uid]
+        if (cached != null) return cached
+        val packageName = packageManager
+            .getPackagesForUid(uid)
+            ?.firstOrNull()
+            ?.takeIf { it.isNotEmpty() }
+            .orEmpty()
+        return uidPackageNameMap.putIfAbsent(uid, packageName) ?: packageName
+    }
+
+    private val VpnOptions.tunAddress
+        get(): List<String> = buildList {
+            add(IPV4_ADDRESS)
+            if (ipv6) add(IPV6_ADDRESS)
+        }
 
     private val VpnOptions.tunDns
         get(): List<String> {
@@ -87,10 +105,10 @@ class VpnService : SystemVpnService(), ManagedService {
         }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        // Android starts always-on VPN through this callback instead of FlClash's bound-service
-        // path. Notify the app layer so it can restore Core and fully initialize the VPN service.
-        notifyVpnStartRequested()
-        return super.onStartCommand(intent, flags, startId)
+        if (!synchronized(tunLock) { tunRunning }) {
+            notifyVpnStartRequested()
+        }
+        return START_STICKY
     }
 
     override fun onRevoke() {
@@ -98,9 +116,8 @@ class VpnService : SystemVpnService(), ManagedService {
         notifyVpnRevoked()
     }
 
-    private fun handleStart(options: VpnOptions) {
-        RootTun.clearLeftovers(this)
-        val fd = with(Builder()) {
+    private fun establishTun(options: VpnOptions): Int {
+        fun establishVpn() = with(Builder()) {
             addAddressAndRoutes(options)
             addDnsServers(options)
             setMtu(options.tunMtu)
@@ -124,8 +141,16 @@ class VpnService : SystemVpnService(), ManagedService {
                 )
             }
             establish()?.detachFd()
-                ?: error("VPN establishment was rejected by the system")
         }
+        val first = runCatching(::establishVpn)
+        first.getOrNull()?.let { return it }
+        GlobalState.log("VPN establishment did not return a descriptor; retrying: ${first.exceptionOrNull()}")
+        Thread.sleep(300)
+        return establishVpn() ?: error("VPN establishment was rejected by the system")
+    }
+
+    private fun handleStart(options: VpnOptions) {
+        val fd = establishTun(options)
         synchronized(tunLock) {
             tunRunning = true
             try {
@@ -138,7 +163,7 @@ class VpnService : SystemVpnService(), ManagedService {
                     fd = fd,
                     protect = this::protect,
                     resolveUid = this::resolveUid,
-                    resolvePackage = packageNames::resolve,
+                    resolvePackage = this::resolvePackage,
                     options = TunOptions(
                         mtu = options.tunMtu,
                         address = options.tunAddress,
@@ -272,11 +297,11 @@ class VpnService : SystemVpnService(), ManagedService {
     companion object {
         // mihomo's own TUN default: 198.18.0.0/15 is benchmarking space no LAN
         // uses, and its fake-ip pool starts at .4, past this /30.
-        internal const val IPV4_ADDRESS = "198.18.0.1/30"
-        internal const val IPV6_ADDRESS = "fdfe:dcba:9876::1/126"
+        private const val IPV4_ADDRESS = "198.18.0.1/30"
+        private const val IPV6_ADDRESS = "fdfe:dcba:9876::1/126"
         private const val DNS = "198.18.0.2"
         private const val DNS6 = "fdfe:dcba:9876::2"
-        internal const val NET_ANY = "0.0.0.0"
+        private const val NET_ANY = "0.0.0.0"
         private const val NET_ANY6 = "::"
         private const val LOCAL_HOST = "127.0.0.1"
     }

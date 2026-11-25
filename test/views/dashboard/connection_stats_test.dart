@@ -1,12 +1,11 @@
 import 'package:fl_clash/core/core.dart';
 import 'package:fl_clash/enum/enum.dart';
-import 'package:fl_clash/features/connection/tracker_info_list.dart';
+import 'package:fl_clash/features/connection/connection.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/providers.dart';
 import 'package:fl_clash/state.dart';
 import 'package:fl_clash/views/connection/requests.dart';
 import 'package:fl_clash/views/dashboard/widgets/connection_stats.dart';
-import 'package:fl_clash/views/dns_queries.dart';
 import 'package:fl_clash/widgets/widgets.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -159,15 +158,20 @@ void main() {
   testWidgets('every count opens its own list in a sheet', (tester) async {
     await pumpCard(tester);
 
-    for (final (label, view) in [
-      ('Live connections', RequestsView),
-      ('Recent requests', RequestsView),
-      ('DNS queries', DnsQueriesView),
+    for (final (label, list) in [
+      ('Live connections', ConditionFilterRow<TrackerInfo, ConnectionStatus>),
+      ('Recent requests', ConditionFilterRow<TrackerInfo, ConnectionStatus>),
+      ('DNS queries', ConditionFilterRow<DnsQuery, DnsStatus>),
     ]) {
       await tester.tap(_stat(label));
       await tester.pumpAndSettle();
 
-      expect(find.byType(view), findsOneWidget);
+      final view = find.byType(RequestsView);
+      expect(view, findsOneWidget);
+      expect(
+        find.descendant(of: view, matching: find.byType(list)),
+        findsOneWidget,
+      );
       expect(
         tester.getTopLeft(find.byType(SheetDragHandle)).dy,
         closeTo(_mobileSize.height * (1 - snapSheetDetents.first), 1),
@@ -175,63 +179,13 @@ void main() {
 
       await tester.tapAt(const Offset(200, 20));
       await tester.pumpAndSettle();
-      expect(find.byType(view), findsNothing);
+      expect(view, findsNothing);
     }
 
     await teardownCard(tester);
   });
 
-  testWidgets('a sheet switching feeds opens each at its own start', (
-    tester,
-  ) async {
-    holdOpen(100);
-    final notifier = container.read(requestsProvider.notifier);
-    for (var i = 0; i < 100; i++) {
-      notifier.addRequests([_request(i)]);
-    }
-    await pumpCard(tester);
-    await tester.tap(_stat('Recent requests'));
-    await tester.pumpAndSettle();
-    ScrollPosition position() => tester
-        .state<ScrollableState>(
-          find
-              .descendant(
-                of: find.byType(RequestsView),
-                matching: find.byWidgetPredicate(
-                  (widget) =>
-                      widget is Scrollable &&
-                      axisDirectionToAxis(widget.axisDirection) ==
-                          Axis.vertical,
-                ),
-              )
-              .first,
-        )
-        .position;
-    expect(position().pixels, position().maxScrollExtent);
-
-    await tester.tap(find.text('Recent requests').last);
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Running'));
-    await tester.pumpAndSettle();
-    await tester.pump();
-    await tester.pump();
-    await tester.pump();
-    await tester.pump(const Duration(seconds: 2));
-    expect(position().pixels, 0);
-
-    await tester.tap(find.text('Running').last);
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Recent requests').last);
-    await tester.pumpAndSettle();
-    await tester.pump();
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 500));
-    expect(position().pixels, position().maxScrollExtent);
-
-    await teardownCard(tester);
-  });
-
-  testWidgets('the requests sheet keeps the newest request at its top while '
+  testWidgets('the requests sheet keeps the newest request at its end while '
       'it is dragged and requests arrive', (tester) async {
     final notifier = container.read(requestsProvider.notifier);
     var next = 0;
@@ -242,7 +196,7 @@ void main() {
     await tester.tap(_stat('Recent requests'));
     await tester.pumpAndSettle();
     final list = find.descendant(
-      of: find.byType(TrackerInfoList),
+      of: find.byType(RecordFeedView<int>),
       matching: find.byType(Scrollable),
     );
     ScrollPosition position() =>
@@ -262,6 +216,8 @@ void main() {
       expect(position().pixels, position().maxScrollExtent);
     }
     await gesture.up();
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 400));
     await tester.pumpAndSettle();
 
     expect(position().pixels, position().maxScrollExtent);

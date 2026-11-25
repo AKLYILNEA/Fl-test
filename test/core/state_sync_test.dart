@@ -110,6 +110,35 @@ void main() {
     expect(_modes(sync.take(_mode(9, 'global'))), ['global']);
   });
 
+  test('a dashboard pick that comes while the app\'s own pick is unanswered '
+      'waits for the answer, which decides whether it stands', () {
+    final sync = _settled(1);
+    final held = <StateWrite>[];
+    sync.onHeldPicks = held.addAll;
+
+    sync.selectStarted('G');
+    expect(sync.take(_selected(2, 'G', 'dashboard')), isEmpty);
+    sync.selectEnded('G', 3);
+    expect(held, isEmpty);
+
+    sync.selectStarted('G');
+    expect(sync.take(_selected(4, 'G', 'dashboard')), isEmpty);
+    sync.selectEnded('G', null);
+    expect(held, const [SelectionWrite('G', 'dashboard')]);
+
+    held.clear();
+    sync.selectStarted('G');
+    sync.selectStarted('G');
+    expect(sync.take(_selected(5, 'G', 'later')), isEmpty);
+    sync.selectEnded('G', 6);
+    expect(held, isEmpty);
+    sync.selectEnded('G', 7);
+    expect(held, isEmpty);
+    expect(sync.take(_selected(8, 'H', 'other')), const [
+      SelectionWrite('H', 'other'),
+    ]);
+  });
+
   test('picks reported while the app applies a config are dropped, and the '
       'apply ending asks for a new baseline', () {
     final sync = _settled(1);

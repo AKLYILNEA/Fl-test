@@ -34,7 +34,10 @@ class IpAddressRow extends ConsumerWidget {
     final title = this.title;
     if (ip == null) {
       return title == null
-          ? DetailRow(title: shown, copyText: address)
+          ? DecorationListItem(
+              title: Text(shown),
+              onPressed: () => dialogs.copy(address),
+            )
           : DetailRow(
               title: title,
               copyText: address,

@@ -50,14 +50,17 @@ class ProxiesAction extends _$ProxiesAction {
   final List<String> _bufferedFinishes = [];
 
   Timer? _delayFlushTimer;
+  int _groupsRevision = 0;
 
   final Map<String, String> _pendingSelectedRollback = {};
 
   @override
   void build() {
     ref.onDispose(() => _delayFlushTimer?.cancel());
+    ref.listen(currentProfileIdProvider, (_, _) => _groupsRevision++);
     ref.listen(coreStatusProvider, (_, next) {
       if (next != CoreStatus.connected) {
+        _groupsRevision++;
         cancelDelayTests();
       }
     });
@@ -123,10 +126,13 @@ class ProxiesAction extends _$ProxiesAction {
     return ref.read(currentProfileProvider)?.selectedMap[groupName] ?? '';
   }
 
-  Future<void> updateGroups() async {
+  Future<void> updateGroups({bool Function()? shouldRetry}) async {
+    final revision = ++_groupsRevision;
+    bool isCurrent() => ref.mounted && revision == _groupsRevision;
     try {
-      ref.read(groupsProvider.notifier).value = await retry(
+      final groups = await retry<List<Group>?>(
         task: () async {
+          if (!isCurrent()) return null;
           final sortType = ref.read(
             proxiesStyleSettingProvider.select((state) => state.sortType),
           );
@@ -149,11 +155,19 @@ class ProxiesAction extends _$ProxiesAction {
               'updateGroups error: $e',
               logLevel: coreFailureLogLevel(e),
             );
-            return [];
+            return null;
           }
         },
-        retryIf: (res) => res.isEmpty,
+        retryIf: (res) =>
+            isCurrent() &&
+            (shouldRetry?.call() ?? true) &&
+            (res == null ||
+                (res.isEmpty &&
+                    (globalState.lastConfigCounts?.groups ?? 1) > 0)),
       );
+      if (isCurrent() && groups != null) {
+        ref.read(groupsProvider.notifier).value = groups;
+      }
     } catch (e) {
       // The Core failure path already runs inside the retry task above; a
       // throw here only means ref.read hit a disposed container or the
@@ -203,12 +217,12 @@ class ProxiesAction extends _$ProxiesAction {
       sync.selectEnded(groupName, result.seq);
       changed = result.changed;
     } catch (error) {
-      sync.selectEnded(groupName, null);
       commonPrint.log(
         'changeProxy($groupName -> $proxyName) failed: $error',
         logLevel: coreFailureLogLevel(error),
       );
       profilesAction.updateCurrentSelectedMap(groupName, rollbackName);
+      sync.selectEnded(groupName, null);
       dialogs.showBanner(
         currentAppLocalizations.changeProxyFailedTip,
         level: BannerLevel.error,

@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
@@ -74,19 +72,11 @@ class _AndroidContainerState extends ConsumerState<AndroidManager>
 
   @override
   void onServiceStopped([ServiceStartFailure? failure]) {
-    unawaited(ref.read(setupActionProvider.notifier).setRunning(false));
+    ref.read(setupActionProvider.notifier).applyAndroidServiceStopped();
     if (failure != null) {
       dialogs.showBanner(failure.label, level: BannerLevel.error);
     }
     super.onServiceStopped(failure);
-  }
-
-  @override
-  void onRootTunFallback(String reason) {
-    dialogs.showBanner(
-      currentAppLocalizations.rootTunFallback(reason),
-      level: BannerLevel.warning,
-    );
   }
 
   @override

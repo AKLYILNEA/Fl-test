@@ -10,6 +10,26 @@ import 'task.dart';
 typedef MigrationTransform =
     Future<MigrationData> Function(Map<String, Object?> configMap);
 
+Config _updateBundledGeoSources(Config config) {
+  const previousRoot =
+      'https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/';
+  const previous = {
+    GeoResource.MMDB: '${previousRoot}geoip.metadb',
+    GeoResource.ASN: '${previousRoot}GeoLite2-ASN.mmdb',
+    GeoResource.GEOSITE: '${previousRoot}geosite.dat',
+  };
+  final current = _fixFormerDefaultHosts(config);
+  final geoUrls = current.patchClashConfig.geoXUrl;
+  return current.copyWith(
+    patchClashConfig: current.patchClashConfig.copyWith(
+      geoXUrl: {
+        for (final MapEntry(:key, :value) in geoUrls.entries)
+          key: value == previous[key] ? defaultGeoXUrl[key] ?? value : value,
+      },
+    ),
+  );
+}
+
 abstract interface class MigrationStore {
   /// False when the backing store could not be opened at all, as opposed to a
   /// store that opened but holds nothing.
@@ -91,14 +111,15 @@ class Migration {
 
   /// One-off setting changes for upgrades, apart from [currentVersion], which
   /// backups carry and an older app refuses when it is newer than its own.
-  static const upgradeVersion = 5;
+  static const upgradeVersion = 6;
 
   static const Map<int, Config Function(Config config)> _upgrades = {
     1: _resetThemeColors,
     2: _keepGlassLook,
     3: _followSystemColors,
     4: _turnOffSidebarBlur,
-    5: _useBettRulesGeoUrls,
+    5: _fixFormerDefaultHosts,
+    6: _updateBundledGeoSources,
   };
 
   Future<Config> run() async {
@@ -239,41 +260,52 @@ Config _followSystemColors(Config config) {
 Config _turnOffSidebarBlur(Config config) =>
     config.copyWith(themeProps: config.themeProps.copyWith(sidebarBlur: false));
 
-bool _isV0(Map<String, Object?>? configMap) =>
-    configMap?['proxiesStyle'] != null;
-
-/// The geo downloads the app shipped before the switch to bett-rules. A stored
-/// config keeps the URLs it was saved with, so these are rewritten rather than
-/// left behind; a URL the user edited to something else is kept.
-const _legacyGeoXUrl = {
-  GeoResource.MMDB:
-      'https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.metadb',
-  GeoResource.ASN:
-      'https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/GeoLite2-ASN.mmdb',
-  GeoResource.GEOSITE:
-      'https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat',
+// Wrong former defaults, which stored lists keep as the user's own entries.
+final _formerBypassDefaults = {
+  '172.2*': [for (var i = 0; i < 10; i++) '172.2$i.*'],
+};
+const _formerFakeIpFilterDefaults = {
+  'dns.msftnsci.com': ['dns.msftncsi.com'],
+  'www.msftnsci.com': ['www.msftncsi.com'],
 };
 
-Config _useBettRulesGeoUrls(Config config) {
-  final current = config.patchClashConfig.geoXUrl;
-  var changed = false;
-  final geoXUrl = <GeoResource, String>{};
-  for (final entry in current.entries) {
-    final replacement = defaultGeoXUrl[entry.key];
-    if (replacement != null && entry.value == _legacyGeoXUrl[entry.key]) {
-      geoXUrl[entry.key] = replacement;
-      changed = true;
-    } else {
-      geoXUrl[entry.key] = entry.value;
-    }
-  }
-  if (!changed) {
-    return config;
-  }
+Config _fixFormerDefaultHosts(Config config) {
+  final dns = config.patchClashConfig.dns;
   return config.copyWith(
-    patchClashConfig: config.patchClashConfig.copyWith(geoXUrl: geoXUrl),
+    networkProps: config.networkProps.copyWith(
+      bypassDomain: _replacing(
+        config.networkProps.bypassDomain,
+        _formerBypassDefaults,
+      ),
+    ),
+    patchClashConfig: config.patchClashConfig.copyWith(
+      dns: dns.copyWith(
+        fakeIpFilter: _replacing(dns.fakeIpFilter, _formerFakeIpFilterDefaults),
+      ),
+    ),
   );
 }
+
+List<String> _replacing(List<String> hosts, Map<String, List<String>> former) {
+  if (!hosts.any(former.containsKey)) {
+    return hosts;
+  }
+  final added = <String>{};
+  return [
+    for (final host in hosts)
+      ...switch (former[host]) {
+        null => [host],
+        final replacements => [
+          for (final replacement in replacements)
+            if (!hosts.contains(replacement) && added.add(replacement))
+              replacement,
+        ],
+      },
+  ];
+}
+
+bool _isV0(Map<String, Object?>? configMap) =>
+    configMap?['proxiesStyle'] != null;
 
 String? _getStoredDavPassword(Map<String, Object?>? configMap) {
   final dav = configMap?['davProps'] ?? configMap?['dav'];

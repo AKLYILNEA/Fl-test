@@ -90,9 +90,14 @@ Future<Rect> _pumpBar(
   return tester.getRect(find.byType(NavigationToolbar).first);
 }
 
+double _insetOf(WidgetTester tester, bool compact) => appBarActionInset(
+  tester.element(find.byType(NavigationToolbar).first),
+  compact,
+);
+
 void main() {
   for (final view in _views.entries) {
-    final inset = appBarActionInset(view.value == _mobile);
+    final compact = view.value == _mobile;
 
     for (final platform in [TargetPlatform.android, TargetPlatform.macOS]) {
       testWidgets(
@@ -115,8 +120,8 @@ void main() {
             _container(find.widgetWithGlyph(IconButton, AppGlyphs.sync)),
           );
 
-          expect(leading.left, inset);
-          expect(bar.right - action.right, inset);
+          expect(leading.left, _insetOf(tester, compact));
+          expect(bar.right - action.right, _insetOf(tester, compact));
         },
       );
 
@@ -149,8 +154,8 @@ void main() {
             _container(find.widgetWithGlyph(IconButton, AppGlyphs.sync)),
           );
 
-          expect(leading.left, inset);
-          expect(bar.right - action.right, inset);
+          expect(leading.left, _insetOf(tester, compact));
+          expect(bar.right - action.right, _insetOf(tester, compact));
         },
       );
     }
@@ -174,14 +179,12 @@ void main() {
         expect(leading.width, leading.height);
         expect(action.height, leading.height);
         expect(action.width, greaterThan(action.height));
-        expect(bar.right - action.right, inset);
+        expect(bar.right - action.right, _insetOf(tester, compact));
       },
     );
   }
 
-  testWidgets('two bar buttons stand apart without a third button', (
-    tester,
-  ) async {
+  testWidgets('two bar buttons share one pressable group', (tester) async {
     final bar = await _pumpBar(
       tester,
       view: _desktop,
@@ -191,47 +194,12 @@ void main() {
         iconActions: [
           IconButtonData(glyph: AppGlyphs.sync, onPressed: _noop),
           IconButtonData(glyph: AppGlyphs.sort, onPressed: _noop),
-        ],
-        body: SizedBox(),
-      ),
-    );
-    final first = find.widgetWithGlyph(IconButton, AppGlyphs.sync);
-    final second = find.widgetWithGlyph(IconButton, AppGlyphs.sort);
-
-    expect(find.byType(TonalButtonGroup), findsNothing);
-    expect(
-      tester.getRect(_container(second)).left -
-          tester.getRect(_container(first)).right,
-      AppBarActionEdge.container.gap,
-    );
-    expect(
-      bar.right - tester.getRect(_container(second)).right,
-      appBarActionInset(false),
-    );
-  });
-
-  testWidgets('three bar buttons share one pressable group on the first two', (
-    tester,
-  ) async {
-    final bar = await _pumpBar(
-      tester,
-      view: _desktop,
-      platform: TargetPlatform.android,
-      child: const Scaffold(
-        title: 'Title',
-        iconActions: [
-          IconButtonData(glyph: AppGlyphs.sync, onPressed: _noop),
-          IconButtonData(glyph: AppGlyphs.sort, onPressed: _noop),
-          IconButtonData(glyph: AppGlyphs.edit, onPressed: _noop),
         ],
         body: SizedBox(),
       ),
     );
     final group = find.byType(TonalButtonGroup);
     final leading = tester.getRect(_container(_back));
-    final trailing = tester.getRect(
-      _container(find.widgetWithGlyph(IconButton, AppGlyphs.edit)),
-    );
 
     expect(group, findsOneWidget);
     expect(
@@ -243,11 +211,7 @@ void main() {
       findsOneWidget,
     );
     expect(tester.getSize(group).height, leading.height);
-    expect(
-      trailing.left - tester.getRect(group).right,
-      AppBarActionEdge.container.gap,
-    );
-    expect(bar.right - trailing.right, appBarActionInset(false));
+    expect(bar.right - tester.getRect(group).right, _insetOf(tester, false));
   });
 
   testWidgets('on glass a group is one pane, and a lone button its own', (
@@ -264,7 +228,6 @@ void main() {
           iconActions: [
             IconButtonData(glyph: AppGlyphs.sync, onPressed: _noop),
             IconButtonData(glyph: AppGlyphs.sort, onPressed: _noop),
-            IconButtonData(glyph: AppGlyphs.edit, onPressed: _noop),
           ],
           body: SizedBox(),
         ),
@@ -296,7 +259,6 @@ void main() {
         iconActions: [
           IconButtonData(glyph: AppGlyphs.sync, onPressed: _noop),
           IconButtonData(glyph: AppGlyphs.sort, onPressed: _noop),
-          IconButtonData(glyph: AppGlyphs.edit, onPressed: _noop),
         ],
         body: SizedBox(),
       ),
@@ -346,9 +308,6 @@ void main() {
           searchState: AppBarSearchState(onSearch: (_) {}),
           iconActions: const [
             IconButtonData(glyph: AppGlyphs.sync, onPressed: _noop),
-          ],
-          menuItems: const [
-            PopupMenuItem(label: 'Settings', onPressed: _noop),
           ],
           body: const SizedBox(),
         ),
@@ -482,7 +441,7 @@ void main() {
       } else {
         expect(title.center.dx, lessThan(bar.center.dx));
       }
-      expect(bar.right - action.right, appBarActionInset(compact));
+      expect(bar.right - action.right, _insetOf(tester, compact));
     });
   }
 
@@ -584,7 +543,7 @@ void main() {
         find.descendant(of: find.byType(AppBar), matching: find.text('Title')),
       );
 
-      expect(title.left - back.right, appBarActionInset(compact));
+      expect(title.left - back.right, _insetOf(tester, compact));
     });
   }
 
@@ -614,8 +573,8 @@ void main() {
         _container(find.widgetWithGlyph(IconButton, AppGlyphs.sync)),
       );
 
-      expect(rect.left - back.right, appBarActionInset(compact));
-      expect(action.left - rect.right, appBarActionInset(compact));
+      expect(rect.left - back.right, _insetOf(tester, compact));
+      expect(action.left - rect.right, _insetOf(tester, compact));
     });
   }
 
@@ -669,11 +628,11 @@ void main() {
     );
 
     expect(find.text('Title'), findsNothing);
-    expect(field.left, appBarActionInset(true));
+    expect(field.left, _insetOf(tester, true));
     expect(field.height, TonalButtonSize.bar.button);
     expect(field.center.dy, button.center.dy);
     expect(cancel.left - field.right, 12);
-    expect(cancel.right, _mobile.width - appBarActionInset(true));
+    expect(cancel.right, _mobile.width - _insetOf(tester, true));
     expect(cancel.center.dy, button.center.dy);
   });
 

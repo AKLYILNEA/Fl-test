@@ -235,7 +235,7 @@ void main() {
       server: SpeedTestNode(host: 'server.example', sponsor: 'Example'),
     );
     final copy = SpeedTestSettings.fromJson(settings.toJson());
-    expect(copy.toParams('Node A', 'owned')['provider'], 'speedtest');
+    expect(copy.toParams('Node A', 'owned')['proxy'], 'Node A');
     expect(copy.toParams('Node A', 'owned')['streams'], 1);
     expect(copy.server!.host, 'server.example');
     expect(copy.copyWith(automatic: true).server, isNull);
@@ -661,7 +661,7 @@ void main() {
                       w is DecoratedBox &&
                       w.decoration is BoxDecoration &&
                       (w.decoration as BoxDecoration).color ==
-                          DashboardColors.of(viewCtx).track,
+                          DashboardColors.of(viewCtx).tone2,
                 ),
               ),
             )

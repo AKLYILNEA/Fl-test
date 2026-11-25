@@ -3,8 +3,8 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:fl_clash/common/common.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart' show BuildContext, ValueNotifier;
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -140,7 +140,9 @@ class FontManager {
     }
   }
 
-  static Future<CustomFont?> _migrateLegacyFont(SharedPreferences? prefs) async {
+  static Future<CustomFont?> _migrateLegacyFont(
+    SharedPreferences? prefs,
+  ) async {
     final legacyPath = prefs?.getString(_prefKeyLegacyPath);
     String? path;
     if (legacyPath != null &&

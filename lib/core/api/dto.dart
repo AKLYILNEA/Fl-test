@@ -1,5 +1,8 @@
 import 'package:flutter/foundation.dart';
 
+part 'mitm_query_dto.dart';
+part 'module_dto.dart';
+
 typedef JsonMap = Map<String, Object?>;
 
 JsonMap _map(Object? value) =>
@@ -666,6 +669,7 @@ class ServiceItem {
   final String name;
   final String status;
   final String region;
+  final String ip;
   final int delay;
   final List<String> chains;
   final int checkedAt;
@@ -676,6 +680,7 @@ class ServiceItem {
     required this.name,
     required this.status,
     required this.region,
+    required this.ip,
     required this.delay,
     required this.chains,
     required this.checkedAt,
@@ -687,6 +692,7 @@ class ServiceItem {
     name: json['name'] as String,
     status: json['status'] as String,
     region: json['region'] as String? ?? '',
+    ip: json['ip'] as String? ?? '',
     delay: json['delay'] as int? ?? 0,
     chains: _strings(json['chains']),
     checkedAt: json['checkedAt'] as int,
@@ -714,6 +720,19 @@ class TrafficSample {
     down: json['down'] as int,
     totalUp: json['totalUp'] as int,
     totalDown: json['totalDown'] as int,
+  );
+}
+
+@immutable
+class ConnectionFailureDto {
+  final String kind;
+  final String message;
+
+  const ConnectionFailureDto({required this.kind, required this.message});
+
+  factory ConnectionFailureDto.fromJson(JsonMap json) => ConnectionFailureDto(
+    kind: json['kind'] as String,
+    message: json['message'] as String,
   );
 }
 
@@ -750,8 +769,12 @@ class ConnectionInfo {
   final List<String> providerChains;
   final String rule;
   final String rulePayload;
+  final int? ruleIndex;
   final int upload;
   final int download;
+  final ConnectionFailureDto? failure;
+  final ConnectionTimingDto? timing;
+  final List<int> dnsQueries;
 
   const ConnectionInfo({
     required this.id,
@@ -785,8 +808,12 @@ class ConnectionInfo {
     this.providerChains = const [],
     required this.rule,
     this.rulePayload = '',
+    this.ruleIndex,
     required this.upload,
     required this.download,
+    this.failure,
+    this.timing,
+    this.dnsQueries = const [],
   });
 
   factory ConnectionInfo.fromJson(JsonMap json) => ConnectionInfo(
@@ -825,8 +852,57 @@ class ConnectionInfo {
     providerChains: _strings(json['providerChains']),
     rule: json['rule'] as String,
     rulePayload: json['rulePayload'] as String? ?? '',
+    ruleIndex: json['ruleIndex'] as int?,
     upload: json['upload'] as int,
     download: json['download'] as int,
+    failure: switch (_optionalMap(json['failure'])) {
+      final failure? => ConnectionFailureDto.fromJson(failure),
+      null => null,
+    },
+    timing: switch (_optionalMap(json['timing'])) {
+      final timing? => ConnectionTimingDto.fromJson(timing),
+      null => null,
+    },
+    dnsQueries: [
+      for (final id in json['dnsQueries'] as List? ?? const []) id as int,
+    ],
+  );
+}
+
+/// [accepted] is Unix milliseconds; each step is microseconds after it.
+class ConnectionTimingDto {
+  final int accepted;
+  final int? dnsStart;
+  final int? dnsEnd;
+  final int? routed;
+  final int? dialStart;
+  final int? connected;
+  final int? tls;
+  final int? dialEnd;
+  final int? decrypted;
+
+  const ConnectionTimingDto({
+    required this.accepted,
+    this.dnsStart,
+    this.dnsEnd,
+    this.routed,
+    this.dialStart,
+    this.connected,
+    this.tls,
+    this.dialEnd,
+    this.decrypted,
+  });
+
+  factory ConnectionTimingDto.fromJson(JsonMap json) => ConnectionTimingDto(
+    accepted: json['accepted'] as int,
+    dnsStart: json['dnsStart'] as int?,
+    dnsEnd: json['dnsEnd'] as int?,
+    routed: json['routed'] as int?,
+    dialStart: json['dialStart'] as int?,
+    connected: json['connected'] as int?,
+    tls: json['tls'] as int?,
+    dialEnd: json['dialEnd'] as int?,
+    decrypted: json['decrypted'] as int?,
   );
 }
 
@@ -864,17 +940,41 @@ class ConnectionDelta {
   final List<ConnectionInfo> opened;
   final List<int> closed;
   final List<ConnectionCounter> counters;
+  final List<ConnectionEndDto> ended;
 
   const ConnectionDelta({
     this.opened = const [],
     this.closed = const [],
     this.counters = const [],
+    this.ended = const [],
   });
 
   factory ConnectionDelta.fromJson(JsonMap json) => ConnectionDelta(
     opened: _list(json['opened'], ConnectionInfo.fromJson),
     closed: [for (final id in json['closed'] as List? ?? const []) id as int],
     counters: _list(json['counters'], ConnectionCounter.fromJson),
+    ended: _list(json['ended'], ConnectionEndDto.fromJson),
+  );
+}
+
+class ConnectionEndDto {
+  final int id;
+  final String reason;
+  final int endedAt;
+  final String message;
+
+  const ConnectionEndDto({
+    required this.id,
+    required this.reason,
+    required this.endedAt,
+    this.message = '',
+  });
+
+  factory ConnectionEndDto.fromJson(JsonMap json) => ConnectionEndDto(
+    id: json['id'] as int,
+    reason: json['reason'] as String,
+    endedAt: json['endedAt'] as int,
+    message: json['message'] as String? ?? '',
   );
 }
 
@@ -895,6 +995,7 @@ class LogEntry {
 
 @immutable
 class DnsEntry {
+  final int? id;
   final String domain;
   final String type;
   final String initiator;
@@ -907,6 +1008,7 @@ class DnsEntry {
   final int time;
 
   const DnsEntry({
+    this.id,
     required this.domain,
     required this.type,
     required this.initiator,
@@ -920,6 +1022,7 @@ class DnsEntry {
   });
 
   factory DnsEntry.fromJson(JsonMap json) => DnsEntry(
+    id: json['id'] as int?,
     domain: json['domain'] as String,
     type: json['type'] as String,
     initiator: json['initiator'] as String,
@@ -941,6 +1044,7 @@ sealed class CoreEventDto {
     'resourceUpdate' => ResourceUpdateEvent.fromJson(json),
     'stateChanged' => StateChangedEvent.fromJson(json),
     'dialerLoop' => DialerLoopEvent(json['name'] as String),
+    'scriptNotification' => ScriptNotificationEvent.fromJson(json),
     'delay' => DelayEvent(
       DelayResult(
         name: json['name'] as String,
@@ -948,12 +1052,11 @@ sealed class CoreEventDto {
         value: json['value'] as int,
       ),
     ),
-    'fatal' => FatalEvent(json['message'] as String),
     _ => const UnknownCoreEvent(),
   };
 }
 
-enum ResourceKind { proxyProvider, ruleProvider, geo }
+enum ResourceKind { proxyProvider, ruleProvider, geo, mitmModule }
 
 enum ResourcePhase { updating, updated, unchanged, failed }
 
@@ -1098,16 +1201,39 @@ final class DialerLoopEvent extends CoreEventDto {
   const DialerLoopEvent(this.name);
 }
 
+/// What a MITM script posted with `$notification.post`.
+final class ScriptNotificationEvent extends CoreEventDto {
+  final String script;
+  final String title;
+  final String subtitle;
+  final String body;
+  final String url;
+
+  const ScriptNotificationEvent({
+    required this.script,
+    required this.title,
+    this.subtitle = '',
+    this.body = '',
+    this.url = '',
+  });
+
+  factory ScriptNotificationEvent.fromJson(JsonMap json) =>
+      ScriptNotificationEvent(
+        script: json['script'] as String,
+        title: json['title'] as String,
+        subtitle: json['subtitle'] as String? ?? '',
+        body: json['body'] as String? ?? '',
+        url: json['url'] as String? ?? '',
+      );
+
+  String get text =>
+      [title, subtitle, body].where((part) => part.isNotEmpty).join('\n');
+}
+
 final class DelayEvent extends CoreEventDto {
   final DelayResult result;
 
   const DelayEvent(this.result);
-}
-
-final class FatalEvent extends CoreEventDto {
-  final String message;
-
-  const FatalEvent(this.message);
 }
 
 final class UnknownCoreEvent extends CoreEventDto {

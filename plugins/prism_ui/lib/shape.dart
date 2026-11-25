@@ -10,6 +10,7 @@ abstract final class AppCorner {
   static const double lg = 20;
   static const double xl = 24;
   static const double xxl = 28;
+  static const double listGroup = 26;
 
   /// UIAlertController's corner on iOS 27, rounder than a sheet's.
   static const double alert = 34;
@@ -102,7 +103,7 @@ class SuperellipseBorder extends RoundedSuperellipseBorder {
 
   @override
   Path getOuterPath(Rect rect, {TextDirection? textDirection}) {
-    if (!_isDesktop) {
+    if (!_isDesktop || borderRadius == BorderRadius.zero) {
       return super.getOuterPath(rect, textDirection: textDirection);
     }
     final localPath = _getPathForSize(rect.size, textDirection);
@@ -118,7 +119,9 @@ class SuperellipseBorder extends RoundedSuperellipseBorder {
     Paint paint, {
     TextDirection? textDirection,
   }) {
-    if (!_isDesktop) {
+    if (!_isDesktop ||
+        borderRadius == BorderRadius.zero ||
+        paint.maskFilter != null) {
       super.paintInterior(canvas, rect, paint, textDirection: textDirection);
       return;
     }

@@ -55,6 +55,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 50));
 
       expect(find.byType(MiuixAboutBackdrop), findsOneWidget);
+      expect(find.byType(MiuixChromaticLogo), findsOneWidget);
       expect(find.byType(MiuixChromaticTitle), findsOneWidget);
       expect(find.text(appName), findsOneWidget);
       expect(find.text('v0.9.3'), findsOneWidget);
@@ -83,8 +84,9 @@ void main() {
       }
 
       expect(find.byType(MiuixFrostedSection), findsNWidgets(2));
-      expect(find.byType(DecorationListItem), findsNWidgets(6));
+      expect(find.byType(DecorationListItem), findsNWidgets(7));
       expect(find.text('Telegram'), findsOneWidget);
+      expect(find.text('t.me/aaANDkk1314'), findsOneWidget);
       expect(find.text('aaANDkk'), findsOneWidget);
       expect(find.text('About'), findsOneWidget);
       expect(tester.takeException(), isNull);
@@ -108,7 +110,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(container.read(appSettingProvider).developerMode, isFalse);
-    final icon = find.byType(Image);
+    final icon = find.byType(MiuixChromaticLogo);
     for (var i = 0; i < 5; i++) {
       await tester.tap(icon);
       await tester.pump(const Duration(milliseconds: 50));
@@ -118,4 +120,100 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump();
   });
+
+  testWidgets(
+    'about page defers frosted card blur during route push and enables it on settle',
+    (tester) async {
+      final container = containerFor(tester, const Size(430, 840));
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: TestApp(
+            locale: const Locale('en'),
+            child: Builder(
+              builder: (context) => FilledButton(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    PageRouteBuilder<void>(
+                      transitionDuration: const Duration(milliseconds: 300),
+                      pageBuilder: (_, _, _) => const AboutView(),
+                    ),
+                  );
+                },
+                child: const Text('Open About'),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Open About'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      final duringCards = tester
+          .widgetList<MiuixFrostedCard>(find.byType(MiuixFrostedCard))
+          .toList();
+      expect(duringCards, isNotEmpty);
+      expect(duringCards.every((c) => !c.blurEnabled), isTrue);
+
+      await tester.pump(const Duration(milliseconds: 250));
+      await tester.pump();
+      final settledCards = tester
+          .widgetList<MiuixFrostedCard>(find.byType(MiuixFrostedCard))
+          .toList();
+      expect(settledCards, isNotEmpty);
+      expect(settledCards.every((c) => c.blurEnabled), isTrue);
+      expect(tester.takeException(), isNull);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+    },
+  );
+
+  testWidgets(
+    'scrolling about page across bar alpha threshold keeps scroll position',
+    (tester) async {
+      final container = containerFor(tester, const Size(430, 560));
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const TestApp(
+            locale: Locale('en'),
+            child: AboutView(dynamicBackground: false),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final scrollView = find.byType(CustomScrollView);
+      final scrollable = tester.state<ScrollableState>(
+        find.descendant(of: scrollView, matching: find.byType(Scrollable)),
+      );
+      expect(scrollable.position.pixels, 0);
+
+      // Step through the progress == 0.35 bar-background alpha transition so
+      // any Surface subtree remount would detach and reset ScrollPosition.
+      final gesture = await tester.startGesture(const Offset(215, 420));
+      for (var i = 0; i < 6; i++) {
+        await gesture.moveBy(const Offset(0, -35));
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      final midPixels = scrollable.position.pixels;
+      expect(midPixels, greaterThan(120));
+      await gesture.up();
+      await tester.pumpAndSettle();
+
+      final settledScrollable = tester.state<ScrollableState>(
+        find.descendant(of: scrollView, matching: find.byType(Scrollable)),
+      );
+      expect(identical(settledScrollable, scrollable), isTrue);
+      expect(settledScrollable.position.pixels, greaterThan(100));
+      expect(tester.takeException(), isNull);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump();
+    },
+  );
 }

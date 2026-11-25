@@ -85,8 +85,7 @@ class IpRiskRepository {
 final ipRiskRepositoryProvider = Provider<IpRiskRepository>((ref) {
   return IpRiskRepository(
     read: (ip) => ref.read(coreHandlerProvider).api.readIpCache(ip),
-    write: (ip, data) =>
-        ref.read(coreHandlerProvider).api.writeIpCache(ip, data),
+    write: (ip, data) => ref.read(coreHandlerProvider).api.writeIpCache(ip, data),
     fetch: (ip, cancel) => fetchIpRisk(request.dio, ip, cancel),
   );
 });

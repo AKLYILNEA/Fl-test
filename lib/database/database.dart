@@ -6,11 +6,9 @@ import 'package:collection/collection.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:fl_clash/common/common.dart';
-import 'package:fl_clash/common/mitm_module.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
-import 'package:path/path.dart' show join;
 
 part 'clash_providers.dart';
 part 'converter.dart';
@@ -63,6 +61,13 @@ class Database extends _$Database {
   static LazyDatabase _openConnection() {
     return LazyDatabase(() async {
       final databaseFile = File(await appPath.databasePath);
+      // Avoid a persistent Drift worker isolate on Android: when the Activity
+      // destroys the FlutterEngine while VpnService keeps the process alive,
+      // a surviving child isolate delays IsolateGroup cleanup until after
+      // Impeller tears down ContextVK, triggering vkDestroyFramebuffer SIGSEGV.
+      if (Platform.isAndroid) {
+        return NativeDatabase(databaseFile);
+      }
       return NativeDatabase.createInBackground(databaseFile);
     });
   }
@@ -208,36 +213,16 @@ class Database extends _$Database {
     );
   }
 
+  /// Read as if each module asks, so an enabled one stays agreed to and the
+  /// next save records what its file asks.
   Future<void> _recordMitmConsent() async {
-    final rows = await select(mitmModules).get();
-    if (rows.isEmpty) {
-      return;
-    }
-    final directory = await appPath.mitmModulesDirPath;
-    for (final row in rows) {
-      final fileAsks = await _fileAsksConsent(directory, row);
-      bool? accepted = row.enabled ? null : false;
-      if (row.enabled && (row.scripts > 0 || fileAsks == true)) {
-        accepted = true;
-      }
+    for (final row in await select(mitmModules).get()) {
       await (update(mitmModules)..where((t) => t.id.equals(row.id))).write(
         MitmModulesCompanion(
-          asksConsent: Value(fileAsks ?? true),
-          accepted: Value(accepted),
+          asksConsent: const Value(true),
+          accepted: Value(row.enabled),
         ),
       );
-    }
-  }
-
-  Future<bool?> _fileAsksConsent(String directory, RawMitmModule row) async {
-    try {
-      final file = File(join(directory, row.toMitmModule().fileName));
-      return parseMitmModule(
-        await file.readAsString(),
-        values: row.arguments,
-      ).asksConsent;
-    } catch (_) {
-      return null;
     }
   }
 

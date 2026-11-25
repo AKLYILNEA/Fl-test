@@ -21,7 +21,12 @@ T roundTrip<T>(
 ConfigPatch _patchOf(
   PatchClashConfig config, [
   CoreOptions options = const CoreOptions(testUrl: ''),
-]) => configPatchOf(config, authentication: const [], options: options);
+]) => configPatchOf(
+  config,
+  authentication: const [],
+  hostCredential: 'host:secret',
+  options: options,
+);
 
 void main() {
   group('GeoResource JSON', () {
@@ -452,6 +457,25 @@ void main() {
       expect(props.bypassPrivateRoute, true);
       expect(props.appendSystemDns, false);
     });
+
+    test(
+      'the default bypass covers 172.16.0.0/12 and no public 172 address',
+      () {
+        bool bypassed(String host) => defaultBypassDomain.any(
+          (pattern) => RegExp(
+            '^${RegExp.escape(pattern).replaceAll(r'\*', '.*')}\$',
+          ).hasMatch(host),
+        );
+
+        for (var octet = 0; octet < 256; octet++) {
+          expect(
+            bypassed('172.$octet.1.1'),
+            octet >= 16 && octet < 32,
+            reason: '172.$octet.1.1',
+          );
+        }
+      },
+    );
 
     test('round-trip with custom values', () {
       const props = NetworkProps(
@@ -1077,6 +1101,16 @@ void main() {
     });
   });
 
+  group('VpnProps', () {
+    test('a save from a build with root mode still loads its VPN settings', () {
+      final config = Config.fromJson({
+        'vpnProps': {'rootTun': true, 'dnsHijacking': true, 'ipv6': true},
+      });
+
+      expect(config.vpnProps, const VpnProps(dnsHijacking: true, ipv6: true));
+    });
+  });
+
   group('Config composite serialization', () {
     test('DAVProps obfuscates and restores its password', () {
       const props = DAVProps(
@@ -1408,6 +1442,18 @@ void main() {
 
       expect(balanced['strategy'], 'round-robin');
       expect(balanced.containsKey('tolerance'), isFalse);
+    });
+
+    test('emits policy-priority only on a smart group and reads it back', () {
+      final weighted = group.copyWith(policyPriority: 'HK:1.5;US:0.8');
+      final smart = weighted.copyWith(type: GroupType.Smart);
+
+      expect(weighted.definition.containsKey('policy-priority'), isFalse);
+      expect(
+        smart.definition,
+        containsPair('policy-priority', 'HK:1.5;US:0.8'),
+      );
+      expect(smart.withDefinitionYaml(smart.definitionYaml), smart);
     });
 
     test('emits the options mihomo reads for one type only on that type', () {

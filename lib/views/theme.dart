@@ -1,15 +1,16 @@
-import 'dart:async';
 import 'dart:io';
+
+import 'dart:async';
 import 'dart:math';
 
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/enum/enum.dart';
 import 'package:fl_clash/manager/emoji_manager.dart';
 import 'package:fl_clash/manager/font_manager.dart';
+import 'package:fl_clash/state.dart';
 import 'package:fl_clash/models/models.dart';
 import 'package:fl_clash/providers/config.dart';
 import 'package:fl_clash/providers/state.dart';
-import 'package:fl_clash/state.dart';
 import 'package:fl_clash/ui/icons/icons.dart';
 import 'package:fl_clash/views/font_family.dart';
 import 'package:fl_clash/views/theme_preview.dart';
@@ -27,30 +28,30 @@ class ThemeView extends StatelessWidget {
       title: appLocalizations.theme,
       body: ListView(
         padding: EdgeInsets.only(
-          top: context.contentTopPadding,
+          top: context.appBarInset,
           bottom: 32 + context.bottomInset,
         ),
         children: [
           const ThemeLivePreview(),
-          const SizedBox(height: 16),
+          const SizedBox(height: infoSectionSpacing),
           const _ThemeModeItem(),
-          const SizedBox(height: 16),
+          const SizedBox(height: infoSectionSpacing),
           const _PureBlackItem(),
-          const SizedBox(height: 16),
+          const SizedBox(height: infoSectionSpacing),
           const _PrimaryColorItem(),
-          const SizedBox(height: 16),
+          const SizedBox(height: infoSectionSpacing),
           const _NavigationBarItem(),
-          const SizedBox(height: 16),
+          const SizedBox(height: infoSectionSpacing),
           const _TabAnimationItem(),
-          const SizedBox(height: 16),
+          const SizedBox(height: infoSectionSpacing),
           const _LiquidGlassItem(),
-          const SizedBox(height: 16),
+          const SizedBox(height: infoSectionSpacing),
           if (system.isMacOS || system.isWindows) ...const [
             _SidebarBlurItem(),
-            SizedBox(height: 16),
+            SizedBox(height: infoSectionSpacing),
           ],
           const _FontFamilyItem(),
-          const SizedBox(height: 16),
+          const SizedBox(height: infoSectionSpacing),
           const _TextScaleFactorItem(),
         ],
       ),
@@ -80,7 +81,7 @@ class _ThemeModeItem extends ConsumerWidget {
       liquidGlass: liquidGlass,
     );
     return PreviewChoiceGroup<ThemeMode>(
-      info: Info(label: appLocalizations.themeMode, glyph: AppGlyphs.sunnyLow),
+      info: Info(label: appLocalizations.themeMode, glyph: AppGlyphs.sun),
       value: themeMode,
       choices: [
         PreviewChoice(
@@ -262,7 +263,7 @@ class _PrimaryColorItem extends ConsumerWidget {
           ],
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          padding: context.listInsets.page(top: infoSectionContentGap),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             spacing: 8,
@@ -623,7 +624,7 @@ class _NavigationBarItem extends ConsumerWidget {
     return PreviewChoiceGroup<bool>(
       info: Info(
         label: appLocalizations.navigationBarStyle,
-        glyph: AppGlyphs.dock,
+        glyph: AppGlyphs.layers,
       ),
       value: floatingBar,
       choices: [
@@ -767,7 +768,7 @@ class _SidebarBlurItem extends StatelessWidget {
           info: Info(label: appLocalizations.sidebar, glyph: AppGlyphs.blur),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          padding: context.listInsets.page(top: infoSectionContentGap),
           child: generateGroup([
             ConfigToggleItem(
               title: (l) => l.backgroundBlur,
@@ -795,10 +796,7 @@ class _FontFamilyItem extends ConsumerWidget {
       if (!await file.exists()) {
         return false;
       }
-      final value = await picker.saveFile(
-        font.name,
-        await file.readAsBytes(),
-      );
+      final value = await picker.saveFile(font.name, await file.readAsBytes());
       if (value == null) return false;
       return true;
     }, title: appLocalizations.tip);
@@ -832,7 +830,8 @@ class _FontFamilyItem extends ConsumerWidget {
       valueListenable: FontManager.fontFamilyNotifier,
       builder: (context, fontFamily, _) {
         final customFontName = FontManager.selectedName;
-        final effectiveFontFamily = fontFamily ??
+        final effectiveFontFamily =
+            fontFamily ??
             ref.watch(themeSettingProvider.select((state) => state.fontFamily));
         return Padding(
           padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
@@ -901,6 +900,7 @@ class _FontFamilyItem extends ConsumerWidget {
       }
       return ContextMenuRegion(menuItems: menuItems, child: cardWidget);
     }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -920,8 +920,8 @@ class _FontFamilyItem extends ConsumerWidget {
                       openBuilder: (_, _) => const FontFamilyView(),
                     )
                   : card(
-                      () => showSheet<void>(
-                        context: context,
+                      () => showNestedSheet<void>(
+                        context,
                         builder: (_) => const FontFamilyView(),
                       ),
                     ),
@@ -952,6 +952,7 @@ class _FontFamilyItem extends ConsumerWidget {
 class _TextScaleFactorItem extends ConsumerStatefulWidget {
   const _TextScaleFactorItem();
 
+  static const _step = 0.05;
 
   @override
   ConsumerState<_TextScaleFactorItem> createState() =>
@@ -981,6 +982,8 @@ class _TextScaleFactorItemState extends ConsumerState<_TextScaleFactorItem> {
     final scale = _draft ?? (textScale.enable ? textScale.scale : systemScale);
     final percent = '${(scale * 100).round()}%';
     final level = context.raisedSurfaceLevel;
+    final divisions =
+        ((maxTextScale - minTextScale) / _TextScaleFactorItem._step).round();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -997,7 +1000,7 @@ class _TextScaleFactorItemState extends ConsumerState<_TextScaleFactorItem> {
           ],
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          padding: context.listInsets.page(top: infoSectionContentGap),
           child: Column(
             spacing: 8,
             children: [
@@ -1011,7 +1014,9 @@ class _TextScaleFactorItemState extends ConsumerState<_TextScaleFactorItem> {
                     _update((state) => state.copyWith(enable: value)),
               ),
               Container(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                padding: EdgeInsets.all(
+                  context.listInsets.leading,
+                ).copyWith(bottom: infoSectionContentGap),
                 decoration: ShapeDecoration(
                   color: level.colorOf(colorScheme),
                   shape: AppShape.lg,
@@ -1095,6 +1100,7 @@ class _TextScaleFactorItemState extends ConsumerState<_TextScaleFactorItem> {
                             child: Slider(
                               min: minTextScale,
                               max: maxTextScale,
+                              divisions: divisions,
                               value: scale,
                               label: percent,
                               onChanged: textScale.enable
@@ -1196,9 +1202,9 @@ class _CustomColorSheetState extends State<_CustomColorSheet> {
       ),
       body: ListView(
         padding: EdgeInsets.fromLTRB(
-          max(16, gestureInsets.left),
+          max(context.listInsets.margin, gestureInsets.left),
           context.contentTopPadding,
-          max(16, gestureInsets.right),
+          max(context.listInsets.margin, gestureInsets.right),
           20 + context.bottomInset,
         ),
         children: [
@@ -1209,7 +1215,7 @@ class _CustomColorSheetState extends State<_CustomColorSheet> {
               onChanged: (color) => _controller.value = color,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: infoSectionSpacing),
           Palette(controller: _controller),
         ],
       ),
@@ -1252,7 +1258,7 @@ class _CustomColorPreview extends ConsumerWidget {
       ),
     );
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(context.listInsets.leading),
       decoration: ShapeDecoration(
         color: level.colorOf(context.colorScheme),
         shape: AppShape.xl,

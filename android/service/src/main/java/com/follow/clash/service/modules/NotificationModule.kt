@@ -19,10 +19,10 @@ import com.follow.clash.common.toPendingIntent
 import com.follow.clash.service.R
 import com.follow.clash.service.ServiceConfig
 import com.follow.clash.service.TrafficMeter
+import com.follow.clash.service.whileScreenOn
 import com.follow.clash.service.models.NotificationParams
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
@@ -66,8 +66,7 @@ internal class NotificationModule(
                 intent.action != Intent.ACTION_SCREEN_OFF
             }.onStart {
                 emit(isScreenOn())
-            }.collectLatest { screenOn ->
-                if (!screenOn) return@collectLatest
+            }.whileScreenOn(meter) {
                 combine(
                     flow {
                         while (true) {

@@ -104,8 +104,6 @@ class _TrayManagerState extends ConsumerState<TrayManager> {
 
   void _handleTrayEvent(TrayEvent event) {
     switch (event) {
-      case TrayThemeChanged():
-        _requestUpdate();
       case TrayIconActivated():
         window?.show();
       case TrayMenuRequested():

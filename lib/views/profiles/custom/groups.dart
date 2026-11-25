@@ -78,7 +78,7 @@ enum _GroupOption {
 
   bool appliesTo(GroupType type, LoadBalanceStrategy? strategy) =>
       switch (this) {
-        tolerance => type == GroupType.URLTest,
+        tolerance => type == GroupType.URLTest || type == GroupType.Smart,
         defaultSelected => type == GroupType.Selector,
         _GroupOption.strategy => type == GroupType.LoadBalance,
         hashKey =>
@@ -414,7 +414,10 @@ class _ProxyGroupItem extends ConsumerWidget {
       invalid: issues.isNotEmpty,
       isSelected: isSelected,
       onPressed: isEditing ? onSelected : onPressed,
-      contentPadding: const EdgeInsets.only(left: 16),
+      contentPadding: EdgeInsetsDirectional.only(
+        start: context.listInsets.leading,
+        end: context.listInsets.trailing - Checkbox.edgeInset,
+      ),
       leading: SizedBox.square(
         dimension: 32,
         child: IconTheme.merge(
@@ -1395,7 +1398,7 @@ class _EditProxyGroupViewState extends ConsumerState<EditProxyGroupView> {
         slivers: [
           SliverCustomIssuesBanner(issues: issues),
           SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: context.listInsets.page(),
             sliver: SliverList.list(
               children: [
                 generateSection(
@@ -1412,14 +1415,14 @@ class _EditProxyGroupViewState extends ConsumerState<EditProxyGroupView> {
               ],
             ),
           ),
-          const SliverPadding(
-            padding: EdgeInsets.symmetric(horizontal: 16),
-            sliver: ProxyGroupMembersSliver(),
+          SliverPadding(
+            padding: context.listInsets.page(),
+            sliver: const ProxyGroupMembersSliver(),
           ),
           SliverPadding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16,
-            ).copyWith(bottom: 20 + context.bottomInset),
+            padding: context.listInsets.page().copyWith(
+              bottom: 20 + context.bottomInset,
+            ),
             sliver: SliverList.list(
               children: [
                 _buildOptions(emptyFallbackIssues: emptyFallbackIssues),

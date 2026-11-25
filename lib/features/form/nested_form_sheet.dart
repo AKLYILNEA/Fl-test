@@ -15,8 +15,9 @@ Future<void> showNestedFormSheet<T>({
   required WidgetBuilder formBuilder,
 }) {
   return showFormSheet(
-    context: context,
+    context: sheetNavigatorOf(context).context,
     props: nestedPagedSheetProps,
+    useRootNavigator: false,
     builder: (_) {
       final sheet = ProviderScope(
         overrides: overrides,

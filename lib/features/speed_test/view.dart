@@ -19,7 +19,10 @@ import 'settings.dart';
 import 'store.dart';
 import 'widgets.dart';
 
-Future<void> showSpeedTestSheet(BuildContext context, {String proxyName = ''}) {
+Future<void> showSpeedTestSheet(
+  BuildContext context, {
+  String proxyName = '',
+}) {
   return showSheet<void>(
     context: context,
     props: nestedPagedSheetProps,
@@ -101,7 +104,6 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
     if (_proxy.isNotEmpty) return _proxy;
     return ref.read(isStartProvider) ? '' : 'DIRECT';
   }
-
   String _id() => '${DateTime.now().microsecondsSinceEpoch}';
 
   Future<void> _detect() async {
@@ -288,7 +290,10 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
         ? await Navigator.of(
             context,
           ).push(PagedSheetRoute<String>(builder: (_) => selection))
-        : await showSheet<String>(context: context, builder: (_) => selection);
+        : await showSheet<String>(
+            context: context,
+            builder: (_) => selection,
+          );
     if (!mounted || value == null || value == _proxy) return;
     setState(() {
       _proxy = value;
@@ -308,7 +313,9 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
         setState(() {
           _settings = settings;
         });
-        unawaited(ref.read(speedTestStoreProvider.notifier).settings(settings));
+        unawaited(
+          ref.read(speedTestStoreProvider.notifier).settings(settings),
+        );
       },
     );
     if (isSheetPage(context)) {
@@ -327,9 +334,9 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
 
   Future<void> _openHistory() {
     if (isSheetPage(context)) {
-      return Navigator.of(context).push(
-        PagedSheetRoute<void>(builder: (_) => const SpeedTestHistoryView()),
-      );
+      return Navigator.of(
+        context,
+      ).push(PagedSheetRoute<void>(builder: (_) => const SpeedTestHistoryView()));
     }
     return showSheet<void>(
       context: context,
@@ -355,8 +362,7 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
         : context.colorScheme.primary;
     final gauge = SpeedTestGauge(
       state: _state,
-      standby:
-          (_pendingInitialProbe || _error != null) && !_probing && !_testing,
+      standby: (_pendingInitialProbe || _error != null) && !_probing && !_testing,
       waiting:
           _probing ||
           (_testing &&
@@ -530,8 +536,7 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
       return chains.last;
     }
     final provider = realSelectedProxyStateProvider(proxyName);
-    final resolved =
-        (watch ? ref.watch(provider) : ref.read(provider)).proxyName;
+    final resolved = (watch ? ref.watch(provider) : ref.read(provider)).proxyName;
     return resolved.isEmpty ? proxyName : resolved;
   }
 
@@ -590,7 +595,6 @@ class _SpeedTestViewState extends ConsumerState<SpeedTestView>
     ref.watch(speedTestClientProvider);
     final l = context.appLocalizations;
     final running = ref.watch(isStartProvider);
-    ref.watch(speedTestClientProvider);
     ref.listen(isStartProvider, (_, _) {
       if (_testing) {
         unawaited(
