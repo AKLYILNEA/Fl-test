@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
+import 'package:crypto/crypto.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/core/api/core_api.dart';
 import 'package:fl_clash/core/api/dto.dart';
@@ -25,6 +27,7 @@ const _applied = CoreLifecycleResult(
 );
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   late CoreMocks mocks;
   late CoreController controller;
   late MockCoreApi api;
@@ -124,6 +127,47 @@ void main() {
       await controller.init(34);
 
       verify(() => api.init(home: home.path, sdkInt: 34)).called(1);
+    });
+
+    test(
+      'repairs the legacy GeoSite cache before initializing the Core',
+      () async {
+        final bundled = await File('assets/data/$GEOSITE').readAsBytes();
+        final legacy = Uint8List(bundled.length);
+        var size = 0;
+        for (var i = 0; i < bundled.length; i++) {
+          if (bundled[i] == 13 &&
+              i + 1 < bundled.length &&
+              bundled[i + 1] == 10) {
+            continue;
+          }
+          legacy[size++] = bundled[i];
+        }
+        final cached = File('${home.path}/$GEOSITE');
+        await cached.writeAsBytes(Uint8List.sublistView(legacy, 0, size));
+        expect(size, bundled.length - 8);
+        when(() => api.init(home: home.path, sdkInt: 34)).thenAnswer((_) async {
+          final installed = await sha256.bind(cached.openRead()).first;
+          expect(installed, sha256.convert(bundled));
+        });
+
+        await controller.init(34);
+
+        verify(() => api.init(home: home.path, sdkInt: 34)).called(1);
+      },
+    );
+
+    test('leaves other cached GeoSite resources in place', () async {
+      final cached = File('${home.path}/$GEOSITE');
+      final custom = Uint8List(4433785)..first = 10;
+      await cached.writeAsBytes(custom);
+
+      await CoreController.initGeo();
+
+      expect(
+        await sha256.bind(cached.openRead()).first,
+        sha256.convert(custom),
+      );
     });
 
     test('surfaces what the Core refuses', () async {

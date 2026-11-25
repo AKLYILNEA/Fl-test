@@ -2,3 +2,5 @@
 lib/**/generated/** -whitespace
 plugins/prism_ui/lib/generated/** -whitespace
 patches/concord-customizations.patch whitespace=-blank-at-eol
+assets/data/*.dat binary
+assets/data/*.metadb binary

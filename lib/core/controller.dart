@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:crypto/crypto.dart';
 import 'package:fl_clash/common/common.dart';
 import 'package:fl_clash/core/core.dart';
 import 'package:fl_clash/enum/enum.dart';
@@ -9,6 +10,11 @@ import 'package:fl_clash/plugins/app.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/services.dart';
 import 'package:path/path.dart';
+
+// The Fl-test bundle whose protobuf bytes were changed by CRLF normalization.
+const _damagedGeoSiteLength = 4433785;
+const _damagedGeoSiteSha256 =
+    '9d0fe89bdf0667adcd3b80589ac53e06e46c90e67c503a0795c05929b2634915';
 
 /// The lifecycle of the Core and its [api], with the few operations that
 /// compose several calls or turn app models into API arguments.
@@ -51,7 +57,13 @@ extension type CoreController._(CoreBackend _backend) implements CoreBackend {
       for (final geoFileName in geoFileNameList) {
         final geoFile = File(join(homePath, geoFileName));
         final isExists = await geoFile.exists();
-        if (isExists) {
+        final replaceDamagedGeoSite =
+            isExists &&
+            geoFileName == GEOSITE &&
+            await geoFile.length() == _damagedGeoSiteLength &&
+            (await sha256.bind(geoFile.openRead()).first).toString() ==
+                _damagedGeoSiteSha256;
+        if (isExists && !replaceDamagedGeoSite) {
           continue;
         }
         final asset = 'assets/data/$geoFileName';
@@ -59,11 +71,15 @@ extension type CoreController._(CoreBackend _backend) implements CoreBackend {
         // shares with the UI: the files stall frames for over 100 ms.
         if (app case final app?) {
           await app.extractAsset(asset, geoFile.path);
-          continue;
+        } else {
+          final data = await rootBundle.load(asset);
+          await geoFile.writeAsBytesAtomically(
+            data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
+          );
         }
-        final data = await rootBundle.load(asset);
-        final List<int> bytes = data.buffer.asUint8List();
-        await geoFile.writeAsBytes(bytes, flush: true);
+        if (replaceDamagedGeoSite) {
+          commonPrint.log('Repaired the legacy GeoSite cache');
+        }
       }
     } catch (e) {
       commonPrint.log(
