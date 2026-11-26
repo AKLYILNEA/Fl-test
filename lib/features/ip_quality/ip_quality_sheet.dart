@@ -143,7 +143,6 @@ class _IpRiskSheetState extends ConsumerState<IpRiskSheet>
           builder: (context) => NullStatusSwitcher(
             key: ValueKey(switchKey),
             isLoading: !_retrying && isLoading,
-            holdsArrival: false,
             loadingStatus: const Center(child: ActivityIndicator.page()),
             child: ListView(
               padding: EdgeInsets.fromLTRB(

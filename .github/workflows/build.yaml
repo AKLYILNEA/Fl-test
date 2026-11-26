@@ -47,16 +47,12 @@ jobs:
           STORE_PASSWORD: ${{ secrets.STORE_PASSWORD || secrets.FLCLASH_STORE_PASSWORD || 'flclash123456' }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || secrets.FLCLASH_KEY_PASSWORD || 'flclash123456' }}
         run: |
-          if [ -n "$KEYSTORE_B64" ]; then
-            echo "$KEYSTORE_B64" | base64 --decode > android/app/keystore.jks
-          else
-            echo "WARNING: KEYSTORE secret not set, generating temporary keystore."
-            keytool -genkey -v -keystore android/app/keystore.jks \
-              -keyalg RSA -keysize 2048 -validity 10000 \
-              -alias "$KEY_ALIAS" \
-              -storepass "$STORE_PASSWORD" -keypass "$KEY_PASSWORD" \
-              -dname "CN=FlClash, OU=Dev, O=FlClash, L=City, S=State, C=CN"
+          if [ -z "$KEYSTORE_B64" ]; then
+            echo "::error::Android release keystore is missing"
+            exit 1
           fi
+          echo "$KEYSTORE_B64" | base64 --decode > android/app/keystore.jks
+          keytool -list -keystore android/app/keystore.jks -storepass "$STORE_PASSWORD" -alias "$KEY_ALIAS" >/dev/null
           {
             echo "keyAlias=$KEY_ALIAS"
             echo "storePassword=$STORE_PASSWORD"
@@ -131,13 +127,6 @@ jobs:
           ANDROID_NDK_HOME: ${{ steps.build-ndk.outputs.ndk-path }}
         run: dart tool/package.dart ${{ matrix.platform }} ${{ matrix.platform == 'android' && matrix.arch && format('--arch {0}', matrix.arch) || '' }} ${{ matrix.platform == 'windows' && '--targets exe' || '' }} ${{ env.IS_STABLE == 'true' && '--env stable' || '' }} -v
 
-      - name: Upload
-        uses: actions/upload-artifact@v4
-        with:
-          name: artifact-${{ matrix.platform }}${{ matrix.arch && format('-{0}', matrix.arch) }}
-          path: ./dist
-          overwrite: true
-
       - name: Verify Android signature
         if: startsWith(matrix.platform,'android')
         env:
@@ -151,11 +140,19 @@ jobs:
           echo "keystore: $expected"
           echo "apk:      $actual"
           if [ -z "$expected" ] || [ -z "$actual" ]; then
-            echo "::warning::Could not compare the two certificates; check $apk by hand."
+            echo "::error::Could not compare the two Android signing certificates"
+            exit 1
           elif [ "$expected" != "$actual" ]; then
             echo "::error::$apk is not signed with the release keystore."
             exit 1
           fi
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifact-${{ matrix.platform }}${{ matrix.arch && format('-{0}', matrix.arch) }}
+          path: ./dist
+          overwrite: true
 
   publish:
     # action-gh-release needs a tag, and a manual run has no version to publish.
@@ -173,9 +170,21 @@ jobs:
       - name: Download
         uses: actions/download-artifact@v4
         with:
-          path: ./dist/
+          path: ./artifacts/
           pattern: artifact-*
-          merge-multiple: true
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Merge and verify build manifests
+        run: |
+          flutter pub get
+          dart tool/package.dart merge artifacts/* --out dist
+          rm dist/manifest.json
 
       - name: Delete existing release if same tag
         shell: bash
@@ -209,12 +218,6 @@ jobs:
           if [ -f ./.github/release_template.md ]; then
             sed "s|BUILD_VERSION|$build_version|g; s|VERSION|$version|g" ./.github/release_template.md >> release.md
           fi
-
-      - name: Generate sha256
-        run: |
-          cd ./dist
-          rm -f manifest.json
-          sha256sum ./* > SHA256SUMS
 
       - name: Release
         uses: softprops/action-gh-release@v2

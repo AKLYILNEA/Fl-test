@@ -20,13 +20,13 @@
         <tr>
             <td>Android</td>
             <td>
-                <a href="https://github.com/AKLYILNEA/Fl-test/releases/download/vVERSION/FlClash-dev-VERSION-android-arm64.apk"><img src="https://img.shields.io/badge/APK-ARMv8-168039.svg?logo=android"></a>
+                <a href="https://github.com/AKLYILNEA/Fl-test/releases/download/vVERSION/FlClash-VERSION-android-arm64.apk"><img src="https://img.shields.io/badge/APK-ARMv8-168039.svg?logo=android"></a>
             </td>
         </tr>
         <tr>
             <td>Windows</td>
             <td>
-                <a href="https://github.com/AKLYILNEA/Fl-test/releases/download/vVERSION/FlClash-dev-VERSION-windows-amd64-setup.exe"><img src="https://img.shields.io/badge/Setup-x64-2d7d9a.svg?logo=windows"></a>
+                <a href="https://github.com/AKLYILNEA/Fl-test/releases/download/vVERSION/FlClash-VERSION-windows-amd64-setup.exe"><img src="https://img.shields.io/badge/Setup-x64-2d7d9a.svg?logo=windows"></a>
             </td>
         </tr>
     </tbody>

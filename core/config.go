@@ -168,6 +168,7 @@ func applyConfig(params *SetupParams) error {
 
 	currentConfig = cfg
 	hub.ApplyConfig(cfg)
+	currentRuleTable.observe()
 	patchSelectGroup(params.SelectedMap)
 	updateListeners(cfg)
 	// After the listeners: a probe sent while the TUN is rebuilt carries the

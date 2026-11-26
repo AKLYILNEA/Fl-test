@@ -45,7 +45,7 @@ Get the latest build from [GitHub Releases](https://github.com/chen08209/FlClash
 
 | Platform | Packages | Notes |
 | --- | --- | --- |
-| Android | APK for `arm64-v8a`, `armeabi-v7a` and `x86_64` | Most phones use `arm64-v8a`. Also on the F-Droid repository below. |
+| Android | APK for `arm64` (arm64-v8a), `armv7` (armeabi-v7a) and `amd64` (x86_64) | Most phones use `arm64`. Also on the F-Droid repository below. |
 | Windows 10 and later | Installer (`.exe`) or portable `.zip`, for x64 and ARM64 | Pick ARM64 on Snapdragon and other ARM laptops. |
 | macOS 12 and later | DMG for Apple Silicon and Intel | Also on Homebrew. |
 | Linux | `.deb`, `.rpm` and AppImage, for x64 and ARM64 | See the tray note below. |
@@ -61,6 +61,12 @@ Get the latest build from [GitHub Releases](https://github.com/chen08209/FlClash
 brew tap chen08209/tap
 brew install --cask flclash
 ```
+
+**macOS first launch**
+
+The app is not notarized, so macOS refuses to open it the first time. After dragging it to Applications, run
+`xattr -dr com.apple.quarantine /Applications/FlClash*.app`, or choose Open Anyway under System Settings > Privacy &
+Security. Later updates install from inside the app.
 
 **Linux tray icon**
 
@@ -98,7 +104,7 @@ adb shell am start -a com.follow.clash.action.TOGGLE
 
 ## Build from source
 
-You need [Flutter](https://docs.flutter.dev/get-started/install) 3.50 (release builds use 3.50.0),
+You need [Flutter](https://docs.flutter.dev/get-started/install) 3.50 (release builds use 3.50.1),
 [Go](https://go.dev/dl/) 1.27 and [Rust](https://rustup.rs/) installed through rustup. Each platform builds on its own
 host, except Android, which builds anywhere.
 

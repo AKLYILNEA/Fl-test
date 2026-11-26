@@ -42,7 +42,7 @@
 
 | 平台 | 安装包 | 说明 |
 | --- | --- | --- |
-| Android | `arm64-v8a`、`armeabi-v7a`、`x86_64` 三种 APK | 绝大多数手机选 `arm64-v8a`。也可以通过下方的 F-Droid 仓库安装。 |
+| Android | `arm64`（arm64-v8a）、`armv7`（armeabi-v7a）、`amd64`（x86_64）三种 APK | 绝大多数手机选 `arm64`。也可以通过下方的 F-Droid 仓库安装。 |
 | Windows 10 及以上 | 安装版（`.exe`）或便携版（`.zip`），分 x64 与 ARM64 | 骁龙等 ARM 架构笔记本选 ARM64。 |
 | macOS 12 及以上 | Apple Silicon 与 Intel 两种 DMG | 也可以通过 Homebrew 安装。 |
 | Linux | `.deb`、`.rpm` 和 AppImage，分 x64 与 ARM64 | 托盘依赖见下方说明。 |
@@ -58,6 +58,11 @@
 brew tap chen08209/tap
 brew install --cask flclash
 ```
+
+**macOS 首次打开**
+
+应用未经 Apple 公证，macOS 第一次会拒绝打开。拖进“应用程序”后运行
+`xattr -dr com.apple.quarantine /Applications/FlClash*.app`，或在“系统设置 > 隐私与安全性”里点“仍要打开”。之后的更新在应用内直接安装。
 
 **Linux 托盘图标**
 
@@ -92,7 +97,7 @@ adb shell am start -a com.follow.clash.action.TOGGLE
 
 ## 从源码构建
 
-需要 [Flutter](https://docs.flutter.dev/get-started/install) 3.50（正式版构建使用 3.50.0）、[Go](https://go.dev/dl/) 1.27，
+需要 [Flutter](https://docs.flutter.dev/get-started/install) 3.50（正式版构建使用 3.50.1）、[Go](https://go.dev/dl/) 1.27，
 以及通过 rustup 安装的 [Rust](https://rustup.rs/)。桌面端需要在对应系统上构建，Android 在任意系统上都能构建。
 
 ```bash

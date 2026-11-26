@@ -271,7 +271,6 @@ class _IpLookupViewState extends ConsumerState<IpLookupView>
         ],
         body: Builder(
           builder: (context) => NullStatusSwitcher(
-            holdsArrival: false,
             isLoading: !_retrying && isLoading,
             isEmpty: false,
             loadingStatus: const Center(child: ActivityIndicator.page()),
