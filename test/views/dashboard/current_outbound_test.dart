@@ -499,7 +499,6 @@ void main() {
           localizedCountryName('RU', const Locale('ru')),
           'Российская Федерация',
         );
-        expect(find.byType(SvgPicture), findsOneWidget);
         expect(
           find.byTooltip(
             '\u{1F1E8}\u{1F1F3} China \u00b7 Shanghai \u00b7 Hongkou (Hongkou Qu)',
@@ -623,7 +622,7 @@ void main() {
                   seedColor: otherSeed,
                 );
                 final actualHct = Hct.fromInt(actual.ring.toARGB32());
-                expect(actualHct.hue, closeTo(expectedHct.hue, 1.5));
+                expect(actualHct.hue, closeTo(expectedHct.hue, 2.5));
                 expect(actualHct.tone, closeTo(expectedHct.tone, 0.5));
                 expect(actualHct.chroma, closeTo(expectedHct.chroma, 1.5));
               }

@@ -81,7 +81,6 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await openDetailTab(tester, 'Info');
       expect(find.text('🇺🇸 *****'), findsOneWidget);
       expect(find.text('*****'), findsNothing);
       for (final address in [
@@ -179,6 +178,7 @@ void main() {
         const Offset(0, -500),
       );
       await tester.pumpAndSettle();
+      await openDetailTab(tester, 'Info');
       expect(find.text('🇺🇸 *****'), findsOneWidget);
       expect(find.text('*****:38120'), findsNothing);
       expect(find.text('198.18.0.1:38120'), findsOneWidget);
